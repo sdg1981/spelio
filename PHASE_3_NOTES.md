@@ -37,3 +37,16 @@ Use Node 22 or Node 20.19+.
 ## Notes
 
 Audio URLs are still empty mock values, so tapping the word pill will show `Audio unavailable`. The app is ready for real `audioUrl` values when the admin/audio phase is implemented.
+
+
+## Fast typing fix
+The practice input now locks briefly after an incorrect keypress until the wrong red letter clears. This prevents rapid typing from advancing into the next slot while the error animation is still active.
+
+## Logo SVG
+To use your final vector logo, add it at:
+
+```
+public/spelio-logo.svg
+```
+
+The Logo component will automatically use it. If the SVG is missing, the app falls back to the text logo.

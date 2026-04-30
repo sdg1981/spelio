@@ -79,13 +79,21 @@ export function usePracticeSession({
   });
   const statusTimerRef = useRef<number | null>(null);
   const wrongTimerRef = useRef<number | null>(null);
+  const inputLockedRef = useRef(false);
 
+  useEffect(() => {
+    return () => {
+      if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
+      if (wrongTimerRef.current) window.clearTimeout(wrongTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentIndex(0);
     setIsComplete(false);
     setStatus(null);
     setWrongIndex(null);
+    inputLockedRef.current = false;
     setStats({
       correctWords: 0,
       incorrectWordIds: new Set<string>(),
@@ -102,6 +110,7 @@ export function usePracticeSession({
     if (!currentWord) return;
     setLetters(createInitialLetters(currentWord.welshAnswer));
     setWrongIndex(null);
+    inputLockedRef.current = false;
 
     if (storage.settings.audioPrompts && currentWord.audioUrl) {
       const audio = new Audio(currentWord.audioUrl);
@@ -206,7 +215,7 @@ export function usePracticeSession({
   }
 
   const handleInput = useCallback((char: string) => {
-    if (!currentWord || isComplete) return;
+    if (!currentWord || isComplete || inputLockedRef.current) return;
 
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
@@ -226,6 +235,7 @@ export function usePracticeSession({
     }
 
     const nextLetters = letters.map((letter, index) => index === nextIndex ? { value: char, wrong: true } : letter);
+    inputLockedRef.current = true;
     setLetters(nextLetters);
     setWrongIndex(nextIndex);
     showStatus('Incorrect. Try again.');
@@ -247,11 +257,12 @@ export function usePracticeSession({
     wrongTimerRef.current = window.setTimeout(() => {
       setLetters(previous => previous.map((letter, index) => index === nextIndex ? { value: '' } : letter));
       setWrongIndex(null);
+      inputLockedRef.current = false;
     }, 820);
   }, [currentWord?.id, isComplete, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
   const revealNext = useCallback(() => {
-    if (!currentWord || isComplete) return;
+    if (!currentWord || isComplete || inputLockedRef.current) return;
 
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
