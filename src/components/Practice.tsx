@@ -78,7 +78,12 @@ export function Practice({
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
   function focusMobileInput() {
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
     mobileInputRef.current?.focus({ preventScroll: true });
+    window.requestAnimationFrame(() => {
+      window.scrollTo(scrollX, scrollY);
+    });
   }
 
   const {
@@ -121,9 +126,15 @@ export function Practice({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleInput, isComplete, modal, playAudio, revealNext]);
 
-  // Do not auto-focus on every word change. On mobile browsers, focusing an
-  // off-screen/hidden input can force the page to scroll down above the keyboard.
-  // Instead, focus is triggered by the user tapping the answer area.
+  useEffect(() => {
+    if (!currentWord || modal || isComplete) return;
+
+    const timer = window.setTimeout(() => {
+      focusMobileInput();
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [currentWord?.id, isComplete, modal]);
 
   function updateSettings(patch: Partial<SpelioSettings>) {
     onStorageChange({ ...storage, settings: { ...storage.settings, ...patch } });

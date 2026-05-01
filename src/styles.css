@@ -209,7 +209,7 @@
 .mobile-practice-input{
   position:fixed;
   left:0;
-  bottom:0;
+  top:0;
   width:1px;
   height:1px;
   opacity:.01;
