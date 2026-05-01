@@ -15,20 +15,32 @@ export function Progress({ value = 30, count = '3 / 10' }: { value?: number; cou
   );
 }
 
+function getAnswerLayoutClass(answer: string) {
+  const words = answer.match(/\S+/g) ?? [];
+  const letterCount = answer.replace(/\s/g, '').length;
+  const longestWord = words.reduce((max, word) => Math.max(max, word.length), 0);
+
+  if (letterCount >= 16 || longestWord >= 10) return 'extra-compact';
+  if (letterCount >= 10 || longestWord >= 7) return 'compact';
+  return '';
+}
+
 function LetterSlots({
   word,
   letters,
-  wrongIndex
+  wrongIndex,
+  layoutClass = ''
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
+  layoutClass?: string;
 }) {
   const wordGroups = word.match(/\S+/g) ?? [];
   let searchFrom = 0;
 
   return (
-    <div className="letter-grid">
+    <div className={`letter-grid ${layoutClass}`}>
       {wordGroups.map((group, groupIndex) => {
         const startIndex = word.indexOf(group, searchFrom);
         searchFrom = startIndex + group.length;
@@ -55,7 +67,6 @@ function LetterSlots({
   );
 }
 
-
 export function Practice({
   lists,
   storage,
@@ -76,8 +87,17 @@ export function Practice({
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const mobileKeyboardEnabledRef = useRef(false);
+
+  function shouldUseMobileKeyboard() {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+  }
 
   function focusMobileInput() {
+    if (!shouldUseMobileKeyboard()) return;
+
+    mobileKeyboardEnabledRef.current = true;
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
     mobileInputRef.current?.focus({ preventScroll: true });
@@ -127,7 +147,7 @@ export function Practice({
   }, [handleInput, isComplete, modal, playAudio, revealNext]);
 
   useEffect(() => {
-    if (!currentWord || modal || isComplete) return;
+    if (!currentWord || modal || isComplete || !shouldUseMobileKeyboard()) return;
 
     const timer = window.setTimeout(() => {
       focusMobileInput();
@@ -171,6 +191,8 @@ export function Practice({
     );
   }
 
+  const answerLayoutClass = getAnswerLayoutClass(currentWord.welshAnswer);
+
   return (
     <main className="app-bg relative overflow-hidden">
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
@@ -194,10 +216,15 @@ export function Practice({
           ref={mobileInputRef}
           value=""
           onChange={(event) => {
+            if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
+              event.target.value = '';
+              return;
+            }
+
             const value = event.target.value;
             const char = value[value.length - 1];
             if (char) handleInput(char);
-            event.target.value = "";
+            event.target.value = '';
           }}
           inputMode="text"
           autoCapitalize="none"
@@ -205,11 +232,14 @@ export function Practice({
           autoCorrect="off"
           spellCheck={false}
           aria-label="Type Welsh answer"
+          onBlur={() => {
+            mobileKeyboardEnabledRef.current = false;
+          }}
           className="mobile-practice-input"
         />
 
         <div onClick={focusMobileInput} onTouchStart={focusMobileInput} className="letter-input-tap-zone">
-          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
+          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} layoutClass={answerLayoutClass} />
         </div>
 
         <div className="status-line">
