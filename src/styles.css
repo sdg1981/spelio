@@ -129,11 +129,21 @@
 }
 @media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}
 
-/* Final practice input + responsive answer-slot layout */
+/* Consolidated practice-screen stability fixes
+   - keeps practice logo small on mobile
+   - keeps mobile keyboard input available without visible UI
+   - makes word spaces visibly larger than letter spaces
+   - compacts longer answers without horizontal scrolling */
+.practice-shell .logo-svg-small{
+  width:min(40vw,220px);
+  max-width:220px;
+}
+
 .letter-grid{
   width:100%;
   max-width:min(700px, calc(100vw - 32px));
   overflow:visible;
+  justify-content:center;
 }
 
 .letter-word{
@@ -144,31 +154,13 @@
   white-space:nowrap;
 }
 
-.letter-grid.compact{
-  gap:20px 24px;
-}
+.letter-grid.compact{gap:22px 44px;}
+.letter-grid.compact .letter-word{gap:20px;}
+.letter-grid.compact .letter-slot{min-width:28px;font-size:30px;}
 
-.letter-grid.compact .letter-word{
-  gap:20px;
-}
-
-.letter-grid.compact .letter-slot{
-  min-width:28px;
-  font-size:30px;
-}
-
-.letter-grid.extra-compact{
-  gap:16px 18px;
-}
-
-.letter-grid.extra-compact .letter-word{
-  gap:14px;
-}
-
-.letter-grid.extra-compact .letter-slot{
-  min-width:22px;
-  font-size:24px;
-}
+.letter-grid.extra-compact{gap:18px 36px;}
+.letter-grid.extra-compact .letter-word{gap:14px;}
+.letter-grid.extra-compact .letter-slot{min-width:22px;font-size:24px;}
 
 .mobile-practice-input{
   position:fixed;
@@ -191,80 +183,84 @@
   justify-content:center;
 }
 
+@media (min-width:900px){
+  .practice-shell .logo-svg-small{
+    width:min(28vw,230px);
+    max-width:230px;
+  }
+  .letter-grid{gap:30px 58px;}
+  .letter-word{gap:30px;}
+  .letter-grid.compact{gap:28px 50px;}
+  .letter-grid.extra-compact{gap:24px 42px;}
+}
+
 @media (max-width:520px){
-  .practice-shell .letter-grid{
-    margin-top:42px;
-    max-width:calc(100vw - 28px);
-    gap:30px 24px;
+  .practice-shell{padding-top:74px;}
+
+  .practice-shell .logo-svg-small{
+    width:min(36vw,150px);
+    max-width:150px;
   }
 
-  .practice-shell .letter-word{
-    gap:22px;
+  .practice-shell .logo-small{font-size:34px;}
+
+  .practice-shell .word-pill{
+    margin-top:30px;
+    font-size:21px;
+    padding:17px 32px;
   }
+
+  .practice-shell .letter-grid{
+    margin-top:38px;
+    max-width:calc(100vw - 28px);
+    gap:30px 44px; /* row gap, word gap */
+  }
+
+  .practice-shell .letter-word{gap:18px;} /* letter gap inside a word */
 
   .practice-shell .letter-slot{
-    min-width:26px;
-    height:40px;
-    font-size:30px;
+    min-width:25px;
+    height:39px;
+    font-size:29px;
   }
 
-  .practice-shell .letter-grid.compact{
-    gap:24px 18px;
-  }
+  .practice-shell .letter-grid.compact{gap:26px 38px;}
+  .practice-shell .letter-grid.compact .letter-word{gap:12px;}
+  .practice-shell .letter-grid.compact .letter-slot{min-width:21px;font-size:24px;}
 
-  .practice-shell .letter-grid.compact .letter-word{
-    gap:16px;
-  }
+  .practice-shell .letter-grid.extra-compact{gap:22px 32px;}
+  .practice-shell .letter-grid.extra-compact .letter-word{gap:8px;}
+  .practice-shell .letter-grid.extra-compact .letter-slot{min-width:17px;font-size:20px;}
 
-  .practice-shell .letter-grid.compact .letter-slot{
-    min-width:22px;
-    font-size:25px;
-  }
-
-  .practice-shell .letter-grid.extra-compact{
-    gap:20px 14px;
-  }
-
-  .practice-shell .letter-grid.extra-compact .letter-word{
-    gap:11px;
-  }
-
-  .practice-shell .letter-grid.extra-compact .letter-slot{
-    min-width:18px;
-    font-size:21px;
-  }
+  .practice-shell .utility-bar{margin-bottom:54px;}
 }
 
 @media (max-width:380px){
+  .practice-shell{padding-top:70px;}
+
+  .practice-shell .logo-svg-small{
+    width:min(34vw,132px);
+    max-width:132px;
+  }
+
+  .practice-shell .logo-small{font-size:32px;}
+
+  .practice-shell .word-pill{margin-top:28px;}
+
   .practice-shell .letter-grid{
+    margin-top:36px;
     max-width:calc(100vw - 24px);
-    gap:28px 20px;
+    gap:28px 38px;
   }
 
-  .practice-shell .letter-word{
-    gap:18px;
-  }
+  .practice-shell .letter-word{gap:15px;}
+  .practice-shell .letter-slot{min-width:23px;font-size:27px;}
 
-  .practice-shell .letter-slot{
-    min-width:24px;
-    font-size:28px;
-  }
+  .practice-shell .letter-grid.compact{gap:24px 32px;}
+  .practice-shell .letter-grid.compact .letter-word{gap:10px;}
+  .practice-shell .letter-grid.compact .letter-slot{min-width:19px;font-size:22px;}
 
-  .practice-shell .letter-grid.compact .letter-word{
-    gap:13px;
-  }
-
-  .practice-shell .letter-grid.compact .letter-slot{
-    min-width:20px;
-    font-size:23px;
-  }
-
-  .practice-shell .letter-grid.extra-compact .letter-word{
-    gap:9px;
-  }
-
-  .practice-shell .letter-grid.extra-compact .letter-slot{
-    min-width:16px;
-    font-size:20px;
-  }
+  .practice-shell .letter-grid.extra-compact{gap:20px 28px;}
+  .practice-shell .letter-grid.extra-compact .letter-word{gap:7px;}
+  .practice-shell .letter-grid.extra-compact .letter-slot{min-width:15px;font-size:19px;}
 }

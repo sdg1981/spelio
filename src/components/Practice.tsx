@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -15,51 +15,27 @@ export function Progress({ value = 30, count = '3 / 10' }: { value?: number; cou
   );
 }
 
-function getAnswerLayoutClass(answer: string) {
-  const words = answer.match(/\S+/g) ?? [];
-  const letterCount = answer.replace(/\s/g, '').length;
-  const longestWord = words.reduce((max, word) => Math.max(max, word.length), 0);
-
-  if (letterCount >= 16 || longestWord >= 10) return 'extra-compact';
-  if (letterCount >= 10 || longestWord >= 7) return 'compact';
-  return '';
-}
-
 function LetterSlots({
   word,
   letters,
-  wrongIndex,
-  layoutClass = ''
+  wrongIndex
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
-  layoutClass?: string;
 }) {
-  const wordGroups = word.match(/\S+/g) ?? [];
-  let searchFrom = 0;
-
   return (
-    <div className={`letter-grid ${layoutClass}`}>
-      {wordGroups.map((group, groupIndex) => {
-        const startIndex = word.indexOf(group, searchFrom);
-        searchFrom = startIndex + group.length;
+    <div className="letter-grid">
+      {word.split('').map((char, index) => {
+        if (char === ' ') return <span key={index} className="letter-space" aria-hidden="true" />;
 
+        const slot = letters[index];
         return (
-          <span className="letter-word" key={`${group}-${groupIndex}-${startIndex}`}>
-            {group.split('').map((char, offset) => {
-              const index = startIndex + offset;
-              const slot = letters[index];
-
-              return (
-                <span
-                  key={`${char}-${index}`}
-                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
-                >
-                  {slot?.value || '_'}
-                </span>
-              );
-            })}
+          <span
+            key={index}
+            className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+          >
+            {slot?.value || '_'}
           </span>
         );
       })}
@@ -101,9 +77,7 @@ export function Practice({
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
     mobileInputRef.current?.focus({ preventScroll: true });
-    window.requestAnimationFrame(() => {
-      window.scrollTo(scrollX, scrollY);
-    });
+    window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
   }
 
   const {
@@ -147,7 +121,7 @@ export function Practice({
   }, [handleInput, isComplete, modal, playAudio, revealNext]);
 
   useEffect(() => {
-    if (!currentWord || modal || isComplete || !shouldUseMobileKeyboard()) return;
+    if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
 
     const timer = window.setTimeout(() => {
       focusMobileInput();
@@ -165,6 +139,16 @@ export function Practice({
     const ids = selectedDraft.length ? selectedDraft : fallback;
     onStorageChange({ ...storage, selectedListIds: ids, currentPathPosition: ids[0] ?? null });
     setModal(null);
+  }
+
+  function handleRevealLetter() {
+    revealNext();
+
+    if (shouldUseMobileKeyboard()) {
+      window.setTimeout(() => {
+        focusMobileInput();
+      }, 40);
+    }
   }
 
   if (!hasWords || !currentWord) {
@@ -263,7 +247,15 @@ export function Practice({
             <span>Word list</span>
           </button>
 
-          <button onClick={revealNext}>
+          <button
+            onPointerDown={(event) => {
+              if (shouldUseMobileKeyboard()) {
+                event.preventDefault();
+                focusMobileInput();
+              }
+            }}
+            onClick={handleRevealLetter}
+          >
             <CornerDownRight size={23} />
             <span>Reveal letter</span>
           </button>
