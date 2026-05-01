@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -15,33 +15,59 @@ export function Progress({ value = 30, count = '3 / 10' }: { value?: number; cou
   );
 }
 
+function getAnswerLayoutClass(answer: string) {
+  const lettersOnly = answer.replace(/\s/g, '');
+  const totalLetters = lettersOnly.length;
+  const longestWordLength = answer
+    .split(/\s+/)
+    .reduce((max, part) => Math.max(max, part.length), 0);
+
+  if (totalLetters >= 14 || longestWordLength >= 9) return 'extra-compact';
+  if (totalLetters >= 9 || longestWordLength >= 6) return 'compact';
+  return '';
+}
+
 function LetterSlots({
   word,
   letters,
-  wrongIndex
+  wrongIndex,
+  layoutClass = ''
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
+  layoutClass?: string;
 }) {
-  return (
-    <div className="letter-grid">
-      {word.split('').map((char, index) => {
-        if (char === ' ') return <span key={index} className="letter-space" aria-hidden="true" />;
+  let globalIndex = 0;
 
-        const slot = letters[index];
+  return (
+    <div className={`letter-grid ${layoutClass}`.trim()}>
+      {word.split(' ').map((wordPart, wordIndex) => {
+        const startIndex = globalIndex;
+        globalIndex += wordPart.length + 1;
+
         return (
-          <span
-            key={index}
-            className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
-          >
-            {slot?.value || '_'}
+          <span key={`${wordPart}-${wordIndex}-${startIndex}`} className="letter-word">
+            {wordPart.split('').map((_, localIndex) => {
+              const index = startIndex + localIndex;
+              const slot = letters[index];
+
+              return (
+                <span
+                  key={index}
+                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+                >
+                  {slot?.value || '_'}
+                </span>
+              );
+            })}
           </span>
         );
       })}
     </div>
   );
 }
+
 
 export function Practice({
   lists,
