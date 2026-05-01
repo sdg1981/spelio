@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -75,6 +75,11 @@ export function Practice({
 }) {
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  function focusMobileInput() {
+    mobileInputRef.current?.focus();
+  }
 
   const {
     currentWord,
@@ -115,6 +120,16 @@ export function Practice({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleInput, isComplete, modal, playAudio, revealNext]);
+
+  useEffect(() => {
+    if (!currentWord || modal || isComplete) return;
+
+    const timer = window.setTimeout(() => {
+      mobileInputRef.current?.focus();
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [currentWord?.id, isComplete, modal]);
 
   function updateSettings(patch: Partial<SpelioSettings>) {
     onStorageChange({ ...storage, settings: { ...storage.settings, ...patch } });
@@ -170,7 +185,27 @@ export function Practice({
           <div className="dialect-label">{currentWord.dialect === 'North Wales' ? 'North Wales form' : currentWord.dialect === 'South Wales / Standard' || currentWord.dialect === 'Standard' ? 'South Wales / Standard form' : 'Dialect-specific form'}</div>
         )}
 
-        <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
+        <input
+          ref={mobileInputRef}
+          value=""
+          onChange={(event) => {
+            const value = event.target.value;
+            const char = value[value.length - 1];
+            if (char) handleInput(char);
+            event.target.value = "";
+          }}
+          inputMode="text"
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Type Welsh answer"
+          className="mobile-practice-input"
+        />
+
+        <div onClick={focusMobileInput} onTouchStart={focusMobileInput} className="letter-input-tap-zone">
+          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
+        </div>
 
         <div className="status-line">
           {status === 'Incorrect. Try again.' && (

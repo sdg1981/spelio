@@ -204,3 +204,24 @@
     gap:26px;
   }
 }
+
+/* Mobile keyboard focus target for custom letter-slot UI */
+.mobile-practice-input{
+  position:fixed;
+  left:0;
+  bottom:0;
+  width:1px;
+  height:1px;
+  opacity:.01;
+  border:0;
+  padding:0;
+  margin:0;
+  background:transparent;
+  color:transparent;
+  caret-color:transparent;
+}
+.letter-input-tap-zone{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
