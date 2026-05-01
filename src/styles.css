@@ -128,3 +128,62 @@
   text-transform:uppercase;
 }
 @media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}
+
+/* Mobile practice logo sizing fix
+   Keeps the homepage logo large, but constrains the smaller practice logo so
+   the word pill, answer slots, and mobile keyboard can remain usable. */
+.logo-svg{
+  display:block;
+  height:auto;
+}
+.logo-svg-home{
+  width:min(84vw,560px);
+  max-width:560px;
+}
+.logo-svg-small{
+  width:min(46vw,260px);
+  max-width:260px;
+}
+.practice-shell .logo-svg-small{
+  width:min(44vw,240px);
+  max-width:240px;
+}
+
+@media (max-width:520px){
+  .home-shell .logo-svg-home{
+    width:min(84vw,560px);
+    max-width:560px;
+  }
+
+  .practice-shell{
+    padding-top:88px;
+  }
+
+  .practice-shell .logo-svg-small{
+    width:min(48vw,200px);
+    max-width:200px;
+  }
+
+  .practice-shell .logo-small{
+    font-size:42px;
+  }
+
+  .practice-shell .word-pill{
+    margin-top:42px;
+  }
+
+  .practice-shell .letter-grid{
+    margin-top:52px;
+  }
+}
+
+@media (max-width:380px){
+  .practice-shell .logo-svg-small{
+    width:min(50vw,185px);
+    max-width:185px;
+  }
+
+  .practice-shell .logo-small{
+    font-size:39px;
+  }
+}
