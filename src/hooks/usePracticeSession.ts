@@ -177,9 +177,18 @@ export function usePracticeSession({
 
   const finishSession = useCallback((finalStats = stats) => {
     const endedAt = Date.now();
+    const cleanCorrectWords = Math.max(
+      0,
+      session.words.length -
+        new Set([
+          ...Array.from(finalStats.incorrectWordIds),
+          ...Array.from(finalStats.revealedWordIds)
+        ]).size
+    );
+
     const base = {
       totalWords: session.words.length,
-      correctWords: finalStats.correctWords,
+      correctWords: cleanCorrectWords,
       incorrectWords: finalStats.incorrectWordIds.size,
       revealedWords: finalStats.revealedWordIds.size,
       incorrectAttempts: finalStats.incorrectAttempts,
