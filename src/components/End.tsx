@@ -34,8 +34,19 @@ export function EndScreen({
     ['◷', formatTime(result.durationSeconds), 'Time taken', 'text-[#2b83d4]']
   ];
 
-  const primaryTitle = result.state === 'struggled' && hasDifficultWords ? 'Review difficult words' : recommendation.title;
-  const primarySubtitle = result.state === 'struggled' && hasDifficultWords ? 'Based on your last session' : recommendation.subtitle;
+  const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
+  const shouldPrioritiseReview = result.state === 'struggled' && hasDifficultWords;
+  const primaryTitle = shouldPrioritiseReview
+    ? 'Review difficult words'
+    : !hasDifficultWords && recommendationLooksLikeReview
+      ? 'Continue learning'
+      : recommendation.title;
+  const primarySubtitle = shouldPrioritiseReview
+    ? 'Based on your last session'
+    : !hasDifficultWords && recommendationLooksLikeReview
+      ? 'Keep building from your selected word list'
+      : recommendation.subtitle;
+  const handlePrimary = shouldPrioritiseReview ? onReview : onContinue;
 
   return (
     <main className="app-bg relative">
@@ -58,7 +69,7 @@ export function EndScreen({
 
         <h2 className="mt-12 md:mt-10 w-full max-w-[620px] text-left text-[34px] md:text-[24px] font-black tracking-[-.055em]">What’s next?</h2>
         <div className="card-list mt-7">
-          <ActionRow primary icon={<BookOpen size={30} />} title={primaryTitle} subtitle={primarySubtitle} onClick={result.state === 'struggled' && hasDifficultWords ? onReview : onContinue} />
+          <ActionRow primary icon={<BookOpen size={30} />} title={primaryTitle} subtitle={primarySubtitle} onClick={handlePrimary} />
           {hasDifficultWords && result.state !== 'struggled' && <ActionRow icon={<Target size={30} />} title="Review difficult words" subtitle="Go over words you found challenging" accent="blue" onClick={onReview} />}
           <ActionRow icon={<SlidersHorizontal size={30} />} title="Change word lists" subtitle="Choose different lists for your next session" onClick={onChangeLists} />
         </div>

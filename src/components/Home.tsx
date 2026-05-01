@@ -24,6 +24,14 @@ export function Home({
 }) {
   const isFirst = mode === 'first';
   const isStruggled = mode === 'struggled';
+  const shouldPrioritiseReview = isStruggled && hasDifficultWords;
+  const homeHeading = isFirst
+    ? null
+    : shouldPrioritiseReview
+      ? 'Focus on tricky words'
+      : 'Continue learning';
+  const primaryLabel = shouldPrioritiseReview ? 'Review difficult words' : 'Start spelling practice';
+  const handlePrimary = shouldPrioritiseReview ? onReview : onStart;
 
   return (
     <main className="app-bg">
@@ -38,18 +46,18 @@ export function Home({
           <h1 className={`${isFirst ? 'font-semibold' : 'font-extrabold'} tracking-[-.055em] text-[#071522]`}>
             {isFirst ? (
               <><span>Type what you hear.</span><br /><span>Learn Welsh spelling.</span></>
-            ) : isStruggled ? 'Focus on tricky words' : 'Continue learning'}
+            ) : homeHeading}
           </h1>
 
           {!isFirst && (
             <p className="mt-5 text-[17px] md:text-[16px] text-[#697481]">
-              {isStruggled ? 'Based on your last session' : recommendation.subtitle}
+              {shouldPrioritiseReview ? 'Based on your last session' : recommendation.subtitle}
             </p>
           )}
         </div>
 
         <div className="mt-7 w-full">
-          <PrimaryButton onClick={onStart}>{isStruggled ? 'Review difficult words' : 'Start spelling practice'}</PrimaryButton>
+          <PrimaryButton onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
         </div>
 
         <div className="mt-12 action-list">
@@ -57,7 +65,7 @@ export function Home({
             <ActionRow icon={<Target size={30} />} title="Review difficult words" accent="red" onClick={onReview} />
           )}
 
-          {isStruggled && (
+          {shouldPrioritiseReview && (
             <ActionRow icon={<Play size={30} />} title="Continue learning" subtitle={recommendation.subtitle} accent="red" onClick={onContinue} />
           )}
 
