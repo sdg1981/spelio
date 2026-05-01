@@ -2,74 +2,44 @@ import type { WordList } from '../../data/wordLists';
 import type { SpelioStorage } from './storage';
 import { hasDifficultWords } from './sessionEngine';
 
-export type RecommendationKind = 'review' | 'continue' | 'next-list';
-
-export interface Recommendation {
-  kind: RecommendationKind;
-  title: string;
-  subtitle?: string;
+export type Recommendation = {
+  kind: 'list' | 'review';
   listId?: string;
+  title: string;
+  subtitle: string;
+};
+
+function findList(lists: WordList[], id?: string | null) {
+  return id ? lists.find(list => list.id === id) : undefined;
 }
 
-export function getCurrentList(storage: SpelioStorage, lists: WordList[]) {
-  const selected = storage.currentPathPosition || storage.selectedListIds[0];
-  return lists.find(list => list.id === selected) ?? lists[0];
+function firstIncomplete(lists: WordList[], storage: SpelioStorage) {
+  return lists.find(list => !storage.listProgress[list.id]?.completed) ?? lists[0];
 }
 
 export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
-  const current = getCurrentList(storage, lists);
-
   if (storage.lastSessionResult?.state === 'struggled' && hasDifficultWords(storage)) {
     return {
       kind: 'review',
+      listId: storage.currentPathPosition ?? storage.selectedListIds[0] ?? lists[0]?.id,
       title: 'Review difficult words',
       subtitle: 'Based on your last session'
     };
   }
 
+  const current = findList(lists, storage.currentPathPosition) ?? findList(lists, storage.selectedListIds[0]);
   if (current && !storage.listProgress[current.id]?.completed) {
-    return {
-      kind: 'continue',
-      title: 'Continue learning',
-      subtitle: current.name,
-      listId: current.id
-    };
+    return { kind: 'list', listId: current.id, title: 'Continue learning', subtitle: current.name };
   }
 
-  const nextList = current?.nextListId ? lists.find(list => list.id === current.nextListId) : undefined;
-  if (nextList) {
-    return {
-      kind: 'next-list',
-      title: 'Continue learning',
-      subtitle: nextList.name,
-      listId: nextList.id
-    };
-  }
+  const next = findList(lists, current?.nextListId);
+  if (next) return { kind: 'list', listId: next.id, title: 'Continue learning', subtitle: next.name };
 
-  const unfinishedInStage = lists.find(list => list.stage === current?.stage && !storage.listProgress[list.id]?.completed);
-  if (unfinishedInStage) {
-    return {
-      kind: 'continue',
-      title: 'Continue learning',
-      subtitle: unfinishedInStage.name,
-      listId: unfinishedInStage.id
-    };
-  }
-
-  const unfinished = lists.find(list => !storage.listProgress[list.id]?.completed);
-  if (unfinished) {
-    return {
-      kind: 'continue',
-      title: 'Continue learning',
-      subtitle: unfinished.name,
-      listId: unfinished.id
-    };
-  }
-
+  const fallback = firstIncomplete(lists, storage);
   return {
-    kind: 'continue',
+    kind: 'list',
+    listId: fallback?.id,
     title: 'Continue learning',
-    subtitle: current?.name,
-    listId: current?.id
+    subtitle: fallback?.name ?? 'Select a word list'
   };
 }

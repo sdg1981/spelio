@@ -1,70 +1,90 @@
-import type { PracticeWord, WordList } from '../../data/wordLists';
-import type { SpelioStorage, SessionResult } from './storage';
+import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
+import type { SessionResult, SessionState, SpelioStorage } from './storage';
 
-export interface SessionWord extends PracticeWord {
-  sourceListName: string;
-}
+export interface SessionWord extends PracticeWord {}
 
 export interface PracticeSession {
   words: SessionWord[];
   listIds: string[];
-  startedAt: number;
 }
+
+const SESSION_TARGET = 10;
 
 function scoreWord(word: PracticeWord, storage: SpelioStorage) {
   const progress = storage.wordProgress[word.id];
   if (!progress?.seen) return 0;
-  if (progress.revealedCount > 0) return 1;
-  if (progress.incorrectAttempts > 0) return 2;
+  if (progress.incorrectAttempts > 0) return 1;
+  if (progress.revealedCount > 0) return 2;
   if (!progress.completedCount) return 3;
-  return 10;
+  return 10 + progress.completedCount;
 }
 
-export function flattenWords(lists: WordList[], selectedListIds: string[]) {
-  return lists
-    .filter(list => selectedListIds.includes(list.id) && list.isActive)
-    .flatMap(list => list.words.map(word => ({ ...word, sourceListName: list.name })));
+function isDialectEligible(word: PracticeWord, preference: DialectPreference) {
+  if (preference === 'mixed') return true;
+  if (preference === 'north') return word.dialect === 'Both' || word.dialect === 'North Wales';
+  return word.dialect === 'Both' || word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
+}
+
+function dialectRank(word: PracticeWord, preference: DialectPreference) {
+  if (preference === 'north') return word.dialect === 'North Wales' ? 0 : 1;
+  if (preference === 'south-standard') return word.dialect === 'South Wales / Standard' || word.dialect === 'Standard' ? 0 : 1;
+  const progress = word.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return progress % 2;
+}
+
+export function filterDialectVariants(words: PracticeWord[], preference: DialectPreference) {
+  const eligible = words.filter(word => isDialectEligible(word, preference));
+  const grouped = new Map<string, PracticeWord[]>();
+  const ungrouped: PracticeWord[] = [];
+
+  for (const word of eligible) {
+    const groupId = word.variantGroupId?.trim();
+    if (!groupId) {
+      ungrouped.push(word);
+      continue;
+    }
+    grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
+  }
+
+  const chosen = Array.from(grouped.values()).map(group => {
+    return [...group].sort((a, b) => dialectRank(a, preference) - dialectRank(b, preference) || a.order - b.order)[0];
+  });
+
+  return [...ungrouped, ...chosen].sort((a, b) => a.order - b.order);
 }
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false): PracticeSession {
-  const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : lists.slice(0, 1).map(list => list.id);
-  const sourceWords = flattenWords(lists, selectedIds);
+  const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : [lists[0]?.id].filter(Boolean) as string[];
+  const selectedLists = lists.filter(list => selectedIds.includes(list.id) && list.isActive);
+  const allCandidates = selectedLists.flatMap(list => list.words);
+  const candidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference);
 
-  const ordered = [...sourceWords].sort((a, b) => {
-    if (reviewDifficult) {
-      const ap = storage.wordProgress[a.id];
-      const bp = storage.wordProgress[b.id];
-      const aDifficult = ap?.difficult ? 0 : 1;
-      const bDifficult = bp?.difficult ? 0 : 1;
-      if (aDifficult !== bDifficult) return aDifficult - bDifficult;
-      const revealDiff = (bp?.revealedCount ?? 0) - (ap?.revealedCount ?? 0);
-      if (revealDiff !== 0) return revealDiff;
-      return (bp?.incorrectAttempts ?? 0) - (ap?.incorrectAttempts ?? 0);
-    }
-
-    const diff = scoreWord(a, storage) - scoreWord(b, storage);
-    if (diff !== 0) return diff;
-    return a.order - b.order;
+  const reviewWords = candidates.filter(word => {
+    const progress = storage.wordProgress[word.id];
+    return progress?.difficult || (progress?.incorrectAttempts ?? 0) > 0 || (progress?.revealedCount ?? 0) > 0;
   });
 
-  const difficultOnly = reviewDifficult ? ordered.filter(word => storage.wordProgress[word.id]?.difficult) : ordered;
+  const pool = reviewDifficult && reviewWords.length ? reviewWords : candidates;
+  const words = [...pool]
+    .sort((a, b) => scoreWord(a, storage) - scoreWord(b, storage) || a.listId.localeCompare(b.listId) || a.order - b.order)
+    .slice(0, SESSION_TARGET);
 
   return {
-    words: difficultOnly.slice(0, 10),
-    listIds: selectedIds,
-    startedAt: Date.now()
+    words,
+    listIds: Array.from(new Set(words.map(word => word.listId)))
   };
 }
 
-export function classifySession(result: Omit<SessionResult, 'state'>): SessionResult['state'] {
-  const accuracy = result.correctWords / Math.max(result.totalWords, 1);
-  const difficultyScore = result.incorrectAttempts + result.revealedLetters * 2;
+export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedLetters'>): SessionState {
+  const accuracy = base.totalWords ? base.correctWords / base.totalWords : 0;
+  const difficultyScore = base.incorrectAttempts + base.revealedLetters * 2;
 
-  if (accuracy >= 0.9 && result.revealedLetters === 0) return 'strong';
-  if (accuracy < 0.75 || result.revealedLetters > 0 || difficultyScore >= 3) return 'struggled';
+  if (accuracy >= 0.9 && base.revealedLetters === 0) return 'strong';
+  if (accuracy >= 0.75 && accuracy < 0.9) return 'good';
+  if (accuracy < 0.75 || base.revealedLetters > 0 || difficultyScore >= 3) return 'struggled';
   return 'good';
 }
 
 export function hasDifficultWords(storage: SpelioStorage) {
-  return Object.values(storage.wordProgress).some(progress => progress.difficult);
+  return Object.values(storage.wordProgress).some(progress => progress.difficult || progress.incorrectAttempts > 0 || progress.revealedCount > 0);
 }

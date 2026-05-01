@@ -56,7 +56,7 @@ export function Practice({
   storage: SpelioStorage;
   reviewDifficult?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
-  onComplete: (result: SessionResult) => void;
+  onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
@@ -153,6 +153,9 @@ export function Practice({
           <Volume2 className="text-[#d90000]" size={24} />
           {storage.settings.englishVisible && <span>{currentWord.englishPrompt}</span>}
         </button>
+        {currentWord.dialect !== 'Both' && (
+          <div className="dialect-label">{currentWord.dialect === 'North Wales' ? 'North Wales form' : currentWord.dialect === 'South Wales / Standard' || currentWord.dialect === 'Standard' ? 'South Wales / Standard form' : 'Dialect-specific form'}</div>
+        )}
 
         <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
 
@@ -255,6 +258,37 @@ function SettingsModal({
               <span>
                 <b className="block text-[18px] md:text-[15px]">Strict</b>
                 <span className="mt-2 block field-note">Requires correct accents and diacritics.</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-10 border-t border-[#edf0f2] pt-8">
+          <h3 className="text-[16px] md:text-[15px] font-extrabold">Dialect preference</h3>
+          <p className="mt-2 field-note">Choose which Welsh dialect variants appear in practice.</p>
+
+          <div className="mt-7 space-y-6">
+            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'mixed' })}>
+              <Radio active={settings.dialectPreference === 'mixed'} />
+              <span>
+                <b className="block text-[18px] md:text-[15px]">Mixed / Both</b>
+                <span className="mt-2 block field-note">Includes all eligible variants.</span>
+              </span>
+            </button>
+
+            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'north' })}>
+              <Radio active={settings.dialectPreference === 'north'} />
+              <span>
+                <b className="block text-[18px] md:text-[15px]">North Wales</b>
+                <span className="mt-2 block field-note">Uses North Wales forms where available.</span>
+              </span>
+            </button>
+
+            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'south-standard' })}>
+              <Radio active={settings.dialectPreference === 'south-standard'} />
+              <span>
+                <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
+                <span className="mt-2 block field-note">Uses South Wales or standard forms where available.</span>
               </span>
             </button>
           </div>

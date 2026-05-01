@@ -44,8 +44,9 @@ export default function App() {
     setScreen('practice');
   }
 
-  function handleComplete(result: SessionResult) {
+  function handleComplete(result: SessionResult, nextStorage: SpelioStorage) {
     setLastResult(result);
+    setStorage(nextStorage);
     setScreen('end');
   }
 

@@ -117,3 +117,14 @@
 .toggle-switch.on span{transform:translateX(22px);}
 .letter-space{width:20px;height:44px;}
 @media (max-width:520px){.letter-space{width:28px;height:44px}.toggle-switch{height:36px;width:64px}.toggle-switch span{height:30px;width:30px}.toggle-switch.on span{transform:translateX(28px)}}
+
+/* Dialect-aware practice labels */
+.dialect-label{
+  margin-top:14px;
+  color:#8c95a0;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+@media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}

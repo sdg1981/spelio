@@ -58,9 +58,12 @@ export function usePracticeSession({
   storage: SpelioStorage;
   reviewDifficult?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
-  onComplete: (result: SessionResult) => void;
+  onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
 }) {
-  const session = useMemo(() => createPracticeSession(lists, storage, reviewDifficult), [lists, storage.selectedListIds.join('|'), reviewDifficult]);
+  const session = useMemo(
+    () => createPracticeSession(lists, storage, reviewDifficult),
+    [lists, storage.selectedListIds.join('|'), storage.settings.dialectPreference, reviewDifficult]
+  );
   const sessionIdentity = session.words.map(word => word.id).join('|');
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentWord = session.words[currentIndex];
@@ -80,6 +83,11 @@ export function usePracticeSession({
   const statusTimerRef = useRef<number | null>(null);
   const wrongTimerRef = useRef<number | null>(null);
   const inputLockedRef = useRef(false);
+  const storageRef = useRef(storage);
+
+  useEffect(() => {
+    storageRef.current = storage;
+  }, [storage]);
 
   useEffect(() => {
     return () => {
@@ -137,7 +145,8 @@ export function usePracticeSession({
 
   function persistWordProgress(word: PracticeWord, patch: { incorrect?: boolean; revealed?: boolean; completed?: boolean }) {
     const now = new Date().toISOString();
-    const previous = storage.wordProgress[word.id] ?? {
+    const currentStorage = storageRef.current;
+    const previous = currentStorage.wordProgress[word.id] ?? {
       seen: false,
       completedCount: 0,
       incorrectAttempts: 0,
@@ -146,10 +155,10 @@ export function usePracticeSession({
     };
 
     const nextStorage: SpelioStorage = {
-      ...storage,
-      currentPathPosition: storage.currentPathPosition || word.listId,
+      ...currentStorage,
+      currentPathPosition: currentStorage.currentPathPosition || word.listId,
       wordProgress: {
-        ...storage.wordProgress,
+        ...currentStorage.wordProgress,
         [word.id]: {
           ...previous,
           seen: true,
@@ -162,6 +171,7 @@ export function usePracticeSession({
       }
     };
 
+    storageRef.current = nextStorage;
     onStorageChange(nextStorage);
   }
 
@@ -180,17 +190,17 @@ export function usePracticeSession({
     const result: SessionResult = { ...base, state: classifySession(base) };
 
     let nextStorage: SpelioStorage = {
-      ...storage,
+      ...storageRef.current,
       lastSessionDate: new Date().toISOString(),
       lastSessionResult: result
     };
     nextStorage = updateListCompletion(nextStorage, lists, result);
 
-    onStorageChange(nextStorage);
+    storageRef.current = nextStorage;
     setStats(previous => ({ ...previous, endedAt }));
     setIsComplete(true);
-    if (storage.settings.soundEffects) playTone('completion');
-    onComplete(result);
+    if (storageRef.current.settings.soundEffects) playTone('completion');
+    onComplete(result, nextStorage);
   }, [lists, onComplete, onStorageChange, session.listIds, session.words.length, stats, storage]);
 
   function completeWord() {

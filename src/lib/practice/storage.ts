@@ -1,11 +1,25 @@
-import { defaultSelectedListIds } from '../../data/wordLists';
-import type { WelshSpellingMode, WordList } from '../../data/wordLists';
+import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
+
+export type SessionState = 'strong' | 'good' | 'struggled';
+
+export interface SessionResult {
+  totalWords: number;
+  correctWords: number;
+  incorrectWords: number;
+  revealedWords: number;
+  incorrectAttempts: number;
+  revealedLetters: number;
+  durationSeconds: number;
+  listIds: string[];
+  state: SessionState;
+}
 
 export interface SpelioSettings {
   englishVisible: boolean;
   audioPrompts: boolean;
   soundEffects: boolean;
   welshSpelling: WelshSpellingMode;
+  dialectPreference: DialectPreference;
 }
 
 export interface WordProgress {
@@ -18,22 +32,11 @@ export interface WordProgress {
 }
 
 export interface ListProgress {
-  completed: boolean;
   seenWordIds: string[];
-  strongSessionCount: number;
+  completed: boolean;
+  completedAt?: string;
   lastPractisedAt?: string;
-}
-
-export interface SessionResult {
-  totalWords: number;
-  correctWords: number;
-  incorrectWords: number;
-  revealedWords: number;
-  incorrectAttempts: number;
-  revealedLetters: number;
-  durationSeconds: number;
-  state: 'strong' | 'good' | 'struggled';
-  listIds: string[];
+  strongSessionCount: number;
 }
 
 export interface SpelioStorage {
@@ -46,18 +49,19 @@ export interface SpelioStorage {
   settings: SpelioSettings;
 }
 
-const STORAGE_KEY = 'spelio:mvp-progress:v1';
+const STORAGE_KEY = 'spelio-storage-v1';
 
 export const defaultSettings: SpelioSettings = {
   englishVisible: true,
   audioPrompts: true,
   soundEffects: true,
-  welshSpelling: 'flexible'
+  welshSpelling: 'flexible',
+  dialectPreference: 'mixed'
 };
 
 export const defaultStorage: SpelioStorage = {
-  selectedListIds: defaultSelectedListIds,
-  currentPathPosition: defaultSelectedListIds[0] ?? null,
+  selectedListIds: ['foundations_first_words'],
+  currentPathPosition: 'foundations_first_words',
   lastSessionDate: null,
   lastSessionResult: null,
   wordProgress: {},
@@ -65,70 +69,117 @@ export const defaultStorage: SpelioStorage = {
   settings: defaultSettings
 };
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function normaliseStorage(value: unknown): SpelioStorage {
+  const source = isObject(value) ? value : {};
+  const settings = isObject(source.settings) ? source.settings : {};
+
+  return {
+    ...defaultStorage,
+    ...source,
+    selectedListIds: Array.isArray(source.selectedListIds) ? source.selectedListIds.filter(id => typeof id === 'string') : defaultStorage.selectedListIds,
+    currentPathPosition: typeof source.currentPathPosition === 'string' ? source.currentPathPosition : defaultStorage.currentPathPosition,
+    lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
+    lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
+    wordProgress: isObject(source.wordProgress) ? source.wordProgress as Record<string, WordProgress> : {},
+    listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
+    settings: {
+      ...defaultSettings,
+      ...settings,
+      welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
+      dialectPreference:
+        settings.dialectPreference === 'north' || settings.dialectPreference === 'south-standard'
+          ? settings.dialectPreference
+          : 'mixed'
+    }
+  };
+}
+
 export function loadSpelioStorage(): SpelioStorage {
   if (typeof window === 'undefined') return defaultStorage;
-
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultStorage;
-    const parsed = JSON.parse(raw) as Partial<SpelioStorage>;
-
-    return {
-      ...defaultStorage,
-      ...parsed,
-      selectedListIds: parsed.selectedListIds?.length ? parsed.selectedListIds : defaultStorage.selectedListIds,
-      settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
-      wordProgress: parsed.wordProgress ?? {},
-      listProgress: parsed.listProgress ?? {}
-    };
+    return normaliseStorage(raw ? JSON.parse(raw) : null);
   } catch {
     return defaultStorage;
   }
 }
 
-export function saveSpelioStorage(data: SpelioStorage) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+export function saveSpelioStorage(storage: SpelioStorage) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normaliseStorage(storage)));
+  } catch {
+    // Local storage should never block practice.
+  }
 }
 
-export function resetSpelioStorage() {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STORAGE_KEY);
+function unique(values: string[]) {
+  return Array.from(new Set(values));
 }
 
-export function updateListCompletion(data: SpelioStorage, lists: WordList[], session: SessionResult): SpelioStorage {
-  const next: SpelioStorage = {
-    ...data,
-    wordProgress: { ...data.wordProgress },
-    listProgress: { ...data.listProgress }
-  };
+function isDialectEligible(word: PracticeWord, preference: DialectPreference) {
+  if (preference === 'mixed') return true;
+  if (preference === 'north') return word.dialect === 'Both' || word.dialect === 'North Wales';
+  return word.dialect === 'Both' || word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
+}
 
-  for (const listId of session.listIds) {
+function eligibleCompletionWords(list: WordList, preference: DialectPreference) {
+  const eligible = list.words.filter(word => isDialectEligible(word, preference));
+  const byGroup = new Map<string, PracticeWord[]>();
+  const ungrouped: PracticeWord[] = [];
+
+  for (const word of eligible) {
+    const groupId = word.variantGroupId?.trim();
+    if (!groupId) {
+      ungrouped.push(word);
+      continue;
+    }
+    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), word]);
+  }
+
+  return [
+    ...ungrouped,
+    ...Array.from(byGroup.values()).map(group => group[0])
+  ];
+}
+
+export function updateListCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
+  const now = new Date().toISOString();
+  const nextListProgress = { ...storage.listProgress };
+
+  for (const listId of result.listIds) {
     const list = lists.find(item => item.id === listId);
     if (!list) continue;
 
-    const existing = next.listProgress[listId] ?? {
-      completed: false,
+    const previous = nextListProgress[listId] ?? {
       seenWordIds: [],
+      completed: false,
       strongSessionCount: 0
     };
 
-    const seenWordIds = new Set(existing.seenWordIds);
-    list.words.forEach(word => {
-      if (next.wordProgress[word.id]?.seen) seenWordIds.add(word.id);
-    });
+    const completionWords = eligibleCompletionWords(list, storage.settings.dialectPreference);
+    const seenWordIds = unique([
+      ...previous.seenWordIds,
+      ...completionWords.filter(word => storage.wordProgress[word.id]?.seen).map(word => word.id)
+    ]);
 
-    const everyWordSeen = list.words.every(word => seenWordIds.has(word.id));
-    const strongEnoughToComplete = session.correctWords / Math.max(session.totalWords, 1) >= 0.85 && session.revealedWords === 0;
+    const allWordsSeen = completionWords.every(word => seenWordIds.includes(word.id) || storage.wordProgress[word.id]?.seen);
+    const accuracy = result.totalWords ? result.correctWords / result.totalWords : 0;
+    const strongSession = accuracy >= 0.85 && result.revealedLetters === 0;
+    const completed = previous.completed || (allWordsSeen && strongSession);
 
-    next.listProgress[listId] = {
-      ...existing,
-      seenWordIds: Array.from(seenWordIds),
-      completed: existing.completed || (everyWordSeen && strongEnoughToComplete),
-      strongSessionCount: session.state === 'strong' ? existing.strongSessionCount + 1 : existing.strongSessionCount,
-      lastPractisedAt: new Date().toISOString()
+    nextListProgress[listId] = {
+      ...previous,
+      seenWordIds,
+      completed,
+      completedAt: completed && !previous.completed ? now : previous.completedAt,
+      lastPractisedAt: now,
+      strongSessionCount: previous.strongSessionCount + (strongSession ? 1 : 0)
     };
   }
 
-  return next;
+  return { ...storage, listProgress: nextListProgress };
 }
