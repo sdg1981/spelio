@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -24,24 +24,37 @@ function LetterSlots({
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
 }) {
+  const wordGroups = word.match(/\S+/g) ?? [];
+  let searchFrom = 0;
+
   return (
     <div className="letter-grid">
-      {word.split('').map((char, index) => {
-        if (char === ' ') return <span key={index} className="letter-space" aria-hidden="true" />;
+      {wordGroups.map((group, groupIndex) => {
+        const startIndex = word.indexOf(group, searchFrom);
+        searchFrom = startIndex + group.length;
 
-        const slot = letters[index];
         return (
-          <span
-            key={index}
-            className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
-          >
-            {slot?.value || '_'}
+          <span className="letter-word" key={`${group}-${groupIndex}-${startIndex}`}>
+            {group.split('').map((char, offset) => {
+              const index = startIndex + offset;
+              const slot = letters[index];
+
+              return (
+                <span
+                  key={`${char}-${index}`}
+                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+                >
+                  {slot?.value || '_'}
+                </span>
+              );
+            })}
           </span>
         );
       })}
     </div>
   );
 }
+
 
 export function Practice({
   lists,
@@ -62,11 +75,6 @@ export function Practice({
 }) {
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
-  const mobileInputRef = useRef<HTMLInputElement>(null);
-
-  function focusMobileInput() {
-    mobileInputRef.current?.focus();
-  }
 
   const {
     currentWord,
@@ -82,16 +90,6 @@ export function Practice({
     revealNext,
     playAudio
   } = usePracticeSession({ lists, storage, reviewDifficult, onStorageChange, onComplete });
-
-  useEffect(() => {
-    if (!currentWord || isComplete || modal) return;
-
-    const timer = window.setTimeout(() => {
-      mobileInputRef.current?.focus();
-    }, 80);
-
-    return () => window.clearTimeout(timer);
-  }, [currentWord?.id, isComplete, modal]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -172,35 +170,7 @@ export function Practice({
           <div className="dialect-label">{currentWord.dialect === 'North Wales' ? 'North Wales form' : currentWord.dialect === 'South Wales / Standard' || currentWord.dialect === 'Standard' ? 'South Wales / Standard form' : 'Dialect-specific form'}</div>
         )}
 
-        <input
-          ref={mobileInputRef}
-          value=""
-          onChange={(event) => {
-            const value = event.target.value;
-            const char = value[value.length - 1];
-            if (char) handleInput(char);
-            event.currentTarget.value = '';
-          }}
-          onKeyDown={(event) => {
-            if (event.key.length === 1) {
-              event.preventDefault();
-              event.stopPropagation();
-              handleInput(event.key);
-            }
-          }}
-          inputMode="text"
-          autoCapitalize="none"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          aria-label="Type Welsh answer"
-          className="mobile-hidden-input"
-          style={{ position: 'absolute', opacity: 0, width: 1, height: 1, border: 0, padding: 0, pointerEvents: 'none' }}
-        />
-
-        <div onClick={focusMobileInput} onTouchStart={focusMobileInput}>
-          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
-        </div>
+        <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} />
 
         <div className="status-line">
           {status === 'Incorrect. Try again.' && (

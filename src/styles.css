@@ -129,61 +129,78 @@
 }
 @media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}
 
-/* Mobile practice logo sizing fix
-   Keeps the homepage logo large, but constrains the smaller practice logo so
-   the word pill, answer slots, and mobile keyboard can remain usable. */
-.logo-svg{
-  display:block;
-  height:auto;
+
+/* Practice mobile refinement: smaller in-practice logo and non-breaking word groups */
+.letter-word{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  white-space:nowrap;
 }
-.logo-svg-home{
-  width:min(84vw,560px);
-  max-width:560px;
-}
-.logo-svg-small{
-  width:min(46vw,260px);
-  max-width:260px;
-}
-.practice-shell .logo-svg-small{
-  width:min(44vw,240px);
-  max-width:240px;
+
+@media (min-width:900px){
+  .letter-word{gap:36px;}
 }
 
 @media (max-width:520px){
-  .home-shell .logo-svg-home{
-    width:min(84vw,560px);
-    max-width:560px;
-  }
-
   .practice-shell{
-    padding-top:88px;
+    padding-top:76px;
   }
 
   .practice-shell .logo-svg-small{
-    width:min(48vw,200px);
-    max-width:200px;
+    width:min(40vw,168px);
+    max-width:168px;
   }
 
   .practice-shell .logo-small{
-    font-size:42px;
+    font-size:36px;
   }
 
   .practice-shell .word-pill{
-    margin-top:42px;
+    margin-top:34px;
+    font-size:22px;
+    padding:18px 34px;
   }
 
   .practice-shell .letter-grid{
-    margin-top:52px;
+    margin-top:44px;
+    gap:32px 30px;
+  }
+
+  .letter-word{
+    gap:30px;
+  }
+
+  .practice-shell .utility-bar{
+    margin-bottom:56px;
   }
 }
 
 @media (max-width:380px){
+  .practice-shell{
+    padding-top:72px;
+  }
+
   .practice-shell .logo-svg-small{
-    width:min(50vw,185px);
-    max-width:185px;
+    width:min(38vw,150px);
+    max-width:150px;
   }
 
   .practice-shell .logo-small{
-    font-size:39px;
+    font-size:34px;
+  }
+
+  .practice-shell .word-pill{
+    margin-top:30px;
+  }
+
+  .practice-shell .letter-grid{
+    margin-top:40px;
+    gap:30px 26px;
+  }
+
+  .letter-word{
+    gap:26px;
   }
 }
