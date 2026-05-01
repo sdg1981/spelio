@@ -143,7 +143,7 @@ export function usePracticeSession({
     audio.play().catch(() => showStatus('Audio unavailable'));
   }, [currentWord?.id]);
 
-  function persistWordProgress(word: PracticeWord, patch: { incorrect?: boolean; revealed?: boolean; completed?: boolean }) {
+  function persistWordProgress(word: PracticeWord, patch: { incorrect?: boolean; revealed?: boolean; completed?: boolean; cleanCompleted?: boolean }) {
     const now = new Date().toISOString();
     const currentStorage = storageRef.current;
     const previous = currentStorage.wordProgress[word.id] ?? {
@@ -165,7 +165,7 @@ export function usePracticeSession({
           completedCount: previous.completedCount + (patch.completed ? 1 : 0),
           incorrectAttempts: previous.incorrectAttempts + (patch.incorrect ? 1 : 0),
           revealedCount: previous.revealedCount + (patch.revealed ? 1 : 0),
-          difficult: previous.difficult || Boolean(patch.incorrect || patch.revealed),
+          difficult: patch.cleanCompleted ? false : previous.difficult || Boolean(patch.incorrect || patch.revealed),
           lastPractisedAt: now
         }
       }
@@ -212,9 +212,16 @@ export function usePracticeSession({
     onComplete(result, nextStorage);
   }, [lists, onComplete, onStorageChange, session.listIds, session.words.length, stats, storage]);
 
-  function completeWord() {
+  function completeWord(forceDifficult = false) {
     if (!currentWord) return;
-    persistWordProgress(currentWord, { completed: true });
+
+    const hadIssueInThisSession =
+      forceDifficult ||
+      stats.incorrectWordIds.has(currentWord.id) ||
+      stats.revealedWordIds.has(currentWord.id) ||
+      letters.some(letter => letter.revealed);
+
+    persistWordProgress(currentWord, { completed: true, cleanCompleted: !hadIssueInThisSession });
 
     setStats(previous => {
       const next = { ...previous, correctWords: previous.correctWords + 1 };
@@ -303,7 +310,7 @@ export function usePracticeSession({
     });
 
     if (findNextInputIndex(answer, nextLetters, nextIndex + 1) < 0) {
-      completeWord();
+      completeWord(true);
     }
   }, [currentWord?.id, isComplete, letters]);
 

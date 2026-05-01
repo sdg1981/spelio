@@ -182,7 +182,7 @@ export function Practice({
       <main className="app-bg relative overflow-hidden">
         <Progress value={0} count="0 / 0" />
         <section className="page-shell practice-shell">
-          <Logo small />
+          <Logo small onClick={onBackHome} />
           <div className="status-line">Select a word list to begin</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
           <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
@@ -212,7 +212,7 @@ export function Practice({
       </button>
 
       <section className="page-shell practice-shell">
-        <Logo small />
+        <Logo small onClick={onBackHome} />
 
         <button className="word-pill" onClick={playAudio}>
           <Volume2 className="text-[#d90000]" size={24} />
