@@ -61,7 +61,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 
   const reviewWords = candidates.filter(word => {
     const progress = storage.wordProgress[word.id];
-    return progress?.difficult || (progress?.incorrectAttempts ?? 0) > 0 || (progress?.revealedCount ?? 0) > 0;
+    return progress?.difficult === true;
   });
 
   const pool = reviewDifficult && reviewWords.length ? reviewWords : candidates;
@@ -86,5 +86,5 @@ export function classifySession(base: Pick<SessionResult, 'correctWords' | 'tota
 }
 
 export function hasDifficultWords(storage: SpelioStorage) {
-  return Object.values(storage.wordProgress).some(progress => progress.difficult || progress.incorrectAttempts > 0 || progress.revealedCount > 0);
+  return Object.values(storage.wordProgress).some(progress => progress.difficult === true);
 }
