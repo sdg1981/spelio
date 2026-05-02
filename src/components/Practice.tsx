@@ -112,6 +112,7 @@ export function Practice({
     currentWord,
     letters,
     status,
+    statusTone,
     wrongIndex,
     activeIndex,
     isComplete,
@@ -261,7 +262,7 @@ export function Practice({
           <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} />
         </div>
 
-        <div className="status-line">
+        <div className={`status-line status-line-${statusTone}`}>
           {status === 'Incorrect. Try again.' && (
             <><CircleX size={22} />Incorrect. Try again.</>
           )}

@@ -129,6 +129,19 @@
 }
 @media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}
 
+/* Practice feedback tones */
+.status-line{
+  color:#5f6b76;
+}
+
+.status-line-success{
+  color:#346f54;
+}
+
+.status-line-error{
+  color:var(--red);
+}
+
 /* Consolidated practice-screen stability fixes
    - keeps practice logo small on mobile
    - keeps mobile keyboard input available without visible UI

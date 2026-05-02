@@ -12,6 +12,8 @@ interface LetterState {
   wrong?: boolean;
 }
 
+export type PracticeStatusTone = 'success' | 'error' | 'neutral';
+
 function createInitialLetters(answer: string): LetterState[] {
   return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));
 }
@@ -85,6 +87,7 @@ export function usePracticeSession({
   const currentWord = session.words[currentIndex];
   const [letters, setLetters] = useState<LetterState[]>(() => createInitialLetters(currentWord?.welshAnswer ?? ''));
   const [status, setStatus] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<PracticeStatusTone>('neutral');
   const [wrongIndex, setWrongIndex] = useState<number | null>(null);
   const [isComplete, setIsComplete] = useState(false);
   const [stats, setStats] = useState({
@@ -116,6 +119,7 @@ export function usePracticeSession({
     setCurrentIndex(0);
     setIsComplete(false);
     setStatus(null);
+    setStatusTone('neutral');
     setWrongIndex(null);
     inputLockedRef.current = false;
     setStats({
@@ -142,8 +146,9 @@ export function usePracticeSession({
     }
   }, [currentWord?.id]);
 
-  function showStatus(message: string) {
+  function showStatus(message: string, tone: PracticeStatusTone = 'neutral') {
     setStatus(message);
+    setStatusTone(tone);
     if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
     statusTimerRef.current = window.setTimeout(() => setStatus(null), 1500);
   }
@@ -247,12 +252,13 @@ export function usePracticeSession({
         } else {
           setCurrentIndex(index => index + 1);
           setStatus(null);
+          setStatusTone('neutral');
         }
       }, 320);
       return next;
     });
 
-    showStatus('Correct');
+    showStatus('Correct', 'success');
     if (storage.settings.soundEffects) playTone('success');
   }
 
@@ -282,7 +288,7 @@ export function usePracticeSession({
     inputLockedRef.current = true;
     setLetters(nextLetters);
     setWrongIndex(nextIndex);
-    showStatus('Incorrect. Try again.');
+    showStatus('Incorrect. Try again.', 'error');
     persistWordProgress(currentWord, { incorrect: true });
 
     setStats(previous => {
@@ -350,6 +356,7 @@ export function usePracticeSession({
     currentWord: currentWord as SessionWord | undefined,
     letters,
     status,
+    statusTone,
     wrongIndex,
     activeIndex,
     isComplete,
