@@ -1,4 +1,5 @@
 import { ActionRow } from './Buttons';
+import { Footer } from './Footer';
 import { BookOpen, Check, SlidersHorizontal, Target } from './Icons';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
@@ -75,6 +76,7 @@ export function EndScreen({
         </div>
 
         <button className="mt-10 border-0 bg-transparent text-[28px] md:text-[18px] text-[#d90000]" onClick={onHome}>⌂&nbsp;&nbsp;Back to home</button>
+        <Footer />
       </section>
     </main>
   );

@@ -1,5 +1,6 @@
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
+import { Footer } from './Footer';
 import { List, Play, Target } from './Icons';
 import type { Recommendation } from '../lib/practice/recommendations';
 
@@ -72,7 +73,7 @@ export function Home({
           <ActionRow icon={<List size={30} />} title="Select word list" onClick={onSelectList} />
         </div>
 
-        <p className="footer-copy mt-16">© 2025 Spelio</p>
+        <Footer className="mt-16" />
       </section>
     </main>
   );

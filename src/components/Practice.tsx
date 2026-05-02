@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
+import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
@@ -195,7 +196,7 @@ export function Practice({
           <div className="status-line">Select a word list to begin</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
           <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
-          <p className="footer-copy">© 2025 Spelio</p>
+          <Footer />
         </section>
         {modal === 'wordlist' && (
           <WordListModal
@@ -296,7 +297,7 @@ export function Practice({
           </button>
         </div>
 
-        <p className="footer-copy">© 2025 Spelio</p>
+        <Footer />
       </section>
 
       {modal === 'settings' && <SettingsModal settings={storage.settings} onChange={updateSettings} onClose={() => setModal(null)} />}
