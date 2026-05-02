@@ -30,8 +30,15 @@ export default function App() {
     const listId = options?.listId;
     const review = Boolean(options?.review);
 
+    if (review && !hasDifficultWords(storage)) {
+      setReviewMode(false);
+      setInitialPracticeModal(null);
+      setScreen('home');
+      return;
+    }
+
     setStorage(previous => {
-      if (!listId) return previous;
+      if (!listId || review) return previous;
       return {
         ...previous,
         selectedListIds: [listId],

@@ -55,8 +55,10 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false): PracticeSession {
   const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : [lists[0]?.id].filter(Boolean) as string[];
-  const selectedLists = lists.filter(list => selectedIds.includes(list.id) && list.isActive);
-  const allCandidates = selectedLists.flatMap(list => list.words);
+  const eligibleLists = reviewDifficult
+    ? lists.filter(list => list.isActive)
+    : lists.filter(list => selectedIds.includes(list.id) && list.isActive);
+  const allCandidates = eligibleLists.flatMap(list => list.words);
   const candidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference);
 
   const reviewWords = candidates.filter(word => {
