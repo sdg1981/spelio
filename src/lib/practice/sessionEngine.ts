@@ -64,7 +64,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
     return progress?.difficult === true;
   });
 
-  const pool = reviewDifficult && reviewWords.length ? reviewWords : candidates;
+  const pool = reviewDifficult ? reviewWords : candidates;
   const words = [...pool]
     .sort((a, b) => scoreWord(a, storage) - scoreWord(b, storage) || a.listId.localeCompare(b.listId) || a.order - b.order)
     .slice(0, SESSION_TARGET);
