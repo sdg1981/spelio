@@ -29,8 +29,9 @@ function getAnswerCandidates(word: PracticeWord) {
 
 function validateInputAtIndex(char: string, word: PracticeWord, index: number, mode: SpelioSettings['welshSpelling']) {
   return getAnswerCandidates(word).some(candidate => {
-    if (candidate.length !== word.welshAnswer.length || candidate[index] === ' ') return false;
-    return validateLetter(char, candidate[index], mode);
+    const expected = candidate[index];
+    if (!expected || expected === ' ') return false;
+    return validateLetter(char, expected, mode);
   });
 }
 
