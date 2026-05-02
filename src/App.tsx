@@ -16,7 +16,17 @@ export default function App() {
   const [reviewMode, setReviewMode] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
-  const recommendation = useMemo(() => getRecommendation(storage, wordLists), [storage]);
+  const difficultWords = useMemo(() => hasDifficultWords(storage), [storage.wordProgress]);
+  const recommendation = useMemo(
+    () => getRecommendation(storage, wordLists),
+    [
+      difficultWords,
+      storage.currentPathPosition,
+      storage.lastSessionResult,
+      storage.listProgress,
+      storage.selectedListIds
+    ]
+  );
 
   useEffect(() => {
     saveSpelioStorage(storage);
@@ -30,7 +40,7 @@ export default function App() {
     const listId = options?.listId;
     const review = Boolean(options?.review);
 
-    if (review && !hasDifficultWords(storage)) {
+    if (review && !difficultWords) {
       setReviewMode(false);
       setScreen('home');
       return;
@@ -69,7 +79,7 @@ export default function App() {
 
   const homeMode = !storage.lastSessionDate
     ? 'first'
-    : storage.lastSessionResult?.state === 'struggled' && hasDifficultWords(storage)
+    : storage.lastSessionResult?.state === 'struggled' && difficultWords
       ? 'struggled'
       : 'returning';
 
@@ -91,11 +101,10 @@ export default function App() {
       <>
         <EndScreen
           result={lastResult}
-          recommendation={getRecommendation(storage, wordLists)}
-          hasDifficultWords={hasDifficultWords(storage)}
+          recommendation={recommendation}
+          hasDifficultWords={difficultWords}
           onContinue={() => {
-            const next = getRecommendation(storage, wordLists);
-            startPractice({ review: next.kind === 'review', listId: next.listId });
+            startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId });
           }}
           onReview={() => startPractice({ review: true })}
           onChangeLists={() => setWordListModalOpen(true)}
@@ -118,7 +127,7 @@ export default function App() {
       <Home
         mode={homeMode}
         recommendation={recommendation}
-        hasDifficultWords={hasDifficultWords(storage)}
+        hasDifficultWords={difficultWords}
         onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
         onContinue={() => startPractice({ listId: recommendation.listId })}
         onReview={() => startPractice({ review: true })}

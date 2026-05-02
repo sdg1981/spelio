@@ -89,9 +89,10 @@ export function Practice({
   onBackHome: () => void;
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
-  const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
+  const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
+  const settingsModalOpenRef = useRef(initialModal === 'settings');
 
   function shouldUseMobileKeyboard() {
     if (typeof window === 'undefined') return false;
@@ -132,7 +133,7 @@ export function Practice({
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (modal || isComplete) return;
+      if (modal || settingsModalOpenRef.current || isComplete) return;
       if (isControlTarget(event.target)) return;
 
       if (event.code === 'Space') {
@@ -166,9 +167,20 @@ export function Practice({
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
 
-  function updateSettings(patch: Partial<SpelioSettings>) {
-    onStorageChange({ ...storage, settings: { ...storage.settings, ...patch } });
-  }
+  const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
+    const nextSettings = { ...storage.settings, ...patch };
+    const hasChanged = Object.keys(patch).some(key => {
+      const settingKey = key as keyof SpelioSettings;
+      return storage.settings[settingKey] !== nextSettings[settingKey];
+    });
+
+    if (!hasChanged) return;
+    onStorageChange({ ...storage, settings: nextSettings });
+  }, [onStorageChange, storage]);
+
+  const handleSettingsModalOpenChange = useCallback((open: boolean) => {
+    settingsModalOpenRef.current = open;
+  }, []);
 
   function applyWordLists(selectedIds: string[]) {
     const fallback = lists[0] ? [lists[0].id] : [];
@@ -215,9 +227,12 @@ export function Practice({
     <main className="app-bg relative overflow-hidden">
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
 
-      <button className="settings-cog" onClick={() => setModal('settings')} aria-label="Settings">
-        <Settings size={22} />
-      </button>
+      <SettingsLauncher
+        settings={storage.settings}
+        onChange={updateSettings}
+        onOpenChange={handleSettingsModalOpenChange}
+        initiallyOpen={initialModal === 'settings'}
+      />
 
       <section className="page-shell practice-shell">
         <Logo small onClick={onBackHome} />
@@ -297,7 +312,6 @@ export function Practice({
         <Footer />
       </section>
 
-      {modal === 'settings' && <SettingsModal settings={storage.settings} onChange={updateSettings} onClose={() => setModal(null)} />}
       {modal === 'wordlist' && (
         <WordListModal
           lists={lists}
@@ -329,6 +343,40 @@ function Radio({ active = false }: { active?: boolean }) {
     </span>
   );
 }
+
+const SettingsLauncher = memo(function SettingsLauncher({
+  settings,
+  onChange,
+  onOpenChange,
+  initiallyOpen = false
+}: {
+  settings: SpelioSettings;
+  onChange: (patch: Partial<SpelioSettings>) => void;
+  onOpenChange: (open: boolean) => void;
+  initiallyOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
+
+  const setModalOpen = useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen);
+    onOpenChange(nextOpen);
+  }, [onOpenChange]);
+
+  return (
+    <>
+      <button className="settings-cog" onClick={() => setModalOpen(true)} aria-label="Settings">
+        <Settings size={22} />
+      </button>
+      {open && (
+        <SettingsModal
+          settings={settings}
+          onChange={onChange}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </>
+  );
+});
 
 function SettingsModal({
   settings,

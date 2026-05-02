@@ -47,7 +47,7 @@
   .card-list .action-row-sub{font-size:17px;}
 }
 
-.overlay{overflow:hidden;}
+.overlay{overflow:hidden;backdrop-filter:none;}
 .modal{max-height:90svh;display:flex;flex-direction:column;}
 .modal-close{border:0;background:transparent;color:#8c95a0;font-size:28px;line-height:1;padding:0;}
 .modal-header{flex:0 0 auto;}
