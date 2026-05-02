@@ -14,6 +14,8 @@ interface LetterState {
 
 export type PracticeStatusTone = 'success' | 'error' | 'neutral';
 
+const REVEALED_WORD_COMPLETION_DELAY_MS = 800;
+
 function createInitialLetters(answer: string): LetterState[] {
   return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));
 }
@@ -90,6 +92,7 @@ export function usePracticeSession({
   const [statusTone, setStatusTone] = useState<PracticeStatusTone>('neutral');
   const [wrongIndex, setWrongIndex] = useState<number | null>(null);
   const [isComplete, setIsComplete] = useState(false);
+  const [isCompletingRevealedWord, setIsCompletingRevealedWord] = useState(false);
   const [stats, setStats] = useState({
     correctWords: 0,
     incorrectWordIds: new Set<string>(),
@@ -101,7 +104,9 @@ export function usePracticeSession({
   });
   const statusTimerRef = useRef<number | null>(null);
   const wrongTimerRef = useRef<number | null>(null);
+  const revealedCompletionTimerRef = useRef<number | null>(null);
   const inputLockedRef = useRef(false);
+  const isCompletingRevealedWordRef = useRef(false);
   const storageRef = useRef(storage);
 
   useEffect(() => {
@@ -112,6 +117,7 @@ export function usePracticeSession({
     return () => {
       if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
       if (wrongTimerRef.current) window.clearTimeout(wrongTimerRef.current);
+      if (revealedCompletionTimerRef.current) window.clearTimeout(revealedCompletionTimerRef.current);
     };
   }, []);
 
@@ -121,7 +127,13 @@ export function usePracticeSession({
     setStatus(null);
     setStatusTone('neutral');
     setWrongIndex(null);
+    setIsCompletingRevealedWord(false);
+    isCompletingRevealedWordRef.current = false;
     inputLockedRef.current = false;
+    if (revealedCompletionTimerRef.current) {
+      window.clearTimeout(revealedCompletionTimerRef.current);
+      revealedCompletionTimerRef.current = null;
+    }
     setStats({
       correctWords: 0,
       incorrectWordIds: new Set<string>(),
@@ -138,6 +150,8 @@ export function usePracticeSession({
     if (!currentWord) return;
     setLetters(createInitialLetters(currentWord.welshAnswer));
     setWrongIndex(null);
+    setIsCompletingRevealedWord(false);
+    isCompletingRevealedWordRef.current = false;
     inputLockedRef.current = false;
 
     if (storage.settings.audioPrompts && currentWord.audioUrl) {
@@ -312,7 +326,7 @@ export function usePracticeSession({
   }, [currentWord?.id, isComplete, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
   const revealNext = useCallback(() => {
-    if (!currentWord || isComplete || inputLockedRef.current) return;
+    if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
 
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
@@ -334,7 +348,15 @@ export function usePracticeSession({
     });
 
     if (findNextInputIndex(answer, nextLetters, nextIndex + 1) < 0) {
-      completeWord(true);
+      isCompletingRevealedWordRef.current = true;
+      setIsCompletingRevealedWord(true);
+      inputLockedRef.current = true;
+
+      if (revealedCompletionTimerRef.current) window.clearTimeout(revealedCompletionTimerRef.current);
+      revealedCompletionTimerRef.current = window.setTimeout(() => {
+        revealedCompletionTimerRef.current = null;
+        completeWord(true);
+      }, REVEALED_WORD_COMPLETION_DELAY_MS);
     }
   }, [currentWord?.id, isComplete, letters]);
 
@@ -360,6 +382,7 @@ export function usePracticeSession({
     wrongIndex,
     activeIndex,
     isComplete,
+    isCompletingRevealedWord,
     stats: publicStats,
     progressValue: session.words.length ? (stats.correctWords / session.words.length) * 100 : 0,
     progressCount: `${Math.min(stats.correctWords + 1, session.words.length)} / ${session.words.length}`,
