@@ -15,6 +15,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
   const [initialPracticeModal, setInitialPracticeModal] = useState<'settings' | 'wordlist' | null>(null);
+  const [wordListModalOrigin, setWordListModalOrigin] = useState<'home' | 'end' | null>(null);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const recommendation = useMemo(() => getRecommendation(storage, wordLists), [storage]);
 
@@ -41,13 +42,53 @@ export default function App() {
 
     setReviewMode(review);
     setInitialPracticeModal(null);
+    setWordListModalOrigin(null);
     setScreen('practice');
   }
 
   function handleComplete(result: SessionResult, nextStorage: SpelioStorage) {
     setLastResult(result);
     setStorage(nextStorage);
+    setWordListModalOrigin(null);
     setScreen('end');
+  }
+
+  function handleWordListModalDone(changed: boolean) {
+    const origin = wordListModalOrigin;
+
+    setInitialPracticeModal(null);
+    setWordListModalOrigin(null);
+
+    if (origin === 'end') {
+      setScreen(changed ? 'home' : 'end');
+      return;
+    }
+
+    if (origin === 'home') {
+      setScreen('home');
+      return;
+    }
+
+    if (changed) {
+      setReviewMode(false);
+      setScreen('home');
+    }
+  }
+
+  function handleWordListModalCancel() {
+    const origin = wordListModalOrigin;
+
+    setInitialPracticeModal(null);
+    setWordListModalOrigin(null);
+
+    if (origin === 'end') {
+      setScreen('end');
+      return;
+    }
+
+    if (origin === 'home') {
+      setScreen('home');
+    }
   }
 
   const homeMode = !storage.lastSessionDate
@@ -66,6 +107,8 @@ export default function App() {
         onComplete={handleComplete}
         onBackHome={() => setScreen('home')}
         initialModal={initialPracticeModal}
+        onWordListModalDone={handleWordListModalDone}
+        onWordListModalCancel={handleWordListModalCancel}
       />
     );
   }
@@ -81,7 +124,7 @@ export default function App() {
           startPractice({ review: next.kind === 'review', listId: next.listId });
         }}
         onReview={() => startPractice({ review: true })}
-        onChangeLists={() => { setInitialPracticeModal('wordlist'); setReviewMode(false); setScreen('practice'); }}
+        onChangeLists={() => { setInitialPracticeModal('wordlist'); setWordListModalOrigin('end'); setReviewMode(false); setScreen('practice'); }}
         onHome={() => setScreen('home')}
       />
     );
@@ -95,7 +138,7 @@ export default function App() {
       onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
       onContinue={() => startPractice({ listId: recommendation.listId })}
       onReview={() => startPractice({ review: true })}
-      onSelectList={() => { setInitialPracticeModal('wordlist'); setReviewMode(false); setScreen('practice'); }}
+      onSelectList={() => { setInitialPracticeModal('wordlist'); setWordListModalOrigin('home'); setReviewMode(false); setScreen('practice'); }}
     />
   );
 }

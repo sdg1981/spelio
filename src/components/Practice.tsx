@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -15,59 +15,33 @@ export function Progress({ value = 30, count = '3 / 10' }: { value?: number; cou
   );
 }
 
-function getAnswerLayoutClass(answer: string) {
-  const lettersOnly = answer.replace(/\s/g, '');
-  const totalLetters = lettersOnly.length;
-  const longestWordLength = answer
-    .split(/\s+/)
-    .reduce((max, part) => Math.max(max, part.length), 0);
-
-  if (totalLetters >= 14 || longestWordLength >= 9) return 'extra-compact';
-  if (totalLetters >= 9 || longestWordLength >= 6) return 'compact';
-  return '';
-}
-
 function LetterSlots({
   word,
   letters,
-  wrongIndex,
-  layoutClass = ''
+  wrongIndex
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
-  layoutClass?: string;
 }) {
-  let globalIndex = 0;
-
   return (
-    <div className={`letter-grid ${layoutClass}`.trim()}>
-      {word.split(' ').map((wordPart, wordIndex) => {
-        const startIndex = globalIndex;
-        globalIndex += wordPart.length + 1;
+    <div className="letter-grid">
+      {word.split('').map((char, index) => {
+        if (char === ' ') return <span key={index} className="letter-space" aria-hidden="true" />;
 
+        const slot = letters[index];
         return (
-          <span key={`${wordPart}-${wordIndex}-${startIndex}`} className="letter-word">
-            {wordPart.split('').map((_, localIndex) => {
-              const index = startIndex + localIndex;
-              const slot = letters[index];
-
-              return (
-                <span
-                  key={index}
-                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
-                >
-                  {slot?.value || '_'}
-                </span>
-              );
-            })}
+          <span
+            key={index}
+            className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+          >
+            {slot?.value || '_'}
           </span>
         );
       })}
     </div>
   );
 }
-
 
 export function Practice({
   lists,
@@ -76,7 +50,9 @@ export function Practice({
   onStorageChange,
   onComplete,
   onBackHome,
-  initialModal = null
+  initialModal = null,
+  onWordListModalDone,
+  onWordListModalCancel
 }: {
   lists: WordList[];
   storage: SpelioStorage;
@@ -85,9 +61,12 @@ export function Practice({
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
   initialModal?: 'settings' | 'wordlist' | null;
+  onWordListModalDone?: (changed: boolean) => void;
+  onWordListModalCancel?: () => void;
 }) {
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
+  const [originalSelectedIds, setOriginalSelectedIds] = useState<string[]>(storage.selectedListIds);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
 
@@ -156,6 +135,30 @@ export function Practice({
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
 
+  function normaliseListIds(ids: string[]) {
+    return [...ids].sort();
+  }
+
+  function didSelectionChange(nextIds: string[]) {
+    const original = normaliseListIds(originalSelectedIds);
+    const next = normaliseListIds(nextIds);
+
+    if (original.length !== next.length) return true;
+    return original.some((id, index) => id !== next[index]);
+  }
+
+  function openWordListModal() {
+    setSelectedDraft(storage.selectedListIds);
+    setOriginalSelectedIds(storage.selectedListIds);
+    setModal('wordlist');
+  }
+
+  function cancelWordListSelection() {
+    setSelectedDraft(originalSelectedIds);
+    setModal(null);
+    onWordListModalCancel?.();
+  }
+
   function updateSettings(patch: Partial<SpelioSettings>) {
     onStorageChange({ ...storage, settings: { ...storage.settings, ...patch } });
   }
@@ -163,8 +166,14 @@ export function Practice({
   function applyWordLists() {
     const fallback = lists[0] ? [lists[0].id] : [];
     const ids = selectedDraft.length ? selectedDraft : fallback;
-    onStorageChange({ ...storage, selectedListIds: ids, currentPathPosition: ids[0] ?? null });
+    const changed = didSelectionChange(ids);
+
+    if (changed) {
+      onStorageChange({ ...storage, selectedListIds: ids, currentPathPosition: ids[0] ?? null });
+    }
+
     setModal(null);
+    onWordListModalDone?.(changed);
   }
 
   function handleRevealLetter() {
@@ -182,9 +191,9 @@ export function Practice({
       <main className="app-bg relative overflow-hidden">
         <Progress value={0} count="0 / 0" />
         <section className="page-shell practice-shell">
-          <Logo small onClick={onBackHome} />
+          <Logo small />
           <div className="status-line">Select a word list to begin</div>
-          <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
+          <button className="done-button mt-10" onClick={openWordListModal}>Select word list</button>
           <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
           <p className="footer-copy">© 2025 Spelio</p>
         </section>
@@ -193,7 +202,7 @@ export function Practice({
             lists={lists}
             selectedIds={selectedDraft}
             onSelectedIdsChange={setSelectedDraft}
-            onClose={() => setModal(null)}
+            onClose={cancelWordListSelection}
             onDone={applyWordLists}
           />
         )}
@@ -212,7 +221,7 @@ export function Practice({
       </button>
 
       <section className="page-shell practice-shell">
-        <Logo small onClick={onBackHome} />
+        <Logo small />
 
         <button className="word-pill" onClick={playAudio}>
           <Volume2 className="text-[#d90000]" size={24} />
@@ -265,10 +274,7 @@ export function Practice({
             <span>English</span>
           </button>
 
-          <button onClick={() => {
-            setSelectedDraft(storage.selectedListIds);
-            setModal('wordlist');
-          }}>
+          <button onClick={openWordListModal}>
             <List size={22} />
             <span>Word list</span>
           </button>
