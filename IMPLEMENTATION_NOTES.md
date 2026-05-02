@@ -31,3 +31,15 @@ Spaces in Welsh answers are now treated as structural layout only.
 - Multi-word answers work whether the user types the word boundary space or continues with the next letter.
 - During active practice, desktop spacebar input follows the same silent ignore path; audio replay remains available from the prompt button.
 - The active letter slot now uses a slightly thicker calm underline with a low-intensity fade animation, and `prefers-reduced-motion` disables the animation while keeping the thicker underline.
+
+## Word-list selection state verification
+
+Manual verification for the word-list selection/session-state fix:
+
+- From the homepage, open Word Lists, change the selection, press Done, and confirm the app remains on the homepage, persists `selectedListIds`, updates `currentPathPosition`, and does not start practice.
+- From an active practice session, open Word Lists, change the selection, press Done, and confirm the app returns to the homepage, discards the active session, persists the selected list, and does not start a new session.
+- Select a list already marked completed and confirm the homepage still recommends that manually selected list until another session is explicitly started and completed.
+- Select `First Verbs — Core Actions` and confirm the homepage does not immediately show `First Phrases — Using Verbs` solely because it is `nextListId`.
+- Change checkboxes in the modal, close with X, reopen it, and confirm the unsaved changes were discarded.
+- Save a selection, refresh the page, and confirm the persisted selected list is still shown/recommended.
+- Confirm `Review difficult words` only overrides the homepage recommendation when difficult words currently exist.

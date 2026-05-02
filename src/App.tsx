@@ -10,6 +10,15 @@ import { hasDifficultWords } from './lib/practice/sessionEngine';
 
 type Screen = 'home' | 'practice' | 'end';
 
+function normalizeSelectedListIds(selectedIds: string[]) {
+  const fallback = wordLists[0] ? [wordLists[0].id] : [];
+  return selectedIds.length ? selectedIds : fallback;
+}
+
+function sameListSelection(left: string[], right: string[]) {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
+
 export default function App() {
   const [storage, setStorage] = useState<SpelioStorage>(() => loadSpelioStorage());
   const [screen, setScreen] = useState<Screen>('home');
@@ -66,15 +75,22 @@ export default function App() {
   }
 
   function saveSelectedWordLists(selectedIds: string[]) {
-    const fallback = wordLists[0] ? [wordLists[0].id] : [];
-    const ids = selectedIds.length ? selectedIds : fallback;
+    const ids = normalizeSelectedListIds(selectedIds);
+    const changed = !sameListSelection(ids, storage.selectedListIds);
+
+    if (!changed) {
+      setWordListModalOpen(false);
+      return;
+    }
 
     setStorage(previous => ({
       ...previous,
       selectedListIds: ids,
       currentPathPosition: ids[0] ?? null
     }));
+    setReviewMode(false);
     setWordListModalOpen(false);
+    setScreen('home');
   }
 
   const homeMode = !storage.lastSessionDate
@@ -92,6 +108,7 @@ export default function App() {
         onStorageChange={updateStorage}
         onComplete={handleComplete}
         onBackHome={() => setScreen('home')}
+        onWordListsDone={saveSelectedWordLists}
       />
     );
   }

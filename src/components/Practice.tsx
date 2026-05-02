@@ -79,6 +79,7 @@ export function Practice({
   onStorageChange,
   onComplete,
   onBackHome,
+  onWordListsDone,
   initialModal = null
 }: {
   lists: WordList[];
@@ -87,6 +88,7 @@ export function Practice({
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
+  onWordListsDone: (selectedIds: string[]) => void;
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
   const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
@@ -185,8 +187,14 @@ export function Practice({
   function applyWordLists(selectedIds: string[]) {
     const fallback = lists[0] ? [lists[0].id] : [];
     const ids = selectedIds.length ? selectedIds : fallback;
-    onStorageChange({ ...storage, selectedListIds: ids, currentPathPosition: ids[0] ?? null });
-    setModal(null);
+    const changed = ids.length !== storage.selectedListIds.length || ids.some((id, index) => id !== storage.selectedListIds[index]);
+
+    if (!changed) {
+      setModal(null);
+      return;
+    }
+
+    onWordListsDone(ids);
   }
 
   function handleRevealLetter(event?: MouseEvent<HTMLButtonElement>) {

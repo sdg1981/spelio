@@ -240,12 +240,32 @@ export function usePracticeSession({
     };
     nextStorage = updateListCompletion(nextStorage, lists, result);
 
+    const completedSingleListId = result.listIds.length === 1 ? result.listIds[0] : null;
+    const completedList = completedSingleListId ? lists.find(list => list.id === completedSingleListId) : undefined;
+    const nextListId = completedList?.nextListId;
+    const shouldAdvancePath =
+      !reviewDifficult &&
+      completedList !== undefined &&
+      typeof nextListId === 'string' &&
+      nextStorage.listProgress[completedList.id]?.completed &&
+      nextStorage.currentPathPosition === completedList.id &&
+      nextStorage.selectedListIds.length === 1 &&
+      nextStorage.selectedListIds[0] === completedList.id;
+
+    if (shouldAdvancePath) {
+      nextStorage = {
+        ...nextStorage,
+        selectedListIds: [nextListId],
+        currentPathPosition: nextListId
+      };
+    }
+
     storageRef.current = nextStorage;
     setStats(previous => ({ ...previous, endedAt }));
     setIsComplete(true);
     if (storageRef.current.settings.soundEffects) playTone('completion');
     onComplete(result, nextStorage);
-  }, [lists, onComplete, onStorageChange, session.listIds, session.words.length, stats, storage]);
+  }, [lists, onComplete, onStorageChange, reviewDifficult, session.listIds, session.words.length, stats, storage]);
 
   function completeWord(forceDifficult = false) {
     if (!currentWord) return;
