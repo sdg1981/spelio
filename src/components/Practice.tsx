@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
@@ -90,7 +90,6 @@ export function Practice({
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
-  const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
 
@@ -171,9 +170,9 @@ export function Practice({
     onStorageChange({ ...storage, settings: { ...storage.settings, ...patch } });
   }
 
-  function applyWordLists() {
+  function applyWordLists(selectedIds: string[]) {
     const fallback = lists[0] ? [lists[0].id] : [];
-    const ids = selectedDraft.length ? selectedDraft : fallback;
+    const ids = selectedIds.length ? selectedIds : fallback;
     onStorageChange({ ...storage, selectedListIds: ids, currentPathPosition: ids[0] ?? null });
     setModal(null);
   }
@@ -201,8 +200,7 @@ export function Practice({
         {modal === 'wordlist' && (
           <WordListModal
             lists={lists}
-            selectedIds={selectedDraft}
-            onSelectedIdsChange={setSelectedDraft}
+            initialSelectedIds={storage.selectedListIds}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
           />
@@ -276,7 +274,6 @@ export function Practice({
           </button>
 
           <button onClick={() => {
-            setSelectedDraft(storage.selectedListIds);
             setModal('wordlist');
           }}>
             <List size={22} />
@@ -304,8 +301,7 @@ export function Practice({
       {modal === 'wordlist' && (
         <WordListModal
           lists={lists}
-          selectedIds={selectedDraft}
-          onSelectedIdsChange={setSelectedDraft}
+          initialSelectedIds={storage.selectedListIds}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
         />
@@ -429,44 +425,64 @@ function SettingsModal({
   );
 }
 
-function WordListModal({
+const WordListRow = memo(function WordListRow({
+  list,
+  checked,
+  onToggle
+}: {
+  list: WordList;
+  checked: boolean;
+  onToggle: (listId: string) => void;
+}) {
+  return (
+    <label className="check-row">
+      <span className="check-left">
+        <input
+          type="checkbox"
+          className="wordlist-checkbox"
+          checked={checked}
+          onChange={() => onToggle(list.id)}
+        />
+        <span className="check-name">{list.name}</span>
+      </span>
+      <span className="dialect">{list.dialect}</span>
+    </label>
+  );
+});
+
+export function WordListModal({
   lists,
-  selectedIds,
-  onSelectedIdsChange,
+  initialSelectedIds,
   onClose,
   onDone
 }: {
   lists: WordList[];
-  selectedIds: string[];
-  onSelectedIdsChange: (ids: string[]) => void;
+  initialSelectedIds: string[];
   onClose: () => void;
-  onDone: () => void;
+  onDone: (selectedIds: string[]) => void;
 }) {
   const [query, setQuery] = useState('');
-  const filteredLists = useMemo(() => lists.filter(list => list.name.toLowerCase().includes(query.toLowerCase())), [lists, query]);
+  const [selectedIds, setSelectedIds] = useState(() => initialSelectedIds);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const filteredLists = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return lists;
+    return lists.filter(list => list.name.toLowerCase().includes(normalizedQuery));
+  }, [lists, query]);
   const groups = useMemo(() => {
     return filteredLists.reduce<Record<string, WordList[]>>((acc, list) => {
-      acc[list.stage] = acc[list.stage] ? [...acc[list.stage], list] : [list];
+      (acc[list.stage] ??= []).push(list);
       return acc;
     }, {});
   }, [filteredLists]);
 
-  function toggleList(listId: string) {
-    onSelectedIdsChange(selectedIds.includes(listId) ? selectedIds.filter(id => id !== listId) : [...selectedIds, listId]);
-  }
-
-  const Row = ({ list }: { list: WordList }) => {
-    const on = selectedIds.includes(list.id);
-    return (
-      <label className="check-row">
-        <span className="check-left">
-          <button type="button" className={`fake-check ${on ? 'on' : ''}`} onClick={() => toggleList(list.id)}>{on ? '✓' : ''}</button>
-          <button type="button" className="check-name text-left" onClick={() => toggleList(list.id)}>{list.name}</button>
-        </span>
-        <span className="dialect">{list.dialect}</span>
-      </label>
-    );
-  };
+  const toggleList = useCallback((listId: string) => {
+    setSelectedIds(previous => (
+      previous.includes(listId)
+        ? previous.filter(id => id !== listId)
+        : [...previous, listId]
+    ));
+  }, []);
 
   return (
     <Overlay>
@@ -487,15 +503,22 @@ function WordListModal({
             {Object.entries(groups).map(([group, groupLists]) => (
               <div key={group}>
                 <h3 className="group-title">{group}</h3>
-                {groupLists.map(list => <Row key={list.id} list={list} />)}
+                {groupLists.map(list => (
+                  <WordListRow
+                    key={list.id}
+                    list={list}
+                    checked={selectedSet.has(list.id)}
+                    onToggle={toggleList}
+                  />
+                ))}
               </div>
             ))}
           </div>
         </div>
 
         <div className="done-row sticky-done">
-          <button className="clear-button" onClick={() => onSelectedIdsChange([])}>Clear all</button>
-          <button className="done-button" onClick={onDone}>Done</button>
+          <button className="clear-button" onClick={() => setSelectedIds([])}>Clear all</button>
+          <button className="done-button" onClick={() => onDone(selectedIds)}>Done</button>
         </div>
       </section>
     </Overlay>

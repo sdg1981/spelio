@@ -56,7 +56,40 @@
 .wordlist-body .selected-box{margin-top:0;}
 .wordlist-body .search-input{margin-top:32px;}
 .sticky-done{position:sticky;bottom:0;z-index:2;flex:0 0 auto;background:linear-gradient(to bottom,rgba(255,255,255,.94),#fff 28%);box-shadow:0 -12px 32px rgba(7,21,34,.045);margin-top:0;padding:26px 0 32px;}
+.check-row{cursor:pointer;}
+.check-row:hover .check-name{color:var(--red);}
 .check-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wordlist-checkbox{
+  appearance:none;
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  margin:0;
+  flex:0 0 auto;
+  border:1.6px solid #c8d0d8;
+  border-radius:4px;
+  background:#fff;
+  cursor:pointer;
+  transition:background .14s ease,border-color .14s ease,box-shadow .14s ease;
+}
+.wordlist-checkbox:checked{
+  border-color:var(--red);
+  background:var(--red);
+}
+.wordlist-checkbox:checked::after{
+  content:"";
+  width:5px;
+  height:9px;
+  border:solid #fff;
+  border-width:0 2px 2px 0;
+  transform:translateY(-1px) rotate(45deg);
+}
+.wordlist-checkbox:focus-visible{
+  outline:0;
+  box-shadow:0 0 0 3px rgba(217,0,0,.18);
+}
 
 @media (min-width:900px){
   .modal-small{max-width:520px;padding:38px;}
@@ -77,6 +110,8 @@
   .done-row{gap:18px;}
   .done-button{min-width:132px;}
   .check-row{font-size:20px;gap:10px;}
+  .wordlist-checkbox{width:22px;height:22px;border-radius:5px;}
+  .wordlist-checkbox:checked::after{width:6px;height:11px;border-width:0 2.4px 2.4px 0;}
   .dialect{font-size:17px;}
   .group-title{font-size:18px;}
   .search-input{height:68px;font-size:25px;}
@@ -92,7 +127,8 @@
   .wordlist-body .search-input{margin-top:26px;}
   .check-row{font-size:20px;padding:18px 0;}
   .check-left{gap:12px;}
-  .fake-check{width:24px;height:24px;}
+  .wordlist-checkbox{width:24px;height:24px;border-radius:5px;}
+  .wordlist-checkbox:checked::after{width:7px;height:12px;border-width:0 2.5px 2.5px 0;}
   .dialect{font-size:16px;}
   .group-title{font-size:18px;letter-spacing:.16em;}
   .done-button{font-size:24px;padding:21px 40px;}

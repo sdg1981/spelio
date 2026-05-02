@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Home } from './components/Home';
-import { Practice } from './components/Practice';
+import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
 import { wordLists } from './data/wordLists';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
@@ -14,7 +14,7 @@ export default function App() {
   const [storage, setStorage] = useState<SpelioStorage>(() => loadSpelioStorage());
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
-  const [initialPracticeModal, setInitialPracticeModal] = useState<'settings' | 'wordlist' | null>(null);
+  const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const recommendation = useMemo(() => getRecommendation(storage, wordLists), [storage]);
 
@@ -32,7 +32,6 @@ export default function App() {
 
     if (review && !hasDifficultWords(storage)) {
       setReviewMode(false);
-      setInitialPracticeModal(null);
       setScreen('home');
       return;
     }
@@ -47,7 +46,6 @@ export default function App() {
     });
 
     setReviewMode(review);
-    setInitialPracticeModal(null);
     setScreen('practice');
   }
 
@@ -55,6 +53,18 @@ export default function App() {
     setLastResult(result);
     setStorage(nextStorage);
     setScreen('end');
+  }
+
+  function saveSelectedWordLists(selectedIds: string[]) {
+    const fallback = wordLists[0] ? [wordLists[0].id] : [];
+    const ids = selectedIds.length ? selectedIds : fallback;
+
+    setStorage(previous => ({
+      ...previous,
+      selectedListIds: ids,
+      currentPathPosition: ids[0] ?? null
+    }));
+    setWordListModalOpen(false);
   }
 
   const homeMode = !storage.lastSessionDate
@@ -72,37 +82,56 @@ export default function App() {
         onStorageChange={updateStorage}
         onComplete={handleComplete}
         onBackHome={() => setScreen('home')}
-        initialModal={initialPracticeModal}
       />
     );
   }
 
   if (screen === 'end' && lastResult) {
     return (
-      <EndScreen
-        result={lastResult}
-        recommendation={getRecommendation(storage, wordLists)}
-        hasDifficultWords={hasDifficultWords(storage)}
-        onContinue={() => {
-          const next = getRecommendation(storage, wordLists);
-          startPractice({ review: next.kind === 'review', listId: next.listId });
-        }}
-        onReview={() => startPractice({ review: true })}
-        onChangeLists={() => { setInitialPracticeModal('wordlist'); setReviewMode(false); setScreen('practice'); }}
-        onHome={() => setScreen('home')}
-      />
+      <>
+        <EndScreen
+          result={lastResult}
+          recommendation={getRecommendation(storage, wordLists)}
+          hasDifficultWords={hasDifficultWords(storage)}
+          onContinue={() => {
+            const next = getRecommendation(storage, wordLists);
+            startPractice({ review: next.kind === 'review', listId: next.listId });
+          }}
+          onReview={() => startPractice({ review: true })}
+          onChangeLists={() => setWordListModalOpen(true)}
+          onHome={() => setScreen('home')}
+        />
+        {wordListModalOpen && (
+          <WordListModal
+            lists={wordLists}
+            initialSelectedIds={storage.selectedListIds}
+            onClose={() => setWordListModalOpen(false)}
+            onDone={saveSelectedWordLists}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <Home
-      mode={homeMode}
-      recommendation={recommendation}
-      hasDifficultWords={hasDifficultWords(storage)}
-      onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
-      onContinue={() => startPractice({ listId: recommendation.listId })}
-      onReview={() => startPractice({ review: true })}
-      onSelectList={() => { setInitialPracticeModal('wordlist'); setReviewMode(false); setScreen('practice'); }}
-    />
+    <>
+      <Home
+        mode={homeMode}
+        recommendation={recommendation}
+        hasDifficultWords={hasDifficultWords(storage)}
+        onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
+        onContinue={() => startPractice({ listId: recommendation.listId })}
+        onReview={() => startPractice({ review: true })}
+        onSelectList={() => setWordListModalOpen(true)}
+      />
+      {wordListModalOpen && (
+        <WordListModal
+          lists={wordLists}
+          initialSelectedIds={storage.selectedListIds}
+          onClose={() => setWordListModalOpen(false)}
+          onDone={saveSelectedWordLists}
+        />
+      )}
+    </>
   );
 }
