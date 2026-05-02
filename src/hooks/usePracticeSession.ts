@@ -14,7 +14,7 @@ interface LetterState {
 
 export type PracticeStatusTone = 'success' | 'error' | 'neutral';
 
-const REVEALED_WORD_COMPLETION_DELAY_MS = 800;
+const REVEALED_WORD_COMPLETION_DELAY_MS = 1600;
 
 function createInitialLetters(answer: string): LetterState[] {
   return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));
