@@ -23,6 +23,10 @@ function findNextInputIndex(answer: string, letters: LetterState[], start = 0) {
   return -1;
 }
 
+function isInputSpace(char: string) {
+  return char === ' ';
+}
+
 function getAnswerCandidates(word: PracticeWord) {
   return [word.welshAnswer, ...(word.acceptedAlternatives ?? [])];
 }
@@ -255,6 +259,8 @@ export function usePracticeSession({
   const handleInput = useCallback((char: string) => {
     if (!currentWord || isComplete || inputLockedRef.current) return;
 
+    if (isInputSpace(char)) return;
+
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
     if (nextIndex < 0) return;
@@ -336,12 +342,16 @@ export function usePracticeSession({
     endTime: stats.endedAt,
     total: session.words.length
   };
+  const activeIndex = currentWord && !isComplete && !inputLockedRef.current
+    ? findNextInputIndex(currentWord.welshAnswer, letters)
+    : -1;
 
   return {
     currentWord: currentWord as SessionWord | undefined,
     letters,
     status,
     wrongIndex,
+    activeIndex,
     isComplete,
     stats: publicStats,
     progressValue: session.words.length ? (stats.correctWords / session.words.length) * 100 : 0,

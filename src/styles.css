@@ -183,6 +183,27 @@
   justify-content:center;
 }
 
+.letter-slot.active:not(.mistake){
+  border-bottom-color:#071522;
+  border-bottom-width:3.5px;
+  animation:active-letter-underline 1.6s ease-in-out infinite;
+}
+
+@keyframes active-letter-underline{
+  0%,100%{
+    border-bottom-color:rgba(7,21,34,.64);
+  }
+  50%{
+    border-bottom-color:rgba(7,21,34,.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .letter-slot.active:not(.mistake){
+    animation:none;
+  }
+}
+
 @media (min-width:900px){
   .practice-shell .logo-svg-small{
     width:min(28vw,230px);

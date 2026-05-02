@@ -31,11 +31,13 @@ function LetterSlots({
   word,
   letters,
   wrongIndex,
+  activeIndex,
   layoutClass = ''
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
+  activeIndex: number;
   layoutClass?: string;
 }) {
   let globalIndex = 0;
@@ -55,7 +57,7 @@ function LetterSlots({
               return (
                 <span
                   key={index}
-                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
                 >
                   {slot?.value || '_'}
                 </span>
@@ -111,6 +113,7 @@ export function Practice({
     letters,
     status,
     wrongIndex,
+    activeIndex,
     isComplete,
     stats,
     progressValue,
@@ -122,12 +125,18 @@ export function Practice({
   } = usePracticeSession({ lists, storage, reviewDifficult, onStorageChange, onComplete });
 
   useEffect(() => {
+    function isControlTarget(target: EventTarget | null) {
+      if (!(target instanceof HTMLElement)) return false;
+      return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
+    }
+
     function onKeyDown(event: KeyboardEvent) {
       if (modal || isComplete) return;
+      if (isControlTarget(event.target)) return;
 
       if (event.code === 'Space') {
         event.preventDefault();
-        playAudio();
+        handleInput(' ');
         return;
       }
 
@@ -144,7 +153,7 @@ export function Practice({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleInput, isComplete, modal, playAudio, revealNext]);
+  }, [handleInput, isComplete, modal, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -249,7 +258,7 @@ export function Practice({
         />
 
         <div onClick={focusMobileInput} onTouchStart={focusMobileInput} className="letter-input-tap-zone">
-          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} layoutClass={answerLayoutClass} />
+          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} />
         </div>
 
         <div className="status-line">
