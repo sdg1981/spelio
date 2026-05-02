@@ -91,7 +91,6 @@ export function Practice({
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
   const mobileInputRef = useRef<HTMLInputElement>(null);
-  const practiceTargetRef = useRef<HTMLElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
 
   function shouldUseMobileKeyboard() {
@@ -107,15 +106,6 @@ export function Practice({
     const scrollY = window.scrollY;
     mobileInputRef.current?.focus({ preventScroll: true });
     window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
-  }
-
-  function focusPracticeTarget() {
-    if (shouldUseMobileKeyboard()) {
-      focusMobileInput();
-      return;
-    }
-
-    practiceTargetRef.current?.focus({ preventScroll: true });
   }
 
   const {
@@ -191,7 +181,9 @@ export function Practice({
     revealNext();
     event?.currentTarget.blur();
 
-    window.setTimeout(focusPracticeTarget, shouldUseMobileKeyboard() ? 40 : 0);
+    if (shouldUseMobileKeyboard()) {
+      window.setTimeout(focusMobileInput, 40);
+    }
   }
 
   if (!hasWords || !currentWord) {
@@ -228,7 +220,7 @@ export function Practice({
         <Settings size={22} />
       </button>
 
-      <section ref={practiceTargetRef} tabIndex={-1} className="page-shell practice-shell">
+      <section className="page-shell practice-shell">
         <Logo small onClick={onBackHome} />
 
         <button className="word-pill" onClick={playAudio}>
