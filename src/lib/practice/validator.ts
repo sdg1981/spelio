@@ -9,12 +9,32 @@ const flexibleMap: Record<string, string> = {
   ŵ: 'w', ŷ: 'y'
 };
 
-function normalise(char: string, mode: WelshSpellingMode) {
-  const lower = char.toLowerCase();
-  if (mode === 'strict') return lower;
-  return flexibleMap[lower] ?? lower;
+const apostropheVariants = /['’‘`´ʻ]/g;
+const dashVariants = /[-–—‑]/g;
+const whitespace = /\s+/g;
+
+export function normalizeForComparison(value: string): string {
+  return value
+    .replace(apostropheVariants, "'")
+    .replace(dashVariants, '-')
+    .toLowerCase()
+    .trim()
+    .replace(whitespace, ' ');
+}
+
+function applyWelshSpellingMode(value: string, mode: WelshSpellingMode) {
+  if (mode === 'strict') return value;
+  return Array.from(value).map(char => flexibleMap[char] ?? char).join('');
+}
+
+function normalise(value: string, mode: WelshSpellingMode) {
+  return applyWelshSpellingMode(normalizeForComparison(value), mode);
 }
 
 export function validateLetter(input: string, expected: string, mode: WelshSpellingMode) {
+  return normalise(input, mode) === normalise(expected, mode);
+}
+
+export function validateAnswer(input: string, expected: string, mode: WelshSpellingMode) {
   return normalise(input, mode) === normalise(expected, mode);
 }

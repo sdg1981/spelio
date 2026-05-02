@@ -23,6 +23,17 @@ function findNextInputIndex(answer: string, letters: LetterState[], start = 0) {
   return -1;
 }
 
+function getAnswerCandidates(word: PracticeWord) {
+  return [word.welshAnswer, ...(word.acceptedAlternatives ?? [])];
+}
+
+function validateInputAtIndex(char: string, word: PracticeWord, index: number, mode: SpelioSettings['welshSpelling']) {
+  return getAnswerCandidates(word).some(candidate => {
+    if (candidate.length !== word.welshAnswer.length || candidate[index] === ' ') return false;
+    return validateLetter(char, candidate[index], mode);
+  });
+}
+
 function playTone(type: 'success' | 'error' | 'completion') {
   try {
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -248,7 +259,7 @@ export function usePracticeSession({
     if (nextIndex < 0) return;
 
     const expected = answer[nextIndex];
-    const correct = validateLetter(char, expected, storage.settings.welshSpelling);
+    const correct = validateInputAtIndex(char, currentWord, nextIndex, storage.settings.welshSpelling);
 
     if (correct) {
       const nextLetters = letters.map((letter, index) => index === nextIndex ? { value: expected } : letter);

@@ -137,7 +137,7 @@ export function Practice({
         return;
       }
 
-      if (event.key.length === 1 && /[a-zA-ZÀ-žŵŷŴŶ]/.test(event.key)) {
+      if (event.key.length === 1 && /[a-zA-ZÀ-žŵŷŴŶ'’‘`´ʻ\-–—‑]/.test(event.key)) {
         handleInput(event.key);
       }
     }
