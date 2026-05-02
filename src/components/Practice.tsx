@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
 import { usePracticeSession } from '../hooks/usePracticeSession';
@@ -91,6 +91,7 @@ export function Practice({
   const [modal, setModal] = useState<'settings' | 'wordlist' | null>(initialModal);
   const [selectedDraft, setSelectedDraft] = useState<string[]>(storage.selectedListIds);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const practiceTargetRef = useRef<HTMLElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
 
   function shouldUseMobileKeyboard() {
@@ -106,6 +107,15 @@ export function Practice({
     const scrollY = window.scrollY;
     mobileInputRef.current?.focus({ preventScroll: true });
     window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
+  }
+
+  function focusPracticeTarget() {
+    if (shouldUseMobileKeyboard()) {
+      focusMobileInput();
+      return;
+    }
+
+    practiceTargetRef.current?.focus({ preventScroll: true });
   }
 
   const {
@@ -177,14 +187,11 @@ export function Practice({
     setModal(null);
   }
 
-  function handleRevealLetter() {
+  function handleRevealLetter(event?: MouseEvent<HTMLButtonElement>) {
     revealNext();
+    event?.currentTarget.blur();
 
-    if (shouldUseMobileKeyboard()) {
-      window.setTimeout(() => {
-        focusMobileInput();
-      }, 40);
-    }
+    window.setTimeout(focusPracticeTarget, shouldUseMobileKeyboard() ? 40 : 0);
   }
 
   if (!hasWords || !currentWord) {
@@ -221,7 +228,7 @@ export function Practice({
         <Settings size={22} />
       </button>
 
-      <section className="page-shell practice-shell">
+      <section ref={practiceTargetRef} tabIndex={-1} className="page-shell practice-shell">
         <Logo small onClick={onBackHome} />
 
         <button className="word-pill" onClick={playAudio}>
