@@ -37,7 +37,7 @@ export function Home({
   return (
     <main className="app-bg">
       <section className="page-shell home-shell">
-        <Logo />
+        <Logo animateCursor />
 
         <button className="play-orb play-orb-lg mt-[78px] md:mt-14" aria-label="Start practice" onClick={onStart}>
           <span><Play size={70} strokeWidth={1.8} /></span>
@@ -61,7 +61,7 @@ export function Home({
           <PrimaryButton onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
         </div>
 
-        <div className="mt-12 action-list">
+        <div className="mt-12 action-list review-action-region">
           {!isFirst && !isStruggled && hasDifficultWords && (
             <ActionRow icon={<Target size={30} />} title="Review difficult words" accent="red" onClick={onReview} />
           )}

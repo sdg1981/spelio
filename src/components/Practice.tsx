@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
 import { Footer } from './Footer';
@@ -33,18 +33,21 @@ function LetterSlots({
   letters,
   wrongIndex,
   activeIndex,
-  layoutClass = ''
+  layoutClass = '',
+  wordComplete = false
 }: {
   word: string;
   letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
   wrongIndex: number | null;
   activeIndex: number;
   layoutClass?: string;
+  wordComplete?: boolean;
 }) {
   let globalIndex = 0;
+  let visibleLetterIndex = 0;
 
   return (
-    <div className={`letter-grid ${layoutClass}`.trim()}>
+    <div className={`letter-grid ${layoutClass} ${wordComplete ? 'word-complete' : ''}`.trim()}>
       {word.split(' ').map((wordPart, wordIndex) => {
         const startIndex = globalIndex;
         globalIndex += wordPart.length + 1;
@@ -54,11 +57,16 @@ function LetterSlots({
             {wordPart.split('').map((_, localIndex) => {
               const index = startIndex + localIndex;
               const slot = letters[index];
+              const animationIndex = visibleLetterIndex;
+              visibleLetterIndex += 1;
+              const hasValue = Boolean(slot?.value);
+              const isMistake = wrongIndex === index || slot?.wrong;
 
               return (
                 <span
-                  key={index}
-                  className={`letter-slot ${!slot?.value ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${wrongIndex === index || slot?.wrong ? 'mistake' : ''}`}
+                  key={`${index}-${slot?.value || 'empty'}-${slot?.revealed ? 'revealed' : 'typed'}-${isMistake ? 'wrong' : 'ok'}`}
+                  className={`letter-slot ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed ? 'typed' : ''}`}
+                  style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 20}ms` } as CSSProperties : undefined}
                 >
                   {slot?.value || '_'}
                 </span>
@@ -92,9 +100,11 @@ export function Practice({
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
   const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
+  const [localStatus, setLocalStatus] = useState<string | null>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
+  const localStatusTimerRef = useRef<number | null>(null);
 
   function shouldUseMobileKeyboard() {
     if (typeof window === 'undefined') return false;
@@ -127,6 +137,16 @@ export function Practice({
     revealNext,
     playAudio
   } = usePracticeSession({ lists, storage, reviewDifficult, onStorageChange, onComplete });
+
+  useEffect(() => {
+    return () => {
+      if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (status) setLocalStatus(null);
+  }, [status]);
 
   useEffect(() => {
     function isControlTarget(target: EventTarget | null) {
@@ -206,6 +226,25 @@ export function Practice({
     }
   }
 
+  function showLocalStatus(message: string) {
+    setLocalStatus(message);
+    if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
+    localStatusTimerRef.current = window.setTimeout(() => setLocalStatus(null), 1500);
+  }
+
+  function handleEnglishToggle() {
+    const nextVisible = !storage.settings.englishVisible;
+    updateSettings({ englishVisible: nextVisible });
+    showLocalStatus(nextVisible ? 'English on' : 'English off');
+  }
+
+  function handleWordPillClick() {
+    playAudio();
+    if (shouldUseMobileKeyboard()) {
+      window.setTimeout(focusMobileInput, 40);
+    }
+  }
+
   if (!hasWords || !currentWord) {
     return (
       <main className="app-bg relative overflow-hidden">
@@ -230,6 +269,9 @@ export function Practice({
   }
 
   const answerLayoutClass = getAnswerLayoutClass(currentWord.welshAnswer);
+  const wordComplete = findIncompleteLetterIndex(currentWord.welshAnswer, letters) < 0;
+  const displayStatus = status ?? localStatus;
+  const displayTone = status ? statusTone : 'neutral';
 
   return (
     <main className="app-bg relative overflow-hidden">
@@ -245,7 +287,7 @@ export function Practice({
       <section className="page-shell practice-shell">
         <Logo small onClick={onBackHome} />
 
-        <button className="word-pill" onClick={playAudio}>
+        <button className="word-pill" onClick={handleWordPillClick}>
           <Volume2 className="text-[#d90000]" size={24} />
           {storage.settings.englishVisible && <span>{currentWord.englishPrompt}</span>}
         </button>
@@ -280,18 +322,13 @@ export function Practice({
         />
 
         <div onClick={focusMobileInput} onTouchStart={focusMobileInput} className="letter-input-tap-zone">
-          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} />
+          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
         </div>
 
-        <div className={`status-line status-line-${statusTone}`}>
-          {status === 'Incorrect. Try again.' && (
-            <><CircleX size={22} />Incorrect. Try again.</>
-          )}
-          {status && status !== 'Incorrect. Try again.' && status}
-        </div>
+        <AnimatedStatusLine status={displayStatus} tone={displayTone} />
 
         <div className="utility-bar">
-          <button onClick={() => updateSettings({ englishVisible: !storage.settings.englishVisible })}>
+          <button onClick={handleEnglishToggle}>
             <FileText size={22} />
             <span>English</span>
           </button>
@@ -329,6 +366,56 @@ export function Practice({
         />
       )}
     </main>
+  );
+}
+
+function findIncompleteLetterIndex(answer: string, letters: Array<{ value: string }>) {
+  return answer.split('').findIndex((char, index) => char !== ' ' && !letters[index]?.value);
+}
+
+function AnimatedStatusLine({
+  status,
+  tone
+}: {
+  status: string | null;
+  tone: 'success' | 'error' | 'neutral';
+}) {
+  const [visibleStatus, setVisibleStatus] = useState(status);
+  const [visibleTone, setVisibleTone] = useState(tone);
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    let timer: number | undefined;
+
+    if (status) {
+      setVisibleStatus(status);
+      setVisibleTone(tone);
+      setLeaving(false);
+      return undefined;
+    }
+
+    if (visibleStatus) {
+      setLeaving(true);
+      timer = window.setTimeout(() => {
+        setVisibleStatus(null);
+        setLeaving(false);
+      }, 260);
+    }
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [status, tone, visibleStatus]);
+
+  return (
+    <div className={`status-line status-line-${visibleStatus ? visibleTone : tone}`}>
+      {visibleStatus && (
+        <span className={`status-message ${leaving ? 'leaving' : 'entering'}`} key={visibleStatus}>
+          {visibleStatus === 'Incorrect. Try again.' && <CircleX size={22} />}
+          {visibleStatus}
+        </span>
+      )}
+    </div>
   );
 }
 

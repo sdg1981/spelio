@@ -334,3 +334,285 @@
   .practice-shell .letter-grid.extra-compact .letter-word{gap:7px;}
   .practice-shell .letter-grid.extra-compact .letter-slot{min-width:15px;font-size:19px;}
 }
+
+/* Quiet animation polish */
+.screen-transition{
+  min-height:100svh;
+  animation:screen-enter .22s ease-out both;
+}
+
+@keyframes screen-enter{
+  from{opacity:0;transform:translateY(5px) scale(.998);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+.logo-svg{
+  display:block;
+  height:auto;
+}
+
+.logo-svg-home{
+  width:min(78vw,300px);
+}
+
+.logo-letter-fill{
+  fill:#0d1a25;
+}
+
+.logo-cursor-mark{
+  fill:#d32e2e;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+
+.logo-cursor-intro .logo-cursor-mark{
+  animation:logo-cursor-soft-blink 1.08s ease-in-out 3 both;
+}
+
+@keyframes logo-cursor-soft-blink{
+  0%,100%{opacity:1;}
+  48%{opacity:.28;}
+}
+
+.play-orb{
+  transition:transform .16s ease-out,box-shadow .18s ease-out,border-color .18s ease-out;
+}
+
+.play-orb:hover{
+  transform:scale(1.025);
+  box-shadow:0 28px 76px rgba(7,21,34,.1),0 0 0 8px rgba(217,0,0,.025);
+  border-color:#f4dfdf;
+}
+
+.play-orb:active{
+  transform:scale(.975);
+  box-shadow:0 18px 42px rgba(7,21,34,.075);
+}
+
+.primary-cta{
+  transition:transform .15s ease-out,background .16s ease,box-shadow .18s ease-out;
+}
+
+.primary-cta:hover{
+  transform:scale(1.02);
+  box-shadow:0 28px 56px rgba(217,0,0,.2),0 0 0 8px rgba(217,0,0,.035);
+}
+
+.primary-cta:active{
+  transform:scale(.98);
+  box-shadow:0 16px 36px rgba(217,0,0,.16);
+}
+
+.action-row{
+  transition:background .16s ease-out,opacity .18s ease-out,transform .18s ease-out;
+}
+
+.action-row:hover{
+  background:rgba(7,21,34,.018);
+}
+
+.action-row:active{
+  transform:scale(.995);
+}
+
+.review-action-region .action-row,
+.end-actions .action-row{
+  animation:action-row-enter .2s ease-out both;
+}
+
+@keyframes action-row-enter{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.progress-fill{
+  transition:width .24s ease-out;
+}
+
+.word-pill{
+  transition:transform .13s ease-out,box-shadow .13s ease-out,border-color .16s ease-out;
+}
+
+.word-pill:hover{
+  border-color:#efd4d4;
+  box-shadow:0 20px 52px rgba(7,21,34,.075);
+}
+
+.word-pill:active{
+  transform:scale(.975);
+  box-shadow:0 12px 32px rgba(7,21,34,.055);
+}
+
+.letter-slot{
+  color:var(--ink);
+  transition:border-color .12s ease-out,background .16s ease-out,color .12s ease-out,box-shadow .16s ease-out;
+}
+
+.letter-slot.typed:not(.mistake){
+  animation:letter-correct-pop .13s ease-out both;
+}
+
+.letter-slot.revealed:not(.mistake){
+  animation:letter-reveal .18s ease-out both;
+}
+
+.letter-slot.mistake{
+  animation:letter-soft-shake .24s ease-in-out both;
+}
+
+.letter-slot.active:not(.mistake){
+  animation:active-letter-underline 1.8s ease-in-out infinite;
+}
+
+.word-complete .letter-slot.filled:not(.mistake){
+  animation:letter-success-wave .32s ease-out both;
+  animation-delay:var(--letter-wave-delay,0ms);
+}
+
+@keyframes letter-correct-pop{
+  0%{transform:scale(1);}
+  52%{transform:scale(1.045);background:rgba(31,166,90,.055);}
+  100%{transform:scale(1);background:transparent;}
+}
+
+@keyframes letter-reveal{
+  from{opacity:0;transform:translateY(4px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@keyframes letter-soft-shake{
+  0%,100%{transform:translateX(0);}
+  22%{transform:translateX(-3px);}
+  46%{transform:translateX(3px);}
+  70%{transform:translateX(-2px);}
+}
+
+@keyframes letter-success-wave{
+  0%{background:transparent;box-shadow:none;color:var(--ink);}
+  38%{background:rgba(31,166,90,.09);box-shadow:0 0 0 4px rgba(31,166,90,.035);color:var(--ink);}
+  100%{background:transparent;box-shadow:none;color:var(--ink);}
+}
+
+.status-message{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  will-change:opacity,transform;
+}
+
+.status-message.entering{
+  animation:status-enter .15s ease-out both;
+}
+
+.status-message.leaving{
+  animation:status-exit .26s ease-out both;
+}
+
+@keyframes status-enter{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@keyframes status-exit{
+  from{opacity:1;}
+  to{opacity:0;}
+}
+
+.overlay{
+  animation:overlay-enter .18s ease-out both;
+}
+
+.modal{
+  animation:modal-enter .19s ease-out both;
+}
+
+@keyframes overlay-enter{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+@keyframes modal-enter{
+  from{opacity:0;transform:translateY(6px) scale(.985);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+.success-orb{
+  animation:success-orb-enter .22s ease-out both;
+}
+
+.success-orb svg{
+  animation:success-check-enter .24s ease-out .06s both;
+}
+
+.end-count,
+.end-heading,
+.end-subtitle,
+.end-next-heading,
+.end-actions{
+  animation:end-fade-up .2s ease-out both;
+}
+
+.end-heading{animation-delay:.04s;}
+.end-subtitle{animation-delay:.07s;}
+.end-next-heading{animation-delay:.2s;}
+.end-actions{animation-delay:.24s;}
+
+.end-stat{
+  animation:end-fade-up .22s ease-out both;
+  animation-delay:calc(.1s + var(--stat-delay,0ms));
+}
+
+@keyframes success-orb-enter{
+  from{opacity:0;transform:scale(.965);}
+  to{opacity:1;transform:scale(1);}
+}
+
+@keyframes success-check-enter{
+  from{opacity:0;transform:scale(.92);}
+  to{opacity:1;transform:scale(1);}
+}
+
+@keyframes end-fade-up{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@media (max-width:520px){
+  .logo-svg-home{
+    width:min(76vw,300px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.001ms!important;
+  }
+
+  .screen-transition,
+  .logo-cursor-intro .logo-cursor-mark,
+  .letter-slot.active:not(.mistake),
+  .letter-slot.typed:not(.mistake),
+  .letter-slot.revealed:not(.mistake),
+  .letter-slot.mistake,
+  .word-complete .letter-slot.filled:not(.mistake),
+  .status-message,
+  .overlay,
+  .modal,
+  .success-orb,
+  .success-orb svg,
+  .end-count,
+  .end-heading,
+  .end-subtitle,
+  .end-next-heading,
+  .end-actions,
+  .end-stat{
+    animation:none!important;
+    transform:none!important;
+  }
+}

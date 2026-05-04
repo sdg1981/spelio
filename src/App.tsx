@@ -101,21 +101,23 @@ export default function App() {
 
   if (screen === 'practice') {
     return (
-      <Practice
-        lists={wordLists}
-        storage={storage}
-        reviewDifficult={reviewMode}
-        onStorageChange={updateStorage}
-        onComplete={handleComplete}
-        onBackHome={() => setScreen('home')}
-        onWordListsDone={saveSelectedWordLists}
-      />
+      <div className="screen-transition" key="practice">
+        <Practice
+          lists={wordLists}
+          storage={storage}
+          reviewDifficult={reviewMode}
+          onStorageChange={updateStorage}
+          onComplete={handleComplete}
+          onBackHome={() => setScreen('home')}
+          onWordListsDone={saveSelectedWordLists}
+        />
+      </div>
     );
   }
 
   if (screen === 'end' && lastResult) {
     return (
-      <>
+      <div className="screen-transition" key="end">
         <EndScreen
           result={lastResult}
           recommendation={recommendation}
@@ -135,12 +137,12 @@ export default function App() {
             onDone={saveSelectedWordLists}
           />
         )}
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="screen-transition" key="home">
       <Home
         mode={homeMode}
         recommendation={recommendation}
@@ -158,6 +160,6 @@ export default function App() {
           onDone={saveSelectedWordLists}
         />
       )}
-    </>
+    </div>
   );
 }

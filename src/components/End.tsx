@@ -3,6 +3,7 @@ import { Footer } from './Footer';
 import { BookOpen, Check, SlidersHorizontal, Target } from './Icons';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
+import type { CSSProperties } from 'react';
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
@@ -53,14 +54,14 @@ export function EndScreen({
     <main className="app-bg relative">
       <div className="progress-top"><div className="progress-track"><div className="progress-fill" style={{ width: '100%' }} /></div></div>
       <section className="page-shell end-shell">
-        <div className="text-[24px] md:text-[14px] font-bold text-[#6e7783]">{result.totalWords} / {result.totalWords}</div>
+        <div className="end-count text-[24px] md:text-[14px] font-bold text-[#6e7783]">{result.totalWords} / {result.totalWords}</div>
         <div className="success-orb mt-8 md:mt-6"><Check size={92} strokeWidth={1.75} /></div>
-        <h1 className="mt-9 md:mt-6 text-center font-black tracking-[-.065em] text-[#19a352]">Excellent!</h1>
-        <p className="mt-4 text-[#66717c]">You’ve completed this practice session.</p>
+        <h1 className="end-heading mt-9 md:mt-6 text-center font-black tracking-[-.065em] text-[#19a352]">Excellent!</h1>
+        <p className="end-subtitle mt-4 text-[#66717c]">You’ve completed this practice session.</p>
 
         <div className="stats-grid mt-12 md:mt-10">
-          {stats.map(([icon, number, label, className]) => (
-            <div className="stat" key={label}>
+          {stats.map(([icon, number, label, className], index) => (
+            <div className="stat end-stat" key={label} style={{ '--stat-delay': `${index * 35}ms` } as CSSProperties}>
               <div className={`stat-icon ${className}`}>{icon}</div>
               <div className="stat-num">{number}</div>
               <div className="stat-label">{label}</div>
@@ -68,8 +69,8 @@ export function EndScreen({
           ))}
         </div>
 
-        <h2 className="mt-12 md:mt-10 w-full max-w-[620px] text-left text-[34px] md:text-[24px] font-black tracking-[-.055em]">What’s next?</h2>
-        <div className="card-list mt-7">
+        <h2 className="end-next-heading mt-12 md:mt-10 w-full max-w-[620px] text-left text-[34px] md:text-[24px] font-black tracking-[-.055em]">What’s next?</h2>
+        <div className="card-list end-actions mt-7">
           <ActionRow primary icon={<BookOpen size={30} />} title={primaryTitle} subtitle={primarySubtitle} onClick={handlePrimary} />
           {hasDifficultWords && result.state !== 'struggled' && <ActionRow icon={<Target size={30} />} title="Review difficult words" subtitle="Go over words you found challenging" accent="blue" onClick={onReview} />}
           <ActionRow icon={<SlidersHorizontal size={30} />} title="Change word lists" subtitle="Choose different lists for your next session" onClick={onChangeLists} />
