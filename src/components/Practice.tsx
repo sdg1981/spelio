@@ -369,8 +369,10 @@ export function Practice({
     if (open) {
       finishPeek(false);
       peekActivatedRef.current = false;
+    } else {
+      restorePracticeInputFocus();
     }
-  }, [finishPeek]);
+  }, [finishPeek, restorePracticeInputFocus]);
 
   function applyWordLists(selectedIds: string[]) {
     const fallback = lists[0] ? [lists[0].id] : [];
@@ -665,7 +667,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
 
   return (
     <>
-      <button className="settings-cog" onClick={() => setModalOpen(true)} aria-label="Settings">
+      <button className="settings-cog" onClick={() => setModalOpen(true)} aria-label="Open settings">
         <Settings size={22} />
       </button>
       {open && (
