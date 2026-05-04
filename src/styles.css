@@ -234,6 +234,7 @@
   touch-action:manipulation;
   user-select:none;
   -webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
 
 .peek-ghost{
@@ -245,13 +246,13 @@
   color:#263240;
   opacity:0;
   pointer-events:none;
-  transform:translate(-50%,2px);
+  transform:translate(-50%,-14px);
   transition:opacity .18s ease-out,transform .18s ease-out;
 }
 
 .peek-ghost.visible{
   opacity:.43;
-  transform:translate(-50%,0);
+  transform:translate(-50%,-20px);
   transition-duration:.12s;
 }
 
@@ -474,6 +475,16 @@
 
 .reveal-button{
   transition:transform .12s ease-out,background .16s ease-out;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+.reveal-button *{
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
 
 .reveal-button:active{
@@ -662,7 +673,7 @@
   .peek-ghost,
   .peek-ghost.visible{
     transition-duration:.1s!important;
-    transform:translateX(-50%)!important;
+    transform:translate(-50%,-20px)!important;
   }
 
   .letter-slot.revealed:not(.mistake){
