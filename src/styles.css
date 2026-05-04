@@ -479,12 +479,14 @@
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .reveal-button *{
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .reveal-button:active{

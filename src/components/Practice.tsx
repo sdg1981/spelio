@@ -422,15 +422,6 @@ export function Practice({
     }
   }
 
-  function handleAnswerPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (shouldUseMobileKeyboard()) {
-      event.preventDefault();
-      focusMobileInput();
-    }
-
-    beginPeekHold();
-  }
-
   function showLocalStatus(message: string) {
     setLocalStatus(message);
     if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
@@ -528,11 +519,7 @@ export function Practice({
 
         <div
           onClick={focusMobileInput}
-          onPointerDown={handleAnswerPointerDown}
-          onPointerUp={endPeekHold}
-          onPointerCancel={endPeekHold}
-          onPointerLeave={endPeekHold}
-          className="letter-input-tap-zone answer-peek-zone"
+          className="letter-input-tap-zone"
         >
           <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
           <GhostAnswer answer={currentWord.welshAnswer} layoutClass={answerLayoutClass} visible={isPeeking} />
@@ -560,6 +547,7 @@ export function Practice({
             onPointerUp={handleRevealPointerUp}
             onPointerCancel={endPeekHold}
             onPointerLeave={endPeekHold}
+            onContextMenu={(event) => event.preventDefault()}
             onClick={handleRevealLetter}
           >
             <CornerDownRight size={23} />
