@@ -43,3 +43,16 @@ Manual verification for the word-list selection/session-state fix:
 - Change checkboxes in the modal, close with X, reopen it, and confirm the unsaved changes were discarded.
 - Save a selection, refresh the page, and confirm the persisted selected list is still shown/recommended.
 - Confirm `Review difficult words` only overrides the homepage recommendation when difficult words currently exist.
+
+## Quiet animation polish
+
+The UI now includes a restrained animation layer intended to make Spelio feel responsive without becoming gamified or distracting.
+
+- Homepage logo uses an inline SVG so the red cursor mark can blink softly on first render, then stop. Practice uses the existing small logo without cursor animation.
+- Main screen changes use a short fade with slight vertical movement.
+- Homepage primary actions, practice audio pill, utility/action rows, modals, progress bar, status messages, letter slots, completed words, and end-screen stats all use small, quick CSS transitions/keyframes.
+- Correct typed letters pop subtly; revealed letters fade/slide in; incorrect letters keep a short low-amplitude shake.
+- Word completion uses a brief left-to-right highlight wave across the completed word.
+- Reveal completion delay is kept short enough for the completion wave to read while preserving reveal scoring and difficult-word logic.
+- `prefers-reduced-motion: reduce` disables decorative animation and reduces transitions globally.
+- Hidden mobile input focus is preserved after tapping the audio pill and pressing Reveal; desktop keyboard handling is unchanged.
