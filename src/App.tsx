@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Home } from './components/Home';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
+import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
 import { loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
@@ -99,50 +100,41 @@ export default function App() {
       ? 'struggled'
       : 'returning';
 
-  if (screen === 'practice') {
-    return (
-      <div className="screen-transition" key="practice">
-        <Practice
+  const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
+  const screenContent = activeScreen === 'practice' ? (
+    <Practice
+      lists={wordLists}
+      storage={storage}
+      reviewDifficult={reviewMode}
+      onStorageChange={updateStorage}
+      onComplete={handleComplete}
+      onBackHome={() => setScreen('home')}
+      onWordListsDone={saveSelectedWordLists}
+    />
+  ) : activeScreen === 'end' && lastResult ? (
+    <>
+      <EndScreen
+        result={lastResult}
+        recommendation={recommendation}
+        hasDifficultWords={difficultWords}
+        onContinue={() => {
+          startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId });
+        }}
+        onReview={() => startPractice({ review: true })}
+        onChangeLists={() => setWordListModalOpen(true)}
+        onHome={() => setScreen('home')}
+      />
+      {wordListModalOpen && (
+        <WordListModal
           lists={wordLists}
-          storage={storage}
-          reviewDifficult={reviewMode}
-          onStorageChange={updateStorage}
-          onComplete={handleComplete}
-          onBackHome={() => setScreen('home')}
-          onWordListsDone={saveSelectedWordLists}
+          initialSelectedIds={storage.selectedListIds}
+          onClose={() => setWordListModalOpen(false)}
+          onDone={saveSelectedWordLists}
         />
-      </div>
-    );
-  }
-
-  if (screen === 'end' && lastResult) {
-    return (
-      <div className="screen-transition" key="end">
-        <EndScreen
-          result={lastResult}
-          recommendation={recommendation}
-          hasDifficultWords={difficultWords}
-          onContinue={() => {
-            startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId });
-          }}
-          onReview={() => startPractice({ review: true })}
-          onChangeLists={() => setWordListModalOpen(true)}
-          onHome={() => setScreen('home')}
-        />
-        {wordListModalOpen && (
-          <WordListModal
-            lists={wordLists}
-            initialSelectedIds={storage.selectedListIds}
-            onClose={() => setWordListModalOpen(false)}
-            onDone={saveSelectedWordLists}
-          />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="screen-transition" key="home">
+      )}
+    </>
+  ) : (
+    <>
       <Home
         mode={homeMode}
         recommendation={recommendation}
@@ -160,6 +152,12 @@ export default function App() {
           onDone={saveSelectedWordLists}
         />
       )}
-    </div>
+    </>
+  );
+
+  return (
+    <ScreenTransition screen={activeScreen}>
+      {screenContent}
+    </ScreenTransition>
   );
 }
