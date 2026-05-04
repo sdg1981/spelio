@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
-import { loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
+import { clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { hasDifficultWords } from './lib/practice/sessionEngine';
 
@@ -26,6 +26,8 @@ export default function App() {
   const [reviewMode, setReviewMode] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
+  const [resetStatusVisible, setResetStatusVisible] = useState(false);
+  const resetStatusTimerRef = useRef<number | null>(null);
   const difficultWords = useMemo(() => hasDifficultWords(storage), [storage.wordProgress]);
   const recommendation = useMemo(
     () => getRecommendation(storage, wordLists),
@@ -41,6 +43,12 @@ export default function App() {
   useEffect(() => {
     saveSpelioStorage(storage);
   }, [storage]);
+
+  useEffect(() => {
+    return () => {
+      if (resetStatusTimerRef.current) window.clearTimeout(resetStatusTimerRef.current);
+    };
+  }, []);
 
   function updateStorage(next: SpelioStorage) {
     setStorage(next);
@@ -94,6 +102,24 @@ export default function App() {
     setScreen('home');
   }
 
+  function resetProgress() {
+    clearSpelioStorageData();
+    const freshStorage = createDefaultStorage();
+
+    setStorage(freshStorage);
+    setReviewMode(false);
+    setWordListModalOpen(false);
+    setLastResult(null);
+    setScreen('home');
+    setResetStatusVisible(true);
+
+    if (resetStatusTimerRef.current) window.clearTimeout(resetStatusTimerRef.current);
+    resetStatusTimerRef.current = window.setTimeout(() => {
+      setResetStatusVisible(false);
+      resetStatusTimerRef.current = null;
+    }, 1800);
+  }
+
   const homeMode = !storage.lastSessionDate
     ? 'first'
     : storage.lastSessionResult?.state === 'struggled' && difficultWords
@@ -110,6 +136,7 @@ export default function App() {
       onComplete={handleComplete}
       onBackHome={() => setScreen('home')}
       onWordListsDone={saveSelectedWordLists}
+      onResetProgress={resetProgress}
     />
   ) : activeScreen === 'end' && lastResult ? (
     <>
@@ -156,8 +183,13 @@ export default function App() {
   );
 
   return (
-    <ScreenTransition screen={activeScreen}>
-      {screenContent}
-    </ScreenTransition>
+    <>
+      <ScreenTransition screen={activeScreen}>
+        {screenContent}
+      </ScreenTransition>
+      <div className={`app-toast ${resetStatusVisible ? 'visible' : ''}`} role="status" aria-live="polite">
+        Progress reset — you’re starting fresh
+      </div>
+    </>
   );
 }

@@ -112,6 +112,7 @@ export function Practice({
   onComplete,
   onBackHome,
   onWordListsDone,
+  onResetProgress,
   initialModal = null
 }: {
   lists: WordList[];
@@ -121,6 +122,7 @@ export function Practice({
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
   onWordListsDone: (selectedIds: string[]) => void;
+  onResetProgress: () => void;
   initialModal?: 'settings' | 'wordlist' | null;
 }) {
   const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
@@ -477,6 +479,7 @@ export function Practice({
         settings={storage.settings}
         onChange={updateSettings}
         onOpenChange={handleSettingsModalOpenChange}
+        onResetProgress={onResetProgress}
         initiallyOpen={initialModal === 'settings'}
       />
 
@@ -644,11 +647,13 @@ const SettingsLauncher = memo(function SettingsLauncher({
   settings,
   onChange,
   onOpenChange,
+  onResetProgress,
   initiallyOpen = false
 }: {
   settings: SpelioSettings;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onOpenChange: (open: boolean) => void;
+  onResetProgress: () => void;
   initiallyOpen?: boolean;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
@@ -668,6 +673,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
           settings={settings}
           onChange={onChange}
           onClose={() => setModalOpen(false)}
+          onResetProgress={onResetProgress}
         />
       )}
     </>
@@ -677,94 +683,133 @@ const SettingsLauncher = memo(function SettingsLauncher({
 function SettingsModal({
   settings,
   onChange,
-  onClose
+  onClose,
+  onResetProgress
 }: {
   settings: SpelioSettings;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onClose: () => void;
+  onResetProgress: () => void;
 }) {
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
+  function handleResetConfirm() {
+    setConfirmingReset(false);
+    onClose();
+    onResetProgress();
+  }
+
   return (
     <Overlay>
-      <section className="modal modal-small">
-        <div className="flex items-center justify-between">
-          <h2 className="modal-title">Settings</h2>
-          <button className="text-[#8c95a0] text-2xl" onClick={onClose}>×</button>
+      <section className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div className="settings-modal-header flex items-center justify-between">
+          <h2 className="modal-title" id="settings-title">Settings</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close settings">×</button>
         </div>
 
-        <div className="mt-10">
-          <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh spelling</h3>
-          <p className="mt-2 field-note">Choose how strictly Welsh characters are checked.</p>
+        <div className="settings-modal-body">
+          <div>
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh spelling</h3>
+            <p className="mt-2 field-note">Choose how strictly Welsh characters are checked.</p>
 
-          <div className="mt-7 space-y-7">
-            <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'flexible' })}>
-              <Radio active={settings.welshSpelling === 'flexible'} />
-              <span>
-                <b className="block text-[18px] md:text-[15px]">Flexible (recommended)</b>
-                <span className="mt-2 block field-note">Accepts unaccented and accented characters.</span>
-              </span>
-            </button>
+            <div className="mt-7 space-y-7">
+              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'flexible' })}>
+                <Radio active={settings.welshSpelling === 'flexible'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">Flexible (recommended)</b>
+                  <span className="mt-2 block field-note">Accepts unaccented and accented characters.</span>
+                </span>
+              </button>
 
-            <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'strict' })}>
-              <Radio active={settings.welshSpelling === 'strict'} />
+              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'strict' })}>
+                <Radio active={settings.welshSpelling === 'strict'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">Strict</b>
+                  <span className="mt-2 block field-note">Requires correct accents and diacritics.</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-[#edf0f2] pt-8">
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">Dialect preference</h3>
+            <p className="mt-2 field-note">Choose which Welsh dialect variants appear in practice.</p>
+
+            <div className="mt-7 space-y-6">
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'mixed' })}>
+                <Radio active={settings.dialectPreference === 'mixed'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">Mixed / Both</b>
+                  <span className="mt-2 block field-note">Includes all eligible variants.</span>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'north' })}>
+                <Radio active={settings.dialectPreference === 'north'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">North Wales</b>
+                  <span className="mt-2 block field-note">Uses North Wales forms where available.</span>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'south-standard' })}>
+                <Radio active={settings.dialectPreference === 'south-standard'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
+                  <span className="mt-2 block field-note">Uses South Wales or standard forms where available.</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
+            <div className="flex items-center justify-between gap-8">
               <span>
-                <b className="block text-[18px] md:text-[15px]">Strict</b>
-                <span className="mt-2 block field-note">Requires correct accents and diacritics.</span>
+                <b className="block text-[18px] md:text-[15px]">Audio prompts</b>
+                <span className="mt-2 block field-note">Play audio when each word appears.</span>
               </span>
+              <Toggle active={settings.audioPrompts} onClick={() => onChange({ audioPrompts: !settings.audioPrompts })} />
+            </div>
+
+            <div className="flex items-center justify-between gap-8">
+              <span>
+                <b className="block text-[18px] md:text-[15px]">Sound effects</b>
+                <span className="mt-2 block field-note">Play sounds for correct and incorrect answers.</span>
+              </span>
+              <Toggle active={settings.soundEffects} onClick={() => onChange({ soundEffects: !settings.soundEffects })} />
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-[#edf0f2] pt-7">
+            <button className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
+              Reset progress
             </button>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-[#edf0f2] pt-8">
-          <h3 className="text-[16px] md:text-[15px] font-extrabold">Dialect preference</h3>
-          <p className="mt-2 field-note">Choose which Welsh dialect variants appear in practice.</p>
-
-          <div className="mt-7 space-y-6">
-            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'mixed' })}>
-              <Radio active={settings.dialectPreference === 'mixed'} />
-              <span>
-                <b className="block text-[18px] md:text-[15px]">Mixed / Both</b>
-                <span className="mt-2 block field-note">Includes all eligible variants.</span>
-              </span>
-            </button>
-
-            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'north' })}>
-              <Radio active={settings.dialectPreference === 'north'} />
-              <span>
-                <b className="block text-[18px] md:text-[15px]">North Wales</b>
-                <span className="mt-2 block field-note">Uses North Wales forms where available.</span>
-              </span>
-            </button>
-
-            <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'south-standard' })}>
-              <Radio active={settings.dialectPreference === 'south-standard'} />
-              <span>
-                <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
-                <span className="mt-2 block field-note">Uses South Wales or standard forms where available.</span>
-              </span>
-            </button>
-          </div>
+        <div className="settings-modal-footer">
+          <button className="w-full rounded-[8px] border border-[#dfe4e8] bg-white py-5 text-[22px] md:text-[16px]" onClick={onClose}>Close</button>
         </div>
-
-        <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
-          <div className="flex items-center justify-between gap-8">
-            <span>
-              <b className="block text-[18px] md:text-[15px]">Audio prompts</b>
-              <span className="mt-2 block field-note">Play audio when each word appears.</span>
-            </span>
-            <Toggle active={settings.audioPrompts} onClick={() => onChange({ audioPrompts: !settings.audioPrompts })} />
-          </div>
-
-          <div className="flex items-center justify-between gap-8">
-            <span>
-              <b className="block text-[18px] md:text-[15px]">Sound effects</b>
-              <span className="mt-2 block field-note">Play sounds for correct and incorrect answers.</span>
-            </span>
-            <Toggle active={settings.soundEffects} onClick={() => onChange({ soundEffects: !settings.soundEffects })} />
-          </div>
-        </div>
-
-        <button className="mt-10 w-full rounded-[8px] border border-[#dfe4e8] bg-white py-5 text-[22px] md:text-[16px]" onClick={onClose}>Close</button>
       </section>
+
+      {confirmingReset && (
+        <div className="confirm-layer" role="presentation">
+          <section className="modal modal-small reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title">
+            <h2 className="modal-title" id="reset-progress-title">Reset progress?</h2>
+            <p className="modal-text mt-5">
+              This will clear all your progress, settings, and history on this device.
+            </p>
+            <div className="mt-9 flex justify-end gap-3">
+              <button className="confirm-cancel-button" onClick={() => setConfirmingReset(false)} type="button">
+                Cancel
+              </button>
+              <button className="confirm-reset-button" onClick={handleResetConfirm} type="button">
+                Reset
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </Overlay>
   );
 }

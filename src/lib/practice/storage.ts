@@ -50,6 +50,15 @@ export interface SpelioStorage {
 }
 
 const STORAGE_KEY = 'spelio-storage-v1';
+const LEGACY_STORAGE_KEYS = [
+  'selectedListIds',
+  'currentPathPosition',
+  'lastSessionDate',
+  'lastSessionResult',
+  'wordProgress',
+  'listProgress',
+  'settings'
+];
 
 export const defaultSettings: SpelioSettings = {
   englishVisible: true,
@@ -68,6 +77,16 @@ export const defaultStorage: SpelioStorage = {
   listProgress: {},
   settings: defaultSettings
 };
+
+export function createDefaultStorage(): SpelioStorage {
+  return {
+    ...defaultStorage,
+    selectedListIds: [...defaultStorage.selectedListIds],
+    wordProgress: {},
+    listProgress: {},
+    settings: { ...defaultSettings }
+  };
+}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -99,12 +118,12 @@ export function normaliseStorage(value: unknown): SpelioStorage {
 }
 
 export function loadSpelioStorage(): SpelioStorage {
-  if (typeof window === 'undefined') return defaultStorage;
+  if (typeof window === 'undefined') return createDefaultStorage();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     return normaliseStorage(raw ? JSON.parse(raw) : null);
   } catch {
-    return defaultStorage;
+    return createDefaultStorage();
   }
 }
 
@@ -113,6 +132,19 @@ export function saveSpelioStorage(storage: SpelioStorage) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normaliseStorage(storage)));
   } catch {
     // Local storage should never block practice.
+  }
+}
+
+export function clearSpelioStorageData() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+    for (const key of LEGACY_STORAGE_KEYS) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Local storage should never block resetting in-memory progress.
   }
 }
 
