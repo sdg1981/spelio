@@ -343,7 +343,7 @@ export function usePracticeSession({
       setWrongIndex(null);
       inputLockedRef.current = false;
     }, 820);
-  }, [currentWord?.id, isComplete, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
+  }, [currentWord?.id, isComplete, letters, stats, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
@@ -380,6 +380,21 @@ export function usePracticeSession({
     }
   }, [currentWord?.id, isComplete, letters]);
 
+  const markCurrentWordRevealed = useCallback(() => {
+    if (!currentWord || isComplete) return;
+
+    persistWordProgress(currentWord, { revealed: true });
+
+    setStats(previous => {
+      const revealedWordIds = new Set(previous.revealedWordIds);
+      revealedWordIds.add(currentWord.id);
+      return {
+        ...previous,
+        revealedWordIds
+      };
+    });
+  }, [currentWord?.id, isComplete]);
+
   const publicStats = {
     correct: stats.correctWords,
     incorrect: stats.incorrectWordIds.size,
@@ -409,6 +424,7 @@ export function usePracticeSession({
     hasWords: session.words.length > 0,
     handleInput,
     revealNext,
+    markCurrentWordRevealed,
     playAudio
   };
 }

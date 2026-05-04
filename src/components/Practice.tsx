@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
+import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
 import { Logo } from './Logo';
 import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
 import { Footer } from './Footer';
@@ -79,6 +79,30 @@ function LetterSlots({
   );
 }
 
+function GhostAnswer({
+  answer,
+  layoutClass = '',
+  visible
+}: {
+  answer: string;
+  layoutClass?: string;
+  visible: boolean;
+}) {
+  return (
+    <div className={`peek-ghost letter-grid ${layoutClass} ${visible ? 'visible' : ''}`.trim()} aria-hidden="true">
+      {answer.split(' ').map((wordPart, wordIndex) => (
+        <span key={`${wordPart}-${wordIndex}`} className="letter-word">
+          {wordPart.split('').map((char, localIndex) => (
+            <span key={`${char}-${localIndex}`} className="letter-slot peek-letter">
+              {char}
+            </span>
+          ))}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 
 export function Practice({
   lists,
@@ -105,6 +129,14 @@ export function Practice({
   const mobileKeyboardEnabledRef = useRef(false);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
+  const [isPeeking, setIsPeeking] = useState(false);
+  const [peekUsedForCurrentWord, setPeekUsedForCurrentWord] = useState(false);
+  const peekTimerRef = useRef<number | null>(null);
+  const peekAutoHideTimerRef = useRef<number | null>(null);
+  const peekActivatedRef = useRef(false);
+  const isPeekingRef = useRef(false);
+  const spaceHoldStartedRef = useRef(false);
+  const revealHandledByPointerRef = useRef(false);
 
   function shouldUseMobileKeyboard() {
     if (typeof window === 'undefined') return false;
@@ -135,14 +167,118 @@ export function Practice({
     hasWords,
     handleInput,
     revealNext,
+    markCurrentWordRevealed,
     playAudio
   } = usePracticeSession({ lists, storage, reviewDifficult, onStorageChange, onComplete });
+
+  const clearPeekTimers = useCallback(() => {
+    if (peekTimerRef.current) {
+      window.clearTimeout(peekTimerRef.current);
+      peekTimerRef.current = null;
+    }
+
+    if (peekAutoHideTimerRef.current) {
+      window.clearTimeout(peekAutoHideTimerRef.current);
+      peekAutoHideTimerRef.current = null;
+    }
+  }, []);
+
+  const restorePracticeInputFocus = useCallback(() => {
+    if (shouldUseMobileKeyboard()) {
+      focusMobileInput();
+      return;
+    }
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, []);
+
+  const finishPeek = useCallback((showMemoryStatus = true) => {
+    clearPeekTimers();
+    const wasPeeking = isPeekingRef.current;
+
+    if (wasPeeking) {
+      isPeekingRef.current = false;
+      setIsPeeking(false);
+      if (showMemoryStatus) showLocalStatus('Now try from memory');
+    }
+
+    restorePracticeInputFocus();
+  }, [clearPeekTimers, restorePracticeInputFocus]);
+
+  const activatePeek = useCallback(() => {
+    if (!currentWord || isComplete || modal || settingsModalOpenRef.current) return;
+
+    peekActivatedRef.current = true;
+
+    if (peekUsedForCurrentWord) {
+      showLocalStatus('Peek used');
+      restorePracticeInputFocus();
+      return;
+    }
+
+    setPeekUsedForCurrentWord(true);
+    markCurrentWordRevealed();
+    isPeekingRef.current = true;
+    setIsPeeking(true);
+
+    if (peekAutoHideTimerRef.current) window.clearTimeout(peekAutoHideTimerRef.current);
+    peekAutoHideTimerRef.current = window.setTimeout(() => {
+      finishPeek(true);
+    }, 1500);
+  }, [currentWord, finishPeek, isComplete, markCurrentWordRevealed, modal, peekUsedForCurrentWord, restorePracticeInputFocus]);
+
+  const beginPeekHold = useCallback(() => {
+    if (!currentWord || isComplete || modal || settingsModalOpenRef.current) return;
+
+    clearPeekTimers();
+    peekActivatedRef.current = false;
+    peekTimerRef.current = window.setTimeout(activatePeek, 300);
+  }, [activatePeek, clearPeekTimers, currentWord, isComplete, modal]);
+
+  const endPeekHold = useCallback(() => {
+    if (peekTimerRef.current) {
+      window.clearTimeout(peekTimerRef.current);
+      peekTimerRef.current = null;
+    }
+
+    if (isPeekingRef.current) {
+      finishPeek(true);
+    } else {
+      restorePracticeInputFocus();
+    }
+
+    peekActivatedRef.current = false;
+  }, [finishPeek, restorePracticeInputFocus]);
 
   useEffect(() => {
     return () => {
       if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
+      clearPeekTimers();
     };
-  }, []);
+  }, [clearPeekTimers]);
+
+  useEffect(() => {
+    isPeekingRef.current = isPeeking;
+  }, [isPeeking]);
+
+  useEffect(() => {
+    clearPeekTimers();
+    const wasPeeking = isPeekingRef.current;
+    peekActivatedRef.current = false;
+    isPeekingRef.current = false;
+    setIsPeeking(false);
+    setPeekUsedForCurrentWord(false);
+    if (wasPeeking) restorePracticeInputFocus();
+  }, [clearPeekTimers, currentWord?.id, restorePracticeInputFocus]);
+
+  useEffect(() => {
+    if (modal || isComplete || settingsModalOpenRef.current) {
+      finishPeek(false);
+      peekActivatedRef.current = false;
+    }
+  }, [finishPeek, isComplete, modal]);
 
   useEffect(() => {
     if (status) setLocalStatus(null);
@@ -160,7 +296,10 @@ export function Practice({
 
       if (event.code === 'Space') {
         event.preventDefault();
-        handleInput(' ');
+        if (!event.repeat && !spaceHoldStartedRef.current) {
+          spaceHoldStartedRef.current = true;
+          beginPeekHold();
+        }
         return;
       }
 
@@ -175,9 +314,26 @@ export function Practice({
       }
     }
 
+    function onKeyUp(event: KeyboardEvent) {
+      if (event.code !== 'Space' || isControlTarget(event.target)) return;
+
+      event.preventDefault();
+      const didPeek = peekActivatedRef.current;
+      endPeekHold();
+      spaceHoldStartedRef.current = false;
+
+      if (!didPeek && !modal && !settingsModalOpenRef.current && !isComplete) {
+        playAudio();
+      }
+    }
+
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleInput, isComplete, modal, revealNext]);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [beginPeekHold, endPeekHold, handleInput, isComplete, modal, playAudio, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -188,6 +344,12 @@ export function Practice({
 
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
+
+  const currentWordComplete = currentWord ? findIncompleteLetterIndex(currentWord.welshAnswer, letters) < 0 : false;
+
+  useEffect(() => {
+    if (currentWordComplete) finishPeek(false);
+  }, [currentWordComplete, finishPeek]);
 
   const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
     const nextSettings = { ...storage.settings, ...patch };
@@ -202,7 +364,11 @@ export function Practice({
 
   const handleSettingsModalOpenChange = useCallback((open: boolean) => {
     settingsModalOpenRef.current = open;
-  }, []);
+    if (open) {
+      finishPeek(false);
+      peekActivatedRef.current = false;
+    }
+  }, [finishPeek]);
 
   function applyWordLists(selectedIds: string[]) {
     const fallback = lists[0] ? [lists[0].id] : [];
@@ -218,12 +384,51 @@ export function Practice({
   }
 
   function handleRevealLetter(event?: MouseEvent<HTMLButtonElement>) {
+    if (revealHandledByPointerRef.current) {
+      revealHandledByPointerRef.current = false;
+      return;
+    }
+
+    if (peekActivatedRef.current) {
+      peekActivatedRef.current = false;
+      event?.currentTarget.blur();
+      restorePracticeInputFocus();
+      return;
+    }
+
     revealNext();
     event?.currentTarget.blur();
+    restorePracticeInputFocus();
+  }
 
+  function handleRevealPointerDown(event: PointerEvent<HTMLButtonElement>) {
     if (shouldUseMobileKeyboard()) {
-      window.setTimeout(focusMobileInput, 40);
+      event.preventDefault();
+      focusMobileInput();
     }
+
+    beginPeekHold();
+  }
+
+  function handleRevealPointerUp(event: PointerEvent<HTMLButtonElement>) {
+    const didPeek = peekActivatedRef.current;
+    endPeekHold();
+    revealHandledByPointerRef.current = true;
+
+    if (!didPeek) {
+      revealNext();
+      event.currentTarget.blur();
+      restorePracticeInputFocus();
+    }
+  }
+
+  function handleAnswerPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (shouldUseMobileKeyboard()) {
+      event.preventDefault();
+      focusMobileInput();
+    }
+
+    beginPeekHold();
   }
 
   function showLocalStatus(message: string) {
@@ -269,7 +474,7 @@ export function Practice({
   }
 
   const answerLayoutClass = getAnswerLayoutClass(currentWord.welshAnswer);
-  const wordComplete = findIncompleteLetterIndex(currentWord.welshAnswer, letters) < 0;
+  const wordComplete = currentWordComplete;
   const displayStatus = status ?? localStatus;
   const displayTone = status ? statusTone : 'neutral';
 
@@ -321,8 +526,16 @@ export function Practice({
           className="mobile-practice-input"
         />
 
-        <div onClick={focusMobileInput} onTouchStart={focusMobileInput} className="letter-input-tap-zone">
+        <div
+          onClick={focusMobileInput}
+          onPointerDown={handleAnswerPointerDown}
+          onPointerUp={endPeekHold}
+          onPointerCancel={endPeekHold}
+          onPointerLeave={endPeekHold}
+          className="letter-input-tap-zone answer-peek-zone"
+        >
           <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
+          <GhostAnswer answer={currentWord.welshAnswer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
 
         <AnimatedStatusLine status={displayStatus} tone={displayTone} />
@@ -334,6 +547,7 @@ export function Practice({
           </button>
 
           <button onClick={() => {
+            finishPeek(false);
             setModal('wordlist');
           }}>
             <List size={22} />
@@ -341,12 +555,11 @@ export function Practice({
           </button>
 
           <button
-            onPointerDown={(event) => {
-              if (shouldUseMobileKeyboard()) {
-                event.preventDefault();
-                focusMobileInput();
-              }
-            }}
+            className="reveal-button"
+            onPointerDown={handleRevealPointerDown}
+            onPointerUp={handleRevealPointerUp}
+            onPointerCancel={endPeekHold}
+            onPointerLeave={endPeekHold}
             onClick={handleRevealLetter}
           >
             <CornerDownRight size={23} />
