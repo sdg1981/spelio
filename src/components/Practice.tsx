@@ -155,6 +155,11 @@ export function Practice({
     window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
   }
 
+  function blurMobileInput() {
+    mobileKeyboardEnabledRef.current = false;
+    mobileInputRef.current?.blur();
+  }
+
   const {
     currentWord,
     letters,
@@ -196,7 +201,7 @@ export function Practice({
     }
   }, []);
 
-  const finishPeek = useCallback((showMemoryStatus = true) => {
+  const finishPeek = useCallback((showMemoryStatus = true, restoreFocus = true) => {
     clearPeekTimers();
     const wasPeeking = isPeekingRef.current;
 
@@ -206,7 +211,7 @@ export function Practice({
       if (showMemoryStatus) showLocalStatus('Now try from memory');
     }
 
-    restorePracticeInputFocus();
+    if (restoreFocus) restorePracticeInputFocus();
   }, [clearPeekTimers, restorePracticeInputFocus]);
 
   const activatePeek = useCallback(() => {
@@ -367,7 +372,8 @@ export function Practice({
   const handleSettingsModalOpenChange = useCallback((open: boolean) => {
     settingsModalOpenRef.current = open;
     if (open) {
-      finishPeek(false);
+      finishPeek(false, false);
+      blurMobileInput();
       peekActivatedRef.current = false;
     } else {
       restorePracticeInputFocus();
