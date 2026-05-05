@@ -414,7 +414,7 @@ Examples:
 
 The session engine should resolve dialect variants before rendering the answer slots.
 
-For the MVP, there is no user-facing dialect preference. Variant selection should use mixed-mode behaviour: include eligible variants, choose only one item per variantGroupId, and avoid showing multiple regional spellings of the same prompt in a single session.
+For the MVP, there is no user-facing dialect preference. Variant selection should use mixed-mode behaviour: dialect variants are eligible by default, and multiple variants from the same variantGroupId may appear in the same session if they are spaced apart and not shown consecutively. The goal is to expose learners to real Welsh dialect variation without disrupting practice flow.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
 
@@ -570,13 +570,18 @@ Do not move the user to the next word list after only completing one 10-word ses
 
 Before selecting session words, resolve dialect variants using mixed-mode behaviour.
 
-If multiple words share the same variantGroupId, only one variant should be eligible in a single session.
+If multiple words share the same variantGroupId, they represent dialect variants of the same prompt.
 
-Selection rules for variantGroupId:
+Variant selection rules:
 
-- Choose one variant per session.
-- Do not show both variants of the same item in the same session.
-- The MVP may use deterministic mixed selection to keep sessions stable.
+- Variants may appear in the same session.
+- Variants must not be shown consecutively.
+- Prefer spacing variants apart within a session.
+- Avoid over-representing a single variantGroupId in a session; typically no more than 2 variants per group in a 10-word session.
+- Selection should feel natural and not forced.
+- Over time, expose learners to different variants where available.
+
+The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation.
 
 When choosing session words, prioritise:
 
@@ -1217,7 +1222,7 @@ Build:
 - Completion logic
 - End-session stats
 - Dialect filtering before rendering answer slots
-- One eligible variant per variantGroupId per session
+- Mixed-mode dialect variant selection, allowing spaced non-consecutive variants from the same variantGroupId where appropriate
 - Mobile hidden input handling
 - Desktop key handling without duplication
 
@@ -1274,7 +1279,7 @@ I am building Spelio, a premium mobile-first Welsh spelling practice web app for
 
 Use this after the UI shell exists:
 
-Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using mixed-mode behaviour and ensure only one word per variantGroupId appears in a session. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
+Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using mixed-mode behaviour, allowing multiple variants from the same variantGroupId only when they are spaced apart and not consecutive. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
 
 ### Prompt 3 — Build local storage progress and recommendation logic
 

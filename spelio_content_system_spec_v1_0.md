@@ -557,6 +557,8 @@ Example:
 - nawr — South Wales / Standard
 - rwan — North Wales
 
+Spelio teaches mixed Welsh by default. The MVP does not expose a user-facing dialect preference. Where meaningful dialect variants exist, learners may encounter more than one variant over time, and multiple variants may appear in the same session if they are spaced apart and not shown consecutively.
+
 Do not handle different-length dialect forms as acceptedAlternatives.
 
 ---
@@ -590,6 +592,37 @@ Example:
 ```
 
 dialectNote must not duplicate usageNote.
+
+When creating meaningful dialect variants:
+
+- Create separate word entries for each variant.
+- Use the same English prompt.
+- Give each variant its own Welsh answer.
+- Add the correct dialect value.
+- Add a short dialectNote where useful.
+- Link the entries with the same variantGroupId.
+- Ensure each variant has its own audio matching the exact Welsh answer.
+
+Example:
+
+```json
+[
+  {
+    "englishPrompt": "now",
+    "welshAnswer": "nawr",
+    "dialect": "South Wales / Standard",
+    "dialectNote": "South Wales / standard form.",
+    "variantGroupId": "now"
+  },
+  {
+    "englishPrompt": "now",
+    "welshAnswer": "rwan",
+    "dialect": "North Wales",
+    "dialectNote": "North Wales form.",
+    "variantGroupId": "now"
+  }
+]
+```
 
 ---
 
@@ -670,6 +703,8 @@ Do not use acceptedAlternatives for:
 - different phrase structures
 
 Different-length variants should be separate word items with variantGroupId.
+
+Meaningful dialect variants should always be separate word entries linked by variantGroupId, especially when they have different spellings, different lengths, or different audio.
 
 Diacritic tolerance should be handled by the spelling engine, not by adding unaccented alternatives manually.
 
@@ -991,6 +1026,10 @@ Rules:
 - Avoid early mutation burden.
 - Use mutations only where appropriate for the stage.
 - Do not use acceptedAlternatives for different-length variants.
+- Create separate entries for meaningful dialect variants.
+- Link dialect variants with variantGroupId.
+- Do not use acceptedAlternatives for dialect variants.
+- Mixed Welsh exposure is the default; variants may appear in the same session if spaced apart.
 - Keep usageNote short and rare.
 - Do not put dialect information in usageNote.
 - Keep lists coherent and practical.
