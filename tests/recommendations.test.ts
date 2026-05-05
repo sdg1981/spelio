@@ -1,5 +1,6 @@
 import { wordLists } from '../src/data/wordLists';
 import { createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
+import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   applyWordProgressPatch,
   createDefaultStorage,
@@ -24,6 +25,14 @@ function numbersStorage(): SpelioStorage {
     ...createDefaultStorage(),
     selectedListIds: ['foundations_numbers'],
     currentPathPosition: 'foundations_numbers'
+  };
+}
+
+function weatherAndWorkStorage(): SpelioStorage {
+  return {
+    ...createDefaultStorage(),
+    selectedListIds: ['stage2_weather', 'stage2_work'],
+    currentPathPosition: 'stage2_weather'
   };
 }
 
@@ -140,4 +149,29 @@ test('recommendation uses updated progress rather than stale pre-session state',
 
   const updatedStorage = updateListCompletion(staleStorage, wordLists, result);
   assertEqual(getRecommendation(updatedStorage, wordLists).listId, 'foundations_mixed_01', 'Post-commit progress should recommend next list');
+});
+
+test('multi-list selection keeps a mixed homepage label', () => {
+  const storage = weatherAndWorkStorage();
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(storage.selectedListIds.length, 2, 'Setup should persist both selected list IDs');
+  assertEqual(storage.selectedListIds.includes('stage2_weather'), true, 'Weather should remain selected');
+  assertEqual(storage.selectedListIds.includes('stage2_work'), true, 'Work should remain selected');
+  assertEqual(recommendation.title, 'Continue learning', 'Primary action should remain continue learning');
+  assertEqual(recommendation.subtitle, 'Custom mixed word list', 'Homepage subtitle should not collapse to Weather only');
+  assertEqual(recommendation.listId, undefined, 'Mixed recommendation should not provide a single list ID that can overwrite selection');
+  assertEqual(getSelectedListLabel(storage.selectedListIds, wordLists), 'Custom mixed word list', 'Selection helper should label multi-list practice as mixed');
+});
+
+test('practice session draws Weather and Work words from the combined selection', () => {
+  const session = createPracticeSession(wordLists, weatherAndWorkStorage());
+  const listIds = new Set(session.words.map(word => word.listId));
+  const firstTenListIds = session.words.slice(0, 10).map(word => word.listId);
+
+  assertEqual(session.words.length, 10, 'Session should use the normal ten-word target');
+  assert(listIds.has('stage2_weather'), 'Session should include Weather words');
+  assert(listIds.has('stage2_work'), 'Session should include Work words');
+  assertEqual(firstTenListIds.every(id => id === 'stage2_weather'), false, 'First 10 questions should not be Weather only');
+  assertEqual(firstTenListIds.every(id => id === 'stage2_work'), false, 'First 10 questions should not be Work only');
 });

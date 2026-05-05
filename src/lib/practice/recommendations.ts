@@ -1,6 +1,7 @@
 import type { WordList } from '../../data/wordLists';
 import type { SpelioStorage } from './storage';
 import { hasDifficultWords } from './sessionEngine';
+import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
   kind: 'list' | 'review';
@@ -23,13 +24,22 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
 
 export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
   const difficultWordsExist = hasDifficultWords(storage);
+  const selectedLists = getSelectedLists(storage.selectedListIds, lists);
 
   if (storage.lastSessionResult?.state === 'struggled' && difficultWordsExist) {
     return {
       kind: 'review',
-      listId: storage.currentPathPosition ?? storage.selectedListIds[0] ?? lists[0]?.id,
+      listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,
       title: 'Review difficult words',
       subtitle: 'Based on your last session'
+    };
+  }
+
+  if (selectedLists.length > 1) {
+    return {
+      kind: 'list',
+      title: 'Continue learning',
+      subtitle: getSelectedListLabel(storage.selectedListIds, lists)
     };
   }
 

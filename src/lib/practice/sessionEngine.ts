@@ -19,6 +19,39 @@ function scoreWord(word: PracticeWord, storage: SpelioStorage) {
   return 10 + progress.completedCount;
 }
 
+function selectSessionWords(pool: PracticeWord[], listIds: string[], storage: SpelioStorage) {
+  const byList = new Map<string, PracticeWord[]>();
+
+  for (const word of pool) {
+    byList.set(word.listId, [...(byList.get(word.listId) ?? []), word]);
+  }
+
+  for (const [listId, words] of byList) {
+    byList.set(
+      listId,
+      [...words].sort((a, b) => scoreWord(a, storage) - scoreWord(b, storage) || a.order - b.order)
+    );
+  }
+
+  const orderedListIds = [
+    ...listIds.filter(id => byList.has(id)),
+    ...Array.from(byList.keys()).filter(id => !listIds.includes(id)).sort()
+  ];
+  const words: PracticeWord[] = [];
+
+  while (words.length < SESSION_TARGET && orderedListIds.some(id => (byList.get(id)?.length ?? 0) > 0)) {
+    for (const listId of orderedListIds) {
+      const nextWord = byList.get(listId)?.shift();
+      if (!nextWord) continue;
+
+      words.push(nextWord);
+      if (words.length >= SESSION_TARGET) break;
+    }
+  }
+
+  return words;
+}
+
 function isDialectEligible(word: PracticeWord, preference: DialectPreference) {
   if (preference === 'mixed') return true;
   if (preference === 'north') return word.dialect === 'Both' || word.dialect === 'North Wales';
@@ -67,9 +100,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   });
 
   const pool = reviewDifficult ? reviewWords : candidates;
-  const words = [...pool]
-    .sort((a, b) => scoreWord(a, storage) - scoreWord(b, storage) || a.listId.localeCompare(b.listId) || a.order - b.order)
-    .slice(0, SESSION_TARGET);
+  const words = selectSessionWords(pool, eligibleLists.map(list => list.id), storage);
 
   return {
     words,
