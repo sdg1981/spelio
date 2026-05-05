@@ -142,6 +142,16 @@ export function saveSpelioStorage(storage: SpelioStorage) {
   }
 }
 
+export function applyPracticeStartListSelection(storage: SpelioStorage, listId?: string): SpelioStorage {
+  if (!listId) return storage;
+
+  return {
+    ...storage,
+    selectedListIds: [listId],
+    currentPathPosition: listId
+  };
+}
+
 export function clearSpelioStorageData() {
   if (typeof window === 'undefined') return;
 

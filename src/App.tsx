@@ -5,7 +5,7 @@ import { EndScreen } from './components/End';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
-import { clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
+import { applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { hasDifficultWords } from './lib/practice/sessionEngine';
 
@@ -64,14 +64,7 @@ export default function App() {
       return;
     }
 
-    setStorage(previous => {
-      if (!listId || review) return previous;
-      return {
-        ...previous,
-        selectedListIds: [listId],
-        currentPathPosition: listId
-      };
-    });
+    setStorage(previous => (review ? previous : applyPracticeStartListSelection(previous, listId)));
 
     setReviewMode(review);
     setScreen('practice');

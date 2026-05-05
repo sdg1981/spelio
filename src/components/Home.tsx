@@ -25,13 +25,17 @@ export function Home({
 }) {
   const isFirst = mode === 'first';
   const isStruggled = mode === 'struggled';
-  const shouldPrioritiseReview = isStruggled && hasDifficultWords;
+  const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
   const homeHeading = isFirst
     ? null
     : shouldPrioritiseReview
       ? 'Focus on tricky words'
       : 'Continue learning';
-  const primaryLabel = shouldPrioritiseReview ? 'Review difficult words' : 'Start spelling practice';
+  const primaryLabel = shouldPrioritiseReview
+    ? 'Review difficult words'
+    : !isFirst && recommendation.title !== 'Continue learning'
+      ? recommendation.title
+      : 'Start spelling practice';
   const handlePrimary = shouldPrioritiseReview ? onReview : onStart;
 
   return (

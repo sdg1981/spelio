@@ -37,7 +37,7 @@ export function EndScreen({
   ];
 
   const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
-  const shouldPrioritiseReview = result.state === 'struggled' && hasDifficultWords;
+  const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
   const primaryTitle = shouldPrioritiseReview
     ? 'Review difficult words'
     : !hasDifficultWords && recommendationLooksLikeReview

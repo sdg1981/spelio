@@ -1,6 +1,6 @@
 import type { WordList } from '../../data/wordLists';
 import type { SpelioStorage } from './storage';
-import { hasDifficultWords } from './sessionEngine';
+import { filterDialectVariants, hasDifficultWords } from './sessionEngine';
 import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
@@ -22,9 +22,45 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
   return storage.lastSessionResult?.listIds.includes(listId) === true;
 }
 
+function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordList[]) {
+  const words = filterDialectVariants(
+    selectedLists.filter(list => list.isActive).flatMap(list => list.words),
+    storage.settings.dialectPreference
+  );
+
+  return words.length > 0 && words.every(word => {
+    const progress = storage.wordProgress[word.id];
+    return progress?.seen === true && progress.completedCount > 0;
+  });
+}
+
 export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
   const difficultWordsExist = hasDifficultWords(storage);
   const selectedLists = getSelectedLists(storage.selectedListIds, lists);
+
+  if (selectedLists.length > 1) {
+    if (difficultWordsExist) {
+      return {
+        kind: 'review',
+        title: 'Review difficult words',
+        subtitle: 'From your mixed selection'
+      };
+    }
+
+    if (mixedSelectionIsComplete(storage, selectedLists)) {
+      return {
+        kind: 'list',
+        title: 'Practise again',
+        subtitle: 'You’ve completed this mixed selection'
+      };
+    }
+
+    return {
+      kind: 'list',
+      title: 'Continue mixed practice',
+      subtitle: getSelectedListLabel(storage.selectedListIds, lists)
+    };
+  }
 
   if (storage.lastSessionResult?.state === 'struggled' && difficultWordsExist) {
     return {
@@ -32,14 +68,6 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
       listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,
       title: 'Review difficult words',
       subtitle: 'Based on your last session'
-    };
-  }
-
-  if (selectedLists.length > 1) {
-    return {
-      kind: 'list',
-      title: 'Continue learning',
-      subtitle: getSelectedListLabel(storage.selectedListIds, lists)
     };
   }
 
