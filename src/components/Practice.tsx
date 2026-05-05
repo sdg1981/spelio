@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { Logo } from './Logo';
-import { CircleX, CornerDownRight, FileText, List, Settings, Volume2 } from './Icons';
+import { CircleX, Eye, Globe2, List, Settings, Volume2 } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -10,8 +9,8 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practi
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
     <div className="progress-top">
-      <div className="progress-track"><div className="progress-fill" style={{ width: `${value}%` }} /></div>
       <div className="progress-count">{count}</div>
+      <div className="progress-track"><div className="progress-fill" style={{ width: `${value}%` }} /></div>
     </div>
   );
 }
@@ -453,10 +452,12 @@ export function Practice({
 
   if (!hasWords || !currentWord) {
     return (
-      <main className="app-bg relative overflow-hidden">
+      <main className="app-bg practice-app relative overflow-hidden">
         <Progress value={0} count="0 / 0" />
+        <button className="practice-mark-button" onClick={onBackHome} aria-label="Back to home">
+          <span>S<span aria-hidden="true">_</span></span>
+        </button>
         <section className="page-shell practice-shell">
-          <Logo small onClick={onBackHome} />
           <div className="status-line">Select a word list to begin</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
           <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
@@ -483,8 +484,11 @@ export function Practice({
     .filter((note): note is string => Boolean(note));
 
   return (
-    <main className="app-bg relative overflow-hidden">
+    <main className="app-bg practice-app relative overflow-hidden">
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
+      <button className="practice-mark-button" onClick={onBackHome} aria-label="Back to home">
+        <span>S<span aria-hidden="true">_</span></span>
+      </button>
 
       <SettingsLauncher
         settings={storage.settings}
@@ -495,8 +499,6 @@ export function Practice({
       />
 
       <section className="page-shell practice-shell">
-        <Logo small onClick={onBackHome} />
-
         <button className="word-pill" onClick={handleWordPillClick}>
           <Volume2 className="text-[#d90000]" size={24} />
           {storage.settings.englishVisible && <span>{currentWord.englishPrompt}</span>}
@@ -550,8 +552,8 @@ export function Practice({
 
         <div className="utility-bar">
           <button onClick={handleEnglishToggle}>
-            <FileText size={22} />
-            <span>English</span>
+            <Globe2 size={22} />
+            <span>EN</span>
           </button>
 
           <button onClick={() => {
@@ -559,7 +561,7 @@ export function Practice({
             setModal('wordlist');
           }}>
             <List size={22} />
-            <span>Word list</span>
+            <span>LIST</span>
           </button>
 
           <button
@@ -571,8 +573,8 @@ export function Practice({
             onContextMenu={(event) => event.preventDefault()}
             onClick={handleRevealLetter}
           >
-            <CornerDownRight size={23} />
-            <span>Reveal letter</span>
+            <Eye size={23} />
+            <span>REVEAL</span>
           </button>
         </div>
 
