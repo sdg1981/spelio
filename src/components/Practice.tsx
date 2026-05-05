@@ -625,8 +625,8 @@ function AnimatedStatusLine({
   );
 }
 
-function Overlay({ children }: { children: ReactNode }) {
-  return <div className="overlay">{children}</div>;
+function Overlay({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={['overlay', className].filter(Boolean).join(' ')}>{children}</div>;
 }
 
 function Toggle({ active, onClick }: { active: boolean; onClick: () => void }) {
@@ -836,7 +836,6 @@ const WordListRow = memo(function WordListRow({
         />
         <span className="check-name">{list.name}</span>
       </span>
-      <span className="dialect">{list.dialect}</span>
     </label>
   );
 });
@@ -876,7 +875,7 @@ export function WordListModal({
   }, []);
 
   return (
-    <Overlay>
+    <Overlay className="wordlist-overlay">
       <section className="modal modal-wide modal-accent wordlist-modal">
         <div className="modal-header flex items-start justify-between gap-4">
           <div>
