@@ -49,6 +49,13 @@ export interface SpelioStorage {
   settings: SpelioSettings;
 }
 
+export interface WordProgressPatch {
+  incorrect?: boolean;
+  revealed?: boolean;
+  completed?: boolean;
+  cleanCompleted?: boolean;
+}
+
 const STORAGE_KEY = 'spelio-storage-v1';
 const LEGACY_STORAGE_KEYS = [
   'selectedListIds',
@@ -146,6 +153,38 @@ export function clearSpelioStorageData() {
   } catch {
     // Local storage should never block resetting in-memory progress.
   }
+}
+
+export function applyWordProgressPatch(
+  storage: SpelioStorage,
+  word: PracticeWord,
+  patch: WordProgressPatch,
+  practisedAt = new Date().toISOString()
+): SpelioStorage {
+  const previous = storage.wordProgress[word.id] ?? {
+    seen: false,
+    completedCount: 0,
+    incorrectAttempts: 0,
+    revealedCount: 0,
+    difficult: false
+  };
+
+  return {
+    ...storage,
+    currentPathPosition: storage.currentPathPosition || word.listId,
+    wordProgress: {
+      ...storage.wordProgress,
+      [word.id]: {
+        ...previous,
+        seen: true,
+        completedCount: previous.completedCount + (patch.completed ? 1 : 0),
+        incorrectAttempts: previous.incorrectAttempts + (patch.incorrect ? 1 : 0),
+        revealedCount: previous.revealedCount + (patch.revealed ? 1 : 0),
+        difficult: patch.cleanCompleted ? false : previous.difficult || Boolean(patch.incorrect || patch.revealed),
+        lastPractisedAt: practisedAt
+      }
+    }
+  };
 }
 
 function unique(values: string[]) {

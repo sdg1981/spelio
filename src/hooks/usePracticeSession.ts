@@ -3,8 +3,8 @@ import type { PracticeWord, WordList } from '../data/wordLists';
 import { validateLetter } from '../lib/practice/validator';
 import { classifySession, createPracticeSession } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
-import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
-import { updateListCompletion } from '../lib/practice/storage';
+import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
+import { applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 
 interface LetterState {
   value: string;
@@ -182,33 +182,9 @@ export function usePracticeSession({
     audio.play().catch(() => showStatus('Audio unavailable'));
   }, [currentWord?.id]);
 
-  function persistWordProgress(word: PracticeWord, patch: { incorrect?: boolean; revealed?: boolean; completed?: boolean; cleanCompleted?: boolean }) {
-    const now = new Date().toISOString();
+  function persistWordProgress(word: PracticeWord, patch: WordProgressPatch) {
     const currentStorage = storageRef.current;
-    const previous = currentStorage.wordProgress[word.id] ?? {
-      seen: false,
-      completedCount: 0,
-      incorrectAttempts: 0,
-      revealedCount: 0,
-      difficult: false
-    };
-
-    const nextStorage: SpelioStorage = {
-      ...currentStorage,
-      currentPathPosition: currentStorage.currentPathPosition || word.listId,
-      wordProgress: {
-        ...currentStorage.wordProgress,
-        [word.id]: {
-          ...previous,
-          seen: true,
-          completedCount: previous.completedCount + (patch.completed ? 1 : 0),
-          incorrectAttempts: previous.incorrectAttempts + (patch.incorrect ? 1 : 0),
-          revealedCount: previous.revealedCount + (patch.revealed ? 1 : 0),
-          difficult: patch.cleanCompleted ? false : previous.difficult || Boolean(patch.incorrect || patch.revealed),
-          lastPractisedAt: now
-        }
-      }
-    };
+    const nextStorage = applyWordProgressPatch(currentStorage, word, patch);
 
     storageRef.current = nextStorage;
     onStorageChange(nextStorage);

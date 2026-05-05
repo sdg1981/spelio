@@ -13,8 +13,18 @@ function findList(lists: WordList[], id?: string | null) {
   return id ? lists.find(list => list.id === id) : undefined;
 }
 
+function asListRecommendation(list: WordList): Recommendation {
+  return { kind: 'list', listId: list.id, title: 'Continue learning', subtitle: list.name };
+}
+
+function wasJustPractised(storage: SpelioStorage, listId: string) {
+  return storage.lastSessionResult?.listIds.includes(listId) === true;
+}
+
 export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
-  if (storage.lastSessionResult?.state === 'struggled' && hasDifficultWords(storage)) {
+  const difficultWordsExist = hasDifficultWords(storage);
+
+  if (storage.lastSessionResult?.state === 'struggled' && difficultWordsExist) {
     return {
       kind: 'review',
       listId: storage.currentPathPosition ?? storage.selectedListIds[0] ?? lists[0]?.id,
@@ -25,7 +35,14 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
 
   const current = findList(lists, storage.currentPathPosition) ?? findList(lists, storage.selectedListIds[0]);
   if (current) {
-    return { kind: 'list', listId: current.id, title: 'Continue learning', subtitle: current.name };
+    const currentProgress = storage.listProgress[current.id];
+    const nextList = findList(lists, current.nextListId);
+
+    if (currentProgress?.completed === true && nextList && wasJustPractised(storage, current.id)) {
+      return asListRecommendation(nextList);
+    }
+
+    return asListRecommendation(current);
   }
 
   const fallback = lists[0];
