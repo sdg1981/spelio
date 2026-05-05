@@ -1513,58 +1513,59 @@
 
 @media (max-width:520px){
   .practice-app .progress-top{
-    height:104px;
+    height:76px;
   }
 
   .practice-app .progress-count{
-    height:100px;
-    padding-top:24px;
-    font-size:28px;
-    font-weight:400;
+    height:73px;
+    padding-top:0;
+    font-size:18px;
+    font-weight:500;
   }
 
   .practice-app .progress-track{
-    height:4px;
+    height:3px;
   }
 
   .practice-mark-button{
-    left:44px;
-    top:62px;
-    font-size:58px;
+    left:24px;
+    top:22px;
+    font-size:34px;
+    line-height:.82;
   }
 
   .practice-app .settings-cog{
-    right:40px;
-    top:58px;
+    right:20px;
+    top:16px;
     width:44px;
     height:44px;
   }
 
   .practice-app .settings-cog svg{
-    width:36px;
-    height:36px;
-    stroke-width:2.25;
+    width:25px;
+    height:25px;
+    stroke-width:2.35;
   }
 
   .practice-app .practice-shell{
     max-width:100%;
     min-height:100svh;
-    padding:168px 18px 96px;
+    padding:126px 18px 82px;
   }
 
   .practice-app .word-pill{
     min-width:0;
-    width:min(468px, calc(100vw - 128px));
-    gap:30px;
-    padding:25px 34px;
-    font-size:36px;
+    width:min(360px, calc(100vw - 80px));
+    gap:18px;
+    padding:17px 28px;
+    font-size:22px;
     border-radius:999px;
     box-shadow:0 20px 42px rgba(7,21,34,.055);
   }
 
   .practice-app .word-pill svg{
-    width:43px;
-    height:43px;
+    width:28px;
+    height:28px;
   }
 
   .practice-app .dialect-label{
@@ -1579,7 +1580,7 @@
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:92px;
+    margin-top:66px;
   }
 
   .practice-app .letter-grid,
@@ -1589,70 +1590,70 @@
 
   .practice-app .letter-grid{
     max-width:calc(100vw - 56px);
-    gap:74px 56px;
+    gap:52px 44px;
   }
 
   .practice-app .letter-word{
-    gap:32px;
+    gap:24px;
   }
 
   .practice-app .letter-slot{
-    min-width:60px;
-    height:70px;
-    border-bottom-width:6px;
-    font-size:55px;
+    min-width:42px;
+    height:54px;
+    border-bottom-width:4px;
+    font-size:38px;
   }
 
   .practice-app .letter-slot.active:not(.mistake){
-    border-bottom-width:6px;
+    border-bottom-width:4px;
   }
 
   .practice-app .letter-slot.mistake{
-    width:60px;
-    min-width:60px;
-    height:70px;
-    font-size:49px;
+    width:42px;
+    min-width:42px;
+    height:54px;
+    font-size:35px;
   }
 
   .practice-app .letter-grid.compact{
-    gap:58px 48px;
+    gap:44px 36px;
   }
 
   .practice-app .letter-grid.compact .letter-word{
-    gap:22px;
+    gap:16px;
   }
 
   .practice-app .letter-grid.compact .letter-slot{
-    min-width:44px;
-    font-size:45px;
+    min-width:33px;
+    font-size:33px;
   }
 
   .practice-app .letter-grid.extra-compact{
-    gap:48px 38px;
+    gap:38px 30px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-word{
-    gap:14px;
+    gap:10px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-slot{
-    min-width:34px;
-    font-size:36px;
+    min-width:26px;
+    font-size:28px;
   }
 
   .practice-app .status-line{
-    margin-top:70px;
-    min-height:38px;
-    font-size:29px;
+    margin-top:46px;
+    min-height:30px;
+    font-size:20px;
   }
 
   .practice-app .status-message{
-    gap:18px;
+    gap:10px;
   }
 
   .practice-app .status-message svg{
-    width:32px;
-    height:32px;
+    width:22px;
+    height:22px;
   }
 
   .practice-app .utility-bar{
@@ -1673,16 +1674,16 @@
   }
 
   .practice-app .utility-bar button{
-    min-height:118px;
-    gap:18px;
-    padding:22px 10px calc(24px + env(safe-area-inset-bottom));
-    font-size:29px;
+    min-height:72px;
+    gap:12px;
+    padding:15px 10px calc(15px + env(safe-area-inset-bottom));
+    font-size:17px;
     font-weight:500;
   }
 
   .practice-app .utility-bar svg{
-    width:34px;
-    height:34px;
+    width:23px;
+    height:23px;
   }
 
   .practice-app .footer-copy{
@@ -1692,51 +1693,51 @@
 
 @media (max-width:520px) and (max-height:760px){
   .practice-app .practice-shell{
-    padding-top:132px;
-    padding-bottom:82px;
+    padding-top:104px;
+    padding-bottom:72px;
   }
 
   .practice-app .word-pill{
-    width:min(360px, calc(100vw - 126px));
-    padding:17px 26px;
-    font-size:26px;
+    width:min(330px, calc(100vw - 76px));
+    padding:14px 24px;
+    font-size:19px;
   }
 
   .practice-app .word-pill svg{
-    width:32px;
-    height:32px;
+    width:24px;
+    height:24px;
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:58px;
+    margin-top:42px;
   }
 
   .practice-app .letter-grid{
-    gap:46px 42px;
+    gap:34px 34px;
   }
 
   .practice-app .letter-word{
-    gap:24px;
+    gap:18px;
   }
 
   .practice-app .letter-slot{
-    min-width:42px;
-    height:52px;
-    border-bottom-width:4px;
-    font-size:39px;
+    min-width:32px;
+    height:42px;
+    border-bottom-width:3px;
+    font-size:30px;
   }
 
   .practice-app .letter-slot.active:not(.mistake){
-    border-bottom-width:4px;
+    border-bottom-width:3px;
   }
 
   .practice-app .letter-grid.compact .letter-word{
-    gap:16px;
+    gap:12px;
   }
 
   .practice-app .letter-grid.compact .letter-slot{
-    min-width:34px;
-    font-size:34px;
+    min-width:27px;
+    font-size:27px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-word{
@@ -1744,13 +1745,13 @@
   }
 
   .practice-app .letter-grid.extra-compact .letter-slot{
-    min-width:27px;
-    font-size:29px;
+    min-width:22px;
+    font-size:24px;
   }
 
   .practice-app .status-line{
-    margin-top:48px;
-    font-size:22px;
+    margin-top:32px;
+    font-size:17px;
   }
 
   .practice-app .status-message svg{
@@ -1759,29 +1760,29 @@
   }
 
   .practice-app .utility-bar button{
-    min-height:72px;
-    padding-top:14px;
-    padding-bottom:calc(14px + env(safe-area-inset-bottom));
-    font-size:17px;
+    min-height:60px;
+    padding-top:11px;
+    padding-bottom:calc(11px + env(safe-area-inset-bottom));
+    font-size:15px;
   }
 
   .practice-app .utility-bar svg{
-    width:22px;
-    height:22px;
+    width:20px;
+    height:20px;
   }
 }
 
 @media (max-width:380px){
   .practice-mark-button{
-    left:32px;
+    left:20px;
   }
 
   .practice-app .settings-cog{
-    right:28px;
+    right:16px;
   }
 
   .practice-app .word-pill{
-    width:min(330px, calc(100vw - 82px));
+    width:min(320px, calc(100vw - 56px));
   }
 
   .practice-app .letter-grid{
