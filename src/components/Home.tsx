@@ -1,7 +1,7 @@
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
-import { List, Play, Target } from './Icons';
+import { List } from './Icons';
 import type { Recommendation } from '../lib/practice/recommendations';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
@@ -24,60 +24,62 @@ export function Home({
   onSelectList: () => void;
 }) {
   const isFirst = mode === 'first';
-  const isStruggled = mode === 'struggled';
-  const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
-  const homeHeading = isFirst
-    ? null
+  const shouldPrioritiseReview = hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
+  const homeHeading = shouldPrioritiseReview ? 'Focus on tricky words' : 'Continue learning';
+  const primaryLabel = isFirst
+    ? 'Start spelling practice'
     : shouldPrioritiseReview
-      ? 'Focus on tricky words'
+      ? 'Review difficult words'
       : 'Continue learning';
-  const primaryLabel = shouldPrioritiseReview
-    ? 'Review difficult words'
-    : !isFirst && recommendation.title !== 'Continue learning'
-      ? recommendation.title
-      : 'Start spelling practice';
   const handlePrimary = shouldPrioritiseReview ? onReview : onStart;
+  const selectListLabel = isFirst ? 'Select word list' : 'Change word list';
+  const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
 
   return (
-    <main className="app-bg">
-      <section className="page-shell home-shell">
-        <Logo animateCursor />
+    <main className="homepage-bg">
+      <section className={`page-shell home-shell ${shellStateClass}`}>
+        <div className="home-logo">
+          <Logo animateCursor />
+        </div>
 
-        <button className="play-orb play-orb-lg mt-[78px] md:mt-14" aria-label="Start practice" onClick={onStart}>
-          <span><Play size={70} strokeWidth={1.8} /></span>
-        </button>
-
-        <div className="home-copy min-h-[82px] text-center">
-          <h1 className={`${isFirst ? 'font-semibold' : 'font-extrabold'} tracking-[-.055em] text-[#071522]`}>
+        <div className={`home-copy ${isFirst ? 'home-copy-first' : ''}`}>
+          <h1 className={`home-heading ${isFirst ? 'home-heading-first' : ''}`}>
             {isFirst ? (
               <><span>Type what you hear.</span><br /><span>Learn Welsh spelling.</span></>
             ) : homeHeading}
           </h1>
 
           {!isFirst && (
-            <p className="mt-5 text-[17px] md:text-[16px] text-[#697481]">
+            <p className="home-support">
               {shouldPrioritiseReview ? 'Based on your last session' : recommendation.subtitle}
             </p>
           )}
         </div>
 
-        <div className="mt-7 w-full">
-          <PrimaryButton onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
-        </div>
+        <PrimaryButton className="home-primary" onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
 
-        <div className="mt-12 action-list review-action-region">
-          {!isFirst && !isStruggled && hasDifficultWords && (
-            <ActionRow icon={<Target size={30} />} title="Review difficult words" accent="red" onClick={onReview} />
+        <div className="action-list home-action-list">
+          {shouldPrioritiseReview && hasDifficultWords && (
+            <ActionRow
+              icon={<List size={30} />}
+              title="Continue learning"
+              subtitle="From where you left off"
+              arrowVariant="arrow"
+              onClick={onContinue}
+            />
           )}
 
-          {shouldPrioritiseReview && (
-            <ActionRow icon={<Play size={30} />} title="Continue learning" subtitle={recommendation.subtitle} accent="red" onClick={onContinue} />
-          )}
-
-          <ActionRow icon={<List size={30} />} title="Select word list" onClick={onSelectList} />
+          <ActionRow
+            icon={<List size={30} />}
+            title={selectListLabel}
+            subtitle={!isFirst ? 'Choose a different list' : undefined}
+            subtitleClassName="home-desktop-subtitle"
+            arrowVariant="arrow"
+            onClick={onSelectList}
+          />
         </div>
 
-        <Footer className="mt-16" />
+        <Footer className="home-footer" variant="home" />
       </section>
     </main>
   );
