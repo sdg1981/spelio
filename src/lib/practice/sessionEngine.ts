@@ -110,11 +110,11 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 
 export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedLetters'>): SessionState {
   const accuracy = base.totalWords ? base.correctWords / base.totalWords : 0;
-  const difficultyScore = base.incorrectAttempts + base.revealedLetters * 2;
 
-  if (accuracy >= 0.9 && base.revealedLetters === 0) return 'strong';
+  if (base.incorrectAttempts > 0 || base.revealedLetters > 0) return 'struggled';
+  if (accuracy >= 0.9) return 'strong';
   if (accuracy >= 0.75 && accuracy < 0.9) return 'good';
-  if (accuracy < 0.75 || base.revealedLetters > 0 || difficultyScore >= 3) return 'struggled';
+  if (accuracy < 0.75) return 'struggled';
   return 'good';
 }
 

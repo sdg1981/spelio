@@ -1,5 +1,5 @@
 import { wordLists } from '../src/data/wordLists';
-import { createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   applyWordProgressPatch,
@@ -84,6 +84,18 @@ function completeNumbersCleanly(storage: SpelioStorage) {
   );
 }
 
+function finishNumbersSession(storage: SpelioStorage, result: SessionResult) {
+  return updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    wordLists,
+    result
+  );
+}
+
 function test(name: string, fn: () => void) {
   try {
     fn();
@@ -123,6 +135,89 @@ test('completing all difficult words cleanly removes them from review', () => {
 
   assertEqual(hasDifficultWords(storage), false, 'Clean completion should clear difficult flags');
   assertEqual(createPracticeSession(wordLists, storage, true).words.length, 0, 'Empty review should have no words');
+});
+
+test('wrong letter then correct completion keeps word difficult and prioritises review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: false }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:10.000Z');
+  }
+
+  const base = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 1,
+    revealedWords: 0,
+    incorrectAttempts: 1,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: ['foundations_numbers']
+  };
+  storage = finishNumbersSession(storage, { ...base, state: classifySession(base) });
+
+  const recommendation = getRecommendation(storage, wordLists);
+  assertEqual(storage.lastSessionResult?.incorrectWords, 1, 'Session should count one incorrect word');
+  assertEqual(storage.lastSessionResult?.state, 'struggled', 'Any incorrect attempt should make the session struggled');
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, true, 'Word should remain difficult after same-session correction');
+  assertEqual(recommendation.kind, 'review', 'Difficult word after a struggled session should be primary');
+  assertEqual(recommendation.title, 'Review difficult words', 'Primary action should review difficult words');
+});
+
+test('reveal then correct completion keeps word difficult and prioritises review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { revealed: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: false }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:10.000Z');
+  }
+
+  const base = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 0,
+    revealedWords: 1,
+    incorrectAttempts: 0,
+    revealedLetters: 1,
+    durationSeconds: 30,
+    listIds: ['foundations_numbers']
+  };
+  storage = finishNumbersSession(storage, { ...base, state: classifySession(base) });
+
+  const recommendation = getRecommendation(storage, wordLists);
+  assertEqual(storage.lastSessionResult?.revealedWords, 1, 'Session should count one revealed word');
+  assertEqual(storage.lastSessionResult?.state, 'struggled', 'Any revealed letter should make the session struggled');
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, true, 'Word should remain difficult after same-session reveal');
+  assertEqual(recommendation.kind, 'review', 'Difficult word after a struggled session should be primary');
+  assertEqual(recommendation.title, 'Review difficult words', 'Primary action should review difficult words');
+});
+
+test('clean completion of a previously difficult word in a later session clears review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, true, 'Setup should mark the word difficult');
+
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, false, 'Later clean completion should clear difficult');
+  assertEqual(hasDifficultWords(storage), false, 'No current difficult words should remain');
 });
 
 test('Review difficult words is hidden when no difficult words remain', () => {
