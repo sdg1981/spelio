@@ -199,6 +199,39 @@
 }
 @media (max-width:520px){.dialect-label{margin-top:18px;font-size:15px;}}
 
+.word-insight{
+  margin-top:16px;
+  max-width:min(520px, calc(100vw - 64px));
+  color:#7f8994;
+  font-size:14px;
+  line-height:1.35;
+  text-align:center;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+
+.word-insight span{
+  display:block;
+}
+
+.word-insight ~ .letter-input-tap-zone .letter-grid{
+  margin-top:58px;
+}
+
+@media (max-width:520px){
+  .word-insight{
+    margin-top:18px;
+    max-width:calc(100vw - 64px);
+    font-size:17px;
+  }
+
+  .word-insight ~ .letter-input-tap-zone .letter-grid{
+    margin-top:64px;
+  }
+}
+
 /* Practice feedback tones */
 .status-line{
   color:#5f6b76;

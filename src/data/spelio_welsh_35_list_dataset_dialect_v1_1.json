@@ -79,7 +79,8 @@
           "difficulty": 1,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Formal/polite; often shortened in speech."
         },
         {
           "id": "foundations_first_words_005",
@@ -93,7 +94,8 @@
           "difficulty": 1,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Informal. Fuller form: “Mae’n ddrwg gen i”."
         },
         {
           "id": "foundations_first_words_006",
@@ -311,8 +313,8 @@
           "englishPrompt": "to work",
           "welshAnswer": "gweithio",
           "acceptedAlternatives": [],
-          "audioUrl": "/audio/gweithio.m4a",
-          "audioStatus": "generated",
+          "audioUrl": "",
+          "audioStatus": "missing",
           "notes": "",
           "order": 9,
           "difficulty": 1,
@@ -1410,8 +1412,8 @@
           "englishPrompt": "to work",
           "welshAnswer": "gweithio",
           "acceptedAlternatives": [],
-          "audioUrl": "/audio/gweithio.m4a",
-          "audioStatus": "generated",
+          "audioUrl": "",
+          "audioStatus": "missing",
           "notes": "",
           "order": 8,
           "difficulty": 1,
@@ -3024,7 +3026,8 @@
           "difficulty": 2,
           "dialect": "South Wales / Standard",
           "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "want coffee"
+          "variantGroupId": "want coffee",
+          "usageNote": "Fuller form; North often uses “isio”."
         },
         {
           "id": "stage2_phrases_wanting_want_coffee_north",
@@ -3038,7 +3041,8 @@
           "difficulty": 2,
           "dialect": "North Wales",
           "dialectNote": "North Wales form using isio.",
-          "variantGroupId": "want coffee"
+          "variantGroupId": "want coffee",
+          "usageNote": "Common North Wales form of “eisiau”."
         },
         {
           "id": "stage2_phrases_wanting_002",
@@ -3052,7 +3056,8 @@
           "difficulty": 2,
           "dialect": "South Wales / Standard",
           "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "want food"
+          "variantGroupId": "want food",
+          "usageNote": "Fuller form; North often uses “isio”."
         },
         {
           "id": "stage2_phrases_wanting_want_food_north",
@@ -3066,7 +3071,8 @@
           "difficulty": 2,
           "dialect": "North Wales",
           "dialectNote": "North Wales form using isio.",
-          "variantGroupId": "want food"
+          "variantGroupId": "want food",
+          "usageNote": "Common North Wales form of “eisiau”."
         },
         {
           "id": "stage2_phrases_wanting_003",
@@ -3080,7 +3086,8 @@
           "difficulty": 2,
           "dialect": "South Wales / Standard",
           "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "want help"
+          "variantGroupId": "want help",
+          "usageNote": "Fuller form; North often uses “isio”."
         },
         {
           "id": "stage2_phrases_wanting_want_help_north",
@@ -3094,7 +3101,8 @@
           "difficulty": 2,
           "dialect": "North Wales",
           "dialectNote": "North Wales form using isio.",
-          "variantGroupId": "want help"
+          "variantGroupId": "want help",
+          "usageNote": "Common North Wales form of “eisiau”."
         },
         {
           "id": "stage2_phrases_wanting_004",

@@ -1,3 +1,5 @@
+import dataset from './spelio_welsh_35_list_dataset_dialect_v1_1.json';
+
 export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
 export type DialectPreference = 'mixed' | 'north' | 'south-standard';
@@ -15,6 +17,7 @@ export interface PracticeWord {
   difficulty?: number;
   dialect: Exclude<Dialect, 'Mixed'>;
   dialectNote?: string;
+  usageNote?: string;
   variantGroupId?: string;
 }
 
@@ -45,6 +48,7 @@ type DatasetWord = {
   difficulty?: number;
   dialect?: PracticeWord['dialect'];
   dialectNote?: string;
+  usageNote?: string;
   variantGroupId?: string;
 };
 
@@ -5645,6 +5649,13 @@ const rawLists = (JSON.parse(String.raw`{
   ]
 }`) as { lists: DatasetList[] }).lists;
 
+const usageNotesByWordId = new Map(
+  (dataset.lists as DatasetList[])
+    .flatMap(list => list.words)
+    .filter(word => word.usageNote)
+    .map(word => [word.id, word.usageNote ?? ''])
+);
+
 export const wordLists: WordList[] = rawLists
   .filter(list => list.isActive)
   .sort((a, b) => a.order - b.order)
@@ -5675,6 +5686,7 @@ export const wordLists: WordList[] = rawLists
         difficulty: word.difficulty,
         dialect: word.dialect ?? 'Both',
         dialectNote: word.dialectNote ?? '',
+        usageNote: word.usageNote ?? usageNotesByWordId.get(word.id) ?? '',
         variantGroupId: word.variantGroupId ?? ''
       }))
   }));

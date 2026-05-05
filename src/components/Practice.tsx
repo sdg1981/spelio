@@ -472,6 +472,9 @@ export function Practice({
   const wordComplete = currentWordComplete;
   const displayStatus = status ?? localStatus;
   const displayTone = status ? statusTone : 'neutral';
+  const wordInsights = [currentWord.dialectNote, currentWord.usageNote]
+    .map(note => note?.trim())
+    .filter((note): note is string => Boolean(note));
 
   return (
     <main className="app-bg relative overflow-hidden">
@@ -494,6 +497,13 @@ export function Practice({
         </button>
         {currentWord.dialect !== 'Both' && (
           <div className="dialect-label">{currentWord.dialect === 'North Wales' ? 'North Wales form' : currentWord.dialect === 'South Wales / Standard' || currentWord.dialect === 'Standard' ? 'South Wales / Standard form' : 'Dialect-specific form'}</div>
+        )}
+        {wordInsights.length > 0 && (
+          <div className="word-insight" aria-label="Word insight">
+            {wordInsights.map(note => (
+              <span key={note}>{note}</span>
+            ))}
+          </div>
         )}
 
         <input
