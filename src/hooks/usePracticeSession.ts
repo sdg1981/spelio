@@ -108,6 +108,8 @@ export function usePracticeSession({
   const inputLockedRef = useRef(false);
   const isCompletingRevealedWordRef = useRef(false);
   const storageRef = useRef(storage);
+  const incorrectWordIdsRef = useRef(new Set<string>());
+  const revealedWordIdsRef = useRef(new Set<string>());
 
   useEffect(() => {
     storageRef.current = storage;
@@ -143,6 +145,8 @@ export function usePracticeSession({
       startedAt: Date.now(),
       endedAt: undefined
     });
+    incorrectWordIdsRef.current = new Set<string>();
+    revealedWordIdsRef.current = new Set<string>();
     setLetters(createInitialLetters(session.words[0]?.welshAnswer ?? ''));
   }, [sessionIdentity]);
 
@@ -272,14 +276,25 @@ export function usePracticeSession({
 
     const hadIssueInThisSession =
       forceDifficult ||
-      stats.incorrectWordIds.has(currentWord.id) ||
-      stats.revealedWordIds.has(currentWord.id) ||
+      incorrectWordIdsRef.current.has(currentWord.id) ||
+      revealedWordIdsRef.current.has(currentWord.id) ||
       letters.some(letter => letter.revealed);
 
     persistWordProgress(currentWord, { completed: true, cleanCompleted: !hadIssueInThisSession });
 
     setStats(previous => {
-      const next = { ...previous, correctWords: previous.correctWords + 1 };
+      const incorrectWordIds = new Set(previous.incorrectWordIds);
+      for (const wordId of Array.from(incorrectWordIdsRef.current)) incorrectWordIds.add(wordId);
+
+      const revealedWordIds = new Set(previous.revealedWordIds);
+      for (const wordId of Array.from(revealedWordIdsRef.current)) revealedWordIds.add(wordId);
+
+      const next = {
+        ...previous,
+        correctWords: previous.correctWords + 1,
+        incorrectWordIds,
+        revealedWordIds
+      };
       window.setTimeout(() => {
         if (currentIndex + 1 >= session.words.length) {
           finishSession(next);
@@ -324,6 +339,7 @@ export function usePracticeSession({
     setWrongIndex(nextIndex);
     showStatus('Incorrect. Try again.', 'error');
     persistWordProgress(currentWord, { incorrect: true });
+    incorrectWordIdsRef.current.add(currentWord.id);
 
     setStats(previous => {
       const incorrectWordIds = new Set(previous.incorrectWordIds);
@@ -356,6 +372,7 @@ export function usePracticeSession({
     setLetters(nextLetters);
     showStatus('Letter revealed');
     persistWordProgress(currentWord, { revealed: true });
+    revealedWordIdsRef.current.add(currentWord.id);
 
     setStats(previous => {
       const revealedWordIds = new Set(previous.revealedWordIds);
@@ -384,6 +401,7 @@ export function usePracticeSession({
     if (!currentWord || isComplete) return;
 
     persistWordProgress(currentWord, { revealed: true });
+    revealedWordIdsRef.current.add(currentWord.id);
 
     setStats(previous => {
       const revealedWordIds = new Set(previous.revealedWordIds);
