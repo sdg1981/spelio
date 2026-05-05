@@ -85,6 +85,12 @@ The MVP contains these core screens and states:
 
 The public user experience should remain extremely simple. The admin panel is private and functional rather than highly polished.
 
+All public screens should include the shared footer copy:
+
+- Made with love for Wales. © CURRENT_YEAR Spelio
+
+The app should use the Spelio SVG favicon.
+
 ## 5. Homepage design
 
 **UX intent:** The homepage must feel effortless and calm. Avoid clutter, avoid secondary explanations, and prioritise a single clear action. Every element should justify its presence.
@@ -224,7 +230,9 @@ Rules:
 - All completed letters return to black.
 - The layout must wrap cleanly for longer words or phrases.
 - No horizontal scrolling.
-- Preserve spaces between words in multi-word phrases.
+- Preserve clear visual spaces between words in multi-word phrases.
+- Spaces are not rendered as input slots.
+- User-typed spaces are ignored silently and should not count as errors.
 
 Answer layout rules:
 
@@ -246,6 +254,11 @@ Bottom controls:
 No separate replay audio icon. Audio replay is handled by the word pill.
 
 No audio prompts toggle in the practice screen. Audio prompt preference belongs in settings.
+
+Reveal supports two interactions:
+
+- Tap/click: reveal the next missing letter.
+- Press and hold: briefly peek at the full answer, mark the word as revealed/difficult, then return to memory practice.
 
 Bottom strip should be subtle:
 
@@ -289,36 +302,19 @@ Fields:
   - On/off
 - Sound effects
   - On/off
-- Dialect preference
-  - Mixed / Both
-  - North Wales
-  - South Wales / Standard
-
-Dialect preference controls which word-level dialect variants are eligible for practice.
-
-If set to North Wales:
-
-- Include words tagged Both
-- Include words tagged North Wales
-- Exclude South Wales / Standard-only variants
-
-If set to South Wales / Standard:
-
-- Include words tagged Both
-- Include words tagged South Wales / Standard
-- Exclude North Wales-only variants
-
-If set to Mixed / Both:
-
-- Include all eligible words
-- If a word is dialect-specific, show a subtle dialect label during that prompt
+- Reset progress
+  - Requires confirmation
+  - Clears progress, settings, and history on the current device
+  - Returns the user to the homepage
+  - Shows a short confirmation toast
 
 Defaults:
 
 - Welsh spelling: Flexible
 - Audio prompts: On
 - Sound effects: On
-- Dialect preference: Mixed / Both
+
+The MVP does not expose a user-facing dialect preference. Dialect metadata is still supported at content level, and dialect-specific prompts may show a subtle dialect label during practice.
 
 ### 7.1 Welsh spelling modes
 
@@ -327,11 +323,15 @@ Flexible:
 - User can type unaccented letters.
 - App accepts equivalent accented Welsh characters.
 - App still displays the correct Welsh spelling.
+- Apostrophe and dash variants are accepted as equivalent.
+- Comparison is case-insensitive.
 
 Strict:
 
 - Accents and diacritics must be typed correctly.
 - Wrong accent counts as incorrect.
+- Apostrophe and dash variants are still accepted as equivalent.
+- Comparison is case-insensitive.
 
 ## 8. Word list modal
 
@@ -412,7 +412,9 @@ Examples:
 - now → nawr — South Wales / Standard — variantGroupId: now
 - now → rwan — North Wales — variantGroupId: now
 
-The session engine should filter dialect eligibility before rendering the answer slots.
+The session engine should resolve dialect variants before rendering the answer slots.
+
+For the MVP, there is no user-facing dialect preference. Variant selection should use mixed-mode behaviour: include eligible variants, choose only one item per variantGroupId, and avoid showing multiple regional spellings of the same prompt in a single session.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
 
@@ -439,6 +441,8 @@ Done behaviour:
 - If no changes were made, close the modal and leave the user where they were.
 - If changes were made:
   - Save the selected lists.
+  - If the user clears all selections, fall back to the first available active list.
+  - Set currentPathPosition to the first selected list.
   - If opened from the homepage, return to the homepage.
   - If opened during practice, end the current session and return to the homepage.
   - If opened from the end screen, return to the homepage.
@@ -564,15 +568,15 @@ Do not move the user to the next word list after only completing one 10-word ses
 
 ### 10.3 Selection priority within a list
 
-Before selecting session words, filter the candidate pool by dialect preference.
+Before selecting session words, resolve dialect variants using mixed-mode behaviour.
 
 If multiple words share the same variantGroupId, only one variant should be eligible in a single session.
 
 Selection rules for variantGroupId:
 
-- Prefer the variant matching the user’s dialect preference.
-- In Mixed / Both mode, randomly choose one variant per session or rotate variants over time.
+- Choose one variant per session.
 - Do not show both variants of the same item in the same session.
+- The MVP may use deterministic mixed selection to keep sessions stable.
 
 When choosing session words, prioritise:
 
@@ -766,16 +770,29 @@ This creates guided progression rather than locked progression.
 
 Review difficult words must only be recommended when current difficult words exist.
 
+Multiple selected lists:
+
+- If multiple lists are selected and difficult words currently exist, recommend Review difficult words.
+- If multiple lists are selected and not all selected-list words have been completed, recommend continuing mixed practice.
+- If multiple lists are selected and all selected-list words have been completed, recommend practising the mixed selection again.
+- The recommendation subtitle should make the mixed selection clear, e.g. “Custom mixed word list”.
+
 ## 15. Local storage
 
 No accounts are required for MVP.
 
-Use local storage for:
+Use local storage key:
+
+```text
+spelio-storage-v1
+```
+
+Use local storage shape:
 
 ```json
 {
-  "selectedListIds": [],
-  "currentPathPosition": null,
+  "selectedListIds": ["foundations_first_words"],
+  "currentPathPosition": "foundations_first_words",
   "lastSessionDate": null,
   "lastSessionResult": {},
   "wordProgress": {},
@@ -784,8 +801,7 @@ Use local storage for:
     "englishVisible": true,
     "audioPrompts": true,
     "soundEffects": true,
-    "welshSpelling": "flexible",
-    "dialectPreference": "mixed"
+    "welshSpelling": "flexible"
   }
 }
 ```
@@ -796,14 +812,16 @@ Word progress should support:
 {
   "wordId": {
     "seen": true,
-    "completed": true,
+    "completedCount": 1,
     "difficult": false,
     "incorrectAttempts": 0,
-    "revealedLetters": 0,
-    "lastSeenAt": "ISO_DATE_STRING"
+    "revealedCount": 0,
+    "lastPractisedAt": "ISO_DATE_STRING"
   }
 }
 ```
+
+Reset progress should remove this storage key and any known legacy MVP storage keys, then recreate default storage in memory.
 
 Limitations:
 
@@ -1006,12 +1024,16 @@ Display rules:
 
 ### 18.5 Reveal letter
 
-- Fills next missing letter.
+- Tap/click fills the next missing letter.
 - Status: “Letter revealed.”
 - Mark word difficult.
 - Does not play success sound.
 - After revealing a letter, mobile keyboard should remain visible.
 - After revealing a letter, focus must return to the hidden input.
+- Press and hold briefly shows the full answer as a peek state.
+- Peek marks the word as revealed/difficult.
+- Peek should end automatically after a short delay and show a subtle “Now try from memory” status.
+- Peek should be available once per word; repeat attempts may show “Peek used”.
 
 ### 18.6 Word completion
 
@@ -1032,8 +1054,11 @@ If the completed word had no incorrect attempts and no revealed letters during t
 
 Desktop:
 
-- Spacebar: replay audio.
+- Spacebar tap/release: replay audio.
+- Spacebar press and hold: peek at the full answer.
 - Right arrow: reveal next letter.
+
+Typed spaces should be ignored silently during practice. Multi-word answers should work whether the user types the word boundary space or continues with the next letter.
 
 Optional later:
 
@@ -1105,6 +1130,13 @@ Show admin warning or user message:
 Words can be mixed from all selected lists.
 
 However, progression logic should still track progress per source list.
+
+When a mixed selection is saved:
+
+- `selectedListIds` stores all selected list IDs in selected order.
+- `currentPathPosition` is set to the first selected list.
+- Recommendation copy should describe the selection as mixed practice.
+- Review difficult words may override mixed practice only when current difficult words exist.
 
 ### 19.6 Review action with no difficult words
 
@@ -1242,13 +1274,13 @@ I am building Spelio, a premium mobile-first Welsh spelling practice web app for
 
 Use this after the UI shell exists:
 
-Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar to replay audio and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, filter session words by dialectPreference and ensure only one word per variantGroupId appears in a session. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
+Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using mixed-mode behaviour and ensure only one word per variantGroupId appears in a session. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
 
 ### Prompt 3 — Build local storage progress and recommendation logic
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio. Store selected word lists, settings, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every word has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Update homepage states based on first-time, returning, and struggled user logic. Persist dialectPreference in local storage and use it in recommendation/session selection logic. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every word has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Do not persist a user-facing dialect preference in local storage; dialect variants should be resolved by mixed-mode session selection. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
