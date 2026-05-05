@@ -92,7 +92,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
     ? lists.filter(list => list.isActive)
     : lists.filter(list => selectedIds.includes(list.id) && list.isActive);
   const allCandidates = eligibleLists.flatMap(list => list.words);
-  const candidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference);
+  const candidates = filterDialectVariants(allCandidates, 'mixed');
 
   const reviewWords = candidates.filter(word => {
     const progress = storage.wordProgress[word.id];

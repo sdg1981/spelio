@@ -82,7 +82,7 @@ export function usePracticeSession({
 }) {
   const session = useMemo(
     () => createPracticeSession(lists, storage, reviewDifficult),
-    [lists, storage.selectedListIds.join('|'), storage.settings.dialectPreference, reviewDifficult]
+    [lists, storage.selectedListIds.join('|'), reviewDifficult]
   );
   const sessionIdentity = session.words.map(word => word.id).join('|');
   const [currentIndex, setCurrentIndex] = useState(0);

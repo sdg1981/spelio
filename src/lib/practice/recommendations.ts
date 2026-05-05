@@ -25,7 +25,7 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
 function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordList[]) {
   const words = filterDialectVariants(
     selectedLists.filter(list => list.isActive).flatMap(list => list.words),
-    storage.settings.dialectPreference
+    'mixed'
   );
 
   return words.length > 0 && words.every(word => {

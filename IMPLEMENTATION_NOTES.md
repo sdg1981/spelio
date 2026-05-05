@@ -1,5 +1,9 @@
 # Spelio practice-engine update
 
+## Settings dialect preference removal
+
+The Settings modal no longer exposes a dialect preference selector. Practice now uses the mixed dialect behavior by default while keeping word-level dialect metadata, dialect notes, usage notes, and `variantGroupId` handling intact. Old saved `dialectPreference` values are ignored during storage normalization so existing users continue with mixed practice.
+
 This build fixes the end-screen stats so:
 
 - `Incorrect` counts unique words where the user made at least one mistake, not every incorrect keypress.

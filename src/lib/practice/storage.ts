@@ -1,4 +1,4 @@
-import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
+import type { PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 
@@ -19,7 +19,6 @@ export interface SpelioSettings {
   audioPrompts: boolean;
   soundEffects: boolean;
   welshSpelling: WelshSpellingMode;
-  dialectPreference: DialectPreference;
 }
 
 export interface WordProgress {
@@ -71,8 +70,7 @@ export const defaultSettings: SpelioSettings = {
   englishVisible: true,
   audioPrompts: true,
   soundEffects: true,
-  welshSpelling: 'flexible',
-  dialectPreference: 'mixed'
+  welshSpelling: 'flexible'
 };
 
 export const defaultStorage: SpelioStorage = {
@@ -114,12 +112,10 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
     settings: {
       ...defaultSettings,
-      ...settings,
-      welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
-      dialectPreference:
-        settings.dialectPreference === 'north' || settings.dialectPreference === 'south-standard'
-          ? settings.dialectPreference
-          : 'mixed'
+      englishVisible: typeof settings.englishVisible === 'boolean' ? settings.englishVisible : defaultSettings.englishVisible,
+      audioPrompts: typeof settings.audioPrompts === 'boolean' ? settings.audioPrompts : defaultSettings.audioPrompts,
+      soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
+      welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible'
     }
   };
 }
@@ -201,14 +197,8 @@ function unique(values: string[]) {
   return Array.from(new Set(values));
 }
 
-function isDialectEligible(word: PracticeWord, preference: DialectPreference) {
-  if (preference === 'mixed') return true;
-  if (preference === 'north') return word.dialect === 'Both' || word.dialect === 'North Wales';
-  return word.dialect === 'Both' || word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
-}
-
-function eligibleCompletionWords(list: WordList, preference: DialectPreference) {
-  const eligible = list.words.filter(word => isDialectEligible(word, preference));
+function eligibleCompletionWords(list: WordList) {
+  const eligible = list.words;
   const byGroup = new Map<string, PracticeWord[]>();
   const ungrouped: PracticeWord[] = [];
 
@@ -241,7 +231,7 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
       strongSessionCount: 0
     };
 
-    const completionWords = eligibleCompletionWords(list, storage.settings.dialectPreference);
+    const completionWords = eligibleCompletionWords(list);
     const seenWordIds = unique([
       ...previous.seenWordIds,
       ...completionWords.filter(word => storage.wordProgress[word.id]?.seen).map(word => word.id)
