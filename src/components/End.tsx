@@ -1,15 +1,14 @@
-import { ActionRow } from './Buttons';
+import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
-import { BookOpen, Check, SlidersHorizontal, Target } from './Icons';
+import { Logo } from './Logo';
+import { Check, List, SlidersHorizontal } from './Icons';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
-import type { CSSProperties } from 'react';
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remaining = seconds % 60;
-  if (minutes === 0) return `${remaining}s`;
-  return `${minutes}:${String(remaining).padStart(2, '0')}`;
+  return `${String(minutes).padStart(2, '0')}:${String(remaining).padStart(2, '0')}`;
 }
 
 export function EndScreen({
@@ -18,8 +17,7 @@ export function EndScreen({
   hasDifficultWords,
   onContinue,
   onReview,
-  onChangeLists,
-  onHome
+  onChangeLists
 }: {
   result: SessionResult;
   recommendation: Recommendation;
@@ -27,57 +25,79 @@ export function EndScreen({
   onContinue: () => void;
   onReview: () => void;
   onChangeLists: () => void;
-  onHome: () => void;
 }) {
-  const stats = [
-    ['✓', String(result.correctWords), 'Correct', 'text-[#20a65a]'],
-    ['×', String(result.incorrectWords), 'Incorrect', 'text-[#d90000]'],
-    ['~', String(result.revealedWords), 'Revealed', 'text-[#c4a100]'],
-    ['◷', formatTime(result.durationSeconds), 'Time taken', 'text-[#2b83d4]']
-  ];
-
   const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
   const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
-  const primaryTitle = shouldPrioritiseReview
-    ? 'Review difficult words'
-    : !hasDifficultWords && recommendationLooksLikeReview
-      ? 'Continue learning'
-      : recommendation.title;
-  const primarySubtitle = shouldPrioritiseReview
-    ? 'Based on your last session'
-    : !hasDifficultWords && recommendationLooksLikeReview
-      ? 'Keep building from your selected word list'
-      : recommendation.subtitle;
+  const recommendationTitle = shouldPrioritiseReview ? 'Focus on tricky words' : 'Continue learning';
+  const recommendedListName = !hasDifficultWords && recommendationLooksLikeReview
+    ? 'Keep building from your selected word list'
+    : recommendation.subtitle;
+  const primaryTitle = shouldPrioritiseReview ? 'Review difficult words' : 'Continue learning';
   const handlePrimary = shouldPrioritiseReview ? onReview : onContinue;
+  const showDifficultReviewSecondary = hasDifficultWords && !shouldPrioritiseReview;
+  const secondaryLearningTitle = shouldPrioritiseReview
+    ? 'Continue learning'
+    : showDifficultReviewSecondary
+      ? 'Review difficult words'
+      : 'Review recent words';
+  const secondaryLearningSubtitle = shouldPrioritiseReview || showDifficultReviewSecondary
+    ? shouldPrioritiseReview
+      ? 'From where you left off'
+      : 'Go over words you found challenging'
+    : 'Go over words from this session';
+  const handleSecondaryLearning = showDifficultReviewSecondary ? onReview : onContinue;
+  const stats = [
+    `${result.correctWords} correct`,
+    `${result.incorrectWords} incorrect`,
+    ...(result.revealedWords > 0 ? [`${result.revealedWords} revealed`] : []),
+    formatTime(result.durationSeconds)
+  ];
 
   return (
-    <main className="app-bg relative">
-      <div className="progress-top"><div className="progress-track"><div className="progress-fill" style={{ width: '100%' }} /></div></div>
-      <section className="page-shell end-shell">
-        <div className="end-count text-[24px] md:text-[14px] font-bold text-[#6e7783]">{result.totalWords} / {result.totalWords}</div>
-        <div className="success-orb mt-8 md:mt-6"><Check size={92} strokeWidth={1.75} /></div>
-        <h1 className="end-heading mt-9 md:mt-6 text-center font-black tracking-[-.065em] text-[#19a352]">Excellent!</h1>
-        <p className="end-subtitle mt-4 text-[#66717c]">You’ve completed this practice session.</p>
+    <main className="end-bg">
+      <section className="page-shell end-shell end-v2-shell">
+        <div className="end-logo"><Logo /></div>
 
-        <div className="stats-grid mt-12 md:mt-10">
-          {stats.map(([icon, number, label, className], index) => (
-            <div className="stat end-stat" key={label} style={{ '--stat-delay': `${index * 35}ms` } as CSSProperties}>
-              <div className={`stat-icon ${className}`}>{icon}</div>
-              <div className="stat-num">{number}</div>
-              <div className="stat-label">{label}</div>
-            </div>
-          ))}
+        <div className="end-success-orb"><Check size={52} strokeWidth={2.2} /></div>
+
+        <div className="end-copy">
+          <h1>Session complete</h1>
+          <p>Great work! You’ve finished this session.</p>
         </div>
 
-        <h2 className="end-next-heading mt-12 md:mt-10 w-full max-w-[620px] text-left text-[34px] md:text-[24px] font-black tracking-[-.055em]">What’s next?</h2>
-        <div className="card-list end-actions mt-7">
-          <ActionRow primary icon={<BookOpen size={30} />} title={primaryTitle} subtitle={primarySubtitle} onClick={handlePrimary} />
-          {hasDifficultWords && result.state !== 'struggled' && <ActionRow icon={<Target size={30} />} title="Review difficult words" subtitle="Go over words you found challenging" accent="blue" onClick={onReview} />}
-          <ActionRow icon={<SlidersHorizontal size={30} />} title="Change word lists" subtitle="Choose different lists for your next session" onClick={onChangeLists} />
+        <div className="end-recommendation">
+          <h2>{recommendationTitle}</h2>
+          {!shouldPrioritiseReview && <p>{recommendedListName}</p>}
+          <div className="end-stats-line" aria-label="Session stats">
+            {stats.map((item, index) => (
+              <span key={item}>
+                {index > 0 && <span className="end-stat-separator" aria-hidden="true">•</span>}
+                {item}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <button className="mt-10 border-0 bg-transparent text-[28px] md:text-[18px] text-[#d90000]" onClick={onHome}>⌂&nbsp;&nbsp;Back to home</button>
-        <Footer />
+        <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>
+
+        <div className="action-list end-action-list">
+          <ActionRow
+            icon={<List size={30} />}
+            title={secondaryLearningTitle}
+            subtitle={secondaryLearningSubtitle}
+            arrowVariant="arrow"
+            onClick={handleSecondaryLearning}
+          />
+          <ActionRow
+            icon={<SlidersHorizontal size={30} />}
+            title="Change word list"
+            subtitle="Choose different lists for your next session"
+            arrowVariant="arrow"
+            onClick={onChangeLists}
+          />
+        </div>
+
+        <Footer className="end-footer" />
       </section>
     </main>
   );
