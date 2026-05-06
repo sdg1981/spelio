@@ -958,6 +958,11 @@
   color:#071522;
 }
 
+.home-action-list .icon-circle.icon-red{
+  background:#fff1f1;
+  color:var(--red);
+}
+
 .home-action-list .chev{
   width:35px;
   height:35px;

@@ -1,7 +1,7 @@
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
-import { List } from './Icons';
+import { List, Play } from './Icons';
 import type { Recommendation } from '../lib/practice/recommendations';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
@@ -61,9 +61,10 @@ export function Home({
         <div className="action-list home-action-list">
           {shouldPrioritiseReview && hasDifficultWords && (
             <ActionRow
-              icon={<List size={30} />}
+              icon={<Play size={30} />}
               title="Continue learning"
               subtitle="From where you left off"
+              accent="red"
               arrowVariant="arrow"
               onClick={onContinue}
             />
