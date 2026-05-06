@@ -29,7 +29,7 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
-  const difficultWords = useMemo(() => hasDifficultWords(storage), [storage.wordProgress]);
+  const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
     () => getRecommendation(storage, wordLists),
     [
@@ -37,6 +37,7 @@ export default function App() {
       storage.currentPathPosition,
       storage.lastSessionResult,
       storage.listProgress,
+      storage.settings.dialectPreference,
       storage.selectedListIds
     ]
   );

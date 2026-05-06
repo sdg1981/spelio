@@ -363,6 +363,9 @@ export function Practice({
 
   const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
     const nextSettings = { ...storage.settings, ...patch };
+    const dialectPreferenceChanged =
+      patch.dialectPreference !== undefined &&
+      patch.dialectPreference !== storage.settings.dialectPreference;
     if (!nextSettings.audioPrompts) {
       nextSettings.englishVisible = true;
     }
@@ -373,7 +376,10 @@ export function Practice({
 
     if (!hasChanged) return;
     onStorageChange({ ...storage, settings: nextSettings });
-  }, [onStorageChange, storage]);
+    if (dialectPreferenceChanged && currentWord && hasWords && !isComplete) {
+      showLocalStatus('Welsh style will apply from your next session.');
+    }
+  }, [currentWord, hasWords, isComplete, onStorageChange, storage]);
 
   const handleSettingsModalOpenChange = useCallback((open: boolean) => {
     settingsModalOpenRef.current = open;

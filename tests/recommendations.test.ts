@@ -69,6 +69,33 @@ function wantingVariantWords(storage: SpelioStorage) {
   return createPracticeSession(wordLists, storage).words.filter(word => targetGroups.has(word.variantGroupId ?? ''));
 }
 
+function difficultWantingStorage(dialectPreference: SpelioStorage['settings']['dialectPreference']) {
+  const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
+  assert(wanting, 'Expected stage2_phrases_wanting to exist');
+  const southVariant = wanting.words.find(word => word.variantGroupId === 'want coffee' && word.dialect === 'South Wales / Standard');
+  assert(southVariant, 'Expected a South/Standard want coffee variant');
+
+  return applyWordProgressPatch(
+    {
+      ...wantingStorage(dialectPreference),
+      lastSessionResult: {
+        totalWords: 10,
+        correctWords: 9,
+        incorrectWords: 1,
+        revealedWords: 0,
+        incorrectAttempts: 1,
+        revealedLetters: 0,
+        durationSeconds: 30,
+        listIds: ['stage2_phrases_wanting'],
+        state: 'struggled'
+      }
+    },
+    southVariant,
+    { incorrect: true },
+    '2026-05-05T00:00:00.000Z'
+  );
+}
+
 function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
   return {
     id,
@@ -538,6 +565,55 @@ test('South Wales / Standard mode still prefers South/Standard variants across p
 
   assert(variants.length > 1, 'Setup should include multiple wanting variant groups');
   assertEqual(variants.every(word => word.dialect === 'South Wales / Standard' || word.dialect === 'Standard'), true, 'South/Standard preference should keep choosing South/Standard variants');
+});
+
+test('Review difficult words maps a difficult paired variant to the current North Wales preference', () => {
+  const storage = difficultWantingStorage('north');
+  const session = createPracticeSession(wordLists, storage, true);
+
+  assertEqual(session.words.length, 1, 'Review should produce one entry for the difficult variant group');
+  assertEqual(session.words[0]?.variantGroupId, 'want coffee', 'Review should keep the difficult learning item');
+  assertEqual(session.words[0]?.dialect, 'North Wales', 'Review should prefer the linked North Wales variant');
+});
+
+test('Review difficult words recommendation respects mapped current Welsh style variants', () => {
+  const storage = difficultWantingStorage('north');
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(hasDifficultWords(storage, wordLists), true, 'Mapped North variant should be reviewable');
+  assertEqual(recommendation.kind, 'review', 'Relevant mapped difficult variants should still drive review recommendation');
+});
+
+test('Review difficult words recommendation falls back when only irrelevant dialect variants are difficult', () => {
+  const list = missingPreferredVariantList();
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    lastSessionResult: {
+      totalWords: 10,
+      correctWords: 9,
+      incorrectWords: 1,
+      revealedWords: 0,
+      incorrectAttempts: 1,
+      revealedLetters: 0,
+      durationSeconds: 30,
+      listIds: [list.id],
+      state: 'struggled'
+    },
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'north'
+    }
+  };
+  const difficultStorage = applyWordProgressPatch(storage, list.words.find(word => word.id === 'south_only') as PracticeWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  const recommendation = getRecommendation(difficultStorage, [list]);
+  const reviewSession = createPracticeSession([list], difficultStorage, true);
+
+  assertEqual(hasDifficultWords(difficultStorage, [list]), false, 'Unmatched old dialect variant should not be recommendation-relevant');
+  assertEqual(recommendation.kind, 'list', 'Recommendation should fall back to normal progression');
+  assertEqual(reviewSession.words.length, 1, 'Explicit review session can still use the available difficult word');
+  assertEqual(reviewSession.words[0]?.id, 'south_only', 'Review fallback should use the available difficult variant');
 });
 
 test('missing preferred variants do not shrink a normal session', () => {

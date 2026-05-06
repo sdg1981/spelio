@@ -621,6 +621,14 @@ Changing word lists mid-session:
 
 A session’s word pool should be fixed when the session starts.
 
+Changing Welsh style during an active session:
+
+- Saves the new preference immediately.
+- Does not alter the current session’s word pool.
+- Does not change the current word, answer slots, answer length, audio, notes, scoring, or progress tracking mid-session.
+- Shows a subtle temporary practice message: “Welsh style will apply from your next session.”
+- Applies when the next normal or Review difficult words session is created.
+
 ## 11. Completion and mastery
 
 ### 11.1 Word states
@@ -738,6 +746,16 @@ Review selection should use current difficulty only:
 progress.difficult === true
 ```
 
+Review difficult words should resolve eligibility using the active `dialectPreference` and `variantGroupId` relationships where possible.
+
+If a difficult word belongs to a linked dialect-variant group, a newly started review session should prefer the variant matching the learner’s current Welsh style. This prevents learners being forced to keep practising an old dialect variant indefinitely after changing Welsh style.
+
+Review must not create duplicate entries for multiple variants in the same `variantGroupId`.
+
+If no matching dialect variant exists, the available difficult word may still be reviewed.
+
+When a mapped review variant is completed cleanly, the relevant current difficulty for that linked variant group should be resolved.
+
 Review session:
 
 - Up to 10 words.
@@ -777,7 +795,7 @@ This should happen immediately as progress updates.
 
 Recommendation order after a session:
 
-1. If user struggled and difficult words currently exist → recommend Review difficult words.
+1. If user struggled and dialect-relevant difficult words currently exist → recommend Review difficult words.
 2. Else if current list is not complete → continue current list.
 3. Else if current list has a nextListId → recommend next list.
 4. Else if unfinished lists exist in current stage → recommend next unfinished list in stage.
@@ -790,11 +808,13 @@ If user manually selects a later list, the app should continue from that point o
 
 This creates guided progression rather than locked progression.
 
-Review difficult words must only be recommended when current difficult words exist.
+Review difficult words must only be recommended when current difficult words exist and are relevant to the learner’s current Welsh style.
+
+If all currently difficult words belong only to dialect variants that no longer match the active Welsh style, and no linked matching variant is available through `variantGroupId`, fall back to normal progression recommendations instead of continuing to suggest irrelevant review.
 
 Multiple selected lists:
 
-- If multiple lists are selected and difficult words currently exist, recommend Review difficult words.
+- If multiple lists are selected and dialect-relevant difficult words currently exist, recommend Review difficult words.
 - If multiple lists are selected and not all selected-list words have been completed, recommend continuing mixed practice.
 - If multiple lists are selected and all selected-list words have been completed, recommend practising the mixed selection again.
 - The recommendation subtitle should make the mixed selection clear, e.g. “Custom mixed word list”.

@@ -186,7 +186,22 @@ export function usePracticeSession({
 
   function persistWordProgress(word: PracticeWord, patch: WordProgressPatch) {
     const currentStorage = storageRef.current;
-    const nextStorage = applyWordProgressPatch(currentStorage, word, patch);
+    let nextStorage = applyWordProgressPatch(currentStorage, word, patch);
+
+    const groupId = word.variantGroupId?.trim();
+    if (reviewDifficult && patch.cleanCompleted && groupId) {
+      const linkedWords = lists.flatMap(list => list.words).filter(item => item.variantGroupId?.trim() === groupId);
+      const nextWordProgress = { ...nextStorage.wordProgress };
+
+      for (const linkedWord of linkedWords) {
+        const progress = nextWordProgress[linkedWord.id];
+        if (progress?.difficult === true) {
+          nextWordProgress[linkedWord.id] = { ...progress, difficult: false };
+        }
+      }
+
+      nextStorage = { ...nextStorage, wordProgress: nextWordProgress };
+    }
 
     storageRef.current = nextStorage;
     onStorageChange(nextStorage);

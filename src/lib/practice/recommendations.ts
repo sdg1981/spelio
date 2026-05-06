@@ -50,7 +50,7 @@ function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordLis
 }
 
 export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
-  const difficultWordsExist = hasDifficultWords(storage);
+  const difficultWordsExist = hasDifficultWords(storage, lists);
   const selectedLists = getSelectedLists(storage.selectedListIds, lists);
 
   if (selectedLists.length > 1) {
