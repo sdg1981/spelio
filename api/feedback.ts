@@ -7,6 +7,8 @@ declare const process: {
 type JsonBody = {
   email?: unknown;
   message?: unknown;
+  feedbackSignals?: unknown;
+  learningMethods?: unknown;
   company?: unknown;
 };
 
@@ -36,6 +38,19 @@ function parseBody(body: unknown): JsonBody | null {
   return null;
 }
 
+function parseStringList(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function formatStringList(values: string[]) {
+  return values.length ? values.join(', ') : 'None selected';
+}
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
@@ -54,6 +69,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   const message = typeof body.message === 'string' ? body.message.trim() : '';
   const email = typeof body.email === 'string' ? body.email.trim() : '';
+  const feedbackSignals = parseStringList(body.feedbackSignals);
+  const learningMethods = parseStringList(body.learningMethods);
 
   if (!message) {
     return response.status(400).json({ ok: false, error: 'Message is required' });
@@ -85,6 +102,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         'Source: Spelio feedback form',
         `Submitted email: ${email || 'Not provided'}`,
         `Timestamp: ${timestamp}`,
+        '',
+        'Quick notes:',
+        formatStringList(feedbackSignals),
+        '',
+        'Learning Welsh with:',
+        formatStringList(learningMethods),
         '',
         'Feedback message:',
         message

@@ -43,7 +43,7 @@ export function Footer({ className = '' }: FooterProps) {
       try {
         await navigator.share({
           title: 'Spelio',
-          text: 'A calm Welsh spelling practice app.',
+          text: 'Really nice Welsh spelling practice app — well worth a try.',
           url: shareUrl
         });
         showShareStatus('shared');
@@ -154,14 +154,42 @@ function InfoModal({
 
 type FeedbackState = 'idle' | 'sending' | 'sent' | 'error';
 
+const feedbackSignalOptions = [
+  'I found this useful',
+  'I’d use this again',
+  'This helped me practise Welsh spelling',
+  'I’d recommend this to another learner',
+  'I found something confusing or frustrating'
+];
+
+const learningMethodOptions = [
+  'SaySomethinginWelsh',
+  'Duolingo',
+  'Dysgu Cymraeg',
+  'School / college',
+  'Self-study',
+  'Multiple methods',
+  'Other'
+];
+
 function looksLikeEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function toggleSelection(value: string, selectedValues: string[]) {
+  if (selectedValues.includes(value)) {
+    return selectedValues.filter(selectedValue => selectedValue !== value);
+  }
+
+  return [...selectedValues, value];
 }
 
 function FeedbackModal({ onClose }: { onClose: () => void }) {
   const titleId = useId();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [feedbackSignals, setFeedbackSignals] = useState<string[]>([]);
+  const [learningMethods, setLearningMethods] = useState<string[]>([]);
   const [company, setCompany] = useState('');
   const [state, setState] = useState<FeedbackState>('idle');
   const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
@@ -200,6 +228,8 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
         body: JSON.stringify({
           email: trimmedEmail || undefined,
           message: trimmedMessage,
+          feedbackSignals,
+          learningMethods,
           company
         })
       });
@@ -264,6 +294,38 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
             />
             {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
           </label>
+
+          <fieldset className="feedback-check-section">
+            <legend>Quick notes <span className="feedback-optional">optional</span></legend>
+            <div className="feedback-check-grid">
+              {feedbackSignalOptions.map(option => (
+                <label className="feedback-check" key={option}>
+                  <input
+                    type="checkbox"
+                    checked={feedbackSignals.includes(option)}
+                    onChange={() => setFeedbackSignals(current => toggleSelection(option, current))}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="feedback-check-section">
+            <legend>I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
+            <div className="feedback-chip-grid">
+              {learningMethodOptions.map(option => (
+                <label className="feedback-chip" key={option}>
+                  <input
+                    type="checkbox"
+                    checked={learningMethods.includes(option)}
+                    onChange={() => setLearningMethods(current => toggleSelection(option, current))}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <div className="feedback-actions">
             <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
