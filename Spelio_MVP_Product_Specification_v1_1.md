@@ -136,7 +136,7 @@ Content:
 - Primary CTA:
   - “Start spelling practice →”
 - Secondary action:
-  - “Review difficult words →” if eligible difficult words currently exist
+  - “Recap tricky words →” if eligible difficult words currently exist
 - Tertiary action:
   - “Select word list →”
 - Faint copyright text
@@ -144,9 +144,11 @@ Content:
 Behaviour:
 
 - Main CTA starts the recommended list/session.
-- Review difficult words appears only if there are current difficult words eligible for the active Welsh style.
+- A low-priority recap/review link appears near the bottom only when eligible difficult words exist.
+- Public label may be softer, such as “Recap tricky words”; internally this may use the existing Review difficult words mode.
+- If showing a count, show 1, 2, 3, 4, or “5+”. Never show large backlog counts.
 - Select word list opens the word list modal.
-- If no eligible difficult words currently exist, the Review difficult words action must be hidden.
+- If no eligible difficult words currently exist, the recap/review action must be hidden.
 - The homepage must not show Review difficult words as an action if selecting it would lead to an empty review session.
 
 ### 5.3 Returning-user struggled homepage
@@ -293,6 +295,20 @@ Messages should fade after approximately 1.2–1.8 seconds.
 Persistent hints should be avoided.
 
 The temporary status message area must not be used for dialect notes or usage notes.
+
+### 6.6 Learner-facing notes
+
+usageNote and dialectNote must not appear before or during active spelling.
+
+Rules:
+
+- They must not appear in the temporary status message area.
+- If displayed in MVP, show them only after the word is completed, revealed, or on a post-answer/end-of-session review surface.
+- Notes should be visually quiet and optional.
+- If both usageNote and dialectNote exist, show usageNote first and dialectNote second.
+- Do not show empty note containers.
+- Do not let notes interrupt typing flow.
+- If note display feels too cluttered, it is acceptable for MVP to store/manage notes in admin first and delay learner display.
 
 ## 7. Settings modal
 
@@ -608,6 +624,20 @@ When choosing session words, prioritise:
 4. Older seen but not completed words
 5. Mastered words only rarely
 
+### 10.3.1 Lightweight recap injection
+
+Starting from the user’s third normal practice session, each new normal session should include up to one recap word if eligible.
+
+Rules:
+
+- A recap word is a previously difficult word that is still relevant to the active Welsh style.
+- Recap injection should not happen in dedicated Review difficult words sessions.
+- Recap should not reduce session quality or cause duplicate variantGroupId entries.
+- If no eligible recap word exists, run the normal session unchanged.
+- Recap should prefer words that were previously incorrect or revealed, prioritising recent/current difficult words.
+- If the recap word is completed cleanly, update its difficult status using the existing review removal rule.
+- This is not a full spaced repetition system and should not introduce complex scheduling.
+
 ### 10.4 Session integrity
 
 **Critical rule:** This behaviour must be enforced strictly with no exceptions. Mixing session state leads to corrupted practice flows and incorrect progress tracking.
@@ -841,6 +871,7 @@ Use local storage shape:
 {
   "selectedListIds": ["foundations_first_words"],
   "currentPathPosition": "foundations_first_words",
+  "normalSessionCount": 0,
   "lastSessionDate": null,
   "lastSessionResult": {},
   "wordProgress": {},
@@ -856,6 +887,14 @@ Use local storage shape:
 ```
 
 Older stored settings without `dialectPreference` should default safely to `mixed`.
+
+If normal completed session count cannot be inferred reliably from lastSessionResult or listProgress, store `normalSessionCount` as the minimal additional field.
+
+Rules:
+
+- Increment normalSessionCount after completed normal sessions.
+- Do not increment it for Review difficult words sessions.
+- Use it to decide when recap injection becomes eligible.
 
 Word progress should support:
 
@@ -951,6 +990,8 @@ Each word should include:
 
 acceptedAlternatives should not be used for different-length dialect variants. Use separate word items linked by variantGroupId instead.
 
+No additional learner-facing note fields are required for MVP. More detailed note categories should remain editorial guidance or internal notes, not separate schema fields.
+
 ### 16.4.1 usageNote rules
 
 Purpose:
@@ -962,14 +1003,59 @@ usageNote provides practical usage guidance such as:
 - typical spoken vs written usage
 - helpful context for when the phrase is used
 
+usageNote should normally be omitted unless the prompt/answer is likely to mislead learners.
+
+Mandatory triggers include:
+
+- yes/no and other response words
+- function words with no simple English equivalent
+- fixed expressions
+- shortened or fuller forms
+- formal/informal distinctions
+- grammar-dependent meanings
+- common learner traps
+
 Rules:
 
 - Must not contain dialect or regional information. That belongs in dialectNote.
 - Must not duplicate dialectNote.
 - Should be a single short sentence or sentence fragment.
-- Recommended length: 5–12 words.
+- Recommended length: usually one short line.
 - Only include if it adds clear value for the learner.
+- Should explain practical use, not teach a full grammar lesson.
 - Prefer omission over low-value notes.
+
+usageNote must not contain regional information; regional information belongs in dialectNote.
+
+### 16.4.2 dialectNote rules
+
+dialectNote should explain regional or Welsh-style variation only.
+
+It should be used when:
+
+- North/South/Standard variants exist
+- the learner may encounter a different regional form
+- the word is part of a variantGroupId
+- the selected Welsh style affects which form appears
+
+It should not:
+
+- duplicate usageNote
+- include general grammar guidance
+- include generic filler
+- reveal the exact target answer during active spelling
+
+### 16.4.3 Admin note presentation
+
+In the admin panel, place usageNote and dialectNote in an “Advanced content notes” or “Learner notes” area so the main word editing flow remains uncluttered.
+
+Admin layout:
+
+- Core fields visible by default: English prompt, Welsh answer, dialect, audio status, difficulty, order.
+- Advanced/content fields collapsible: acceptedAlternatives, usageNote, dialectNote, notes, variantGroupId.
+- Internal notes may be longer and should be clearly labelled “Internal only”.
+- notes remains optional and internal/admin-only for exceptional cases such as uncertainty flags, review comments, audio/pronunciation reminders, or future correction notes. Avoid using notes as a routine content-authoring field.
+- Do not require notes, populate notes routinely, or use notes as a second hidden teaching system.
 
 ### 16.5 Audio generation
 
@@ -1158,33 +1244,35 @@ On tap/click:
 - Play audio immediately.
 - No unnecessary status message unless audio fails.
 
-### 19.2 Prompt notes display
+### 19.2 Post-answer notes display
 
-If the current word has dialect other than Both, show a subtle dialect label near the prompt, for example:
+If the current word has dialect other than Both, the app may show a subtle dialect label only after the word is completed, revealed, or on a post-answer/end-of-session review surface, for example:
 
 - North Wales form
 - South Wales / Standard form
 
 If a word has a dialectNote:
 
-- Show a subtle dialect note near the prompt.
+- Show a subtle dialect note only after active spelling is complete.
 
 If a word has a usageNote:
 
-- Show a subtle usage note near the prompt.
+- Show a subtle usage note only after active spelling is complete.
 
 If both dialectNote and usageNote exist:
 
-- Show dialectNote first.
-- Show usageNote below it.
+- Show usageNote first.
+- Show dialectNote below it.
 
 Display rules:
 
 - Maximum of 2 lines total for dialect and usage notes combined.
 - Keep text small, low contrast, and visually quiet.
+- Do not show notes before or during active spelling.
 - Do not use the temporary status message area.
 - Do not animate or draw attention to these notes.
 - These notes should support the learner without becoming instructional clutter.
+- If this feels too cluttered for MVP, store and manage notes in admin first and delay learner display.
 
 ### 19.3 Correct letter
 
@@ -1381,6 +1469,8 @@ Do not include in MVP:
 - Predictive learner scoring
 - AI recommendation analytics
 
+Lightweight recap of difficult words is included; full spaced repetition scheduling is excluded.
+
 ## 23. Build priorities
 
 ### Phase 1 — Frontend UI
@@ -1410,6 +1500,7 @@ Build:
 - End-session stats
 - Welsh style setting for word-level dialect variant selection
 - Dialect variant selection before rendering answer slots, with at most one variant per variantGroupId in ordinary sessions
+- Optional post-answer note display for usageNote and dialectNote
 - Mobile hidden input handling
 - Desktop key handling without duplication
 
@@ -1424,6 +1515,8 @@ Build:
 - Recommendation logic
 - Current difficulty review logic
 - Removal of words from review after clean completion
+- Lightweight recap injection after the second completed normal session
+- Homepage recap/review link with 5+ capped count
 
 ### Phase 4 — Admin panel
 
@@ -1436,12 +1529,15 @@ Build:
 - Audio preview
 - Word-level dialect fields
 - usageNote and dialectNote management
+- Admin advanced note fields for usageNote, dialectNote, and internal-only notes
 
 ### Phase 5 — Content
 
 Build first Welsh starter lists.
 
 Start with original curated content, not copied course content.
+
+Include stricter usageNote/dialectNote handling so high-risk learner-confusion items get useful short notes and regional information stays in dialectNote.
 
 ### 23.1 Build quality rule
 
@@ -1466,31 +1562,31 @@ I am building Spelio, a premium mobile-first Welsh spelling practice web app for
 
 Use this after the UI shell exists:
 
-Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using Welsh style, choosing at most one variant per variantGroupId in ordinary sessions. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
+Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using Welsh style, choosing at most one variant per variantGroupId in ordinary sessions. Do not display usageNote or dialectNote during active spelling; optional learner note display should happen only after completion, reveal, or on review surfaces. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
 
 ### Prompt 3 — Build local storage progress and recommendation logic
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `normalSessionCount`. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap word from current difficult words into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “Recap tricky words →” link with count capped at 5+ when eligible difficult words exist. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
 Use this once the app works with mock data:
 
-Build a simple private admin panel for Spelio. It should be protected by a simple password stored in an environment variable. The admin panel should allow me to create/edit/delete word lists and add/edit/delete words. Each word list should have name, description, language, dialect, stage, difficulty, order, nextListId, and active status. Each word should have English prompt, Welsh answer, accepted alternatives, audioUrl, audioStatus, notes, order, optional difficulty, dialect, optional dialectNote, optional usageNote, and optional variantGroupId. Add an API route to generate audio using Azure Voice without exposing API keys in the browser. Save generated audio references against words and allow preview/playback in admin.
+Build a simple private admin panel for Spelio. It should be protected by a simple password stored in an environment variable. The admin panel should allow me to create/edit/delete word lists and add/edit/delete words. Each word list should have name, description, language, dialect, stage, difficulty, order, nextListId, and active status. Each word should have English prompt, Welsh answer, accepted alternatives, audioUrl, audioStatus, notes, order, optional difficulty, dialect, optional dialectNote, optional usageNote, and optional variantGroupId. Keep usageNote and dialectNote in a collapsible Advanced content notes or Learner notes area, keep notes clearly labelled internal-only, and do not add separate learner-facing note fields such as grammarNote or registerNote. Add an API route to generate audio using Azure Voice without exposing API keys in the browser. Save generated audio references against words and allow preview/playback in admin.
 
 ### Prompt 5 — Create starter Welsh word lists
 
 Use this as a separate content-generation chat:
 
-Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 words. Include list name, dialect tag where relevant, stage, difficulty, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes. Suggested categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Do not put regional information in usageNote; use dialectNote for that.
+Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 words. Include list name, dialect tag where relevant, stage, difficulty, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes only for exceptional internal review needs. Suggested categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Explicitly identify high-risk learner-confusion items such as yes/no, response words, function words, fixed expressions, shortened/full forms, register differences, grammar-dependent meanings, and common traps. Add short usageNote or dialectNote values only where genuinely useful. Do not put regional information in usageNote; use dialectNote for that.
 
 ### Prompt 6 — Create a technical implementation plan
 
 Use this before or during build:
 
-Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
+Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, lightweight recap injection, capped recap count on the homepage, learner note handling for usageNote and dialectNote, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure including advanced note fields, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
 
 ### Prompt 7 — Implement lightweight anonymous analytics and founder observation dashboard
 

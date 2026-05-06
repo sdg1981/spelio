@@ -585,6 +585,23 @@ Recommended dialect values for Welsh:
 
 dialectNote should explain regional form briefly.
 
+dialectNote should be included when:
+
+- a real regional alternative exists
+- the learner may encounter another form elsewhere
+- the Welsh style setting may surface another variant in future sessions
+- the answer belongs clearly to North Wales, South Wales, Standard Welsh, or another defined variety
+
+dialectNote should not be used for:
+
+- general usage guidance
+- formality
+- grammar
+- generic comments like "Welsh word"
+- duplicating usageNote
+
+If a note mentions regional variation, it belongs in dialectNote, not usageNote.
+
 Learner-facing notes must not reveal the exact target answer currently being practised.
 
 For the Welsh MVP:
@@ -593,6 +610,12 @@ For the Welsh MVP:
 - welshAnswer is the target spelling.
 - usageNote and dialectNote must not contain the exact welshAnswer.
 - usageNote and dialectNote may mention English meanings, opposite dialect variants, fuller or shorter alternative forms, and regional equivalents, provided they do not reveal the exact answer being tested.
+
+If a note would need to name the exact target answer to be useful, either:
+
+- rewrite it without the exact answer
+- put the explanation in internal notes
+- show it only after the answer has been completed, if the product later supports post-answer notes
 
 Example:
 
@@ -667,11 +690,47 @@ Example:
 
 ---
 
-## 17. usageNote Strategy
+## 17. Strong usageNote Strategy
 
 usageNote is optional and learner-facing.
 
 It should be rare and high-value.
+
+usageNote should normally be omitted unless a mandatory learner-confusion trigger applies.
+
+### Mandatory usageNote triggers
+
+A usageNote MUST be included when any of the following apply:
+
+- The English prompt maps poorly onto Welsh.
+- A direct one-word translation would be misleading.
+- The Welsh form depends heavily on grammatical context.
+- The word or phrase is a response form rather than a simple vocabulary item.
+- The learner is likely to overgeneralise from the prompt.
+- The item is a shortened, colloquial, formal, or fixed expression.
+- The Welsh answer is useful but not the only common way to express the prompt.
+- The item involves a common learner trap that can be explained briefly without teaching a full grammar lesson.
+- The prompt is deceptively simple, such as "yes", "no", "with", "want", "you", "here", "there", "please", or "sorry".
+
+### Pedagogical risk principle
+
+Learner-facing notes should prevent likely misunderstanding. They should not add trivia. If a note does not make the learner more confident, more accurate, or less likely to misuse the item, omit it.
+
+### Usage note purpose categories
+
+These are NOT separate schema fields.
+
+The content creator may use these categories to decide what kind of usageNote is needed, but they should still write only one short `usageNote` field:
+
+- Response behaviour — for items like yes/no where Welsh depends on the preceding question.
+- Register — formal, informal, polite, colloquial.
+- Form length — short form, fuller form, common expansion.
+- Context — where the word/phrase is normally used.
+- Common mistake — a likely learner misunderstanding.
+- Grammar-light clarification — a brief explanation where grammar affects usage, without turning the app into a grammar course.
+- Fixed expression — where the phrase should be learnt as a chunk.
+
+Do not expose these categories as separate learner-facing fields in the MVP.
 
 Use usageNote for:
 
@@ -694,6 +753,8 @@ Good usageNote examples:
 - Informal. Fuller form: “Mae’n ddrwg gen i”.
 - Formal/polite; often shortened in speech.
 - Can be expanded to “diolch yn fawr”.
+- Welsh has several forms of ‘yes’; this is a simple general form.
+- Welsh has several forms of ‘no’; this is a simple general form.
 
 Bad usageNote examples:
 
@@ -702,11 +763,28 @@ Bad usageNote examples:
 - North Wales form of the word.
 - This means “thank you”.
 - Shorter spoken form: isio. (when the target answer is "isio coffi")
+- This means yes.
+- This means no.
+- Common word.
+
+For `englishPrompt: "yes"` and `welshAnswer: "ie"`:
+
+Good usageNote:
+
+- Welsh has several forms of ‘yes’; this is a simple general form.
+
+For `englishPrompt: "no"` and `welshAnswer: "na"`:
+
+Good usageNote:
+
+- Welsh has several forms of ‘no’; this is a simple general form.
+
+Do not imply that ie/na answer every yes/no question in Welsh.
 
 Recommended length:
 
 - one short line
-- usually 5–12 words
+- usually brief and concise
 
 Prefer no note over a low-value note.
 
@@ -716,15 +794,19 @@ Prefer no note over a low-value note.
 
 The notes field is internal/admin-facing.
 
-It may be used for:
+It may be used for exceptional cases such as:
 
-- editorial comments
-- content review notes
-- audio generation notes
 - uncertainty flags
-- future improvements
+- review comments
+- audio/pronunciation reminders
+- future correction notes
+- source comments
+- occasional AI regeneration guidance
+- note purpose/category for editors when needed for review
 
-It must not be shown to learners.
+Internal notes may be longer than usageNote or dialectNote, but must not be shown to learners.
+
+notes is optional and should be used for exceptional cases only. Do not require notes, populate notes routinely, or use notes as a second hidden teaching system. Prefer leaving notes empty unless there is a clear editorial reason.
 
 ---
 
@@ -910,6 +992,11 @@ Before accepting a list, check:
 - Are the forms correct?
 - Are dialect choices explicit?
 - Are accepted alternatives used correctly?
+- Does every high-risk prompt have a useful usageNote?
+- Are yes/no, response words, function words, colloquial forms, and fixed expressions explained where needed?
+- Is dialect information in dialectNote rather than usageNote?
+- Are usageNote and dialectNote both short, non-duplicative, and spoiler-safe?
+- Would the note actually prevent learner confusion?
 - Does usageNote avoid revealing the target answer?
 - Does dialectNote avoid revealing the target answer?
 - Do learner-facing notes avoid spoiling the spelling task?
@@ -1081,7 +1168,8 @@ Rules:
 - Link dialect variants with variantGroupId.
 - Do not use acceptedAlternatives for dialect variants.
 - Mixed Welsh exposure is the default; rotate variants over time where possible, but do not show both variants from the same group in the same ordinary session.
-- Keep usageNote short and rare.
+- When generating or reviewing word lists with AI, explicitly ask the AI to identify high-risk learner-confusion items and add short usageNote or dialectNote values only where they are genuinely useful.
+- Keep usageNote short and rare, except where high-risk learner-confusion triggers make it mandatory.
 - Do not put dialect information in usageNote.
 - Keep lists coherent and practical.
 - Prefer simpler spelling over higher usefulness if unsure.
@@ -1103,6 +1191,7 @@ Check:
 - dialect handling
 - acceptedAlternatives
 - usageNote quality
+- high-risk learner-confusion items needing short usageNote or dialectNote values
 - usageNote does not reveal the target answer
 - dialectNote does not reveal the target answer
 - learner-facing notes do not spoil the spelling task
