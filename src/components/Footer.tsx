@@ -260,20 +260,6 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
         </p>
 
         <form className="feedback-form" onSubmit={handleSubmit} noValidate>
-          <label className="feedback-field">
-            <span>Email address <span className="feedback-optional">optional</span></span>
-            <input
-              className="feedback-input"
-              type="email"
-              value={email}
-              onChange={event => setEmail(event.target.value)}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'feedback-email-error' : undefined}
-              autoComplete="email"
-            />
-            {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
-          </label>
-
           <label className="feedback-field feedback-honeypot" aria-hidden="true">
             <span>Company</span>
             <input
@@ -328,6 +314,20 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               ))}
             </div>
           </fieldset>
+
+          <label className="feedback-field">
+            <span>Email address <span className="feedback-optional">optional</span></span>
+            <input
+              className="feedback-input"
+              type="email"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'feedback-email-error' : undefined}
+              autoComplete="email"
+            />
+            {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
+          </label>
 
           <div className="feedback-actions">
             <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
