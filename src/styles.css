@@ -1070,12 +1070,9 @@
 }
 
 .feedback-actions{
-  position:sticky;
-  bottom:0;
   display:grid;
   gap:14px;
   border-top:1px solid var(--line);
-  background:linear-gradient(to bottom,rgba(255,255,255,.94),#fff 24%);
   padding-top:20px;
   padding-bottom:2px;
 }
