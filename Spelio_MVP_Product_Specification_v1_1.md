@@ -136,7 +136,7 @@ Content:
 - Primary CTA:
   - “Start spelling practice →”
 - Secondary action:
-  - “Review difficult words →” if difficult words currently exist
+  - “Review difficult words →” if eligible difficult words currently exist
 - Tertiary action:
   - “Select word list →”
 - Faint copyright text
@@ -144,9 +144,9 @@ Content:
 Behaviour:
 
 - Main CTA starts the recommended list/session.
-- Review difficult words appears only if there are words currently marked difficult.
+- Review difficult words appears only if there are current difficult words eligible for the active Welsh style.
 - Select word list opens the word list modal.
-- If no difficult words currently exist, the Review difficult words action must be hidden.
+- If no eligible difficult words currently exist, the Review difficult words action must be hidden.
 - The homepage must not show Review difficult words as an action if selecting it would lead to an empty review session.
 
 ### 5.3 Returning-user struggled homepage
@@ -162,7 +162,7 @@ Content:
 - Supporting text:
   - “Based on your last session”
 - Primary CTA:
-  - “Review difficult words →” if difficult words currently exist
+  - “Review difficult words →” if eligible difficult words currently exist
 - Secondary action:
   - “Continue learning →”
 - Tertiary action:
@@ -172,7 +172,7 @@ Content:
 Behaviour:
 
 - If the last session is classified as “struggled” and difficult words exist, review becomes the primary action.
-- If the last session is classified as “struggled” but no difficult words currently exist, do not show a review action. Fall back to the appropriate continue-learning recommendation.
+- If the last session is classified as “struggled” but no eligible difficult words currently exist, do not show a review action. Fall back to the appropriate continue-learning recommendation.
 - The user can still continue learning or choose another word list.
 - Select word list opens the word list modal and must not auto-start a practice session after Done is pressed.
 
@@ -510,17 +510,17 @@ Small supporting text:
 
 - Next lesson in your current course
 
-If the user struggled and difficult words currently exist, primary action should become:
+If the user struggled and eligible difficult words currently exist, primary action should become:
 
 - Review difficult words
 
-If the user struggled but no difficult words currently exist, do not show Review difficult words. Use the next valid continue-learning recommendation instead.
+If the user struggled but no eligible difficult words currently exist, do not show Review difficult words. Use the next valid continue-learning recommendation instead.
 
 ### 9.3 Secondary actions
 
 Possible actions:
 
-- Review difficult words, only if difficult words currently exist
+- Review difficult words, only if eligible difficult words currently exist
 - Change word lists
 - Back to home
 
@@ -700,9 +700,9 @@ OR revealedLetters > 0
 OR difficultyScore >= 3
 ```
 
-If the user struggled and difficult words currently exist, the next recommendation should prioritise reviewing difficult words.
+If the user struggled and dialect-eligible difficult words currently exist, the next recommendation should prioritise reviewing difficult words.
 
-If the user struggled but no difficult words currently exist, the app should not show Review difficult words and should fall back to the next valid continue-learning recommendation.
+If the user struggled but no dialect-eligible difficult words currently exist, the app should not show Review difficult words and should fall back to the next valid continue-learning recommendation.
 
 ## 13. Review difficult words
 
@@ -756,7 +756,7 @@ Review difficult words should only include difficult words that are eligible und
 - South Wales / Standard reviews South Wales / Standard, Standard, and Both difficult words.
 - Mixed Welsh may review any currently difficult dialect variant.
 
-Review must not create duplicate entries for multiple variants in the same `variantGroupId`.
+Review must not create duplicate entries for multiple variants in the same `variantGroupId`. `variantGroupId` may be used for deduplication, but not to substitute a different dialect variant for review.
 
 Old difficult entries from another dialect may remain in storage, but should not drive current review recommendations.
 
@@ -773,7 +773,7 @@ Review session:
 
 **Critical rule:** Review must never fall back to a standard session. This prevents incorrect practice behaviour and ensures the feature reflects true user difficulty.
 
-If no difficult words currently exist:
+If no dialect-eligible difficult words currently exist:
 
 - Hide “Review difficult words” on the homepage.
 - Hide “Review difficult words” on the end screen.
@@ -1319,14 +1319,14 @@ When a mixed selection is saved:
 - `selectedListIds` stores all selected list IDs in selected order.
 - `currentPathPosition` is set to the first selected list.
 - Recommendation copy should describe the selection as mixed practice.
-- Review difficult words may override mixed practice only when current difficult words exist.
+- Review difficult words may override mixed practice only when dialect-eligible current difficult words exist.
 
-### 20.6 Review action with no difficult words
+### 20.6 Review action with no eligible difficult words
 
-If the user somehow triggers Review difficult words when no difficult words exist:
+If the user somehow triggers Review difficult words when no dialect-eligible difficult words exist:
 
 - Do not start a standard session.
-- Return to homepage or show a subtle message that there are no difficult words to review.
+- Return to homepage or show a subtle message that there are no eligible difficult words to review.
 - Hide the review action wherever possible to prevent this case.
 
 ## 21. Tech stack recommendation
@@ -1472,7 +1472,7 @@ Using the existing Spelio frontend, implement the core practice engine. The app 
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
@@ -1504,7 +1504,7 @@ The MVP is complete when:
 
 - A new user can open the app and start a Welsh spelling session instantly.
 - A returning user is shown a smart next recommendation.
-- A struggling user is encouraged to review difficult words only when difficult words currently exist.
+- A struggling user is encouraged to review difficult words only when dialect-eligible difficult words currently exist.
 - The practice screen behaves smoothly and clearly.
 - Word lists can contain more than 10 words and are practised over multiple sessions.
 - The app tracks local progress.
