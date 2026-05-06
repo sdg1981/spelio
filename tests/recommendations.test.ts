@@ -1,6 +1,6 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
-import { classifySession, createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   applyManualWordListSelection,
@@ -146,6 +146,58 @@ function missingPreferredVariantList(): WordList {
         dialect: 'South Wales / Standard',
         variantGroupId: 'soft_preference'
       })
+    ]
+  };
+}
+
+function recapSelectionList(): WordList {
+  return {
+    id: 'test_recap_selection',
+    name: 'Recap selection',
+    description: '',
+    language: 'Welsh',
+    dialect: 'Both',
+    stage: 'Test',
+    difficulty: 3,
+    order: 1,
+    isActive: true,
+    words: [
+      {
+        id: 'active_hard_recent',
+        listId: 'test_recap_selection',
+        englishPrompt: 'active hard',
+        welshAnswer: 'caled',
+        order: 1,
+        difficulty: 5,
+        dialect: 'Both'
+      },
+      {
+        id: 'resolved_hard_recent',
+        listId: 'test_recap_selection',
+        englishPrompt: 'resolved hard',
+        welshAnswer: 'anodd',
+        order: 2,
+        difficulty: 5,
+        dialect: 'Both'
+      },
+      {
+        id: 'resolved_easy_older',
+        listId: 'test_recap_selection',
+        englishPrompt: 'resolved easy',
+        welshAnswer: 'hawdd',
+        order: 3,
+        difficulty: 2,
+        dialect: 'Both'
+      },
+      {
+        id: 'resolved_easy_seen_once',
+        listId: 'test_recap_selection',
+        englishPrompt: 'resolved easy once',
+        welshAnswer: 'eto',
+        order: 4,
+        difficulty: 1,
+        dialect: 'Both'
+      }
     ]
   };
 }
@@ -652,4 +704,60 @@ test('Mixed Welsh does not show both variants from one variantGroupId in an ordi
     .filter((groupId): groupId is string => Boolean(groupId));
 
   assertEqual(groups.length, new Set(groups).size, 'Mixed Welsh should choose at most one variant per variantGroupId in a normal session');
+});
+
+test('pre-session recap prefers resolved confidence-building words without repeating one already recapped', () => {
+  const list = recapSelectionList();
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    completedNormalSessionCount: 2,
+    wordProgress: {
+      active_hard_recent: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: true,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-04T10:00:00.000Z'
+      },
+      resolved_hard_recent: {
+        seen: true,
+        completedCount: 2,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-05T10:00:00.000Z'
+      },
+      resolved_easy_older: {
+        seen: true,
+        completedCount: 2,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-03T10:00:00.000Z'
+      },
+      resolved_easy_seen_once: {
+        seen: true,
+        completedCount: 3,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 1,
+        lastPractisedAt: '2026-05-06T10:00:00.000Z'
+      }
+    }
+  };
+
+  const selected = selectPreSessionRecapWord(storage, [list], []);
+
+  assertEqual(selected?.id, 'resolved_easy_older', 'Quick recap should prefer resolved, lower/moderate words that have not already had a clean recap pass');
 });

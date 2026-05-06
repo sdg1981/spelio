@@ -223,13 +223,43 @@ export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
   return getRecapCandidates(activeWords, storage).length;
 }
 
+function recapDifficultyRank(word: PracticeWord) {
+  const difficulty = word.difficulty ?? 3;
+  if (difficulty <= 3) return difficulty;
+  if (difficulty === 4) return 4;
+  return 5;
+}
+
+function sortPreSessionRecapCandidates(words: PracticeWord[], storage: SpelioStorage) {
+  return [...words].sort((a, b) => {
+    const leftProgress = storage.wordProgress[a.id];
+    const rightProgress = storage.wordProgress[b.id];
+    const leftResolved = leftProgress?.difficult ? 1 : 0;
+    const rightResolved = rightProgress?.difficult ? 1 : 0;
+    const leftCleanRecaps = leftProgress?.cleanRecapCount ?? 0;
+    const rightCleanRecaps = rightProgress?.cleanRecapCount ?? 0;
+    const leftPractised = leftProgress?.lastPractisedAt ?? '';
+    const rightPractised = rightProgress?.lastPractisedAt ?? '';
+
+    return (
+      leftResolved - rightResolved ||
+      leftCleanRecaps - rightCleanRecaps ||
+      recapDifficultyRank(a) - recapDifficultyRank(b) ||
+      rightPractised.localeCompare(leftPractised) ||
+      a.order - b.order
+    );
+  });
+}
+
 export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordList[], sessionWords: PracticeWord[], reviewDifficult = false) {
   if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  const candidates = getRecapCandidates(activeWords, storage)
+    .filter(word => !sessionWordIds.has(word.id));
 
-  return getRecapCandidates(activeWords, storage).find(word => !sessionWordIds.has(word.id));
+  return sortPreSessionRecapCandidates(candidates, storage)[0];
 }
 
 export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedLetters'>): SessionState {
