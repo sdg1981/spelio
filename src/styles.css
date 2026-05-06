@@ -1569,18 +1569,25 @@
   }
 
   .practice-app .dialect-label{
-    margin-top:10px;
-    font-size:12px;
+    margin-top:6px;
+    font-size:11px;
+    line-height:1.1;
   }
 
   .practice-app .word-insight{
-    margin-top:10px;
+    margin-top:6px;
     max-width:calc(100vw - 64px);
-    font-size:13px;
+    font-size:12px;
+    line-height:1.18;
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:46px;
+    margin-top:38px;
+  }
+
+  .practice-app .dialect-label + .letter-input-tap-zone,
+  .practice-app .word-insight + .letter-input-tap-zone{
+    margin-top:28px;
   }
 
   .practice-app .letter-grid,
@@ -1590,7 +1597,7 @@
 
   .practice-app .letter-grid{
     max-width:calc(100vw - 48px);
-    gap:36px 36px;
+    gap:26px 36px;
   }
 
   .practice-app .letter-word{
@@ -1616,7 +1623,7 @@
   }
 
   .practice-app .letter-grid.compact{
-    gap:32px 30px;
+    gap:24px 30px;
   }
 
   .practice-app .letter-grid.compact .letter-word{
@@ -1629,7 +1636,7 @@
   }
 
   .practice-app .letter-grid.extra-compact{
-    gap:28px 24px;
+    gap:22px 24px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-word{
@@ -1642,9 +1649,14 @@
   }
 
   .practice-app .status-line{
-    margin-top:32px;
+    margin-top:24px;
     min-height:26px;
     font-size:18px;
+  }
+
+  .practice-app .status-line:empty{
+    min-height:6px;
+    margin-top:16px;
   }
 
   .practice-app .status-message{
@@ -1664,7 +1676,7 @@
     z-index:auto;
     width:min(420px, calc(100vw - 36px));
     max-width:420px;
-    margin-top:18px;
+    margin-top:12px;
     margin-bottom:0;
     border:1px solid #dfe4e9;
     border-radius:7px;
@@ -1708,11 +1720,16 @@
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:34px;
+    margin-top:28px;
+  }
+
+  .practice-app .dialect-label + .letter-input-tap-zone,
+  .practice-app .word-insight + .letter-input-tap-zone{
+    margin-top:20px;
   }
 
   .practice-app .letter-grid{
-    gap:28px 30px;
+    gap:20px 30px;
   }
 
   .practice-app .letter-word{
@@ -1734,6 +1751,10 @@
     gap:10px;
   }
 
+  .practice-app .letter-grid.compact{
+    gap:18px 28px;
+  }
+
   .practice-app .letter-grid.compact .letter-slot{
     min-width:24px;
     font-size:24px;
@@ -1743,14 +1764,23 @@
     gap:10px;
   }
 
+  .practice-app .letter-grid.extra-compact{
+    gap:16px 22px;
+  }
+
   .practice-app .letter-grid.extra-compact .letter-slot{
     min-width:20px;
     font-size:21px;
   }
 
   .practice-app .status-line{
-    margin-top:26px;
+    margin-top:20px;
     font-size:16px;
+  }
+
+  .practice-app .status-line:empty{
+    min-height:4px;
+    margin-top:12px;
   }
 
   .practice-app .status-message svg{
