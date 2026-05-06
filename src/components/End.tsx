@@ -99,7 +99,7 @@ export function EndScreen({
           />
         </div>
 
-        <Footer className="end-footer" />
+        <Footer />
       </section>
     </main>
   );
