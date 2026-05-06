@@ -1162,6 +1162,8 @@
 
   .feedback-modal-body{
     padding-right:0;
+    padding-bottom:calc(36px + env(safe-area-inset-bottom));
+    scroll-padding-bottom:calc(36px + env(safe-area-inset-bottom));
   }
 
   .feedback-field{
