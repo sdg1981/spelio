@@ -1336,24 +1336,27 @@
   font-weight:900;
   line-height:.78;
   letter-spacing:-.1em;
+  opacity:.92;
   touch-action:manipulation;
-  transition:opacity .18s ease-out,transform .18s ease-out;
+  transition:opacity .18s ease-out,color .18s ease-out,transform .18s ease-out;
 }
 
 .practice-mark-button span span{
+  display:inline-block;
   color:var(--red);
   letter-spacing:-.04em;
-  transition:color .18s ease-out,opacity .18s ease-out;
+  transform-origin:center bottom;
+  transition:color .18s ease-out,opacity .18s ease-out,transform .18s ease-out;
 }
 
 .practice-mark-button:focus-visible{
-  outline:2px solid rgba(217,0,0,.34);
-  outline-offset:8px;
-  border-radius:4px;
+  outline:2px solid rgba(217,0,0,.28);
+  outline-offset:7px;
+  border-radius:7px;
 }
 
 .practice-mark-button:active{
-  transform:scale(.985);
+  transform:scale(.98);
 }
 
 .practice-app .settings-cog{
@@ -1566,12 +1569,15 @@
 
 @media (hover:hover) and (pointer:fine){
   .practice-mark-button:hover{
-    opacity:.88;
+    color:#03111d;
+    opacity:1;
+    transform:translateY(-1px) scale(1.015);
   }
 
   .practice-mark-button:hover span span{
-    color:#c90000;
+    color:#c60000;
     opacity:1;
+    transform:scaleX(1.18);
   }
 
   .practice-app .settings-cog:hover{
