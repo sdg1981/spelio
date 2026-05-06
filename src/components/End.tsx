@@ -29,7 +29,8 @@ export function EndScreen({
   hasDifficultWords,
   onContinue,
   onReview,
-  onChangeLists
+  onChangeLists,
+  onHome
 }: {
   result: SessionResult;
   recommendation: Recommendation;
@@ -37,6 +38,7 @@ export function EndScreen({
   onContinue: () => void;
   onReview: () => void;
   onChangeLists: () => void;
+  onHome: () => void;
 }) {
   const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
   const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
@@ -45,7 +47,9 @@ export function EndScreen({
     : recommendation.subtitle;
   const primaryTitle = shouldPrioritiseReview ? 'Review difficult words' : 'Continue learning';
   const handlePrimary = shouldPrioritiseReview ? onReview : onContinue;
-  const encouragement = getEncouragement(result);
+  const encouragement = shouldPrioritiseReview
+    ? 'That was a tricky one — let’s practise those words again.'
+    : getEncouragement(result);
   const stats = [
     `${result.correctWords} correct`,
     `${result.incorrectWords} incorrect`,
@@ -56,7 +60,7 @@ export function EndScreen({
   return (
     <main className="end-bg">
       <section className="page-shell end-shell end-v2-shell">
-        <div className="end-logo"><Logo /></div>
+        <div className="end-logo"><Logo onClick={onHome} /></div>
 
         <div className="end-success-orb"><Check size={52} strokeWidth={2.2} /></div>
 
@@ -75,7 +79,12 @@ export function EndScreen({
               </span>
             ))}
           </div>
-          {!shouldPrioritiseReview && <p>Next up: {recommendedListName}</p>}
+          {!shouldPrioritiseReview && (
+            <>
+              <h2>Next up</h2>
+              <p>{recommendedListName}</p>
+            </>
+          )}
         </div>
 
         <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>

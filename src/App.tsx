@@ -146,6 +146,7 @@ export default function App() {
         }}
         onReview={() => startPractice({ review: true })}
         onChangeLists={() => setWordListModalOpen(true)}
+        onHome={() => setScreen('home')}
       />
       {wordListModalOpen && (
         <WordListModal
