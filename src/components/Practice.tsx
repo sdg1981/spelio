@@ -587,6 +587,7 @@ export function Practice({
             aria-pressed={storage.settings.englishVisible}
           >
             <MessageSquareQuote size={22} />
+            {storage.settings.englishVisible && <span className="english-toggle-label">English</span>}
           </button>
 
           <button

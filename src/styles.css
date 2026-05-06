@@ -1461,6 +1461,7 @@
 }
 
 .practice-app .utility-bar button{
+  min-width:128px;
   min-height:76px;
   flex-direction:row;
   justify-content:center;
@@ -1470,6 +1471,11 @@
   font-size:16px;
   font-weight:700;
   letter-spacing:.02em;
+}
+
+.practice-app .english-toggle-label{
+  color:#53606c;
+  font-weight:500;
 }
 
 .practice-app .utility-bar svg{
@@ -1676,6 +1682,7 @@
   }
 
   .practice-app .utility-bar button{
+    min-width:108px;
     min-height:64px;
     gap:12px;
     padding:12px 10px;

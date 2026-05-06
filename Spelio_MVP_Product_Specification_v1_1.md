@@ -247,12 +247,14 @@ Answer layout rules:
 
 Bottom controls:
 
-- English toggle: `MessageSquareQuote` icon only, with no visible “EN” label
+- English toggle: `MessageSquareQuote` icon only when English is off; `MessageSquareQuote` + “English” when English is on
 - Reveal: eye icon + “REVEAL” label
 
 No separate replay audio icon. Audio replay is handled by the word pill.
 
 The word list button is not present on the practice screen bottom utility strip. Word list selection remains available from the homepage and end screen.
+
+The English toggle must preserve mobile keyboard focus.
 
 No audio prompts toggle in the practice screen. Audio prompt preference belongs in settings.
 
