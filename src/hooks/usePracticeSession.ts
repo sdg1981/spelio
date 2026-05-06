@@ -72,6 +72,7 @@ export function usePracticeSession({
   storage,
   reviewDifficult = false,
   includeRecapDue = false,
+  sessionKey = 0,
   onStorageChange,
   onComplete
 }: {
@@ -79,16 +80,17 @@ export function usePracticeSession({
   storage: SpelioStorage;
   reviewDifficult?: boolean;
   includeRecapDue?: boolean;
+  sessionKey?: number;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
 }) {
   const session = useMemo(
     () => createPracticeSession(lists, storage, reviewDifficult, includeRecapDue),
-    [lists, storage.selectedListIds.join('|'), storage.settings.dialectPreference, reviewDifficult, includeRecapDue]
+    [lists, sessionKey, storage.selectedListIds.join('|'), storage.currentPathPosition, storage.settings.dialectPreference, reviewDifficult, includeRecapDue]
   );
   const recapWord = useMemo(
     () => selectPreSessionRecapWord(storage, lists, session.words, reviewDifficult),
-    [lists, reviewDifficult, session.words, storage.completedNormalSessionCount, storage.settings.dialectPreference]
+    [lists, sessionKey, reviewDifficult, session.words, storage.completedNormalSessionCount, storage.settings.dialectPreference]
   );
   const sessionIdentity = `${recapWord?.id ?? ''}:${session.words.map(word => word.id).join('|')}`;
   const [currentIndex, setCurrentIndex] = useState(0);

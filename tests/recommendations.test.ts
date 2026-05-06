@@ -280,6 +280,34 @@ function completeListCleanly(storage: SpelioStorage, listId: string) {
   );
 }
 
+function completeSessionWordsCleanly(storage: SpelioStorage, words: PracticeWord[], listIds: string[]) {
+  for (const word of words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: words.length,
+    correctWords: words.length,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds,
+    state: 'strong'
+  };
+
+  return updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    wordLists,
+    result
+  );
+}
+
 function finishNumbersSession(storage: SpelioStorage, result: SessionResult) {
   return updateListCompletion(
     {
@@ -431,6 +459,87 @@ test('primary action does not repeat a completed list when nextListId exists', (
 
   assertEqual(recommendation.listId === 'foundations_numbers', false, 'Completed numbers list should not repeat');
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed list should advance to next valid list');
+});
+
+test('single-list progression starts the next recommended list with a fresh normal pool', () => {
+  let storage = firstWordsStorage('mixed');
+  const firstSession = createPracticeSession(wordLists, storage);
+
+  assert(firstSession.words.some(word => word.englishPrompt === 'please'), 'Setup should include please in the first words session');
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, ['foundations_first_words']);
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(recommendation.listId, 'foundations_verbs', 'Completed first words should recommend first verbs');
+
+  storage = applyPracticeStartListSelection(storage, recommendation.listId);
+  const nextSession = createPracticeSession(wordLists, storage);
+
+  assertEqual(nextSession.words.length, 10, 'Next normal session should keep the ten-word target');
+  assertEqual(nextSession.words.every(word => word.listId === 'foundations_verbs'), true, 'Next normal session should use only First Verbs words');
+  assertEqual(nextSession.words.some(word => word.englishPrompt === 'please'), false, 'Please must not leak into the First Verbs normal pool');
+});
+
+test('starting a later session with the same mixed selection prioritises unseen words', () => {
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['stage2_food', 'stage2_people', 'stage2_work'],
+    currentPathPosition: 'stage2_food'
+  };
+  const firstSession = createPracticeSession(wordLists, storage);
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
+  const secondSession = createPracticeSession(wordLists, storage);
+  const firstSessionIds = new Set(firstSession.words.map(word => word.id));
+  const repeatedWords = secondSession.words.filter(word => firstSessionIds.has(word.id));
+
+  assertEqual(firstSession.words.length, 10, 'Setup first mixed session should use ten words');
+  assertEqual(secondSession.words.length, 10, 'Second mixed session should use ten words');
+  assertEqual(repeatedWords.length, 0, 'Second mixed session should draw unseen words before repeating session one');
+});
+
+test('pre-session recap is separate from the next normal session pool', () => {
+  const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
+  assert(firstWords, 'Expected foundations_first_words to exist');
+  const please = firstWords.words.find(word => word.englishPrompt === 'please');
+  assert(please, 'Expected please to exist in first words');
+
+  let storage = firstWordsStorage('mixed');
+  storage = applyWordProgressPatch(storage, please, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, please, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    selectedListIds: ['foundations_verbs'],
+    currentPathPosition: 'foundations_verbs',
+    completedNormalSessionCount: 2
+  };
+
+  const normalSession = createPracticeSession(wordLists, storage);
+  const recapWord = selectPreSessionRecapWord(storage, wordLists, normalSession.words);
+
+  assertEqual(recapWord?.id, please.id, 'Please may appear only as the labelled Quick recap word');
+  assertEqual(normalSession.words.some(word => word.id === please.id), false, 'Quick recap word must not be inserted into the normal ten-word pool');
+  assertEqual(normalSession.words.every(word => word.listId === 'foundations_verbs'), true, 'Normal session should still use the intended current list');
+});
+
+test('ordinary continue learning does not use difficult review words from another list', () => {
+  const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
+  assert(firstWords, 'Expected foundations_first_words to exist');
+  const please = firstWords.words.find(word => word.englishPrompt === 'please');
+  assert(please, 'Expected please to exist in first words');
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_verbs'],
+    currentPathPosition: 'foundations_verbs'
+  };
+  storage = applyWordProgressPatch(storage, please, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+
+  const normalSession = createPracticeSession(wordLists, storage);
+  const reviewSession = createPracticeSession(wordLists, storage, true);
+
+  assertEqual(normalSession.words.some(word => word.id === please.id), false, 'Normal continue learning should not pull difficult words from another list');
+  assertEqual(reviewSession.words.some(word => word.id === please.id), true, 'Difficult word should remain available only in explicit review mode');
 });
 
 test('manual list selection invalidates stale next-list recommendation', () => {

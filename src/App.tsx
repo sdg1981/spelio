@@ -27,6 +27,7 @@ export default function App() {
   const [includeRecapDue, setIncludeRecapDue] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
+  const [practiceSessionKey, setPracticeSessionKey] = useState(0);
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
@@ -76,6 +77,7 @@ export default function App() {
       hasStartedPracticeSession: true
     }));
 
+    setPracticeSessionKey(key => key + 1);
     setReviewMode(review);
     setIncludeRecapDue(review && allowRecapReview);
     setScreen('practice');
@@ -136,6 +138,7 @@ export default function App() {
       storage={storage}
       reviewDifficult={reviewMode}
       includeRecapDue={includeRecapDue}
+      sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
       onStorageChange={updateStorage}
       onComplete={handleComplete}
