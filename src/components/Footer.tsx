@@ -255,16 +255,6 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function handleSendAnotherMessage() {
-    setEmail('');
-    setMessage('');
-    setFeedbackSignals([]);
-    setLearningMethods([]);
-    setCompany('');
-    setErrors({});
-    setState('idle');
-  }
-
   return (
     <div className="overlay" role="presentation">
       <section className="modal modal-small feedback-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
@@ -277,9 +267,6 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
           {state === 'sent' ? (
             <div className="feedback-success" role="status" aria-live="polite">
               <p>Thank you — feedback sent.</p>
-              <button className="feedback-secondary-action" type="button" onClick={handleSendAnotherMessage}>
-                Send another message
-              </button>
             </div>
           ) : (
             <>
