@@ -916,18 +916,23 @@
 }
 
 .feedback-intro{
-  margin-top:16px;
+  margin:0;
   flex:0 0 auto;
+}
+
+.feedback-modal-body{
+  margin-top:16px;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  padding-right:2px;
 }
 
 .feedback-form{
   margin-top:28px;
   display:grid;
   gap:20px;
-  flex:1 1 auto;
-  min-height:0;
-  overflow-y:auto;
-  padding-right:2px;
+  overflow:visible;
 }
 
 .feedback-field{
@@ -1103,6 +1108,40 @@
   cursor:default;
 }
 
+.feedback-success{
+  display:grid;
+  gap:20px;
+  padding:20px 0 4px;
+  color:#346f54;
+  font-size:18px;
+  font-weight:800;
+  line-height:1.35;
+  text-align:left;
+}
+
+.feedback-success p{
+  margin:0;
+}
+
+.feedback-secondary-action{
+  justify-self:start;
+  border:0;
+  background:transparent;
+  color:var(--red);
+  font-size:16px;
+  font-weight:750;
+  padding:0 0 2px;
+  text-decoration:underline;
+  text-decoration-color:#f0b7b7;
+  text-underline-offset:4px;
+}
+
+.feedback-secondary-action:focus-visible{
+  outline:0;
+  border-radius:4px;
+  box-shadow:0 0 0 3px rgba(217,0,0,.14);
+}
+
 @media (max-width:520px){
   .footer-links{
     font-size:14px;
@@ -1115,6 +1154,13 @@
 
   .feedback-form{
     gap:21px;
+  }
+
+  .feedback-modal{
+    max-height:calc(100svh - 40px);
+  }
+
+  .feedback-modal-body{
     padding-right:0;
   }
 
@@ -1166,6 +1212,16 @@
   .feedback-submit{
     font-size:22px;
     padding:20px 24px;
+  }
+
+  .feedback-success{
+    gap:22px;
+    padding:18px 0 6px;
+    font-size:22px;
+  }
+
+  .feedback-secondary-action{
+    font-size:18px;
   }
 }
 

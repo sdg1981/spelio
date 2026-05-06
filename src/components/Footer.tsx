@@ -243,12 +243,26 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
 
       if (!response.ok || !result.ok) throw new Error('Feedback request failed');
 
+      setEmail('');
       setMessage('');
+      setFeedbackSignals([]);
+      setLearningMethods([]);
+      setCompany('');
       setErrors({});
       setState('sent');
     } catch {
       setState('error');
     }
+  }
+
+  function handleSendAnotherMessage() {
+    setEmail('');
+    setMessage('');
+    setFeedbackSignals([]);
+    setLearningMethods([]);
+    setCompany('');
+    setErrors({});
+    setState('idle');
   }
 
   return (
@@ -259,93 +273,105 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
           <button className="modal-close" onClick={onClose} aria-label="Close feedback" type="button">×</button>
         </div>
 
-        <p className="modal-text feedback-intro">
-          Spelio is still early — feedback, corrections, and suggestions are welcome.
-        </p>
-
-        <form className="feedback-form" onSubmit={handleSubmit} noValidate>
-          <label className="feedback-field">
-            <span>Email address <span className="feedback-optional">optional</span></span>
-            <input
-              className="feedback-input"
-              type="email"
-              value={email}
-              onChange={event => setEmail(event.target.value)}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'feedback-email-error' : undefined}
-              autoComplete="email"
-              maxLength={maxFeedbackEmailLength}
-            />
-            {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
-          </label>
-
-          <label className="feedback-field feedback-honeypot" aria-hidden="true">
-            <span>Company</span>
-            <input
-              tabIndex={-1}
-              autoComplete="off"
-              value={company}
-              onChange={event => setCompany(event.target.value)}
-            />
-          </label>
-
-          <label className="feedback-field">
-            <span>Message</span>
-            <textarea
-              className="feedback-input feedback-message"
-              value={message}
-              onChange={event => setMessage(event.target.value)}
-              aria-invalid={Boolean(errors.message)}
-              aria-describedby={errors.message ? 'feedback-message-error' : undefined}
-              maxLength={maxFeedbackMessageLength}
-              required
-            />
-            {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
-          </label>
-
-          <fieldset className="feedback-check-section">
-            <legend>Quick notes <span className="feedback-optional">optional</span></legend>
-            <div className="feedback-check-grid">
-              {feedbackSignalOptions.map(option => (
-                <label className="feedback-check" key={option}>
-                  <input
-                    type="checkbox"
-                    checked={feedbackSignals.includes(option)}
-                    onChange={() => setFeedbackSignals(current => toggleSelection(option, current))}
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
+        <div className="feedback-modal-body">
+          {state === 'sent' ? (
+            <div className="feedback-success" role="status" aria-live="polite">
+              <p>Thank you — feedback sent.</p>
+              <button className="feedback-secondary-action" type="button" onClick={handleSendAnotherMessage}>
+                Send another message
+              </button>
             </div>
-          </fieldset>
+          ) : (
+            <>
+              <p className="modal-text feedback-intro">
+                Spelio is still early — feedback, corrections, and suggestions are welcome.
+              </p>
 
-          <fieldset className="feedback-check-section">
-            <legend>I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
-            <div className="feedback-chip-grid">
-              {learningMethodOptions.map(option => (
-                <label className="feedback-chip" key={option}>
+              <form className="feedback-form" onSubmit={handleSubmit} noValidate>
+                <label className="feedback-field">
+                  <span>Email address <span className="feedback-optional">optional</span></span>
                   <input
-                    type="checkbox"
-                    checked={learningMethods.includes(option)}
-                    onChange={() => setLearningMethods(current => toggleSelection(option, current))}
+                    className="feedback-input"
+                    type="email"
+                    value={email}
+                    onChange={event => setEmail(event.target.value)}
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? 'feedback-email-error' : undefined}
+                    autoComplete="email"
+                    maxLength={maxFeedbackEmailLength}
                   />
-                  <span>{option}</span>
+                  {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
                 </label>
-              ))}
-            </div>
-          </fieldset>
 
-          <div className="feedback-actions">
-            <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
-              {state === 'sending' && 'Sending...'}
-              {state === 'sent' && 'Thank you — feedback sent.'}
-              {state === 'error' && 'Sorry, something went wrong. Please try again.'}
-            </span>
-            <button className="done-button feedback-submit" type="submit" disabled={state === 'sending'}>
-              Send feedback
-            </button>
-          </div>
-        </form>
+                <label className="feedback-field feedback-honeypot" aria-hidden="true">
+                  <span>Company</span>
+                  <input
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={company}
+                    onChange={event => setCompany(event.target.value)}
+                  />
+                </label>
+
+                <label className="feedback-field">
+                  <span>Message</span>
+                  <textarea
+                    className="feedback-input feedback-message"
+                    value={message}
+                    onChange={event => setMessage(event.target.value)}
+                    aria-invalid={Boolean(errors.message)}
+                    aria-describedby={errors.message ? 'feedback-message-error' : undefined}
+                    maxLength={maxFeedbackMessageLength}
+                    required
+                  />
+                  {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
+                </label>
+
+                <fieldset className="feedback-check-section">
+                  <legend>Quick notes <span className="feedback-optional">optional</span></legend>
+                  <div className="feedback-check-grid">
+                    {feedbackSignalOptions.map(option => (
+                      <label className="feedback-check" key={option}>
+                        <input
+                          type="checkbox"
+                          checked={feedbackSignals.includes(option)}
+                          onChange={() => setFeedbackSignals(current => toggleSelection(option, current))}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <fieldset className="feedback-check-section">
+                  <legend>I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
+                  <div className="feedback-chip-grid">
+                    {learningMethodOptions.map(option => (
+                      <label className="feedback-chip" key={option}>
+                        <input
+                          type="checkbox"
+                          checked={learningMethods.includes(option)}
+                          onChange={() => setLearningMethods(current => toggleSelection(option, current))}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <div className="feedback-actions">
+                  <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
+                    {state === 'sending' && 'Sending...'}
+                    {state === 'error' && 'Sorry, something went wrong. Please try again.'}
+                  </span>
+                  <button className="done-button feedback-submit" type="submit" disabled={state === 'sending'}>
+                    Send feedback
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
       </section>
     </div>
   );
