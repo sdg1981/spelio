@@ -2411,6 +2411,10 @@
   line-height:1.3;
 }
 
+.end-recommendation-next .end-stats-line{
+  margin-top:0;
+}
+
 .end-stat-separator{
   display:inline-block;
   margin:0 18px;

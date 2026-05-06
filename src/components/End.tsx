@@ -2,7 +2,6 @@ import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
 import { Check, Play, SlidersHorizontal } from './Icons';
-import { Recycle } from 'lucide-react';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
 
@@ -10,6 +9,18 @@ function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remaining = seconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(remaining).padStart(2, '0')}`;
+}
+
+function getEncouragement(result: SessionResult) {
+  const mostlyRevealed = result.revealedWords >= Math.ceil(result.totalWords / 2);
+  const veryDifficult = result.correctWords <= Math.floor(result.totalWords / 2) || result.revealedLetters >= result.totalWords;
+
+  if (mostlyRevealed || veryDifficult) return 'That was a tricky one — let’s practise those words again.';
+  if (result.incorrectWords > 0 || result.revealedWords > 0 || result.incorrectAttempts > 0 || result.revealedLetters > 0) {
+    return 'Good effort — a quick review will help these stick.';
+  }
+
+  return 'Great work — you’re ready to keep going.';
 }
 
 export function EndScreen({
@@ -29,25 +40,12 @@ export function EndScreen({
 }) {
   const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
   const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
-  const recommendationTitle = shouldPrioritiseReview ? 'Focus on tricky words' : 'Continue learning';
   const recommendedListName = !hasDifficultWords && recommendationLooksLikeReview
     ? 'Keep building from your selected word list'
     : recommendation.subtitle;
   const primaryTitle = shouldPrioritiseReview ? 'Review difficult words' : 'Continue learning';
   const handlePrimary = shouldPrioritiseReview ? onReview : onContinue;
-  const showDifficultReviewSecondary = hasDifficultWords && !shouldPrioritiseReview;
-  const secondaryLearningTitle = shouldPrioritiseReview
-    ? 'Continue learning'
-    : showDifficultReviewSecondary
-      ? 'Review difficult words'
-      : 'Review recent words';
-  const secondaryLearningSubtitle = shouldPrioritiseReview || showDifficultReviewSecondary
-    ? shouldPrioritiseReview
-      ? 'From where you left off'
-      : 'Go over words you found challenging'
-    : 'Go over words from this session';
-  const handleSecondaryLearning = showDifficultReviewSecondary ? onReview : onContinue;
-  const SecondaryLearningIcon = shouldPrioritiseReview ? Play : Recycle;
+  const encouragement = getEncouragement(result);
   const stats = [
     `${result.correctWords} correct`,
     `${result.incorrectWords} incorrect`,
@@ -64,12 +62,11 @@ export function EndScreen({
 
         <div className="end-copy">
           <h1>Session complete</h1>
-          <p>Great work! You’ve finished this session.</p>
+          <p>{encouragement}</p>
         </div>
 
-        <div className="end-recommendation">
-          <h2>{recommendationTitle}</h2>
-          {!shouldPrioritiseReview && <p>{recommendedListName}</p>}
+        <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
+          {shouldPrioritiseReview && <h2>Focus on tricky words</h2>}
           <div className="end-stats-line" aria-label="Session stats">
             {stats.map((item, index) => (
               <span key={item}>
@@ -78,18 +75,21 @@ export function EndScreen({
               </span>
             ))}
           </div>
+          {!shouldPrioritiseReview && <p>Next up: {recommendedListName}</p>}
         </div>
 
         <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>
 
         <div className="action-list end-action-list">
-          <ActionRow
-            icon={<SecondaryLearningIcon size={30} />}
-            title={secondaryLearningTitle}
-            subtitle={secondaryLearningSubtitle}
-            arrowVariant="arrow"
-            onClick={handleSecondaryLearning}
-          />
+          {shouldPrioritiseReview && (
+            <ActionRow
+              icon={<Play size={30} />}
+              title="Continue learning"
+              subtitle="From where you left off"
+              arrowVariant="arrow"
+              onClick={onContinue}
+            />
+          )}
           <ActionRow
             icon={<SlidersHorizontal size={30} />}
             title="Change word list"
