@@ -26,6 +26,7 @@ export default function App() {
   const [reviewMode, setReviewMode] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
+  const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
   const difficultWords = useMemo(() => hasDifficultWords(storage), [storage.wordProgress]);
@@ -64,7 +65,11 @@ export default function App() {
       return;
     }
 
-    setStorage(previous => (review ? previous : applyPracticeStartListSelection(previous, listId)));
+    setShowFirstSessionKeyboardHint(!storage.hasStartedPracticeSession);
+    setStorage(previous => ({
+      ...(review ? previous : applyPracticeStartListSelection(previous, listId)),
+      hasStartedPracticeSession: true
+    }));
 
     setReviewMode(review);
     setScreen('practice');
@@ -103,6 +108,7 @@ export default function App() {
     setReviewMode(false);
     setWordListModalOpen(false);
     setLastResult(null);
+    setShowFirstSessionKeyboardHint(false);
     setScreen('home');
     setResetStatusVisible(true);
 
@@ -125,6 +131,7 @@ export default function App() {
       lists={wordLists}
       storage={storage}
       reviewDifficult={reviewMode}
+      showKeyboardHint={showFirstSessionKeyboardHint}
       onStorageChange={updateStorage}
       onComplete={handleComplete}
       onBackHome={() => setScreen('home')}

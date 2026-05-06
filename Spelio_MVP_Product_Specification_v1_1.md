@@ -1068,6 +1068,10 @@ Desktop:
 - Spacebar press and hold: peek at the full answer.
 - Right arrow: reveal next letter.
 
+The practice screen may show a subtle keyboard shortcut hint on desktop/tablet layouts only. The hint must not appear on mobile. It should say that Space replays audio and Right Arrow reveals the next letter.
+
+The keyboard shortcut hint is first-session-only. Track whether the user has already started a practice session in local storage. Show the hint during that first practice session, then hide it entirely for all later sessions. Reset Progress clears this flag with the rest of progress storage.
+
 Typed spaces should be ignored silently during practice. Multi-word answers should work whether the user types the word boundary space or continues with the next letter.
 
 Optional later:

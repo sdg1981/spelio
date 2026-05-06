@@ -41,6 +41,7 @@ export interface ListProgress {
 export interface SpelioStorage {
   selectedListIds: string[];
   currentPathPosition: string | null;
+  hasStartedPracticeSession: boolean;
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
   wordProgress: Record<string, WordProgress>;
@@ -76,6 +77,7 @@ export const defaultSettings: SpelioSettings = {
 export const defaultStorage: SpelioStorage = {
   selectedListIds: ['foundations_first_words'],
   currentPathPosition: 'foundations_first_words',
+  hasStartedPracticeSession: false,
   lastSessionDate: null,
   lastSessionResult: null,
   wordProgress: {},
@@ -106,6 +108,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     ...source,
     selectedListIds: Array.isArray(source.selectedListIds) ? source.selectedListIds.filter(id => typeof id === 'string') : defaultStorage.selectedListIds,
     currentPathPosition: typeof source.currentPathPosition === 'string' ? source.currentPathPosition : defaultStorage.currentPathPosition,
+    hasStartedPracticeSession: typeof source.hasStartedPracticeSession === 'boolean' ? source.hasStartedPracticeSession : defaultStorage.hasStartedPracticeSession,
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
     wordProgress: isObject(source.wordProgress) ? source.wordProgress as Record<string, WordProgress> : {},

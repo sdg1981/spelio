@@ -107,6 +107,7 @@ export function Practice({
   lists,
   storage,
   reviewDifficult = false,
+  showKeyboardHint = false,
   onStorageChange,
   onComplete,
   onBackHome,
@@ -117,6 +118,7 @@ export function Practice({
   lists: WordList[];
   storage: SpelioStorage;
   reviewDifficult?: boolean;
+  showKeyboardHint?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
@@ -577,6 +579,11 @@ export function Practice({
         </div>
 
         <AnimatedStatusLine status={displayStatus} tone={displayTone} />
+        {showKeyboardHint && (
+          <div className="keyboard-shortcut-hint">
+            Space replays audio. Right Arrow reveals the next letter.
+          </div>
+        )}
 
         <div className="utility-bar">
           <button

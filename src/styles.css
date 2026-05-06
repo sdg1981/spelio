@@ -245,6 +245,22 @@
   color:var(--red);
 }
 
+.keyboard-shortcut-hint{
+  display:none;
+}
+
+@media (min-width:521px){
+  .keyboard-shortcut-hint{
+    display:block;
+    margin-top:10px;
+    color:#8c95a0;
+    font-size:13px;
+    font-weight:500;
+    line-height:1.35;
+    text-align:center;
+  }
+}
+
 /* Consolidated practice-screen stability fixes
    - keeps practice logo small on mobile
    - keeps mobile keyboard input available without visible UI
