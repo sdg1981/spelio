@@ -1,7 +1,8 @@
 import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
-import { Check, List, SlidersHorizontal } from './Icons';
+import { Check, Play, SlidersHorizontal } from './Icons';
+import { Recycle } from 'lucide-react';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
 
@@ -46,6 +47,7 @@ export function EndScreen({
       : 'Go over words you found challenging'
     : 'Go over words from this session';
   const handleSecondaryLearning = showDifficultReviewSecondary ? onReview : onContinue;
+  const SecondaryLearningIcon = shouldPrioritiseReview ? Play : Recycle;
   const stats = [
     `${result.correctWords} correct`,
     `${result.incorrectWords} incorrect`,
@@ -82,7 +84,7 @@ export function EndScreen({
 
         <div className="action-list end-action-list">
           <ActionRow
-            icon={<List size={30} />}
+            icon={<SecondaryLearningIcon size={30} />}
             title={secondaryLearningTitle}
             subtitle={secondaryLearningSubtitle}
             arrowVariant="arrow"
