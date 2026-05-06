@@ -887,6 +887,8 @@
 
 .feedback-modal{
   gap:0;
+  max-height:calc(100svh - 56px);
+  overflow:hidden;
 }
 
 .feedback-modal-header,
@@ -895,6 +897,7 @@
   align-items:center;
   justify-content:space-between;
   gap:16px;
+  flex:0 0 auto;
 }
 
 .footer-info-modal{
@@ -914,12 +917,17 @@
 
 .feedback-intro{
   margin-top:16px;
+  flex:0 0 auto;
 }
 
 .feedback-form{
   margin-top:28px;
   display:grid;
-  gap:18px;
+  gap:20px;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  padding-right:2px;
 }
 
 .feedback-field{
@@ -954,13 +962,17 @@
 }
 
 .feedback-message{
-  min-height:126px;
+  min-height:112px;
   resize:vertical;
+}
+
+.feedback-field + .feedback-check-section{
+  margin-top:-4px;
 }
 
 .feedback-check-section{
   display:grid;
-  gap:10px;
+  gap:12px;
   margin:0;
   padding:0;
   border:0;
@@ -974,28 +986,33 @@
   font-weight:750;
 }
 
-.feedback-check-grid,
+.feedback-check-grid{
+  display:grid;
+  gap:11px;
+}
+
 .feedback-chip-grid{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
+  gap:9px;
 }
 
 .feedback-check,
 .feedback-chip{
   display:inline-flex;
-  align-items:center;
+  align-items:flex-start;
   gap:8px;
   margin:0;
   cursor:pointer;
   color:#465361;
   font-size:13px;
   font-weight:700;
-  line-height:1.2;
+  line-height:1.35;
 }
 
 .feedback-check{
-  flex:1 1 190px;
+  width:100%;
+  max-width:100%;
 }
 
 .feedback-check input,
@@ -1006,7 +1023,7 @@
 .feedback-check input{
   width:15px;
   height:15px;
-  margin:0;
+  margin:1px 0 0;
   flex:0 0 auto;
 }
 
@@ -1023,6 +1040,7 @@
   border:1px solid #dde2e7;
   border-radius:999px;
   background:#fff;
+  color:#465361;
   padding:8px 12px;
 }
 
@@ -1032,9 +1050,9 @@
 }
 
 .feedback-chip input:checked + span{
-  border-color:#bfc8d1;
-  background:#f6f8fa;
-  color:var(--ink);
+  border-color:var(--red);
+  background:#fff4f4;
+  color:#9f0000;
 }
 
 .feedback-honeypot{
@@ -1052,10 +1070,14 @@
 }
 
 .feedback-actions{
+  position:sticky;
+  bottom:0;
   display:grid;
   gap:14px;
   border-top:1px solid var(--line);
-  padding-top:22px;
+  background:linear-gradient(to bottom,rgba(255,255,255,.94),#fff 24%);
+  padding-top:20px;
+  padding-bottom:2px;
 }
 
 .feedback-status{
@@ -1095,7 +1117,8 @@
   }
 
   .feedback-form{
-    gap:22px;
+    gap:21px;
+    padding-right:0;
   }
 
   .feedback-field{
@@ -1109,10 +1132,19 @@
   .feedback-check,
   .feedback-chip{
     font-size:16px;
+    line-height:1.3;
   }
 
   .feedback-check{
-    flex-basis:100%;
+    width:100%;
+  }
+
+  .feedback-check-grid{
+    gap:10px;
+  }
+
+  .feedback-chip-grid{
+    gap:8px;
   }
 
   .feedback-chip span{
@@ -1123,6 +1155,10 @@
   .feedback-input{
     font-size:20px;
     padding:16px;
+  }
+
+  .feedback-message{
+    min-height:126px;
   }
 
   .feedback-error,
