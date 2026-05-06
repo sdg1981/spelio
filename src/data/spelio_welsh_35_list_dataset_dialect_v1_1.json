@@ -37,7 +37,8 @@
           "difficulty": 1,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh has several forms of ‘yes’; this is a simple general form."
         },
         {
           "id": "foundations_first_words_002",
@@ -51,7 +52,8 @@
           "difficulty": 1,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh has several forms of ‘no’; this is a simple general form."
         },
         {
           "id": "foundations_first_words_003",
@@ -132,11 +134,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "South/standard form; North Wales commonly uses rwan.",
+          "notes": "",
           "order": 8,
           "difficulty": 1,
           "dialect": "South Wales / Standard",
-          "dialectNote": "South/standard form; North Wales commonly uses rwan.",
+          "dialectNote": "North Wales commonly uses rwan.",
           "variantGroupId": "now"
         },
         {
@@ -146,11 +148,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form of 'nawr'.",
+          "notes": "",
           "order": 9,
           "difficulty": 1,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form of 'nawr'.",
+          "dialectNote": "South/standard Welsh commonly uses nawr.",
           "variantGroupId": "now"
         },
         {
@@ -484,7 +486,7 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "",
+          "notes": "REVIEW_NEEDED: prompt may need informal/formal context.",
           "order": 10,
           "difficulty": 1,
           "dialect": "Both",
@@ -555,11 +557,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "South/standard form; North Wales often uses efo.",
+          "notes": "",
           "order": 4,
           "difficulty": 1,
           "dialect": "South Wales / Standard",
-          "dialectNote": "South/standard form; North Wales often uses efo.",
+          "dialectNote": "North Wales commonly uses efo.",
           "variantGroupId": "with"
         },
         {
@@ -569,11 +571,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form of 'with'.",
+          "notes": "",
           "order": 5,
           "difficulty": 1,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form of 'with'.",
+          "dialectNote": "South/standard Welsh commonly uses gyda.",
           "variantGroupId": "with"
         },
         {
@@ -644,7 +646,8 @@
           "difficulty": 1,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Used as a connector before an event or clause."
         },
         {
           "id": "foundations_small_words_010",
@@ -1020,11 +1023,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "South/standard form; North Wales commonly uses rwan.",
+          "notes": "",
           "order": 3,
           "difficulty": 1,
           "dialect": "South Wales / Standard",
-          "dialectNote": "South/standard form; North Wales commonly uses rwan.",
+          "dialectNote": "North Wales commonly uses rwan.",
           "variantGroupId": "now"
         },
         {
@@ -1034,11 +1037,11 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form of 'now'.",
+          "notes": "",
           "order": 4,
           "difficulty": 1,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form of 'now'.",
+          "dialectNote": "South/standard Welsh commonly uses nawr.",
           "variantGroupId": "now"
         },
         {
@@ -2462,7 +2465,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "A two-word answer."
         },
         {
           "id": "stage2_adverbs_006",
@@ -2476,7 +2480,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Context can affect the fuller sentence form."
         },
         {
           "id": "stage2_adverbs_007",
@@ -2490,7 +2495,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Used after the word it strengthens."
         },
         {
           "id": "stage2_adverbs_008",
@@ -2716,7 +2722,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Used for more than one person, or politely to one person."
         },
         {
           "id": "stage2_ch_002",
@@ -3021,13 +3028,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 1,
           "difficulty": 2,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "dialectNote": "North Wales commonly uses isio.",
           "variantGroupId": "want coffee",
-          "usageNote": "Fuller form; North often uses “isio”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_want_coffee_north",
@@ -3036,13 +3043,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 2,
           "difficulty": 2,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
           "variantGroupId": "want coffee",
-          "usageNote": "Common North Wales form of “eisiau”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_002",
@@ -3051,13 +3058,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 3,
           "difficulty": 2,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "dialectNote": "North Wales commonly uses isio.",
           "variantGroupId": "want food",
-          "usageNote": "Fuller form; North often uses “isio”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_want_food_north",
@@ -3066,13 +3073,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 4,
           "difficulty": 2,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
           "variantGroupId": "want food",
-          "usageNote": "Common North Wales form of “eisiau”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_003",
@@ -3081,13 +3088,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 5,
           "difficulty": 2,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "dialectNote": "North Wales commonly uses isio.",
           "variantGroupId": "want help",
-          "usageNote": "Fuller form; North often uses “isio”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_want_help_north",
@@ -3096,13 +3103,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 6,
           "difficulty": 2,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
           "variantGroupId": "want help",
-          "usageNote": "Common North Wales form of “eisiau”."
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage2_phrases_wanting_004",
@@ -3111,12 +3118,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 7,
           "difficulty": 2,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "want to go"
+          "dialectNote": "North Wales commonly uses isio.",
+          "variantGroupId": "want to go",
+          "usageNote": "Used before the action wanted."
         },
         {
           "id": "stage2_phrases_wanting_want_to_go_north",
@@ -3125,12 +3133,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 8,
           "difficulty": 2,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
-          "variantGroupId": "want to go"
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
+          "variantGroupId": "want to go",
+          "usageNote": "Used before the action wanted."
         },
         {
           "id": "stage2_phrases_wanting_005",
@@ -3144,7 +3153,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common short phrase for needing something."
         },
         {
           "id": "stage2_phrases_wanting_006",
@@ -3158,7 +3168,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common short phrase for needing something."
         },
         {
           "id": "stage2_phrases_wanting_007",
@@ -3172,7 +3183,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common short phrase for needing something."
         },
         {
           "id": "stage2_phrases_wanting_008",
@@ -3186,7 +3198,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common short phrase for needing to do something."
         },
         {
           "id": "stage2_phrases_wanting_009",
@@ -3195,12 +3208,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 13,
           "difficulty": 2,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "want to learn"
+          "dialectNote": "North Wales commonly uses isio.",
+          "variantGroupId": "want to learn",
+          "usageNote": "Used before the action wanted."
         },
         {
           "id": "stage2_phrases_wanting_want_to_learn_north",
@@ -3209,12 +3223,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 14,
           "difficulty": 2,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
-          "variantGroupId": "want to learn"
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
+          "variantGroupId": "want to learn",
+          "usageNote": "Used before the action wanted."
         },
         {
           "id": "stage2_phrases_wanting_010",
@@ -3228,7 +3243,8 @@
           "difficulty": 2,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common short phrase for needing to do something."
         }
       ]
     },
@@ -4187,7 +4203,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage3_to_phrases_002",
@@ -4201,7 +4218,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage3_to_phrases_003",
@@ -4285,7 +4303,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage3_to_phrases_009",
@@ -4342,7 +4361,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage4_in_phrases_002",
@@ -4356,7 +4376,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage4_in_phrases_003",
@@ -4370,7 +4391,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage4_in_phrases_004",
@@ -4468,7 +4490,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Fixed phrase with a changed initial sound."
         }
       ]
     },
@@ -4581,7 +4604,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Used before the limited thing or action."
         },
         {
           "id": "stage4_connectors_008",
@@ -4595,7 +4619,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Used after the word it strengthens."
         },
         {
           "id": "stage4_connectors_009",
@@ -4609,7 +4634,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Here this means ‘also’, not ‘excessively’."
         },
         {
           "id": "stage4_connectors_010",
@@ -4623,7 +4649,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Learn this as a fixed expression."
         }
       ]
     },
@@ -4694,7 +4721,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Question word, not the connector form."
         },
         {
           "id": "stage4_questions_005",
@@ -4736,7 +4764,8 @@
           "difficulty": 3,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Also used for ‘how many’."
         },
         {
           "id": "stage4_questions_008",
@@ -4816,12 +4845,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 2,
           "difficulty": 4,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "I want coffee"
+          "dialectNote": "North Wales commonly uses isio.",
+          "variantGroupId": "I want coffee",
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage4_sentences_I_want_coffee_north",
@@ -4830,12 +4860,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 3,
           "difficulty": 4,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
-          "variantGroupId": "I want coffee"
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
+          "variantGroupId": "I want coffee",
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage4_sentences_003",
@@ -4849,7 +4880,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Common phrase for needing something."
         },
         {
           "id": "stage4_sentences_004",
@@ -4999,7 +5031,7 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "",
+          "notes": "REVIEW_NEEDED: check whether prompt needs stative home context.",
           "order": 3,
           "difficulty": 4,
           "dialect": "Both",
@@ -5145,7 +5177,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_003",
@@ -5159,7 +5192,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_004",
@@ -5187,7 +5221,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_006",
@@ -5201,7 +5236,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_007",
@@ -5215,7 +5251,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_008",
@@ -5243,7 +5280,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_my_phrases_010",
@@ -5314,7 +5352,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_mixed_004",
@@ -5337,12 +5376,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "Standard/South-leaning form; North Wales commonly uses isio.",
+          "notes": "",
           "order": 5,
           "difficulty": 4,
           "dialect": "South Wales / Standard",
-          "dialectNote": "Standard/South-leaning form; North Wales commonly uses isio.",
-          "variantGroupId": "I want coffee"
+          "dialectNote": "North Wales commonly uses isio.",
+          "variantGroupId": "I want coffee",
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage5_mixed_I_want_coffee_north",
@@ -5351,12 +5391,13 @@
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "North Wales form using isio.",
+          "notes": "",
           "order": 6,
           "difficulty": 4,
           "dialect": "North Wales",
-          "dialectNote": "North Wales form.",
-          "variantGroupId": "I want coffee"
+          "dialectNote": "South/standard Welsh commonly uses eisiau.",
+          "variantGroupId": "I want coffee",
+          "usageNote": "Used before the thing wanted."
         },
         {
           "id": "stage5_mixed_006",
@@ -5370,7 +5411,8 @@
           "difficulty": 4,
           "dialect": "Both",
           "dialectNote": "",
-          "variantGroupId": ""
+          "variantGroupId": "",
+          "usageNote": "Welsh spelling changes after this short word."
         },
         {
           "id": "stage5_mixed_007",
