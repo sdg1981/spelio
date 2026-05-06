@@ -626,7 +626,7 @@ Changing Welsh style during an active session:
 - Saves the new preference immediately.
 - Does not alter the current session’s word pool.
 - Does not change the current word, answer slots, answer length, audio, notes, scoring, or progress tracking mid-session.
-- Shows a subtle temporary practice message: “Welsh style will apply from your next session.”
+- Shows a subtle inline message in Settings as soon as the Welsh style option is selected: “Welsh style will apply from your next session.”
 - Applies when the next normal or Review difficult words session is created.
 
 ## 11. Completion and mastery

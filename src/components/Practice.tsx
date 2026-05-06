@@ -363,9 +363,6 @@ export function Practice({
 
   const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
     const nextSettings = { ...storage.settings, ...patch };
-    const dialectPreferenceChanged =
-      patch.dialectPreference !== undefined &&
-      patch.dialectPreference !== storage.settings.dialectPreference;
     if (!nextSettings.audioPrompts) {
       nextSettings.englishVisible = true;
     }
@@ -376,10 +373,7 @@ export function Practice({
 
     if (!hasChanged) return;
     onStorageChange({ ...storage, settings: nextSettings });
-    if (dialectPreferenceChanged && currentWord && hasWords && !isComplete) {
-      showLocalStatus('Welsh style will apply from your next session.');
-    }
-  }, [currentWord, hasWords, isComplete, onStorageChange, storage]);
+  }, [onStorageChange, storage]);
 
   const handleSettingsModalOpenChange = useCallback((open: boolean) => {
     settingsModalOpenRef.current = open;
@@ -572,6 +566,7 @@ export function Practice({
 
       <SettingsLauncher
         settings={storage.settings}
+        activePracticeSession={Boolean(currentWord && hasWords && !isComplete)}
         onChange={updateSettings}
         onOpenChange={handleSettingsModalOpenChange}
         onResetProgress={onResetProgress}
@@ -761,12 +756,14 @@ function Radio({ active = false }: { active?: boolean }) {
 
 const SettingsLauncher = memo(function SettingsLauncher({
   settings,
+  activePracticeSession,
   onChange,
   onOpenChange,
   onResetProgress,
   initiallyOpen = false
 }: {
   settings: SpelioSettings;
+  activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onOpenChange: (open: boolean) => void;
   onResetProgress: () => void;
@@ -787,6 +784,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
       {open && (
         <SettingsModal
           settings={settings}
+          activePracticeSession={activePracticeSession}
           onChange={onChange}
           onClose={() => setModalOpen(false)}
           onResetProgress={onResetProgress}
@@ -798,21 +796,33 @@ const SettingsLauncher = memo(function SettingsLauncher({
 
 function SettingsModal({
   settings,
+  activePracticeSession,
   onChange,
   onClose,
   onResetProgress
 }: {
   settings: SpelioSettings;
+  activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onClose: () => void;
   onResetProgress: () => void;
 }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [welshStyleNoticeVisible, setWelshStyleNoticeVisible] = useState(false);
 
   function handleResetConfirm() {
     setConfirmingReset(false);
     onClose();
     onResetProgress();
+  }
+
+  function handleDialectPreferenceChange(dialectPreference: SpelioSettings['dialectPreference']) {
+    if (dialectPreference === settings.dialectPreference) return;
+
+    onChange({ dialectPreference });
+    if (activePracticeSession) {
+      setWelshStyleNoticeVisible(true);
+    }
   }
 
   return (
@@ -851,27 +861,32 @@ function SettingsModal({
             <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh style</h3>
 
             <div className="mt-7 space-y-7">
-              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'mixed' })}>
+              <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('mixed')}>
                 <Radio active={settings.dialectPreference === 'mixed'} />
                 <span>
                   <b className="block text-[18px] md:text-[15px]">Mixed Welsh</b>
                 </span>
               </button>
 
-              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'north' })}>
+              <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('north')}>
                 <Radio active={settings.dialectPreference === 'north'} />
                 <span>
                   <b className="block text-[18px] md:text-[15px]">North Wales</b>
                 </span>
               </button>
 
-              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'south_standard' })}>
+              <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('south_standard')}>
                 <Radio active={settings.dialectPreference === 'south_standard'} />
                 <span>
                   <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
                 </span>
               </button>
             </div>
+            {welshStyleNoticeVisible && (
+              <p className="mt-5 field-note" role="status">
+                Welsh style will apply from your next session.
+              </p>
+            )}
           </div>
 
           <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
