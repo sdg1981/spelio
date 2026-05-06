@@ -77,8 +77,6 @@ export function Footer({ className = '' }: FooterProps) {
           <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>Privacy</button>
           <span aria-hidden="true">·</span>
           <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>About</button>
-          <span aria-hidden="true">·</span>
-          <span>Beta v0.1</span>
         </span>
       </footer>
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
