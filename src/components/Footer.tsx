@@ -82,6 +82,7 @@ export function Footer({ className = '' }: FooterProps) {
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       {infoModal === 'privacy' && (
         <InfoModal title="Privacy" titleId="privacy-title" onClose={() => setInfoModal(null)}>
+          <p>Beta version 0.2</p>
           <p>Spelio is designed to work without an account.</p>
           <p>
             Your spelling progress, settings, difficult words, and session history are stored locally on your device using your browser’s storage.
