@@ -19,7 +19,50 @@ function scoreWord(word: PracticeWord, storage: SpelioStorage) {
   return 10 + progress.completedCount;
 }
 
-function selectSessionWords(pool: PracticeWord[], listIds: string[], storage: SpelioStorage) {
+function learningItemKey(word: PracticeWord) {
+  const groupId = word.variantGroupId?.trim();
+  return groupId ? `${word.listId}:${groupId}` : `${word.listId}:${word.id}`;
+}
+
+function scoreLearningItem(words: PracticeWord[], storage: SpelioStorage) {
+  const progressItems = words
+    .map(word => storage.wordProgress[word.id])
+    .filter(Boolean);
+
+  if (!progressItems.some(progress => progress.seen)) return 0;
+  if (progressItems.some(progress => progress.difficult)) return 1;
+  if (progressItems.some(progress => progress.incorrectAttempts > 0 || progress.revealedCount > 0)) return 2;
+
+  const completedCounts = progressItems
+    .map(progress => progress.completedCount)
+    .filter(count => count > 0);
+
+  if (!completedCounts.length) return 3;
+  return 10 + Math.min(...completedCounts);
+}
+
+function getLearningItemScores(words: PracticeWord[], storage: SpelioStorage) {
+  const byItem = new Map<string, PracticeWord[]>();
+  const scores = new Map<string, number>();
+
+  for (const word of words) {
+    const key = learningItemKey(word);
+    byItem.set(key, [...(byItem.get(key) ?? []), word]);
+  }
+
+  for (const [key, itemWords] of byItem) {
+    scores.set(key, scoreLearningItem(itemWords, storage));
+  }
+
+  return scores;
+}
+
+function selectSessionWords(
+  pool: PracticeWord[],
+  listIds: string[],
+  storage: SpelioStorage,
+  score: (word: PracticeWord) => number = word => scoreWord(word, storage)
+) {
   const byList = new Map<string, PracticeWord[]>();
 
   for (const word of pool) {
@@ -29,7 +72,7 @@ function selectSessionWords(pool: PracticeWord[], listIds: string[], storage: Sp
   for (const [listId, words] of byList) {
     byList.set(
       listId,
-      [...words].sort((a, b) => scoreWord(a, storage) - scoreWord(b, storage) || a.order - b.order)
+      [...words].sort((a, b) => score(a) - score(b) || a.order - b.order)
     );
   }
 
@@ -210,7 +253,15 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   const pool = reviewDifficult
     ? getReviewCandidates(allCandidates, storage, includeRecapDue)
     : dialectResolvedCandidates;
-  const words = selectSessionWords(pool, eligibleLists.map(list => list.id), storage);
+  const learningItemScores = reviewDifficult ? undefined : getLearningItemScores(allCandidates, storage);
+  const words = selectSessionWords(
+    pool,
+    eligibleLists.map(list => list.id),
+    storage,
+    learningItemScores
+      ? word => learningItemScores.get(learningItemKey(word)) ?? scoreWord(word, storage)
+      : undefined
+  );
 
   return {
     words,

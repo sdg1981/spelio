@@ -111,7 +111,7 @@ function markWantingWordDifficult(storage: SpelioStorage, predicate: (word: Prac
 function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
   return {
     id,
-    listId: 'test_missing_preferred',
+    listId: overrides.listId ?? 'test_missing_preferred',
     englishPrompt: id,
     welshAnswer: id,
     acceptedAlternatives: [],
@@ -125,6 +125,65 @@ function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord
     usageNote: '',
     variantGroupId: '',
     ...overrides
+  };
+}
+
+function makeLargeList(id: string, startOrder: number, wordCount: number): WordList {
+  return {
+    id,
+    name: id,
+    description: '',
+    language: 'Welsh',
+    dialect: 'Both',
+    stage: 'Test',
+    difficulty: 1,
+    order: startOrder,
+    nextListId: null,
+    isActive: true,
+    words: Array.from({ length: wordCount }, (_, index) => makeTestWord(`${id}_${index + 1}`, index + 1, {
+      listId: id,
+      englishPrompt: `${id} ${index + 1}`,
+      welshAnswer: `${id}${index + 1}`
+    }))
+  };
+}
+
+function makeLargeVariantList(): WordList {
+  const id = 'test_large_variant_single';
+  return {
+    id,
+    name: 'Large variant single',
+    description: '',
+    language: 'Welsh',
+    dialect: 'Mixed',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    words: [
+      ...Array.from({ length: 12 }, (_, index) => [
+        makeTestWord(`${id}_south_${index + 1}`, index + 1, {
+          listId: id,
+          englishPrompt: `variant item ${index + 1}`,
+          welshAnswer: `south${index + 1}`,
+          dialect: 'South Wales / Standard',
+          variantGroupId: `variant_item_${index + 1}`
+        }),
+        makeTestWord(`${id}_north_${index + 1}`, index + 1, {
+          listId: id,
+          englishPrompt: `variant item ${index + 1}`,
+          welshAnswer: `north${index + 1}`,
+          dialect: 'North Wales',
+          variantGroupId: `variant_item_${index + 1}`
+        })
+      ]).flat(),
+      ...Array.from({ length: 12 }, (_, index) => makeTestWord(`${id}_plain_${index + 1}`, index + 13, {
+        listId: id,
+        englishPrompt: `plain item ${index + 1}`,
+        welshAnswer: `plain${index + 1}`
+      }))
+    ].flat()
   };
 }
 
@@ -306,6 +365,11 @@ function completeSessionWordsCleanly(storage: SpelioStorage, words: PracticeWord
     wordLists,
     result
   );
+}
+
+function testLearningItemKey(word: PracticeWord) {
+  const groupId = word.variantGroupId?.trim();
+  return groupId ? `${word.listId}:${groupId}` : `${word.listId}:${word.id}`;
 }
 
 function finishNumbersSession(storage: SpelioStorage, result: SessionResult) {
@@ -496,6 +560,71 @@ test('starting a later session with the same mixed selection prioritises unseen 
   assertEqual(firstSession.words.length, 10, 'Setup first mixed session should use ten words');
   assertEqual(secondSession.words.length, 10, 'Second mixed session should use ten words');
   assertEqual(repeatedWords.length, 0, 'Second mixed session should draw unseen words before repeating session one');
+});
+
+test('single selected 20+ word pool excludes cleanly completed words while unseen words remain', () => {
+  const largeList = makeLargeList('test_large_single', 1, 24);
+  const lists = [largeList];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [largeList.id],
+    currentPathPosition: largeList.id
+  };
+  const firstSession = createPracticeSession(lists, storage);
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
+  const secondSession = createPracticeSession(lists, storage);
+  const firstSessionIds = new Set(firstSession.words.map(word => word.id));
+
+  assertEqual(firstSession.words.length, 10, 'First large-list session should use ten words');
+  assertEqual(secondSession.words.length, 10, 'Second large-list session should use ten words');
+  assertEqual(secondSession.words.some(word => firstSessionIds.has(word.id)), false, 'Second large-list session should exclude cleanly completed words while unseen words remain');
+});
+
+test('single selected variant pool excludes completed learning items while unseen items remain', () => {
+  const largeList = makeLargeVariantList();
+  const lists = [largeList];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [largeList.id],
+    currentPathPosition: largeList.id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'mixed'
+    }
+  };
+  const firstSession = createPracticeSession(lists, storage);
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
+  const secondSession = createPracticeSession(lists, storage);
+  const firstSessionItems = new Set(firstSession.words.map(testLearningItemKey));
+  const repeatedItems = secondSession.words.filter(word => firstSessionItems.has(testLearningItemKey(word)));
+
+  assertEqual(firstSession.words.length, 10, 'First variant-list session should use ten words');
+  assertEqual(secondSession.words.length, 10, 'Second variant-list session should use ten words');
+  assertEqual(repeatedItems.length, 0, 'Second variant-list session should not use sibling variants from completed learning items while unseen items remain');
+});
+
+test('three selected 20+ word pools exclude cleanly completed words while unseen words remain', () => {
+  const lists = [
+    makeLargeList('test_large_multi_a', 1, 12),
+    makeLargeList('test_large_multi_b', 2, 12),
+    makeLargeList('test_large_multi_c', 3, 12)
+  ];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: lists.map(list => list.id),
+    currentPathPosition: lists[0].id
+  };
+  const firstSession = createPracticeSession(lists, storage);
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
+  const secondSession = createPracticeSession(lists, storage);
+  const firstSessionIds = new Set(firstSession.words.map(word => word.id));
+
+  assertEqual(firstSession.words.length, 10, 'First three-list session should use ten words');
+  assertEqual(secondSession.words.length, 10, 'Second three-list session should use ten words');
+  assertEqual(secondSession.words.some(word => firstSessionIds.has(word.id)), false, 'Second three-list session should exclude cleanly completed words while unseen words remain');
 });
 
 test('pre-session recap is separate from the next normal session pool', () => {
