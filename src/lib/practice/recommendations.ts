@@ -4,7 +4,7 @@ import { hasDifficultWords } from './sessionEngine';
 import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
-  kind: 'list' | 'review';
+  kind: 'list' | 'review' | 'choose_list';
   listId?: string;
   title: string;
   subtitle: string;
@@ -64,8 +64,8 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
 
     if (mixedSelectionIsComplete(storage, selectedLists)) {
       return {
-        kind: 'list',
-        title: 'Practise again',
+        kind: 'choose_list',
+        title: 'Choose another word list',
         subtitle: 'You’ve completed this mixed selection'
       };
     }

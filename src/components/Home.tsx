@@ -29,13 +29,16 @@ export function Home({
 }) {
   const isFirst = mode === 'first';
   const shouldPrioritiseReview = hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
+  const shouldChooseAnotherList = !shouldPrioritiseReview && recommendation.kind === 'choose_list';
   const homeHeading = shouldPrioritiseReview ? 'Focus on tricky words' : 'Continue learning';
   const primaryLabel = isFirst
     ? 'Start spelling practice'
     : shouldPrioritiseReview
       ? 'Review difficult words'
-      : 'Continue learning';
-  const handlePrimary = shouldPrioritiseReview ? onReview : onStart;
+      : shouldChooseAnotherList
+        ? 'Choose another word list'
+        : 'Continue learning';
+  const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? 'Select word list' : 'Change word list';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const showRecapEntry = mode === 'returning' && recapWordCount > 0 && !shouldPrioritiseReview;

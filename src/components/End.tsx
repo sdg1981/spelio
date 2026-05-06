@@ -42,11 +42,20 @@ export function EndScreen({
 }) {
   const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
   const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
+  const shouldChooseAnotherList = recommendation.kind === 'choose_list';
   const recommendedListName = !hasDifficultWords && recommendationLooksLikeReview
     ? 'Keep building from your selected word list'
     : recommendation.subtitle;
-  const primaryTitle = shouldPrioritiseReview ? 'Review difficult words' : 'Continue learning';
-  const handlePrimary = shouldPrioritiseReview ? onReview : onContinue;
+  const primaryTitle = shouldPrioritiseReview
+    ? 'Review difficult words'
+    : shouldChooseAnotherList
+      ? 'Choose another word list'
+      : 'Continue learning';
+  const handlePrimary = shouldPrioritiseReview
+    ? onReview
+    : shouldChooseAnotherList
+      ? onChangeLists
+      : onContinue;
   const encouragement = shouldPrioritiseReview
     ? 'That was a tricky one — let’s practise those words again.'
     : getEncouragement(result);
@@ -99,12 +108,21 @@ export function EndScreen({
               onClick={onContinue}
             />
           )}
+          {shouldChooseAnotherList && (
+            <ActionRow
+              icon={<Play size={30} />}
+              title="Practise this mix again"
+              subtitle="Repeat your selected lists"
+              arrowVariant="arrow"
+              onClick={onContinue}
+            />
+          )}
           <ActionRow
             icon={<SlidersHorizontal size={30} />}
-            title="Change word list"
-            subtitle="Choose different lists for your next session"
+            title={shouldChooseAnotherList ? 'Back to home' : 'Change word list'}
+            subtitle={shouldChooseAnotherList ? 'Return to the homepage' : 'Choose different lists for your next session'}
             arrowVariant="arrow"
-            onClick={onChangeLists}
+            onClick={shouldChooseAnotherList ? onHome : onChangeLists}
           />
         </div>
 

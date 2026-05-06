@@ -757,13 +757,13 @@ test('mixed list partially complete recommends continuing mixed practice', () =>
   assertEqual(recommendation.listId, undefined, 'Partial mixed recommendation should not carry a single list ID');
 });
 
-test('mixed list fully complete without difficult words recommends practising again', () => {
+test('mixed list fully complete without difficult words recommends choosing another list', () => {
   const storage = completeWeatherAndWorkCleanly(weatherAndWorkStorage());
   const recommendation = getRecommendation(storage, wordLists);
 
   assertEqual(hasDifficultWords(storage), false, 'Clean completion should leave no difficult words');
-  assertEqual(recommendation.kind, 'list', 'Complete mixed selection should remain repeatable practice');
-  assertEqual(recommendation.title, 'Practise again', 'Complete mixed selection should be labelled as repeat practice');
+  assertEqual(recommendation.kind, 'choose_list', 'Complete mixed selection should make choosing another list primary');
+  assertEqual(recommendation.title, 'Choose another word list', 'Complete mixed selection should not use vague continue/repeat wording as primary');
   assertEqual(recommendation.subtitle, 'You’ve completed this mixed selection', 'Subtitle should explain the mixed selection is complete');
   assertEqual(recommendation.listId, undefined, 'Complete mixed recommendation should not carry a nextListId');
 });
@@ -800,17 +800,19 @@ test('mixed selection never follows nextListId after completion', () => {
   const recommendation = getRecommendation(storage, wordLists);
 
   assertEqual(recommendation.listId, undefined, 'Mixed completion should not recommend any nextListId');
-  assertEqual(recommendation.title, 'Practise again', 'Mixed completion should repeat rather than progress forward');
+  assertEqual(recommendation.kind, 'choose_list', 'Mixed completion should choose another list rather than progress forward');
+  assertEqual(recommendation.title, 'Choose another word list', 'Mixed completion should not label repeat practice as continue');
 });
 
-test('mixed primary action leaves selectedListIds unchanged', () => {
-  const storage = weatherAndWorkStorage();
+test('practise this mix again action leaves selectedListIds unchanged', () => {
+  const storage = completeWeatherAndWorkCleanly(weatherAndWorkStorage());
   const recommendation = getRecommendation(storage, wordLists);
   const nextStorage = applyPracticeStartListSelection(storage, recommendation.listId);
 
-  assertEqual(recommendation.listId, undefined, 'Mixed primary recommendation should start without a single list ID');
-  assertEqual(nextStorage.selectedListIds.join('|'), storage.selectedListIds.join('|'), 'Primary action should preserve mixed selectedListIds');
-  assertEqual(nextStorage.currentPathPosition, storage.currentPathPosition, 'Primary action should not mutate mixed path position');
+  assertEqual(recommendation.kind, 'choose_list', 'Complete mixed selection should make choose-list the primary action');
+  assertEqual(recommendation.listId, undefined, 'Repeat-mix action should start without a single list ID');
+  assertEqual(nextStorage.selectedListIds.join('|'), storage.selectedListIds.join('|'), 'Repeat-mix action should preserve mixed selectedListIds');
+  assertEqual(nextStorage.currentPathPosition, storage.currentPathPosition, 'Repeat-mix action should not mutate mixed path position');
 });
 
 test('older storage without dialectPreference defaults to Mixed Welsh', () => {

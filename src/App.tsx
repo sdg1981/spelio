@@ -28,6 +28,7 @@ export default function App() {
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
+  const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
@@ -71,12 +72,14 @@ export default function App() {
       return;
     }
 
-    setShowFirstSessionKeyboardHint(!storage.hasStartedPracticeSession);
-    setStorage(previous => ({
-      ...(review ? previous : applyPracticeStartListSelection(previous, listId)),
+    const nextStorage = {
+      ...(review ? storage : applyPracticeStartListSelection(storage, listId)),
       hasStartedPracticeSession: true
-    }));
+    };
 
+    setShowFirstSessionKeyboardHint(!storage.hasStartedPracticeSession);
+    setStorage(nextStorage);
+    setPracticeStartStorage(nextStorage);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(review);
     setIncludeRecapDue(review && allowRecapReview);
@@ -136,6 +139,7 @@ export default function App() {
     <Practice
       lists={wordLists}
       storage={storage}
+      sessionStorage={practiceStartStorage ?? storage}
       reviewDifficult={reviewMode}
       includeRecapDue={includeRecapDue}
       sessionKey={practiceSessionKey}

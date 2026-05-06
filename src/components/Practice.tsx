@@ -106,6 +106,7 @@ function GhostAnswer({
 export function Practice({
   lists,
   storage,
+  sessionStorage = storage,
   reviewDifficult = false,
   includeRecapDue = false,
   sessionKey = 0,
@@ -119,6 +120,7 @@ export function Practice({
 }: {
   lists: WordList[];
   storage: SpelioStorage;
+  sessionStorage?: SpelioStorage;
   reviewDifficult?: boolean;
   includeRecapDue?: boolean;
   sessionKey?: number;
@@ -183,7 +185,7 @@ export function Practice({
     revealNext,
     markCurrentWordRevealed,
     playAudio
-  } = usePracticeSession({ lists, storage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete });
 
   const clearPeekTimers = useCallback(() => {
     if (peekTimerRef.current) {
