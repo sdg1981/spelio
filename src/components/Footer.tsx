@@ -100,7 +100,7 @@ export function Footer({ className = '' }: FooterProps) {
       )}
       {infoModal === 'about' && (
         <InfoModal title="About Spelio" titleId="about-title" onClose={() => setInfoModal(null)}>
-          <p>Spelio is a focused Welsh spelling practice app for adult learners.</p>
+          <p>Spelio is a focused Welsh spelling practice app.</p>
           <p>
             It helps learners practise Welsh words and short phrases through short, repeatable spelling sessions designed to improve recall, spelling accuracy, confidence, and the connection between spoken and written Welsh.
           </p>
