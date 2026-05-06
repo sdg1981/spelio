@@ -156,6 +156,8 @@ function InfoModal({
 
 type FeedbackState = 'idle' | 'sending' | 'sent' | 'error';
 
+const maxFeedbackMessageLength = 5000;
+const maxFeedbackEmailLength = 254;
 const feedbackSignalOptions = [
   'I found this useful',
   'I’d use this again',
@@ -213,7 +215,9 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
     const nextErrors: { email?: string; message?: string } = {};
 
     if (!trimmedMessage) nextErrors.message = 'Message is required.';
+    if (trimmedMessage.length > maxFeedbackMessageLength) nextErrors.message = 'Keep feedback under 5,000 characters.';
     if (trimmedEmail && !looksLikeEmail(trimmedEmail)) nextErrors.email = 'Enter a valid email address.';
+    if (trimmedEmail.length > maxFeedbackEmailLength) nextErrors.email = 'Email address is too long.';
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
@@ -270,6 +274,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? 'feedback-email-error' : undefined}
               autoComplete="email"
+              maxLength={maxFeedbackEmailLength}
             />
             {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
           </label>
@@ -292,6 +297,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
               onChange={event => setMessage(event.target.value)}
               aria-invalid={Boolean(errors.message)}
               aria-describedby={errors.message ? 'feedback-message-error' : undefined}
+              maxLength={maxFeedbackMessageLength}
               required
             />
             {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
