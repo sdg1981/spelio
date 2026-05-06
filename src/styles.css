@@ -1470,7 +1470,7 @@
   color:#071522;
   font-size:16px;
   font-weight:700;
-  letter-spacing:.02em;
+  letter-spacing:0;
 }
 
 .practice-app .utility-bar svg{

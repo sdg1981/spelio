@@ -601,7 +601,7 @@ export function Practice({
             onClick={handleRevealLetter}
           >
             <Eye size={23} />
-            <span>REVEAL</span>
+            <span>Reveal</span>
           </button>
         </div>
 
