@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import { Heart } from './Icons';
 
 type FooterProps = {
   className?: string;
@@ -67,7 +68,7 @@ export function Footer({ className = '' }: FooterProps) {
     <>
       <footer className={classes} aria-label={`Made with love for Wales. Copyright ${year} Spelio`}>
         <span className="footer-line">
-          Made with <span className="footer-heart" aria-hidden="true">❤️</span> for Wales · © {year} Spelio
+          Made with <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> for Wales · © {year} Spelio
         </span>
         <span className="footer-links" aria-label="Footer links">
           <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button>
