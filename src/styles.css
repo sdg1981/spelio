@@ -1479,37 +1479,65 @@
 }
 
 .practice-app .utility-bar{
+  display:inline-flex;
+  align-items:center;
   width:fit-content;
   max-width:calc(100vw - 64px);
   margin-top:34px;
   margin-bottom:0;
-  border-color:#dfe4e9;
-  border-radius:8px;
-  box-shadow:0 16px 34px rgba(7,21,34,.045);
-  grid-template-columns:max-content max-content;
+  border-color:#e0e5ea;
+  border-radius:9999px;
+  background:rgba(255,255,255,.98);
+  box-shadow:0 10px 26px rgba(7,21,34,.045);
+  overflow:hidden;
 }
 
 .practice-app .utility-bar button{
-  min-width:128px;
-  min-height:76px;
+  position:relative;
+  min-width:0;
+  min-height:52px;
   flex-direction:row;
   justify-content:center;
-  gap:18px;
-  padding:18px 16px;
-  color:#071522;
+  gap:8px;
+  padding:14px 22px;
+  background:transparent;
+  color:#172433;
   font-size:16px;
-  font-weight:700;
+  font-weight:600;
   letter-spacing:0;
+  transition:background .16s ease-out,color .16s ease-out;
+}
+
+.practice-app .utility-bar button:hover{
+  background:#f8fafc;
+}
+
+.practice-app .utility-bar button:focus-visible{
+  z-index:1;
+  outline:2px solid rgba(7,21,34,.42);
+  outline-offset:-3px;
+  border-radius:9999px;
 }
 
 .practice-app .utility-bar svg{
-  width:24px;
-  height:24px;
-  stroke-width:2.25;
+  width:21px;
+  height:21px;
+  stroke-width:2.15;
+  flex-shrink:0;
 }
 
 .practice-app .utility-bar button+button{
-  border-left-color:#dfe4e9;
+  border-left:0;
+}
+
+.practice-app .utility-bar button+button:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:28%;
+  bottom:28%;
+  width:1px;
+  background:#e2e7ec;
 }
 
 @media (max-height:760px) and (min-width:700px){
@@ -1695,28 +1723,30 @@
     right:auto;
     bottom:auto;
     z-index:auto;
+    display:inline-flex;
+    align-items:center;
     width:fit-content;
     max-width:calc(100vw - 36px);
     margin-top:12px;
     margin-bottom:0;
-    border:1px solid #dfe4e9;
-    border-radius:7px;
-    background:rgba(255,255,255,.96);
-    box-shadow:0 10px 24px rgba(7,21,34,.035);
+    border:1px solid #e0e5ea;
+    border-radius:9999px;
+    background:rgba(255,255,255,.98);
+    box-shadow:0 8px 22px rgba(7,21,34,.035);
   }
 
   .practice-app .utility-bar button{
-    min-width:108px;
-    min-height:64px;
-    gap:12px;
-    padding:12px 10px;
-    font-size:16px;
-    font-weight:500;
+    min-width:0;
+    min-height:50px;
+    gap:7px;
+    padding:12px 18px;
+    font-size:15px;
+    font-weight:600;
   }
 
   .practice-app .utility-bar svg{
-    width:22px;
-    height:22px;
+    width:20px;
+    height:20px;
   }
 
 }
@@ -1808,9 +1838,8 @@
   }
 
   .practice-app .utility-bar button{
-    min-height:60px;
-    padding-top:11px;
-    padding-bottom:11px;
+    min-height:48px;
+    padding:11px 16px;
     font-size:15px;
   }
 
