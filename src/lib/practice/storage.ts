@@ -102,6 +102,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 export function normaliseStorage(value: unknown): SpelioStorage {
   const source = isObject(value) ? value : {};
   const settings = isObject(source.settings) ? source.settings : {};
+  const audioPrompts = typeof settings.audioPrompts === 'boolean' ? settings.audioPrompts : defaultSettings.audioPrompts;
+  const englishVisible = audioPrompts
+    ? typeof settings.englishVisible === 'boolean' ? settings.englishVisible : defaultSettings.englishVisible
+    : true;
 
   return {
     ...defaultStorage,
@@ -115,8 +119,8 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
     settings: {
       ...defaultSettings,
-      englishVisible: typeof settings.englishVisible === 'boolean' ? settings.englishVisible : defaultSettings.englishVisible,
-      audioPrompts: typeof settings.audioPrompts === 'boolean' ? settings.audioPrompts : defaultSettings.audioPrompts,
+      englishVisible,
+      audioPrompts,
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
       welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible'
     }

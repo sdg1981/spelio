@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { CircleX, Eye, Keyboard, MessageSquareQuote, Settings, Volume2 } from './Icons';
+import { CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -141,6 +141,7 @@ export function Practice({
   const spaceHoldStartedRef = useRef(false);
   const revealHandledByPointerRef = useRef(false);
   const englishHandledByPointerRef = useRef(false);
+  const audioHandledByPointerRef = useRef(false);
 
   function shouldUseMobileKeyboard() {
     if (typeof window === 'undefined') return false;
@@ -362,8 +363,11 @@ export function Practice({
 
   const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
     const nextSettings = { ...storage.settings, ...patch };
-    const hasChanged = Object.keys(patch).some(key => {
-      const settingKey = key as keyof SpelioSettings;
+    if (!nextSettings.audioPrompts) {
+      nextSettings.englishVisible = true;
+    }
+
+    const hasChanged = (Object.keys(nextSettings) as Array<keyof SpelioSettings>).some(settingKey => {
       return storage.settings[settingKey] !== nextSettings[settingKey];
     });
 
@@ -441,9 +445,20 @@ export function Practice({
   }
 
   function toggleEnglishPrompt() {
+    if (!storage.settings.audioPrompts && storage.settings.englishVisible) {
+      showLocalStatus('English needed when audio is off');
+      return;
+    }
+
     const nextVisible = !storage.settings.englishVisible;
     updateSettings({ englishVisible: nextVisible });
     showLocalStatus(nextVisible ? 'English on' : 'English off');
+  }
+
+  function toggleAudioPrompts() {
+    const nextAudioPrompts = !storage.settings.audioPrompts;
+    updateSettings(nextAudioPrompts ? { audioPrompts: true } : { audioPrompts: false, englishVisible: true });
+    showLocalStatus(nextAudioPrompts ? 'Audio on' : 'Audio off');
   }
 
   function handleEnglishToggle(event?: MouseEvent<HTMLButtonElement>) {
@@ -473,7 +488,36 @@ export function Practice({
     restorePracticeInputFocus();
   }
 
+  function handleAudioToggle(event?: MouseEvent<HTMLButtonElement>) {
+    if (audioHandledByPointerRef.current) {
+      audioHandledByPointerRef.current = false;
+      return;
+    }
+
+    toggleAudioPrompts();
+    event?.currentTarget.blur();
+    restorePracticeInputFocus();
+  }
+
+  function handleAudioPointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (shouldUseMobileKeyboard()) {
+      event.preventDefault();
+      focusMobileInput();
+    }
+  }
+
+  function handleAudioPointerUp(event: PointerEvent<HTMLButtonElement>) {
+    if (!shouldUseMobileKeyboard()) return;
+
+    audioHandledByPointerRef.current = true;
+    toggleAudioPrompts();
+    event.currentTarget.blur();
+    restorePracticeInputFocus();
+  }
+
   function handleWordPillClick() {
+    if (!storage.settings.audioPrompts) return;
+
     playAudio();
     if (shouldUseMobileKeyboard()) {
       window.setTimeout(focusMobileInput, 40);
@@ -530,7 +574,7 @@ export function Practice({
 
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
-          <Volume2 className="text-[#d90000]" size={24} />
+          {storage.settings.audioPrompts && <Repeat className="text-[#d90000]" size={23} />}
           {storage.settings.englishVisible && <span>{currentWord.englishPrompt}</span>}
         </button>
         {currentWord.dialect !== 'Both' && (
@@ -596,6 +640,17 @@ export function Practice({
           >
             <MessageSquareQuote size={22} />
             <span className="english-toggle-label">English</span>
+          </button>
+
+          <button
+            onClick={handleAudioToggle}
+            onPointerDown={handleAudioPointerDown}
+            onPointerUp={handleAudioPointerUp}
+            aria-label="Toggle audio prompts"
+            aria-pressed={storage.settings.audioPrompts}
+          >
+            {storage.settings.audioPrompts ? <Volume2 size={22} /> : <VolumeX size={22} />}
+            <span>Audio</span>
           </button>
 
           <button

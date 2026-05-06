@@ -172,6 +172,8 @@ export function usePracticeSession({
   }
 
   const playAudio = useCallback(() => {
+    if (!storageRef.current.settings.audioPrompts) return;
+
     if (!currentWord?.audioUrl) {
       showStatus('Audio unavailable');
       return;
