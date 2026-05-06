@@ -1068,7 +1068,7 @@ Desktop:
 - Spacebar press and hold: peek at the full answer.
 - Right arrow: reveal next letter.
 
-The practice screen may show a subtle keyboard shortcut hint on desktop/tablet layouts only. The hint must not appear on mobile. It should say that Space replays audio and Right Arrow reveals the next letter.
+The practice screen may show a subtle inline keyboard shortcut hint on desktop/tablet layouts only. The hint must include a small keyboard icon, must not appear on mobile, and should say: “Space to replay audio • → to reveal next letter”.
 
 The keyboard shortcut hint is first-session-only. Track whether the user has already started a practice session in local storage. Show the hint during that first practice session, then hide it entirely for all later sessions. Reset Progress clears this flag with the rest of progress storage.
 

@@ -251,13 +251,21 @@
 
 @media (min-width:521px){
   .keyboard-shortcut-hint{
-    display:block;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
     margin-top:10px;
     color:#8c95a0;
     font-size:13px;
     font-weight:500;
     line-height:1.35;
     text-align:center;
+  }
+
+  .keyboard-shortcut-hint svg{
+    flex:0 0 auto;
+    color:#a2abb4;
   }
 }
 

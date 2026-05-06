@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { CircleX, Eye, MessageSquareQuote, Settings, Volume2 } from './Icons';
+import { CircleX, Eye, Keyboard, MessageSquareQuote, Settings, Volume2 } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -581,7 +581,8 @@ export function Practice({
         <AnimatedStatusLine status={displayStatus} tone={displayTone} />
         {showKeyboardHint && (
           <div className="keyboard-shortcut-hint">
-            Space replays audio. Right Arrow reveals the next letter.
+            <Keyboard size={14} strokeWidth={1.8} aria-hidden="true" />
+            <span>Space to replay audio • → to reveal next letter</span>
           </div>
         )}
 
