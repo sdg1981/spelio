@@ -841,6 +841,33 @@ function SettingsModal({
             </div>
           </div>
 
+          <div className="mt-10 border-t border-[#edf0f2] pt-8">
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh style</h3>
+
+            <div className="mt-7 space-y-7">
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'mixed' })}>
+                <Radio active={settings.dialectPreference === 'mixed'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">Mixed Welsh</b>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'north' })}>
+                <Radio active={settings.dialectPreference === 'north'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">North Wales</b>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ dialectPreference: 'south_standard' })}>
+                <Radio active={settings.dialectPreference === 'south_standard'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
             <div className="flex items-center justify-between gap-8">
               <span>

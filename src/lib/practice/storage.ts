@@ -1,4 +1,4 @@
-import type { PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
+import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 
@@ -19,6 +19,7 @@ export interface SpelioSettings {
   audioPrompts: boolean;
   soundEffects: boolean;
   welshSpelling: WelshSpellingMode;
+  dialectPreference: DialectPreference;
 }
 
 export interface WordProgress {
@@ -71,7 +72,8 @@ export const defaultSettings: SpelioSettings = {
   englishVisible: true,
   audioPrompts: true,
   soundEffects: true,
-  welshSpelling: 'flexible'
+  welshSpelling: 'flexible',
+  dialectPreference: 'mixed'
 };
 
 export const defaultStorage: SpelioStorage = {
@@ -99,6 +101,12 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function normaliseDialectPreference(value: unknown): DialectPreference {
+  if (value === 'north' || value === 'south_standard' || value === 'mixed') return value;
+  if (value === 'south-standard') return 'south_standard';
+  return defaultSettings.dialectPreference;
+}
+
 export function normaliseStorage(value: unknown): SpelioStorage {
   const source = isObject(value) ? value : {};
   const settings = isObject(source.settings) ? source.settings : {};
@@ -122,7 +130,8 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       englishVisible,
       audioPrompts,
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
-      welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible'
+      welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
+      dialectPreference: normaliseDialectPreference(settings.dialectPreference)
     }
   };
 }
@@ -204,24 +213,20 @@ function unique(values: string[]) {
   return Array.from(new Set(values));
 }
 
-function eligibleCompletionWords(list: WordList) {
-  const eligible = list.words;
+function eligibleCompletionItems(list: WordList) {
   const byGroup = new Map<string, PracticeWord[]>();
-  const ungrouped: PracticeWord[] = [];
+  const items: PracticeWord[][] = [];
 
-  for (const word of eligible) {
+  for (const word of list.words) {
     const groupId = word.variantGroupId?.trim();
     if (!groupId) {
-      ungrouped.push(word);
+      items.push([word]);
       continue;
     }
     byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), word]);
   }
 
-  return [
-    ...ungrouped,
-    ...Array.from(byGroup.values()).map(group => group[0])
-  ];
+  return [...items, ...Array.from(byGroup.values())];
 }
 
 export function updateListCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
@@ -238,13 +243,20 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
       strongSessionCount: 0
     };
 
-    const completionWords = eligibleCompletionWords(list);
+    const completionItems = eligibleCompletionItems(list);
+    const seenRepresentatives = completionItems
+      .filter(group => group.some(word => storage.wordProgress[word.id]?.seen))
+      .map(group => group[0]?.id)
+      .filter((id): id is string => Boolean(id));
     const seenWordIds = unique([
       ...previous.seenWordIds,
-      ...completionWords.filter(word => storage.wordProgress[word.id]?.seen).map(word => word.id)
+      ...seenRepresentatives
     ]);
 
-    const allWordsSeen = completionWords.every(word => seenWordIds.includes(word.id) || storage.wordProgress[word.id]?.seen);
+    const allWordsSeen = completionItems.every(group => {
+      const representativeId = group[0]?.id;
+      return Boolean(representativeId && seenWordIds.includes(representativeId)) || group.some(word => storage.wordProgress[word.id]?.seen);
+    });
     const accuracy = result.totalWords ? result.correctWords / result.totalWords : 0;
     const strongSession = accuracy >= 0.85 && result.revealedLetters === 0;
     const completed = previous.completed || (allWordsSeen && strongSession);

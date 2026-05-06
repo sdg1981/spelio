@@ -303,6 +303,10 @@ Fields:
 - Welsh spelling
   - Flexible
   - Strict
+- Welsh style
+  - Mixed Welsh
+  - North Wales
+  - South Wales / Standard
 - Audio prompts
   - On/off
 - Sound effects
@@ -316,10 +320,11 @@ Fields:
 Defaults:
 
 - Welsh spelling: Flexible
+- Welsh style: Mixed Welsh
 - Audio prompts: On
 - Sound effects: On
 
-The MVP does not expose a user-facing dialect preference. Dialect metadata is still supported at content level, and dialect-specific prompts may show a subtle dialect label during practice.
+Welsh style is stored as `dialectPreference` and affects word-level variant selection only. It must not affect word-list visibility.
 
 ### 7.1 Welsh spelling modes
 
@@ -419,7 +424,9 @@ Examples:
 
 The session engine should resolve dialect variants before rendering the answer slots.
 
-For the MVP, there is no user-facing dialect preference. Variant selection should use mixed-mode behaviour: dialect variants are eligible by default, and multiple variants from the same variantGroupId may appear in the same session if they are spaced apart and not shown consecutively. The goal is to expose learners to real Welsh dialect variation without disrupting practice flow.
+Dialect is handled at word/item level. The Welsh style setting affects variant selection, not word-list visibility. List-level dialect remains internal/admin metadata only and should not appear as public badges beside word lists.
+
+Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh rotates or exposes variants over time where possible, but does not show both variants from the same group in the same ordinary session.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
 
@@ -573,18 +580,19 @@ Do not move the user to the next word list after only completing one 10-word ses
 
 ### 10.3 Selection priority within a list
 
-Before selecting session words, resolve dialect variants using mixed-mode behaviour.
+Before selecting session words, resolve dialect variants using the saved Welsh style preference.
 
 If multiple words share the same variantGroupId, they represent dialect variants of the same prompt.
 
 Variant selection rules:
 
-- Variants may appear in the same session.
-- Variants must not be shown consecutively.
-- Prefer spacing variants apart within a session.
-- Avoid over-representing a single variantGroupId in a session; typically no more than 2 variants per group in a 10-word session.
-- Selection should feel natural and not forced.
-- Over time, expose learners to different variants where available.
+- A variantGroupId counts as one learning item and one prompt slot.
+- Choose at most one variant from a variantGroupId in a normal session.
+- North Wales preference should prefer North Wales variants, then Both, then the best available single variant.
+- South Wales / Standard preference should prefer South Wales / Standard or Standard variants, then Both, then the best available single variant.
+- Mixed Welsh should rotate or expose variants over time where possible.
+- Dialect preference is soft, not a hard filter.
+- If a preferred variant is missing, use the best available variant rather than shrinking the session.
 
 The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation.
 
@@ -811,10 +819,13 @@ Use local storage shape:
     "englishVisible": true,
     "audioPrompts": true,
     "soundEffects": true,
-    "welshSpelling": "flexible"
+    "welshSpelling": "flexible",
+    "dialectPreference": "mixed"
   }
 }
 ```
+
+Older stored settings without `dialectPreference` should default safely to `mixed`.
 
 Word progress should support:
 
@@ -1367,8 +1378,8 @@ Build:
 - Reveal logic
 - Completion logic
 - End-session stats
-- Dialect filtering before rendering answer slots
-- Mixed-mode dialect variant selection, allowing spaced non-consecutive variants from the same variantGroupId where appropriate
+- Welsh style setting for word-level dialect variant selection
+- Dialect variant selection before rendering answer slots, with at most one variant per variantGroupId in ordinary sessions
 - Mobile hidden input handling
 - Desktop key handling without duplication
 
@@ -1425,13 +1436,13 @@ I am building Spelio, a premium mobile-first Welsh spelling practice web app for
 
 Use this after the UI shell exists:
 
-Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using mixed-mode behaviour, allowing multiple variants from the same variantGroupId only when they are spaced apart and not consecutive. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
+Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using Welsh style, choosing at most one variant per variantGroupId in ordinary sessions. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
 
 ### Prompt 3 — Build local storage progress and recommendation logic
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every word has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Do not persist a user-facing dialect preference in local storage; dialect variants should be resolved by mixed-mode session selection. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, and current path position. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. For multiple selected lists, recommend mixed practice unless current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 

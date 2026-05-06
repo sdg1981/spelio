@@ -1,8 +1,8 @@
 # Spelio practice-engine update
 
-## Settings dialect preference removal
+## Welsh style variant selection
 
-The Settings modal no longer exposes a dialect preference selector. Practice now uses the mixed dialect behavior by default while keeping word-level dialect metadata, dialect notes, usage notes, and `variantGroupId` handling intact. Old saved `dialectPreference` values are ignored during storage normalization so existing users continue with mixed practice.
+The Settings modal exposes a quiet Welsh style selector backed by `dialectPreference`. Practice uses it for word-level `variantGroupId` selection only, while keeping word-list visibility clean and preserving word-level dialect metadata, dialect notes, usage notes, and per-variant progress.
 
 This build fixes the end-screen stats so:
 

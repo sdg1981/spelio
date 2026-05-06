@@ -1,6 +1,6 @@
-import type { WordList } from '../../data/wordLists';
+import type { PracticeWord, WordList } from '../../data/wordLists';
 import type { SpelioStorage } from './storage';
-import { filterDialectVariants, hasDifficultWords } from './sessionEngine';
+import { hasDifficultWords } from './sessionEngine';
 import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
@@ -22,15 +22,30 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
   return storage.lastSessionResult?.listIds.includes(listId) === true;
 }
 
-function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordList[]) {
-  const words = filterDialectVariants(
-    selectedLists.filter(list => list.isActive).flatMap(list => list.words),
-    'mixed'
-  );
+function groupLearningItems(words: PracticeWord[]) {
+  const byGroup = new Map<string, PracticeWord[]>();
+  const items: PracticeWord[][] = [];
 
-  return words.length > 0 && words.every(word => {
-    const progress = storage.wordProgress[word.id];
-    return progress?.seen === true && progress.completedCount > 0;
+  for (const word of words) {
+    const groupId = word.variantGroupId?.trim();
+    if (!groupId) {
+      items.push([word]);
+      continue;
+    }
+    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), word]);
+  }
+
+  return [...items, ...Array.from(byGroup.values())];
+}
+
+function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordList[]) {
+  const items = groupLearningItems(selectedLists.filter(list => list.isActive).flatMap(list => list.words));
+
+  return items.length > 0 && items.every(group => {
+    return group.some(word => {
+      const progress = storage.wordProgress[word.id];
+      return progress?.seen === true && progress.completedCount > 0;
+    });
   });
 }
 

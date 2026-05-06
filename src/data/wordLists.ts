@@ -2,7 +2,7 @@ import dataset from './spelio_welsh_35_list_dataset_dialect_v1_1.json';
 
 export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
-export type DialectPreference = 'mixed' | 'north' | 'south-standard';
+export type DialectPreference = 'mixed' | 'north' | 'south_standard';
 
 export interface PracticeWord {
   id: string;

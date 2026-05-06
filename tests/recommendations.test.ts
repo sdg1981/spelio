@@ -1,10 +1,12 @@
 import { wordLists } from '../src/data/wordLists';
+import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { classifySession, createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   applyWordProgressPatch,
   applyPracticeStartListSelection,
   createDefaultStorage,
+  normaliseStorage,
   updateListCompletion,
   type SessionResult,
   type SpelioStorage
@@ -34,6 +36,60 @@ function weatherAndWorkStorage(): SpelioStorage {
     ...createDefaultStorage(),
     selectedListIds: ['stage2_weather', 'stage2_work'],
     currentPathPosition: 'stage2_weather'
+  };
+}
+
+function firstWordsStorage(dialectPreference: SpelioStorage['settings']['dialectPreference']): SpelioStorage {
+  return {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_first_words'],
+    currentPathPosition: 'foundations_first_words',
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference
+    }
+  };
+}
+
+function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
+  return {
+    id,
+    listId: 'test_missing_preferred',
+    englishPrompt: id,
+    welshAnswer: id,
+    acceptedAlternatives: [],
+    audioUrl: '',
+    audioStatus: 'missing',
+    notes: '',
+    order,
+    difficulty: 1,
+    dialect: 'Both',
+    dialectNote: '',
+    usageNote: '',
+    variantGroupId: '',
+    ...overrides
+  };
+}
+
+function missingPreferredVariantList(): WordList {
+  return {
+    id: 'test_missing_preferred',
+    name: 'Missing preferred variant',
+    description: '',
+    language: 'Welsh',
+    dialect: 'Mixed',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    words: [
+      ...Array.from({ length: 9 }, (_, index) => makeTestWord(`shared_${index + 1}`, index + 1)),
+      makeTestWord('south_only', 10, {
+        dialect: 'South Wales / Standard',
+        variantGroupId: 'soft_preference'
+      })
+    ]
   };
 }
 
@@ -354,4 +410,60 @@ test('mixed primary action leaves selectedListIds unchanged', () => {
   assertEqual(recommendation.listId, undefined, 'Mixed primary recommendation should start without a single list ID');
   assertEqual(nextStorage.selectedListIds.join('|'), storage.selectedListIds.join('|'), 'Primary action should preserve mixed selectedListIds');
   assertEqual(nextStorage.currentPathPosition, storage.currentPathPosition, 'Primary action should not mutate mixed path position');
+});
+
+test('older storage without dialectPreference defaults to Mixed Welsh', () => {
+  const storage = normaliseStorage({
+    selectedListIds: ['foundations_first_words'],
+    currentPathPosition: 'foundations_first_words',
+    settings: {
+      englishVisible: true,
+      audioPrompts: true,
+      soundEffects: true,
+      welshSpelling: 'flexible'
+    }
+  });
+
+  assertEqual(storage.settings.dialectPreference, 'mixed', 'Missing dialectPreference should normalize to mixed');
+});
+
+test('North Wales preference selects the North Wales variant where available', () => {
+  const session = createPracticeSession(wordLists, firstWordsStorage('north'));
+  const nowVariant = session.words.find(word => word.variantGroupId === 'now');
+
+  assert(nowVariant, 'Expected first words session to include the now variant group');
+  assertEqual(nowVariant.dialect, 'North Wales', 'North preference should choose the North Wales variant');
+  assertEqual(nowVariant.welshAnswer, 'rwan', 'North preference should choose rwan for now');
+});
+
+test('South Wales / Standard preference selects the South/Standard variant where available', () => {
+  const session = createPracticeSession(wordLists, firstWordsStorage('south_standard'));
+  const nowVariant = session.words.find(word => word.variantGroupId === 'now');
+
+  assert(nowVariant, 'Expected first words session to include the now variant group');
+  assertEqual(nowVariant.dialect, 'South Wales / Standard', 'South/Standard preference should choose the South/Standard variant');
+  assertEqual(nowVariant.welshAnswer, 'nawr', 'South/Standard preference should choose nawr for now');
+});
+
+test('missing preferred variants do not shrink a normal session', () => {
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['test_missing_preferred'],
+    currentPathPosition: 'test_missing_preferred',
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'north'
+    }
+  };
+  const session = createPracticeSession([missingPreferredVariantList()], storage);
+
+  assertEqual(session.words.length, 10, 'Soft dialect preference should keep the ten prompt slots when enough items exist');
+  assert(session.words.some(word => word.id === 'south_only'), 'Best available single variant should remain eligible');
+});
+
+test('Mixed Welsh does not show both variants from one variantGroupId in an ordinary session', () => {
+  const session = createPracticeSession(wordLists, firstWordsStorage('mixed'));
+  const nowVariants = session.words.filter(word => word.variantGroupId === 'now');
+
+  assertEqual(nowVariants.length, 1, 'Mixed Welsh should choose one now variant in a normal session');
 });
