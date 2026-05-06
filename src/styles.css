@@ -991,6 +991,10 @@
   font-weight:750;
 }
 
+.feedback-section-label{
+  margin-bottom:4px;
+}
+
 .feedback-check-grid{
   display:grid;
   gap:11px;

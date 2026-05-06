@@ -315,7 +315,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 </label>
 
                 <fieldset className="feedback-check-section">
-                  <legend>Quick notes <span className="feedback-optional">optional</span></legend>
+                  <legend className="feedback-section-label">Quick notes <span className="feedback-optional">optional</span></legend>
                   <div className="feedback-check-grid">
                     {feedbackSignalOptions.map(option => (
                       <label className="feedback-check" key={option}>
@@ -331,7 +331,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 </fieldset>
 
                 <fieldset className="feedback-check-section">
-                  <legend>I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
+                  <legend className="feedback-section-label">I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
                   <div className="feedback-chip-grid">
                     {learningMethodOptions.map(option => (
                       <label className="feedback-chip" key={option}>
