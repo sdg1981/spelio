@@ -68,7 +68,9 @@ export function Footer({ className = '' }: FooterProps) {
     <>
       <footer className={classes} aria-label={`Made with love for Wales. Copyright ${year} Spelio`}>
         <span className="footer-line">
-          Made with <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> for Wales · © {year} Spelio
+          <span className="footer-made-with">
+            Made with <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> for Wales
+          </span> · © {year} Spelio
         </span>
         <span className="footer-links" aria-label="Footer links">
           <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button>

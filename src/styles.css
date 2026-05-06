@@ -846,6 +846,20 @@
   display:block;
 }
 
+.footer-made-with{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+}
+
+.footer-made-with .footer-heart{
+  display:block;
+  flex:0 0 auto;
+  width:14px;
+  height:14px;
+}
+
 .footer-links{
   display:flex;
   align-items:center;
