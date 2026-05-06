@@ -946,9 +946,137 @@ This should:
 
 Do not expose Azure API keys in the browser.
 
-## 17. Audio handling
+## 17. Founder Observation & Anonymous Product Analytics
 
-### 17.1 Public app
+**UX intent:** Analytics should help the founder understand whether the core practice loop works, without changing the calm, low-friction, privacy-respectful nature of the product.
+
+Analytics are for:
+
+- Improving the core practice loop
+- Identifying content difficulty and learner struggle patterns
+- Monitoring list completion and review usage
+- Supporting future tutor pilots, grants, and educational partnerships
+- Technical health monitoring
+
+Analytics are not for:
+
+- Advertising
+- Growth hacking
+- Invasive tracking
+- Session replay
+- Behavioural profiling
+- Selling user data
+- Gamification or engagement maximisation
+
+### 17.1 Anonymous event principles
+
+Events should be anonymous, minimal, and first-party where possible.
+
+Do not collect:
+
+- Names
+- Emails
+- Account IDs
+- Exact typed answers
+- Full keystroke logs
+- Session replay
+- Unnecessary device fingerprinting
+- Precise location data
+- Marketing identifiers
+
+Analytics should be stored separately from local learner progress. Local progress remains in browser local storage and should not depend on analytics.
+
+Analytics failure must never affect the practice experience.
+
+### 17.2 Recommended anonymous events
+
+Recommended MVP events:
+
+- `session_started`
+- `session_completed`
+- `session_abandoned`
+- `review_started`
+- `review_completed`
+- `list_completed`
+- `audio_replayed`
+- `reveal_used`
+- `difficult_word_marked`
+- `difficult_word_resolved`
+- `audio_unavailable`
+- `frontend_error`
+
+Events should include only the minimum useful context, such as anonymous session ID, list ID, word ID where needed for aggregate difficulty analysis, review mode, duration, accuracy bucket or aggregate result, reveal count, replay count, and error type.
+
+Do not send exact typed answers or full answer-entry history.
+
+### 17.3 Founder observation dashboard
+
+Add a small founder-only observation dashboard inside the existing admin panel.
+
+The dashboard should show aggregate-only views such as:
+
+- Sessions started
+- Sessions completed
+- Completion rate
+- Average session duration
+- Average accuracy
+- Reveal usage rate
+- Audio replay frequency
+- Review difficult words usage
+- Returning anonymous device count
+- List-level completion rate
+- List-level average accuracy
+- List-level reveal rate
+- Most difficult words by aggregate incorrect/reveal rate
+- Missing audio count
+- Audio playback failures
+- Frontend/API errors
+
+This dashboard is for founder observation and product learning only. It should not become a learner-facing dashboard in the MVP.
+
+### 17.4 Admin analytics exclusion
+
+Founder/admin testing must not pollute analytics.
+
+Rules:
+
+- If the founder is logged into the admin panel, any public front-end practice sessions in that same browser must not send analytics events.
+- Admin-authenticated sessions may still update local progress if needed for testing, but they must be excluded from server-side analytics.
+- The app should expose a clear internal helper such as `shouldTrackAnalytics()` that returns false when admin mode is active.
+- Admin mode analytics exclusion should apply globally across homepage, practice screen, end screen, review sessions, and word list interactions.
+- The admin dashboard should ideally show a small “Admin analytics excluded” indicator when admin mode is active.
+
+This rule exists because founder testing will be frequent and would otherwise distort early usage statistics.
+
+### 17.5 Implementation guidance
+
+Use lightweight first-party event logging through a serverless API route.
+
+Consider Plausible or Vercel Analytics for basic page-level analytics.
+
+Do not introduce PostHog or complex product analytics unless later needed.
+
+Prefer aggregate daily statistics over long-term raw event storage. Keep raw event retention short if raw events are stored at all.
+
+Events should be queued or batched where sensible.
+
+Respect browser Do Not Track or a future analytics opt-out setting where practical.
+
+### 17.6 Privacy and legal note
+
+The MVP should clearly disclose use of local storage for progress/settings.
+
+Any anonymous analytics should be described plainly in a privacy or cookies page.
+
+Avoid analytics cookies unless there is a clear reason. Prefer cookieless or first-party privacy-conscious analytics.
+
+If optional anonymous analytics are added later, provide an easy opt-out.
+
+This is not legal advice, but the product should be designed conservatively for UK GDPR/PECR expectations.
+
+## 18. Audio handling
+
+### 18.1 Public app
 
 If audio exists:
 
@@ -962,7 +1090,7 @@ If audio is missing:
 - If user taps audio, show subtle message:
   - “Audio unavailable”
 
-### 17.2 Sound effects
+### 18.2 Sound effects
 
 Sound effects:
 
@@ -977,11 +1105,11 @@ Rules:
 - No overlapping sounds.
 - Respect sound effects setting.
 
-## 18. Interaction details
+## 19. Interaction details
 
 **UX intent:** Interactions should feel responsive, tactile, and predictable. Avoid surprises. Maintain continuity, especially with keyboard and input behaviour.
 
-### 18.1 Word pill tap
+### 19.1 Word pill tap
 
 On tap/click:
 
@@ -989,7 +1117,7 @@ On tap/click:
 - Play audio immediately.
 - No unnecessary status message unless audio fails.
 
-### 18.2 Prompt notes display
+### 19.2 Prompt notes display
 
 If the current word has dialect other than Both, show a subtle dialect label near the prompt, for example:
 
@@ -1017,13 +1145,13 @@ Display rules:
 - Do not animate or draw attention to these notes.
 - These notes should support the learner without becoming instructional clutter.
 
-### 18.3 Correct letter
+### 19.3 Correct letter
 
 - Letter appears black.
 - Brief soft green flash.
 - Move to next slot.
 
-### 18.4 Incorrect letter
+### 19.4 Incorrect letter
 
 - Letter appears red.
 - Small shake animation.
@@ -1032,7 +1160,7 @@ Display rules:
 - Status: “Incorrect. Try again.”
 - Mark word difficult.
 
-### 18.5 Reveal letter
+### 19.5 Reveal letter
 
 - Tap/click fills the next missing letter.
 - Status: “Letter revealed.”
@@ -1045,7 +1173,7 @@ Display rules:
 - Peek should end automatically after a short delay and show a subtle “Now try from memory” status.
 - Peek should be available once per word; repeat attempts may show “Peek used”.
 
-### 18.6 Word completion
+### 19.6 Word completion
 
 - Status: “Correct.”
 - Success sound.
@@ -1055,12 +1183,12 @@ Display rules:
 
 If the completed word had no incorrect attempts and no revealed letters during that session, remove it from current review by setting `progress.difficult` to false.
 
-### 18.7 Progress bar
+### 19.7 Progress bar
 
 - Animate width change over 200–300ms.
 - No jumpy transitions.
 
-### 18.8 Keyboard shortcuts
+### 19.8 Keyboard shortcuts
 
 Desktop:
 
@@ -1078,7 +1206,7 @@ Optional later:
 
 - Enter: continue / confirm where relevant.
 
-### 18.9 Mobile input handling
+### 19.9 Mobile input handling
 
 **Critical implementation requirement:** This system must not be simplified. Incorrect handling will cause keyboard bugs, focus issues, and duplicate input problems.
 
@@ -1093,7 +1221,7 @@ Rules:
 - The mobile keyboard should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
 - Revealing a letter must not dismiss the keyboard.
 
-### 18.10 Desktop input handling
+### 19.10 Desktop input handling
 
 Desktop input rules:
 
@@ -1102,11 +1230,11 @@ Desktop input rules:
 - Avoid double-processing characters.
 - Keyboard shortcuts should not conflict with normal character entry.
 
-## 19. Edge cases
+## 20. Edge cases
 
 **UX intent:** Edge cases should degrade gracefully. Never break flow, never show errors unnecessarily, and always preserve user confidence.
 
-### 19.1 No word lists selected
+### 20.1 No word lists selected
 
 Show:
 
@@ -1116,7 +1244,7 @@ Primary action opens word list modal.
 
 Do not start practice until the user explicitly starts a session after selecting a list.
 
-### 19.2 Empty word list
+### 20.2 Empty word list
 
 Do not allow practice.
 
@@ -1124,7 +1252,7 @@ Show admin warning or user message:
 
 - This list has no words yet.
 
-### 19.3 Very long words or phrases
+### 20.3 Very long words or phrases
 
 - Wrap letter slots cleanly.
 - Preserve spaces.
@@ -1133,13 +1261,13 @@ Show admin warning or user message:
 - Reduce letter size if needed.
 - Avoid horizontal scrolling.
 
-### 19.4 Offline / audio unavailable
+### 20.4 Offline / audio unavailable
 
 - App should still allow text-based practice.
 - Audio failures should not break session.
 - Audio failures should produce only subtle temporary feedback.
 
-### 19.5 Multiple selected lists
+### 20.5 Multiple selected lists
 
 Words can be mixed from all selected lists.
 
@@ -1152,7 +1280,7 @@ When a mixed selection is saved:
 - Recommendation copy should describe the selection as mixed practice.
 - Review difficult words may override mixed practice only when current difficult words exist.
 
-### 19.6 Review action with no difficult words
+### 20.6 Review action with no difficult words
 
 If the user somehow triggers Review difficult words when no difficult words exist:
 
@@ -1160,7 +1288,7 @@ If the user somehow triggers Review difficult words when no difficult words exis
 - Return to homepage or show a subtle message that there are no difficult words to review.
 - Hide the review action wherever possible to prevent this case.
 
-## 20. Tech stack recommendation
+## 21. Tech stack recommendation
 
 Recommended MVP stack:
 
@@ -1177,7 +1305,7 @@ Do not start with a separate Node server unless required.
 
 The app should be built mobile-first and PWA-friendly.
 
-### 20.1 Future app options
+### 21.1 Future app options
 
 Start as browser-based web app.
 
@@ -1187,7 +1315,7 @@ Later options:
 - Capacitor wrapper for App Store / Google Play
 - React Native / Expo only if native needs become significant
 
-## 21. MVP exclusions
+## 22. MVP exclusions
 
 Do not include in MVP:
 
@@ -1202,8 +1330,17 @@ Do not include in MVP:
 - Streaks
 - Badges/coins/gamification
 - Multi-language support beyond data model readiness
+- User-level dashboards
+- Tutor dashboard
+- Cohort management
+- Marketing attribution system
+- Heatmaps
+- Session replay
+- A/B testing framework
+- Predictive learner scoring
+- AI recommendation analytics
 
-## 22. Build priorities
+## 23. Build priorities
 
 ### Phase 1 — Frontend UI
 
@@ -1265,7 +1402,7 @@ Build first Welsh starter lists.
 
 Start with original curated content, not copied course content.
 
-### 22.1 Build quality rule
+### 23.1 Build quality rule
 
 All changes must pass a production build before being considered valid.
 
@@ -1276,7 +1413,7 @@ Required checks:
 
 No file should be integrated without passing TypeScript checks.
 
-## 23. Development prompts for future chats
+## 24. Development prompts for future chats
 
 ### Prompt 1 — Build the frontend UI first
 
@@ -1314,7 +1451,13 @@ Use this before or during build:
 
 Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
 
-## 24. Final MVP definition
+### Prompt 7 — Implement lightweight anonymous analytics and founder observation dashboard
+
+Use this after the core practice loop, local storage progress, and admin panel are working:
+
+Implement lightweight anonymous analytics and a founder observation dashboard for Spelio. Use first-party anonymous event logging through a serverless API route. Add admin analytics exclusion so `shouldTrackAnalytics()` returns false when admin mode is active, and ensure public practice sessions in the same browser as an admin-authenticated session do not send analytics events. Track only minimal anonymous events needed for aggregate metrics, including session starts/completions/abandonments, review usage, list completion, reveal usage, audio replay, difficult word marking/resolution, missing audio, and frontend errors. Build founder-only admin dashboard views for aggregate metrics such as sessions, completion rate, average duration, average accuracy, reveal/audio replay usage, review usage, returning anonymous device count, list-level performance, difficult words, missing audio, playback failures, and frontend/API errors. Keep retention and minimisation privacy-conscious, prefer daily aggregates over long-term raw event storage, avoid invasive tracking, do not collect typed answers or keystroke logs, and do not add session replay, heatmaps, marketing attribution, behavioural profiling, or gamification analytics.
+
+## 25. Final MVP definition
 
 The MVP is complete when:
 
