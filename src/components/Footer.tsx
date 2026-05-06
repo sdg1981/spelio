@@ -89,7 +89,7 @@ export function Footer({ className = '' }: FooterProps) {
           </p>
           <p>You can delete this local progress at any time using Reset progress in Settings.</p>
           <p>
-            Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed,
+            Spelio collects anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed,
             word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is
             useful and what needs improving.
           </p>
