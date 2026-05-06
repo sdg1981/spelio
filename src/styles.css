@@ -833,6 +833,171 @@
   }
 }
 
+/* Feedback */
+.footer-copy{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.footer-feedback-link{
+  border:0;
+  background:transparent;
+  color:#9aa3ad;
+  font-size:13px;
+  line-height:1.35;
+  padding:0 0 1px;
+  text-decoration:underline;
+  text-decoration-color:#d9dee4;
+  text-underline-offset:3px;
+}
+
+.footer-feedback-link:hover{
+  color:#6f7a85;
+  text-decoration-color:#b8c0c9;
+}
+
+.footer-feedback-link:focus-visible{
+  outline:0;
+  border-radius:4px;
+  box-shadow:0 0 0 3px rgba(217,0,0,.12);
+}
+
+.feedback-modal{
+  gap:0;
+}
+
+.feedback-modal-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.feedback-intro{
+  margin-top:16px;
+}
+
+.feedback-form{
+  margin-top:28px;
+  display:grid;
+  gap:18px;
+}
+
+.feedback-field{
+  display:grid;
+  gap:8px;
+  color:#394653;
+  font-size:14px;
+  font-weight:750;
+  text-align:left;
+}
+
+.feedback-optional{
+  color:#9aa3ad;
+  font-weight:650;
+}
+
+.feedback-input{
+  width:100%;
+  border:1px solid #dde2e7;
+  border-radius:8px;
+  background:#fff;
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.35;
+  padding:13px 14px;
+  outline:none;
+}
+
+.feedback-input:focus{
+  border-color:#c4ccd4;
+  box-shadow:0 0 0 3px rgba(7,21,34,.06);
+}
+
+.feedback-message{
+  min-height:126px;
+  resize:vertical;
+}
+
+.feedback-honeypot{
+  position:absolute;
+  left:-10000px;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+}
+
+.feedback-error{
+  color:var(--red);
+  font-size:13px;
+  font-weight:700;
+}
+
+.feedback-actions{
+  display:grid;
+  gap:14px;
+  border-top:1px solid var(--line);
+  padding-top:22px;
+}
+
+.feedback-status{
+  min-height:20px;
+  color:#77818d;
+  font-size:14px;
+  font-weight:700;
+}
+
+.feedback-status-sent{
+  color:#346f54;
+}
+
+.feedback-status-error{
+  color:#9f2630;
+}
+
+.feedback-submit{
+  width:100%;
+  padding:15px 22px;
+  font-size:16px;
+}
+
+.feedback-submit:disabled{
+  opacity:.72;
+  cursor:default;
+}
+
+@media (max-width:520px){
+  .footer-feedback-link{
+    font-size:14px;
+  }
+
+  .feedback-form{
+    gap:22px;
+  }
+
+  .feedback-field{
+    font-size:18px;
+  }
+
+  .feedback-input{
+    font-size:20px;
+    padding:16px;
+  }
+
+  .feedback-error,
+  .feedback-status{
+    font-size:16px;
+  }
+
+  .feedback-submit{
+    font-size:22px;
+    padding:20px 24px;
+  }
+}
+
 @keyframes letter-reveal-reduced{
   from{opacity:0;}
   to{opacity:1;}
