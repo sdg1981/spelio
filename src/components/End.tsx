@@ -94,7 +94,7 @@ export function EndScreen({
             <ActionRow
               icon={<Play size={30} />}
               title="Continue learning"
-              subtitle="From where you left off"
+              subtitle="Pick up where you left off"
               arrowVariant="arrow"
               onClick={onContinue}
             />
