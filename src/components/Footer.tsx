@@ -1,29 +1,154 @@
-import { useEffect, useId, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 
 type FooterProps = {
   className?: string;
   variant?: 'default' | 'home';
 };
 
-export function Footer({ className = '', variant = 'default' }: FooterProps) {
+export function Footer({ className = '' }: FooterProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const year = variant === 'home' ? 2026 : new Date().getFullYear();
+  const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
+  const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
+  const shareStatusTimer = useRef<number | null>(null);
+  const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
-  const separator = variant === 'home' ? ' · ' : '. ';
+
+  useEffect(() => {
+    return () => {
+      if (shareStatusTimer.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(shareStatusTimer.current);
+      }
+    };
+  }, []);
+
+  function showShareStatus(status: 'shared' | 'copied') {
+    setShareStatus(status);
+
+    if (shareStatusTimer.current !== null) {
+      window.clearTimeout(shareStatusTimer.current);
+    }
+
+    shareStatusTimer.current = window.setTimeout(() => {
+      setShareStatus(null);
+      shareStatusTimer.current = null;
+    }, 1800);
+  }
+
+  async function handleShare() {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+
+    const shareUrl = window.location.origin;
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: 'Spelio',
+          text: 'A calm Welsh spelling practice app.',
+          url: shareUrl
+        });
+        showShareStatus('shared');
+        return;
+      } catch {
+        return;
+      }
+    }
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showShareStatus('copied');
+      } catch {
+        // Sharing should never interrupt the footer.
+      }
+    }
+  }
 
   return (
     <>
       <footer className={classes} aria-label={`Made with love for Wales. Copyright ${year} Spelio`}>
-        <span>
-          Made with <span className="footer-heart" aria-hidden="true">♥</span> for Wales{separator}© {year} Spelio
+        <span className="footer-line">
+          Made with <span className="footer-heart" aria-hidden="true">❤️</span> for Wales · © {year} Spelio
         </span>
-        <button className="footer-feedback-link" type="button" onClick={() => setFeedbackOpen(true)}>
-          Feedback
-        </button>
+        <span className="footer-links" aria-label="Footer links">
+          <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button>
+          <span aria-hidden="true">·</span>
+          <button className="footer-link footer-share-link" type="button" onClick={handleShare}>Share</button>
+          <span className="footer-share-separator" aria-hidden="true">·</span>
+          <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>Privacy</button>
+          <span aria-hidden="true">·</span>
+          <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>About</button>
+          <span aria-hidden="true">·</span>
+          <span>Beta v0.1</span>
+        </span>
       </footer>
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+      {infoModal === 'privacy' && (
+        <InfoModal title="Privacy" titleId="privacy-title" onClose={() => setInfoModal(null)}>
+          <p>Spelio is designed to work without an account.</p>
+          <p>
+            Your spelling progress, settings, difficult words, and session history are stored locally on your device using your browser’s storage.
+            This helps Spelio remember what you have practised and recommend what to do next.
+          </p>
+          <p>You can delete this local progress at any time using Reset progress in Settings.</p>
+          <p>
+            Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed,
+            word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is
+            useful and what needs improving.
+          </p>
+          <p>Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.</p>
+        </InfoModal>
+      )}
+      {infoModal === 'about' && (
+        <InfoModal title="About Spelio" titleId="about-title" onClose={() => setInfoModal(null)}>
+          <p>Spelio is a focused Welsh spelling practice app for adult learners.</p>
+          <p>It helps learners practise Welsh words and short phrases through calm, repeatable spelling sessions.</p>
+          <p>
+            Spelio is not a full Welsh course. It is designed to complement other ways of learning Welsh by helping with recall, accuracy, and
+            spelling confidence.
+          </p>
+          <p>The app is currently in beta, so feedback is especially welcome.</p>
+        </InfoModal>
+      )}
+      <div className={`app-toast ${shareStatus ? 'visible' : ''}`} role="status" aria-live="polite">
+        {shareStatus === 'shared' && 'Shared'}
+        {shareStatus === 'copied' && 'Link copied'}
+      </div>
     </>
+  );
+}
+
+function InfoModal({
+  title,
+  titleId,
+  children,
+  onClose
+}: {
+  title: string;
+  titleId: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="overlay" role="presentation">
+      <section className="modal modal-small footer-info-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className="footer-info-modal-header">
+          <h2 className="modal-title" id={titleId}>{title}</h2>
+          <button className="modal-close" onClick={onClose} aria-label={`Close ${title}`} type="button">×</button>
+        </div>
+        <div className="footer-info-modal-body modal-text">
+          {children}
+        </div>
+      </section>
+    </div>
   );
 }
 
