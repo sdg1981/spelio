@@ -52,6 +52,23 @@ function firstWordsStorage(dialectPreference: SpelioStorage['settings']['dialect
   };
 }
 
+function wantingStorage(dialectPreference: SpelioStorage['settings']['dialectPreference']): SpelioStorage {
+  return {
+    ...createDefaultStorage(),
+    selectedListIds: ['stage2_phrases_wanting'],
+    currentPathPosition: 'stage2_phrases_wanting',
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference
+    }
+  };
+}
+
+function wantingVariantWords(storage: SpelioStorage) {
+  const targetGroups = new Set(['want coffee', 'want food', 'want help', 'want to go', 'want to learn']);
+  return createPracticeSession(wordLists, storage).words.filter(word => targetGroups.has(word.variantGroupId ?? ''));
+}
+
 function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
   return {
     id,
@@ -500,6 +517,29 @@ test('South Wales / Standard preference selects the South/Standard variant where
   assertEqual(nowVariant.welshAnswer, 'nawr', 'South/Standard preference should choose nawr for now');
 });
 
+test('Mixed Welsh balances North and South variants across paired wanting groups', () => {
+  const session = createPracticeSession(wordLists, wantingStorage('mixed'));
+  const variants = wantingVariantWords(wantingStorage('mixed'));
+
+  assertEqual(session.words.length, 10, 'Dialect balancing should not reduce the normal session size');
+  assert(variants.some(word => word.dialect === 'North Wales'), 'Mixed Welsh should include at least one North Wales wanting variant');
+  assert(variants.some(word => word.dialect === 'South Wales / Standard' || word.dialect === 'Standard'), 'Mixed Welsh should include at least one South/Standard wanting variant');
+});
+
+test('North Wales mode still prefers North variants across paired wanting groups', () => {
+  const variants = wantingVariantWords(wantingStorage('north'));
+
+  assert(variants.length > 1, 'Setup should include multiple wanting variant groups');
+  assertEqual(variants.every(word => word.dialect === 'North Wales'), true, 'North Wales preference should keep choosing North variants');
+});
+
+test('South Wales / Standard mode still prefers South/Standard variants across paired wanting groups', () => {
+  const variants = wantingVariantWords(wantingStorage('south_standard'));
+
+  assert(variants.length > 1, 'Setup should include multiple wanting variant groups');
+  assertEqual(variants.every(word => word.dialect === 'South Wales / Standard' || word.dialect === 'Standard'), true, 'South/Standard preference should keep choosing South/Standard variants');
+});
+
 test('missing preferred variants do not shrink a normal session', () => {
   const storage: SpelioStorage = {
     ...createDefaultStorage(),
@@ -517,8 +557,10 @@ test('missing preferred variants do not shrink a normal session', () => {
 });
 
 test('Mixed Welsh does not show both variants from one variantGroupId in an ordinary session', () => {
-  const session = createPracticeSession(wordLists, firstWordsStorage('mixed'));
-  const nowVariants = session.words.filter(word => word.variantGroupId === 'now');
+  const session = createPracticeSession(wordLists, wantingStorage('mixed'));
+  const groups = session.words
+    .map(word => word.variantGroupId?.trim())
+    .filter((groupId): groupId is string => Boolean(groupId));
 
-  assertEqual(nowVariants.length, 1, 'Mixed Welsh should choose one now variant in a normal session');
+  assertEqual(groups.length, new Set(groups).size, 'Mixed Welsh should choose at most one variant per variantGroupId in a normal session');
 });

@@ -426,7 +426,7 @@ The session engine should resolve dialect variants before rendering the answer s
 
 Dialect is handled at word/item level. The Welsh style setting affects variant selection, not word-list visibility. List-level dialect remains internal/admin metadata only and should not appear as public badges beside word lists.
 
-Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh rotates or exposes variants over time where possible, but does not show both variants from the same group in the same ordinary session.
+Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh should include a balanced mix of available North Wales and South Wales / Standard variants within the same session where possible, avoiding a simple first-in-dataset-order bias while still showing only one variant from each group.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
 
@@ -590,9 +590,13 @@ Variant selection rules:
 - Choose at most one variant from a variantGroupId in a normal session.
 - North Wales preference should prefer North Wales variants, then Both, then the best available single variant.
 - South Wales / Standard preference should prefer South Wales / Standard or Standard variants, then Both, then the best available single variant.
-- Mixed Welsh should rotate or expose variants over time where possible.
+- Mixed Welsh should feel naturally mixed within the same session where possible, not separated entirely by session order.
+- Mixed Welsh should avoid always choosing the first dataset-order variant.
+- Mixed Welsh may alternate or rotate between North Wales and South Wales / Standard forms across variant groups and sessions.
+- If only one variant exists for a group, use the available variant.
 - Dialect preference is soft, not a hard filter.
 - If a preferred variant is missing, use the best available variant rather than shrinking the session.
+- Dialect balancing must not reduce normal session size.
 
 The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation.
 

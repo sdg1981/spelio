@@ -80,13 +80,38 @@ function variantProgressScore(word: PracticeWord, storage?: SpelioStorage) {
   return storage ? scoreWord(word, storage) : word.order;
 }
 
+function isNorthVariant(word: PracticeWord) {
+  return word.dialect === 'North Wales';
+}
+
+function isSouthStandardVariant(word: PracticeWord) {
+  return word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
+}
+
+function mixedStartOffset(groups: PracticeWord[][], storage?: SpelioStorage) {
+  if (!storage) return 0;
+
+  const seenVariantCount = groups.flat().filter(word => storage.wordProgress[word.id]?.seen).length;
+  return seenVariantCount % 2;
+}
+
+function chooseMixedVariant(group: PracticeWord[], groupIndex: number, startOffset: number, storage?: SpelioStorage): PracticeWord {
+  const fallback = group[0] as PracticeWord;
+  const preferNorth = (groupIndex + startOffset) % 2 === 1;
+  const preferred = group.filter(word => preferNorth ? isNorthVariant(word) : isSouthStandardVariant(word));
+  const candidates = preferred.length ? preferred : group;
+  const chosen = [...candidates].sort((a, b) => (
+    mixedVariantRank(a, storage) - mixedVariantRank(b, storage) ||
+    variantProgressScore(a, storage) - variantProgressScore(b, storage) ||
+    a.order - b.order
+  ))[0];
+
+  return chosen ?? fallback;
+}
+
 function chooseVariant(group: PracticeWord[], preference: DialectPreference, storage?: SpelioStorage): PracticeWord {
   const fallback = group[0] as PracticeWord;
   const chosen = [...group].sort((a, b) => {
-    if (preference === 'mixed') {
-      return mixedVariantRank(a, storage) - mixedVariantRank(b, storage) || variantProgressScore(a, storage) - variantProgressScore(b, storage) || a.order - b.order;
-    }
-
     return dialectRank(a, preference) - dialectRank(b, preference) || variantProgressScore(a, storage) - variantProgressScore(b, storage) || a.order - b.order;
   })[0];
 
@@ -106,7 +131,13 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
     grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
   }
 
-  const chosen = Array.from(grouped.values()).map(group => chooseVariant(group, preference, storage));
+  const groups = Array.from(grouped.values());
+  const startOffset = preference === 'mixed' ? mixedStartOffset(groups, storage) : 0;
+  const chosen = groups.map((group, index) => (
+    preference === 'mixed'
+      ? chooseMixedVariant(group, index, startOffset, storage)
+      : chooseVariant(group, preference, storage)
+  ));
 
   return [...ungrouped, ...chosen].sort((a, b) => a.order - b.order);
 }
