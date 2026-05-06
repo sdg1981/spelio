@@ -3,6 +3,7 @@ import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { classifySession, createPracticeSession, hasDifficultWords } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
+  applyManualWordListSelection,
   applyWordProgressPatch,
   applyPracticeStartListSelection,
   createDefaultStorage,
@@ -129,6 +130,37 @@ function completeNumbersCleanly(storage: SpelioStorage) {
   }
 
   const result = numbersResult();
+  return updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    wordLists,
+    result
+  );
+}
+
+function completeListCleanly(storage: SpelioStorage, listId: string) {
+  const list = wordLists.find(item => item.id === listId);
+  assert(list, `Expected ${listId} to exist`);
+
+  for (const word of list.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: 10,
+    correctWords: 10,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [listId],
+    state: 'strong'
+  };
+
   return updateListCompletion(
     {
       ...storage,
@@ -291,6 +323,29 @@ test('primary action does not repeat a completed list when nextListId exists', (
 
   assertEqual(recommendation.listId === 'foundations_numbers', false, 'Completed numbers list should not repeat');
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed list should advance to next valid list');
+});
+
+test('manual list selection invalidates stale next-list recommendation', () => {
+  const wantingListId = 'stage2_phrases_wanting';
+  const nextListId = 'stage3_f_vs_ff';
+  const completedWantingStorage = completeListCleanly(
+    {
+      ...createDefaultStorage(),
+      selectedListIds: [wantingListId],
+      currentPathPosition: wantingListId
+    },
+    wantingListId
+  );
+
+  assertEqual(getRecommendation(completedWantingStorage, wordLists).listId, nextListId, 'Setup should advance from the just-practised completed list');
+
+  const manuallySelectedStorage = applyManualWordListSelection(completedWantingStorage, [wantingListId]);
+  const recommendation = getRecommendation(manuallySelectedStorage, wordLists);
+
+  assertEqual(manuallySelectedStorage.selectedListIds[0], wantingListId, 'Manual selection should persist the selected list');
+  assertEqual(manuallySelectedStorage.currentPathPosition, wantingListId, 'Manual selection should reset path position to the first selected list');
+  assertEqual(manuallySelectedStorage.lastSessionResult, null, 'Manual selection should invalidate stale session-derived recommendation state');
+  assertEqual(recommendation.listId, wantingListId, 'Manual selection should recommend the selected list, not the previous next list');
 });
 
 test('recommendation uses updated progress rather than stale pre-session state', () => {

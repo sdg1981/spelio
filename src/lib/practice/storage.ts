@@ -164,6 +164,15 @@ export function applyPracticeStartListSelection(storage: SpelioStorage, listId?:
   };
 }
 
+export function applyManualWordListSelection(storage: SpelioStorage, selectedListIds: string[]): SpelioStorage {
+  return {
+    ...storage,
+    selectedListIds,
+    currentPathPosition: selectedListIds[0] ?? null,
+    lastSessionResult: null
+  };
+}
+
 export function clearSpelioStorageData() {
   if (typeof window === 'undefined') return;
 
