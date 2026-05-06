@@ -91,7 +91,7 @@ export function Footer({ className = '' }: FooterProps) {
           <p>
             Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed,
             word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is
-            useful and what needs improving
+            useful and what needs improving.
           </p>
           <p>Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.</p>
         </InfoModal>
