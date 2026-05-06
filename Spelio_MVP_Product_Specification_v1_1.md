@@ -247,11 +247,12 @@ Answer layout rules:
 
 Bottom controls:
 
-- English
-- Word list
-- Reveal
+- English toggle: `MessageSquareQuote` icon only, with no visible “EN” label
+- Reveal: eye icon + “REVEAL” label
 
 No separate replay audio icon. Audio replay is handled by the word pill.
+
+The word list button is not present on the practice screen bottom utility strip. Word list selection remains available from the homepage and end screen.
 
 No audio prompts toggle in the practice screen. Audio prompt preference belongs in settings.
 
@@ -267,6 +268,8 @@ Bottom strip should be subtle:
 - Low visual weight
 - Light separators
 - No heavy card feeling
+
+The practice screen uses the same shared footer copy and styling as the homepage.
 
 ### 6.5 Status messages
 

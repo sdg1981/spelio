@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { CircleX, Eye, Globe2, List, Settings, Volume2 } from './Icons';
+import { CircleX, Eye, MessageSquareQuote, Settings, Volume2 } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -461,7 +461,7 @@ export function Practice({
           <div className="status-line">Select a word list to begin</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
           <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
-          <Footer />
+          <Footer className="home-footer" variant="home" />
         </section>
         {modal === 'wordlist' && (
           <WordListModal
@@ -551,21 +551,17 @@ export function Practice({
         <AnimatedStatusLine status={displayStatus} tone={displayTone} />
 
         <div className="utility-bar">
-          <button onClick={handleEnglishToggle}>
-            <Globe2 size={22} />
-            <span>EN</span>
-          </button>
-
-          <button onClick={() => {
-            finishPeek(false);
-            setModal('wordlist');
-          }}>
-            <List size={22} />
-            <span>LIST</span>
+          <button
+            onClick={handleEnglishToggle}
+            aria-label="Toggle English prompt"
+            aria-pressed={storage.settings.englishVisible}
+          >
+            <MessageSquareQuote size={22} />
           </button>
 
           <button
             className="reveal-button"
+            aria-label="Reveal next letter"
             onPointerDown={handleRevealPointerDown}
             onPointerUp={handleRevealPointerUp}
             onPointerCancel={endPeekHold}
@@ -578,7 +574,7 @@ export function Practice({
           </button>
         </div>
 
-        <Footer />
+        <Footer className="home-footer" variant="home" />
       </section>
 
       {modal === 'wordlist' && (

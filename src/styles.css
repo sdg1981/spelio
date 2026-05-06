@@ -1457,6 +1457,7 @@
   border-color:#dfe4e9;
   border-radius:8px;
   box-shadow:0 16px 34px rgba(7,21,34,.045);
+  grid-template-columns:repeat(2,1fr);
 }
 
 .practice-app .utility-bar button{
@@ -1481,13 +1482,6 @@
   border-left-color:#dfe4e9;
 }
 
-.practice-app .footer-copy{
-  padding-top:48px;
-  color:#9aa3ad;
-  font-size:12px;
-  opacity:.68;
-}
-
 @media (max-height:760px) and (min-width:700px){
   .practice-app .practice-shell{
     padding-top:142px;
@@ -1506,9 +1500,6 @@
     margin-top:22px;
   }
 
-  .practice-app .footer-copy{
-    display:none;
-  }
 }
 
 @media (max-width:767px){
@@ -1697,9 +1688,6 @@
     height:22px;
   }
 
-  .practice-app .footer-copy{
-    display:none;
-  }
 }
 
 @media (max-width:767px) and (max-height:760px){
