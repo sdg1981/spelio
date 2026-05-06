@@ -28,6 +28,8 @@ export interface WordProgress {
   incorrectAttempts: number;
   revealedCount: number;
   difficult: boolean;
+  recapDue?: boolean;
+  cleanRecapCount?: number;
   lastPractisedAt?: string;
 }
 
@@ -45,6 +47,7 @@ export interface SpelioStorage {
   hasStartedPracticeSession: boolean;
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
+  completedNormalSessionCount?: number;
   wordProgress: Record<string, WordProgress>;
   listProgress: Record<string, ListProgress>;
   settings: SpelioSettings;
@@ -55,6 +58,7 @@ export interface WordProgressPatch {
   revealed?: boolean;
   completed?: boolean;
   cleanCompleted?: boolean;
+  recapCompletedClean?: boolean;
 }
 
 const STORAGE_KEY = 'spelio-storage-v1';
@@ -82,6 +86,7 @@ export const defaultStorage: SpelioStorage = {
   hasStartedPracticeSession: false,
   lastSessionDate: null,
   lastSessionResult: null,
+  completedNormalSessionCount: 0,
   wordProgress: {},
   listProgress: {},
   settings: defaultSettings
@@ -123,6 +128,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     hasStartedPracticeSession: typeof source.hasStartedPracticeSession === 'boolean' ? source.hasStartedPracticeSession : defaultStorage.hasStartedPracticeSession,
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
+    completedNormalSessionCount: typeof source.completedNormalSessionCount === 'number' ? source.completedNormalSessionCount : 0,
     wordProgress: isObject(source.wordProgress) ? source.wordProgress as Record<string, WordProgress> : {},
     listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
     settings: {
@@ -199,6 +205,25 @@ export function applyWordProgressPatch(
     revealedCount: 0,
     difficult: false
   };
+  const madeDifficult = Boolean(patch.incorrect || patch.revealed);
+  const previousCleanRecapCount = previous.cleanRecapCount ?? 0;
+  const nextCleanRecapCount = madeDifficult
+    ? 0
+    : patch.recapCompletedClean
+      ? previousCleanRecapCount + 1
+      : previousCleanRecapCount;
+  const nextDifficult = madeDifficult
+    ? true
+    : patch.cleanCompleted
+      ? false
+      : previous.difficult;
+  const nextRecapDue = madeDifficult
+    ? true
+    : patch.recapCompletedClean
+      ? nextCleanRecapCount < 2
+      : patch.cleanCompleted && (previous.difficult || previous.recapDue)
+        ? true
+        : previous.recapDue;
 
   return {
     ...storage,
@@ -211,7 +236,9 @@ export function applyWordProgressPatch(
         completedCount: previous.completedCount + (patch.completed ? 1 : 0),
         incorrectAttempts: previous.incorrectAttempts + (patch.incorrect ? 1 : 0),
         revealedCount: previous.revealedCount + (patch.revealed ? 1 : 0),
-        difficult: patch.cleanCompleted ? false : previous.difficult || Boolean(patch.incorrect || patch.revealed),
+        difficult: nextDifficult,
+        recapDue: nextRecapDue,
+        cleanRecapCount: nextCleanRecapCount,
         lastPractisedAt: practisedAt
       }
     }

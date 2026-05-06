@@ -26,6 +26,7 @@ type ActionProps = {
   accent?: 'red' | 'blue' | 'muted';
   primary?: boolean;
   arrowVariant?: 'chevron' | 'arrow';
+  trailing?: ReactNode;
   className?: string;
   onClick?: () => void;
 };
@@ -38,6 +39,7 @@ export function ActionRow({
   accent = 'muted',
   primary = false,
   arrowVariant = 'chevron',
+  trailing,
   className = '',
   onClick
 }: ActionProps) {
@@ -52,6 +54,7 @@ export function ActionRow({
         <span className="action-row-title">{title}</span>
         {subtitle && <span className={`action-row-sub ${subtitleClassName}`.trim()}>{subtitle}</span>}
       </span>
+      {trailing && <span className="action-row-count">{trailing}</span>}
       <ArrowIcon className="chev" size={34} strokeWidth={2.6} />
     </button>
   );

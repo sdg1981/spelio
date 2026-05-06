@@ -1,7 +1,7 @@
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
-import { List, Play } from './Icons';
+import { List, Play, RotateCcw } from './Icons';
 import type { Recommendation } from '../lib/practice/recommendations';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
@@ -10,17 +10,21 @@ export function Home({
   mode,
   recommendation,
   hasDifficultWords,
+  recapWordCount,
   onStart,
   onContinue,
   onReview,
+  onRecapReview,
   onSelectList
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
   hasDifficultWords: boolean;
+  recapWordCount: number;
   onStart: () => void;
   onContinue: () => void;
   onReview: () => void;
+  onRecapReview: () => void;
   onSelectList: () => void;
 }) {
   const isFirst = mode === 'first';
@@ -34,6 +38,8 @@ export function Home({
   const handlePrimary = shouldPrioritiseReview ? onReview : onStart;
   const selectListLabel = isFirst ? 'Select word list' : 'Change word list';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
+  const showRecapEntry = mode === 'returning' && recapWordCount > 0 && !shouldPrioritiseReview;
+  const recapCountLabel = recapWordCount >= 5 ? '5+' : String(recapWordCount);
 
   return (
     <main className="homepage-bg">
@@ -78,6 +84,17 @@ export function Home({
             arrowVariant="arrow"
             onClick={onSelectList}
           />
+
+          {showRecapEntry && (
+            <ActionRow
+              icon={<RotateCcw size={28} />}
+              title="From earlier"
+              subtitle="Revisit a few words"
+              trailing={recapCountLabel}
+              arrowVariant="arrow"
+              onClick={onRecapReview}
+            />
+          )}
         </div>
 
         <Footer className="home-footer" variant="home" />

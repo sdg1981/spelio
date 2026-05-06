@@ -149,13 +149,16 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
   return [...ungrouped, ...chosen].sort((a, b) => a.order - b.order);
 }
 
-function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage) {
+function getTrackedCandidates(
+  words: PracticeWord[],
+  storage: SpelioStorage,
+  isEligibleProgress: (word: PracticeWord) => boolean
+) {
   const grouped = new Map<string, PracticeWord[]>();
   const candidates: PracticeWord[] = [];
 
   for (const word of words) {
-    const difficult = storage.wordProgress[word.id]?.difficult === true;
-    const eligible = difficult && isReviewEligibleForPreference(word, storage.settings.dialectPreference);
+    const eligible = isEligibleProgress(word) && isReviewEligibleForPreference(word, storage.settings.dialectPreference);
     const groupId = word.variantGroupId?.trim();
     if (!groupId) {
       if (eligible) candidates.push(word);
@@ -171,7 +174,32 @@ function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage) {
   return candidates.filter(Boolean);
 }
 
-export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false): PracticeSession {
+function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage, includeRecapDue = false) {
+  return getTrackedCandidates(words, storage, word => {
+    const progress = storage.wordProgress[word.id];
+    return progress?.difficult === true || (includeRecapDue && progress?.recapDue === true);
+  });
+}
+
+function getDifficultCandidates(words: PracticeWord[], storage: SpelioStorage) {
+  return getTrackedCandidates(words, storage, word => storage.wordProgress[word.id]?.difficult === true);
+}
+
+export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage) {
+  return getTrackedCandidates(words, storage, word => storage.wordProgress[word.id]?.recapDue === true)
+    .sort((a, b) => {
+      const leftProgress = storage.wordProgress[a.id];
+      const rightProgress = storage.wordProgress[b.id];
+      const leftDifficult = leftProgress?.difficult ? 0 : 1;
+      const rightDifficult = rightProgress?.difficult ? 0 : 1;
+      const leftPractised = leftProgress?.lastPractisedAt ?? '';
+      const rightPractised = rightProgress?.lastPractisedAt ?? '';
+
+      return leftDifficult - rightDifficult || rightPractised.localeCompare(leftPractised) || a.order - b.order;
+    });
+}
+
+export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
   const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : [lists[0]?.id].filter(Boolean) as string[];
   const eligibleLists = reviewDifficult
     ? lists.filter(list => list.isActive)
@@ -180,7 +208,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   const dialectResolvedCandidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference, storage);
 
   const pool = reviewDifficult
-    ? getReviewCandidates(allCandidates, storage)
+    ? getReviewCandidates(allCandidates, storage, includeRecapDue)
     : dialectResolvedCandidates;
   const words = selectSessionWords(pool, eligibleLists.map(list => list.id), storage);
 
@@ -188,6 +216,20 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
     words,
     listIds: Array.from(new Set(words.map(word => word.listId)))
   };
+}
+
+export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
+  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  return getRecapCandidates(activeWords, storage).length;
+}
+
+export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordList[], sessionWords: PracticeWord[], reviewDifficult = false) {
+  if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
+
+  const sessionWordIds = new Set(sessionWords.map(word => word.id));
+  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+
+  return getRecapCandidates(activeWords, storage).find(word => !sessionWordIds.has(word.id));
 }
 
 export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedLetters'>): SessionState {
@@ -204,5 +246,5 @@ export function hasDifficultWords(storage: SpelioStorage, lists?: WordList[]) {
   if (!lists) return Object.values(storage.wordProgress).some(progress => progress.difficult === true);
 
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
-  return getReviewCandidates(activeWords, storage).length > 0;
+  return getDifficultCandidates(activeWords, storage).length > 0;
 }

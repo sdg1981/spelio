@@ -107,6 +107,7 @@ export function Practice({
   lists,
   storage,
   reviewDifficult = false,
+  includeRecapDue = false,
   showKeyboardHint = false,
   onStorageChange,
   onComplete,
@@ -118,6 +119,7 @@ export function Practice({
   lists: WordList[];
   storage: SpelioStorage;
   reviewDifficult?: boolean;
+  includeRecapDue?: boolean;
   showKeyboardHint?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
@@ -179,7 +181,7 @@ export function Practice({
     revealNext,
     markCurrentWordRevealed,
     playAudio
-  } = usePracticeSession({ lists, storage, reviewDifficult, onStorageChange, onComplete });
+  } = usePracticeSession({ lists, storage, reviewDifficult, includeRecapDue, onStorageChange, onComplete });
 
   const clearPeekTimers = useCallback(() => {
     if (peekTimerRef.current) {

@@ -1,2 +1,2 @@
-import { ArrowRight, BookOpen, Check, ChevronRight, CircleX, CornerDownRight, Eye, FileText, Keyboard, List, MessageSquareQuote, Play, Repeat, Settings, SlidersHorizontal, Target, Volume2, VolumeX, X } from 'lucide-react';
-export { ArrowRight, BookOpen, Check, ChevronRight, CircleX, CornerDownRight, Eye, FileText, Keyboard, List, MessageSquareQuote, Play, Repeat, Settings, SlidersHorizontal, Target, Volume2, VolumeX, X };
+import { ArrowRight, BookOpen, Check, ChevronRight, CircleX, CornerDownRight, Eye, FileText, Keyboard, List, MessageSquareQuote, Play, Repeat, RotateCcw, Settings, SlidersHorizontal, Target, Volume2, VolumeX, X } from 'lucide-react';
+export { ArrowRight, BookOpen, Check, ChevronRight, CircleX, CornerDownRight, Eye, FileText, Keyboard, List, MessageSquareQuote, Play, Repeat, RotateCcw, Settings, SlidersHorizontal, Target, Volume2, VolumeX, X };

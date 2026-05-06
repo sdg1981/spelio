@@ -2674,3 +2674,15 @@
     margin:0 12px;
   }
 }
+
+.action-row-count{
+  margin-left:auto;
+  flex-shrink:0;
+  color:#6e7783;
+  font-size:17px;
+  font-weight:800;
+}
+
+.action-row-count + .chev{
+  margin-left:0;
+}
