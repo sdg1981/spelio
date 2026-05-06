@@ -585,6 +585,15 @@ Recommended dialect values for Welsh:
 
 dialectNote should explain regional form briefly.
 
+Learner-facing notes must not reveal the exact target answer currently being practised.
+
+For the Welsh MVP:
+
+- englishPrompt may contain English.
+- welshAnswer is the target spelling.
+- usageNote and dialectNote must not contain the exact welshAnswer.
+- usageNote and dialectNote may mention English meanings, opposite dialect variants, fuller or shorter alternative forms, and regional equivalents, provided they do not reveal the exact answer being tested.
+
 Example:
 
 ```json
@@ -596,6 +605,31 @@ Example:
 ```
 
 dialectNote must not duplicate usageNote.
+
+Examples:
+
+If the learner is spelling "isio coffi":
+
+Bad:
+
+- North Wales form using isio.
+- Shorter spoken form: isio.
+
+Good:
+
+- South Wales commonly uses eisiau.
+- Shorter spoken form.
+
+If the learner is spelling "eisiau coffi":
+
+Bad:
+
+- Standard form using eisiau.
+
+Good:
+
+- North Wales commonly uses isio.
+- Fuller standard form.
 
 When creating meaningful dialect variants:
 
@@ -653,6 +687,7 @@ Do not use usageNote for:
 - long explanations
 - generic filler
 - information already in dialectNote
+- the exact target answer currently being practised
 
 Good usageNote examples:
 
@@ -666,6 +701,7 @@ Bad usageNote examples:
 - This is a soft mutation after the preposition i.
 - North Wales form of the word.
 - This means “thank you”.
+- Shorter spoken form: isio. (when the target answer is "isio coffi")
 
 Recommended length:
 
@@ -874,6 +910,9 @@ Before accepting a list, check:
 - Are the forms correct?
 - Are dialect choices explicit?
 - Are accepted alternatives used correctly?
+- Does usageNote avoid revealing the target answer?
+- Does dialectNote avoid revealing the target answer?
+- Do learner-facing notes avoid spoiling the spelling task?
 
 ### Learner experience
 
@@ -922,6 +961,9 @@ Checks:
 - dialect handling
 - mutation correctness
 - usageNote/dialectNote quality
+- usageNote does not reveal the target answer
+- dialectNote does not reveal the target answer
+- learner-facing notes do not spoil the spelling task
 
 A list is production-ready only after all three review levels.
 
@@ -1061,6 +1103,9 @@ Check:
 - dialect handling
 - acceptedAlternatives
 - usageNote quality
+- usageNote does not reveal the target answer
+- dialectNote does not reveal the target answer
+- learner-facing notes do not spoil the spelling task
 - list coherence
 - learner usefulness
 - app compatibility
