@@ -138,6 +138,7 @@ export function Practice({
   const isPeekingRef = useRef(false);
   const spaceHoldStartedRef = useRef(false);
   const revealHandledByPointerRef = useRef(false);
+  const englishHandledByPointerRef = useRef(false);
 
   function shouldUseMobileKeyboard() {
     if (typeof window === 'undefined') return false;
@@ -437,10 +438,37 @@ export function Practice({
     localStatusTimerRef.current = window.setTimeout(() => setLocalStatus(null), 1500);
   }
 
-  function handleEnglishToggle() {
+  function toggleEnglishPrompt() {
     const nextVisible = !storage.settings.englishVisible;
     updateSettings({ englishVisible: nextVisible });
     showLocalStatus(nextVisible ? 'English on' : 'English off');
+  }
+
+  function handleEnglishToggle(event?: MouseEvent<HTMLButtonElement>) {
+    if (englishHandledByPointerRef.current) {
+      englishHandledByPointerRef.current = false;
+      return;
+    }
+
+    toggleEnglishPrompt();
+    event?.currentTarget.blur();
+    restorePracticeInputFocus();
+  }
+
+  function handleEnglishPointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (shouldUseMobileKeyboard()) {
+      event.preventDefault();
+      focusMobileInput();
+    }
+  }
+
+  function handleEnglishPointerUp(event: PointerEvent<HTMLButtonElement>) {
+    if (!shouldUseMobileKeyboard()) return;
+
+    englishHandledByPointerRef.current = true;
+    toggleEnglishPrompt();
+    event.currentTarget.blur();
+    restorePracticeInputFocus();
   }
 
   function handleWordPillClick() {
@@ -553,6 +581,8 @@ export function Practice({
         <div className="utility-bar">
           <button
             onClick={handleEnglishToggle}
+            onPointerDown={handleEnglishPointerDown}
+            onPointerUp={handleEnglishPointerUp}
             aria-label="Toggle English prompt"
             aria-pressed={storage.settings.englishVisible}
           >

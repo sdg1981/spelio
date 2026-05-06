@@ -1450,14 +1450,14 @@
 }
 
 .practice-app .utility-bar{
-  width:min(720px, calc(100vw - 64px));
-  max-width:720px;
+  width:fit-content;
+  max-width:calc(100vw - 64px);
   margin-top:34px;
   margin-bottom:0;
   border-color:#dfe4e9;
   border-radius:8px;
   box-shadow:0 16px 34px rgba(7,21,34,.045);
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:max-content max-content;
 }
 
 .practice-app .utility-bar button{
@@ -1665,8 +1665,8 @@
     right:auto;
     bottom:auto;
     z-index:auto;
-    width:min(420px, calc(100vw - 36px));
-    max-width:420px;
+    width:fit-content;
+    max-width:calc(100vw - 36px);
     margin-top:12px;
     margin-bottom:0;
     border:1px solid #dfe4e9;
