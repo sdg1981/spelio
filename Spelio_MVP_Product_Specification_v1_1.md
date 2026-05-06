@@ -746,15 +746,21 @@ Review selection should use current difficulty only:
 progress.difficult === true
 ```
 
-Review difficult words should resolve eligibility using the active `dialectPreference` and `variantGroupId` relationships where possible.
+Review difficult words should resolve eligibility using the exact difficult word variant and the active `dialectPreference`.
 
-If a difficult word belongs to a linked dialect-variant group, a newly started review session should prefer the variant matching the learner’s current Welsh style. This prevents learners being forced to keep practising an old dialect variant indefinitely after changing Welsh style.
+A word becomes difficult at the exact `wordId` / variant the learner attempted. Changing Welsh style must not convert that old difficult variant into a different dialect variant.
+
+Review difficult words should only include difficult words that are eligible under the current Welsh style:
+
+- North Wales reviews North Wales and Both difficult words.
+- South Wales / Standard reviews South Wales / Standard, Standard, and Both difficult words.
+- Mixed Welsh may review any currently difficult dialect variant.
 
 Review must not create duplicate entries for multiple variants in the same `variantGroupId`.
 
-If no matching dialect variant exists, the available difficult word may still be reviewed.
+Old difficult entries from another dialect may remain in storage, but should not drive current review recommendations.
 
-When a mapped review variant is completed cleanly, the relevant current difficulty for that linked variant group should be resolved.
+When a review word is completed cleanly, the current difficulty for that exact word variant should be resolved.
 
 Review session:
 
@@ -810,7 +816,7 @@ This creates guided progression rather than locked progression.
 
 Review difficult words must only be recommended when current difficult words exist and are relevant to the learner’s current Welsh style.
 
-If all currently difficult words belong only to dialect variants that no longer match the active Welsh style, and no linked matching variant is available through `variantGroupId`, fall back to normal progression recommendations instead of continuing to suggest irrelevant review.
+If all currently difficult words belong only to dialect variants that no longer match the active Welsh style, fall back to normal progression recommendations instead of continuing to suggest irrelevant review.
 
 Multiple selected lists:
 

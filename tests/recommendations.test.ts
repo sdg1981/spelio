@@ -69,11 +69,15 @@ function wantingVariantWords(storage: SpelioStorage) {
   return createPracticeSession(wordLists, storage).words.filter(word => targetGroups.has(word.variantGroupId ?? ''));
 }
 
-function difficultWantingStorage(dialectPreference: SpelioStorage['settings']['dialectPreference']) {
+function difficultWantingStorage(
+  dialectPreference: SpelioStorage['settings']['dialectPreference'],
+  variantDialect: PracticeWord['dialect'] = 'South Wales / Standard',
+  variantGroupId = 'want coffee'
+) {
   const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
   assert(wanting, 'Expected stage2_phrases_wanting to exist');
-  const southVariant = wanting.words.find(word => word.variantGroupId === 'want coffee' && word.dialect === 'South Wales / Standard');
-  assert(southVariant, 'Expected a South/Standard want coffee variant');
+  const difficultWord = wanting.words.find(word => word.variantGroupId === variantGroupId && word.dialect === variantDialect);
+  assert(difficultWord, `Expected a ${variantDialect} ${variantGroupId} variant`);
 
   return applyWordProgressPatch(
     {
@@ -90,10 +94,18 @@ function difficultWantingStorage(dialectPreference: SpelioStorage['settings']['d
         state: 'struggled'
       }
     },
-    southVariant,
+    difficultWord,
     { incorrect: true },
     '2026-05-05T00:00:00.000Z'
   );
+}
+
+function markWantingWordDifficult(storage: SpelioStorage, predicate: (word: PracticeWord) => boolean) {
+  const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
+  assert(wanting, 'Expected stage2_phrases_wanting to exist');
+  const word = wanting.words.find(predicate);
+  assert(word, 'Expected matching wanting word');
+  return applyWordProgressPatch(storage, word, { incorrect: true }, '2026-05-05T00:00:00.000Z');
 }
 
 function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
@@ -567,53 +579,54 @@ test('South Wales / Standard mode still prefers South/Standard variants across p
   assertEqual(variants.every(word => word.dialect === 'South Wales / Standard' || word.dialect === 'Standard'), true, 'South/Standard preference should keep choosing South/Standard variants');
 });
 
-test('Review difficult words maps a difficult paired variant to the current North Wales preference', () => {
-  const storage = difficultWantingStorage('north');
+test('Review difficult words does not substitute a difficult North Wales variant after switching to South/Standard', () => {
+  const storage = difficultWantingStorage('south_standard', 'North Wales');
   const session = createPracticeSession(wordLists, storage, true);
-
-  assertEqual(session.words.length, 1, 'Review should produce one entry for the difficult variant group');
-  assertEqual(session.words[0]?.variantGroupId, 'want coffee', 'Review should keep the difficult learning item');
-  assertEqual(session.words[0]?.dialect, 'North Wales', 'Review should prefer the linked North Wales variant');
-});
-
-test('Review difficult words recommendation respects mapped current Welsh style variants', () => {
-  const storage = difficultWantingStorage('north');
   const recommendation = getRecommendation(storage, wordLists);
 
-  assertEqual(hasDifficultWords(storage, wordLists), true, 'Mapped North variant should be reviewable');
-  assertEqual(recommendation.kind, 'review', 'Relevant mapped difficult variants should still drive review recommendation');
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'North-only difficult variant should not be review-relevant in South/Standard mode');
+  assertEqual(recommendation.kind, 'list', 'Irrelevant old North variant should not drive review recommendation');
+  assertEqual(session.words.length, 0, 'Review should not substitute the South/Standard sibling variant');
 });
 
-test('Review difficult words recommendation falls back when only irrelevant dialect variants are difficult', () => {
-  const list = missingPreferredVariantList();
-  const storage: SpelioStorage = {
-    ...createDefaultStorage(),
-    selectedListIds: [list.id],
-    currentPathPosition: list.id,
-    lastSessionResult: {
-      totalWords: 10,
-      correctWords: 9,
-      incorrectWords: 1,
-      revealedWords: 0,
-      incorrectAttempts: 1,
-      revealedLetters: 0,
-      durationSeconds: 30,
-      listIds: [list.id],
-      state: 'struggled'
-    },
-    settings: {
-      ...createDefaultStorage().settings,
-      dialectPreference: 'north'
-    }
-  };
-  const difficultStorage = applyWordProgressPatch(storage, list.words.find(word => word.id === 'south_only') as PracticeWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
-  const recommendation = getRecommendation(difficultStorage, [list]);
-  const reviewSession = createPracticeSession([list], difficultStorage, true);
+test('Review difficult words does not substitute a difficult South/Standard variant after switching to North Wales', () => {
+  const storage = difficultWantingStorage('north', 'South Wales / Standard');
+  const session = createPracticeSession(wordLists, storage, true);
+  const recommendation = getRecommendation(storage, wordLists);
 
-  assertEqual(hasDifficultWords(difficultStorage, [list]), false, 'Unmatched old dialect variant should not be recommendation-relevant');
-  assertEqual(recommendation.kind, 'list', 'Recommendation should fall back to normal progression');
-  assertEqual(reviewSession.words.length, 1, 'Explicit review session can still use the available difficult word');
-  assertEqual(reviewSession.words[0]?.id, 'south_only', 'Review fallback should use the available difficult variant');
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'South/Standard-only difficult variant should not be review-relevant in North Wales mode');
+  assertEqual(recommendation.kind, 'list', 'Irrelevant old South/Standard variant should not drive review recommendation');
+  assertEqual(session.words.length, 0, 'Review should not substitute the North Wales sibling variant');
+});
+
+test('Both difficult words remain reviewable under North and South/Standard preferences', () => {
+  const northStorage = markWantingWordDifficult(wantingStorage('north'), word => word.englishPrompt === 'need help');
+  const southStorage = markWantingWordDifficult(wantingStorage('south_standard'), word => word.englishPrompt === 'need help');
+  const northSession = createPracticeSession(wordLists, northStorage, true);
+  const southSession = createPracticeSession(wordLists, southStorage, true);
+
+  assertEqual(hasDifficultWords(northStorage, wordLists), true, 'Both difficult word should be reviewable in North Wales mode');
+  assertEqual(hasDifficultWords(southStorage, wordLists), true, 'Both difficult word should be reviewable in South/Standard mode');
+  assertEqual(northSession.words[0]?.welshAnswer, 'angen help', 'North review should include the exact Both difficult word');
+  assertEqual(southSession.words[0]?.welshAnswer, 'angen help', 'South/Standard review should include the exact Both difficult word');
+});
+
+test('Mixed Welsh reviews eligible North, South, and Both difficult words without duplicate variant groups', () => {
+  let storage = wantingStorage('mixed');
+  storage = markWantingWordDifficult(storage, word => word.variantGroupId === 'want coffee' && word.dialect === 'North Wales');
+  storage = markWantingWordDifficult(storage, word => word.variantGroupId === 'want food' && word.dialect === 'South Wales / Standard');
+  storage = markWantingWordDifficult(storage, word => word.variantGroupId === 'want food' && word.dialect === 'North Wales');
+  storage = markWantingWordDifficult(storage, word => word.englishPrompt === 'need help');
+
+  const session = createPracticeSession(wordLists, storage, true);
+  const groups = session.words
+    .map(word => word.variantGroupId?.trim())
+    .filter((groupId): groupId is string => Boolean(groupId));
+
+  assert(session.words.some(word => word.dialect === 'North Wales'), 'Mixed review should include an exact North difficult variant');
+  assert(session.words.some(word => word.dialect === 'South Wales / Standard'), 'Mixed review should include an exact South/Standard difficult variant');
+  assert(session.words.some(word => word.dialect === 'Both'), 'Mixed review should include an exact Both difficult word');
+  assertEqual(groups.length, new Set(groups).size, 'Mixed review should avoid duplicate variantGroupId entries');
 });
 
 test('missing preferred variants do not shrink a normal session', () => {

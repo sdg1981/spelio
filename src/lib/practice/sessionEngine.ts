@@ -88,7 +88,7 @@ function isSouthStandardVariant(word: PracticeWord) {
   return word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
 }
 
-function matchesDialectPreference(word: PracticeWord, preference: DialectPreference) {
+function isReviewEligibleForPreference(word: PracticeWord, preference: DialectPreference) {
   if (preference === 'mixed') return true;
   if (word.dialect === 'Both') return true;
   if (preference === 'north') return isNorthVariant(word);
@@ -149,30 +149,23 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
   return [...ungrouped, ...chosen].sort((a, b) => a.order - b.order);
 }
 
-function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage, allowDialectFallback: boolean) {
+function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage) {
   const grouped = new Map<string, PracticeWord[]>();
   const candidates: PracticeWord[] = [];
 
   for (const word of words) {
+    const difficult = storage.wordProgress[word.id]?.difficult === true;
+    const eligible = difficult && isReviewEligibleForPreference(word, storage.settings.dialectPreference);
     const groupId = word.variantGroupId?.trim();
     if (!groupId) {
-      if (storage.wordProgress[word.id]?.difficult === true && (allowDialectFallback || matchesDialectPreference(word, storage.settings.dialectPreference))) {
-        candidates.push(word);
-      }
+      if (eligible) candidates.push(word);
       continue;
     }
-    grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
+    if (eligible) grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
   }
 
   for (const group of grouped.values()) {
-    if (!group.some(word => storage.wordProgress[word.id]?.difficult === true)) continue;
-
-    const matchingGroup = group.filter(word => matchesDialectPreference(word, storage.settings.dialectPreference));
-    if (matchingGroup.length > 0) {
-      candidates.push(filterDialectVariants(matchingGroup, storage.settings.dialectPreference, storage)[0] as PracticeWord);
-    } else if (allowDialectFallback) {
-      candidates.push(filterDialectVariants(group.filter(word => storage.wordProgress[word.id]?.difficult === true), storage.settings.dialectPreference, storage)[0] as PracticeWord);
-    }
+    candidates.push(filterDialectVariants(group, storage.settings.dialectPreference, storage)[0] as PracticeWord);
   }
 
   return candidates.filter(Boolean);
@@ -187,7 +180,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   const dialectResolvedCandidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference, storage);
 
   const pool = reviewDifficult
-    ? getReviewCandidates(allCandidates, storage, true)
+    ? getReviewCandidates(allCandidates, storage)
     : dialectResolvedCandidates;
   const words = selectSessionWords(pool, eligibleLists.map(list => list.id), storage);
 
@@ -211,5 +204,5 @@ export function hasDifficultWords(storage: SpelioStorage, lists?: WordList[]) {
   if (!lists) return Object.values(storage.wordProgress).some(progress => progress.difficult === true);
 
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
-  return getReviewCandidates(activeWords, storage, false).length > 0;
+  return getReviewCandidates(activeWords, storage).length > 0;
 }
