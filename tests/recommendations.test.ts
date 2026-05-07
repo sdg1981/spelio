@@ -15,7 +15,6 @@ import {
 } from '../src/lib/practice/storage';
 import { getRecommendation } from '../src/lib/practice/recommendations';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
-import { checkForMilestone } from '../src/lib/practice/milestones';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -557,24 +556,7 @@ test('reset progress creates storage with empty cumulative stats', () => {
   const storage = createDefaultStorage();
 
   assertEqual(storage.learningStats?.totalActiveMs, 0, 'Fresh storage should not retain active practice time');
-  assertEqual(storage.shownMilestones.length, 0, 'Fresh storage should not retain shown milestone history');
   assertEqual(formatCumulativeProgress(storage, wordLists), null, 'Fresh storage should not show cumulative progress');
-});
-
-test('older storage defaults shown milestones to empty', () => {
-  const storage = normaliseStorage({
-    selectedListIds: ['foundations_numbers'],
-    wordProgress: {}
-  });
-
-  assertEqual(storage.shownMilestones.length, 0, 'Older storage should initialise milestone history safely');
-});
-
-test('milestone helper returns the highest newly reached milestone', () => {
-  assertEqual(checkForMilestone(9, [])?.threshold, undefined, 'No milestone should show before the first threshold');
-  assertEqual(checkForMilestone(55, [])?.threshold, 50, 'Crossing multiple thresholds should show only the highest one');
-  assertEqual(checkForMilestone(120, [100])?.threshold, undefined, 'Already shown thresholds should not repeat');
-  assertEqual(checkForMilestone(260, [100])?.threshold, 250, 'A later higher threshold should still show');
 });
 
 test('active practice time caps long idle gaps', () => {

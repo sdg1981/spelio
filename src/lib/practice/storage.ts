@@ -56,7 +56,6 @@ export interface SpelioStorage {
   lastSessionResult: SessionResult | null;
   completedNormalSessionCount?: number;
   learningStats?: LearningStats;
-  shownMilestones: number[];
   wordProgress: Record<string, WordProgress>;
   listProgress: Record<string, ListProgress>;
   settings: SpelioSettings;
@@ -106,7 +105,6 @@ export const defaultStorage: SpelioStorage = {
   lastSessionResult: null,
   completedNormalSessionCount: 0,
   learningStats: createDefaultLearningStats(),
-  shownMilestones: [],
   wordProgress: {},
   listProgress: {},
   settings: defaultSettings
@@ -117,7 +115,6 @@ export function createDefaultStorage(): SpelioStorage {
     ...defaultStorage,
     selectedListIds: [...defaultStorage.selectedListIds],
     learningStats: createDefaultLearningStats(),
-    shownMilestones: [],
     wordProgress: {},
     listProgress: {},
     settings: { ...defaultSettings }
@@ -158,9 +155,6 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       firstPractisedAt: typeof learningStats.firstPractisedAt === 'string' ? learningStats.firstPractisedAt : null,
       lastPractisedAt: typeof learningStats.lastPractisedAt === 'string' ? learningStats.lastPractisedAt : null
     },
-    shownMilestones: Array.isArray(source.shownMilestones)
-      ? source.shownMilestones.filter((threshold): threshold is number => Number.isFinite(threshold))
-      : [],
     wordProgress: isObject(source.wordProgress) ? source.wordProgress as Record<string, WordProgress> : {},
     listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
     settings: {
