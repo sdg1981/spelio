@@ -689,20 +689,17 @@ Purpose: show completion, performance, and the best next action.
 
 Content:
 
-- Complete progress bar
-- Success icon/checkmark
+- Spelio logo
+- Circular score indicator:
+  - Show correct answers over total words, for example “9/10”
+  - Show a proportional circular progress ring around the score
+  - Use the shared success green for the progress ring
 - Heading:
-  - “Excellent!”
-- Message:
-  - “You’ve completed this session”
-- Stats:
-  - Correct
-  - Incorrect
-  - Revealed
-- Do not show raw elapsed session time in the main stats row.
+  - “Session complete”
 - Optional subtle cumulative progress line:
   - “Total progress: 142 spellings learned”
   - “Total progress: 142 spellings learned · 38 minutes practised”
+- Next word list title / recommendation area, where appropriate
 - Primary recommended action
 - Secondary action
 - Tertiary action

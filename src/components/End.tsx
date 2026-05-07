@@ -1,21 +1,48 @@
 import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
-import { Check, Play, SlidersHorizontal } from './Icons';
+import { Play, SlidersHorizontal } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
 
-function getEncouragement(result: SessionResult, t: Translate) {
-  const mostlyRevealed = result.revealedWords >= Math.ceil(result.totalWords / 2);
-  const veryDifficult = result.correctWords <= Math.floor(result.totalWords / 2) || result.revealedLetters >= result.totalWords;
+function clampScore(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(Math.max(value, min), max);
+}
 
-  if (mostlyRevealed || veryDifficult) return t('end.trickyEncouragement');
-  if (result.incorrectWords > 0 || result.revealedWords > 0 || result.incorrectAttempts > 0 || result.revealedLetters > 0) {
-    return t('end.reviewHelps');
-  }
+function CircularScore({
+  correctWords,
+  totalWords,
+  correctLabel
+}: {
+  correctWords?: number;
+  totalWords?: number;
+  correctLabel: string;
+}) {
+  const total = clampScore(totalWords ?? 0, 0, Number.MAX_SAFE_INTEGER);
+  const correct = clampScore(correctWords ?? 0, 0, total);
+  const percentage = total > 0 ? clampScore((correct / total) * 100, 0, 100) : 0;
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - percentage / 100);
 
-  return t('end.greatWork');
+  return (
+    <div className="end-score-ring" aria-label={`${correct}/${total} ${correctLabel}`} role="img">
+      <svg className="end-score-ring-svg" viewBox="0 0 132 132" aria-hidden="true">
+        <circle className="end-score-ring-track" cx="66" cy="66" r={radius} />
+        <circle
+          className="end-score-ring-progress"
+          cx="66"
+          cy="66"
+          r={radius}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+        />
+      </svg>
+      <span className="end-score-ring-text">{correct}/{total}</span>
+    </div>
+  );
 }
 
 export function EndScreen({
@@ -58,40 +85,26 @@ export function EndScreen({
     : shouldChooseAnotherList
       ? onChangeLists
       : onContinue;
-  const encouragement = shouldPrioritiseReview
-    ? t('end.trickyEncouragement')
-    : getEncouragement(result, t);
-  const stats = [
-    `${result.correctWords} ${t('end.correct')}`,
-    `${result.incorrectWords} ${t('end.incorrect')}`,
-    ...(result.revealedWords > 0 ? [`${result.revealedWords} ${t('end.revealed')}`] : [])
-  ];
 
   return (
     <main className="end-bg">
       <section className="page-shell end-shell end-v2-shell">
         <div className="end-logo"><Logo onClick={onHome} backHomeLabel={t('practice.backToHome')} /></div>
 
-        <div className="end-success-orb"><Check size={52} strokeWidth={2.2} /></div>
+        <CircularScore
+          correctWords={result.correctWords}
+          totalWords={result.totalWords}
+          correctLabel={t('end.correct')}
+        />
 
         <div className="end-copy">
           <h1>{t('end.sessionComplete')}</h1>
-          <p>{encouragement}</p>
-        </div>
-
-        <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
-          {shouldPrioritiseReview && <h2>{t('home.focusTricky')}</h2>}
-          <div className="end-stats-line" aria-label={t('end.sessionStats')}>
-            {stats.map((item, index) => (
-              <span key={item}>
-                {index > 0 && <span className="end-stat-separator" aria-hidden="true">•</span>}
-                {item}
-              </span>
-            ))}
-          </div>
           {progressSummary && (
             <p className="end-progress-line">{progressSummary}</p>
           )}
+        </div>
+
+        <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
           {!shouldPrioritiseReview && (
             <>
               <h2>{t('end.nextUp')}</h2>
