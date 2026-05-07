@@ -1,5 +1,5 @@
 import type { AdminFocusFilters } from './filters';
-import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 
 export interface AdminWordWithListName extends AdminWord {
   listName: string;
@@ -24,6 +24,8 @@ export interface AdminRepository {
   createWord(word: AdminWord): Promise<AdminWord>;
   deleteWord(id: string): Promise<void>;
   reorderWords(listId: string, orderedWordIds: string[]): Promise<void>;
+  previewImport(payload: unknown): Promise<ImportValidationResult>;
+  importContent(payload: unknown): Promise<ImportContentResult>;
   validateImport(payload: unknown): Promise<ImportValidationResult>;
   listStages(): Promise<AdminStructureOption[]>;
   listFocusCategories(): Promise<AdminStructureOption[]>;

@@ -1,8 +1,7 @@
 import { adminDialects, adminFocusCategories, adminStages, adminWordListCollections, adminWordLists } from '../data/mockAdminData';
 import type { AdminFocusFilters } from './filters';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
-import { getAudioHealth } from './adminRepository';
-import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
@@ -124,24 +123,69 @@ export const mockAdminRepository: AdminRepository = {
     });
   },
 
-  async validateImport(payload: unknown): Promise<ImportValidationResult> {
-    const validation = validateImportPayload(payload, collections.map(collection => collection.id));
-    const parsed = typeof payload === 'string' ? safeParse(payload) : payload;
-    const importedLists = isRecord(parsed) && Array.isArray(parsed.lists) ? parsed.lists : [];
-    const ids = importedLists.map(item => isRecord(item) ? String(item.id ?? '') : '').filter(Boolean);
-    const existingIds = new Set(lists.map(list => list.id));
-    const updatedLists = ids.filter(id => existingIds.has(id)).length;
-    const newLists = ids.length - updatedLists;
-    const totalWords = importedLists.reduce((sum, item) => sum + (isRecord(item) && Array.isArray(item.words) ? item.words.length : 0), 0);
-    const missingAudio = lists.reduce((sum, list) => sum + getAudioHealth(list).missing, 0);
+  async previewImport(payload: unknown): Promise<ImportValidationResult> {
+    const preview = validateImportPayload(payload, {
+      existingCollectionIds: collections.map(collection => collection.id),
+      existingListIds: lists.map(list => list.id),
+      existingWordIds: lists.flatMap(list => list.words.map(word => word.id))
+    });
+    return preview;
+  },
+
+  async importContent(payload: unknown): Promise<ImportContentResult> {
+    // TODO: Move production imports behind a protected server/API route with transaction-like behaviour.
+    const preview = validateImportPayload(payload, {
+      existingCollectionIds: collections.map(collection => collection.id),
+      existingListIds: lists.map(list => list.id),
+      existingWordIds: lists.flatMap(list => list.words.map(word => word.id))
+    });
+    if (preview.errors.length) {
+      return {
+        success: false,
+        collectionsUpserted: 0,
+        listsUpserted: 0,
+        wordsUpserted: 0,
+        errors: preview.errors,
+        warnings: preview.warnings
+      };
+    }
+
+    preview.content.collections.forEach(collection => {
+      const saved = cloneCollection(collection);
+      collections = collections.some(item => item.id === saved.id)
+        ? collections.map(item => item.id === saved.id ? saved : item)
+        : [...collections, saved];
+    });
+    collections = collections.sort((a, b) => a.order - b.order);
+
+    preview.content.lists.forEach(importedList => {
+      const existing = lists.find(list => list.id === importedList.id);
+      const importedWordIds = new Set(importedList.words.map(word => word.id));
+      const mergedWords = existing
+        ? [
+            ...existing.words.filter(word => !importedWordIds.has(word.id)),
+            ...importedList.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] }))
+          ].sort((a, b) => a.order - b.order)
+        : importedList.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] }));
+      const saved = cloneList({ ...importedList, collectionName: collectionName(importedList.collectionId), words: mergedWords });
+      lists = lists.some(item => item.id === saved.id)
+        ? lists.map(item => item.id === saved.id ? saved : item)
+        : [...lists, saved];
+    });
+    lists = lists.sort((a, b) => a.order - b.order);
+
     return {
-      newLists,
-      updatedLists,
-      totalWords: totalWords || validation.totalWords,
-      duplicates: validation.duplicates,
-      missingAudio,
-      warnings: validation.warnings
+      success: true,
+      collectionsUpserted: preview.content.collections.length,
+      listsUpserted: preview.content.lists.length,
+      wordsUpserted: preview.content.words.length,
+      errors: [],
+      warnings: preview.warnings
     };
+  },
+
+  async validateImport(payload: unknown): Promise<ImportValidationResult> {
+    return this.previewImport(payload);
   },
 
   async listStages() {
@@ -156,15 +200,3 @@ export const mockAdminRepository: AdminRepository = {
     return adminDialects.map((name, index) => structureOption(name, index + 1));
   }
 };
-
-function safeParse(payload: string): unknown {
-  try {
-    return JSON.parse(payload);
-  } catch {
-    return {};
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}

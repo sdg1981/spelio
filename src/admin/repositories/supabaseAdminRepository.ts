@@ -1,9 +1,9 @@
 import { supabase } from '../../lib/supabaseClient';
-import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ImportValidationResult } from '../types';
+import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ImportContentResult, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
-import { validateImportPayload } from './importValidation';
+import { validateImportPayload, type ImportPreview } from './importValidation';
 
 type WordListRow = {
   id: string;
@@ -208,11 +208,94 @@ export const supabaseAdminRepository: AdminRepository = {
     if (failure?.error) throw failure.error;
   },
 
-  async validateImport(payload: unknown): Promise<ImportValidationResult> {
+  async previewImport(payload: unknown): Promise<ImportValidationResult> {
     const client = requireSupabase();
-    const { data, error } = await client.from('word_list_collections').select('id');
-    if (error) throw error;
-    return validateImportPayload(payload, (data ?? []).map(collection => collection.id));
+    const [collectionsResult, listsResult, wordsResult] = await Promise.all([
+      client.from('word_list_collections').select('id'),
+      client.from('word_lists').select('id'),
+      client.from('words').select('id')
+    ]);
+    if (collectionsResult.error) throw collectionsResult.error;
+    if (listsResult.error) throw listsResult.error;
+    if (wordsResult.error) throw wordsResult.error;
+    return validateImportPayload(payload, {
+      existingCollectionIds: (collectionsResult.data ?? []).map(collection => collection.id),
+      existingListIds: (listsResult.data ?? []).map(list => list.id),
+      existingWordIds: (wordsResult.data ?? []).map(word => word.id)
+    });
+  },
+
+  async importContent(payload: unknown): Promise<ImportContentResult> {
+    const client = requireSupabase();
+    // TODO: Move production imports behind a protected server/API route with transaction-like behaviour.
+    const preview = await this.previewImport(payload) as ImportPreview;
+    if (preview.errors.length) {
+      return {
+        success: false,
+        collectionsUpserted: 0,
+        listsUpserted: 0,
+        wordsUpserted: 0,
+        errors: preview.errors,
+        warnings: preview.warnings
+      };
+    }
+
+    const content = preview.content;
+
+    if (content.collections.length) {
+      const { error } = await client.from('word_list_collections').upsert(content.collections.map(toCollectionRow), { onConflict: 'id' });
+      if (error) {
+        return {
+          success: false,
+          collectionsUpserted: 0,
+          listsUpserted: 0,
+          wordsUpserted: 0,
+          errors: [`Collection import failed: ${error.message}`],
+          warnings: preview.warnings
+        };
+      }
+    }
+
+    if (content.lists.length) {
+      const { error } = await client.from('word_lists').upsert(content.lists.map(toWordListRow), { onConflict: 'id' });
+      if (error) {
+        return {
+          success: false,
+          collectionsUpserted: content.collections.length,
+          listsUpserted: 0,
+          wordsUpserted: 0,
+          errors: [`Word-list import failed: ${error.message}`],
+          warnings: preview.warnings
+        };
+      }
+    }
+
+    if (content.words.length) {
+      const { error } = await client.from('words').upsert(content.words.map(toWordRow), { onConflict: 'id' });
+      if (error) {
+        return {
+          success: false,
+          collectionsUpserted: content.collections.length,
+          listsUpserted: content.lists.length,
+          wordsUpserted: 0,
+          errors: [`Word import failed: ${error.message}`],
+          warnings: preview.warnings
+        };
+      }
+    }
+
+    return {
+      success: true,
+      collectionsUpserted: content.collections.length,
+      listsUpserted: content.lists.length,
+      wordsUpserted: content.words.length,
+      errors: [],
+      warnings: preview.warnings
+    };
+  },
+
+  async validateImport(payload: unknown): Promise<ImportValidationResult> {
+    return this.previewImport(payload);
   },
 
   async listStages() {

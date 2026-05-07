@@ -80,10 +80,25 @@ export interface AdminStructureOption {
 }
 
 export interface ImportValidationResult {
+  collections: number;
+  defaultedCollections: number;
+  totalLists: number;
   newLists: number;
   updatedLists: number;
+  newWords: number;
+  updatedWords: number;
   totalWords: number;
   duplicates: number;
   missingAudio: number;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface ImportContentResult {
+  success: boolean;
+  collectionsUpserted: number;
+  listsUpserted: number;
+  wordsUpserted: number;
+  errors: string[];
   warnings: string[];
 }
