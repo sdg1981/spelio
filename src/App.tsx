@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
@@ -12,6 +12,8 @@ import { formatCumulativeProgress } from './lib/practice/progress';
 
 type Screen = 'home' | 'practice' | 'end';
 
+const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
+
 function normalizeSelectedListIds(selectedIds: string[]) {
   const fallback = wordLists[0] ? [wordLists[0].id] : [];
   return selectedIds.length ? selectedIds : fallback;
@@ -22,6 +24,14 @@ function sameListSelection(left: string[], right: string[]) {
 }
 
 export default function App() {
+  if (window.location.pathname.startsWith('/admin')) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-white" />}>
+        <AdminApp />
+      </Suspense>
+    );
+  }
+
   const [storage, setStorage] = useState<SpelioStorage>(() => loadSpelioStorage());
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
