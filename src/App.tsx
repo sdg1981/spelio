@@ -65,9 +65,10 @@ export default function App() {
   const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recapWordCount = useMemo(() => getRecapWordCount(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
-    () => getRecommendation(storage, wordLists, t),
+    () => getRecommendation(storage, wordLists, t, interfaceLanguage),
     [
       difficultWords,
+      interfaceLanguage,
       storage.currentPathPosition,
       storage.lastSessionResult,
       storage.listProgress,

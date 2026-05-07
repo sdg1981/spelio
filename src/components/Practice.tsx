@@ -7,6 +7,7 @@ import type { PracticeWord, WordList } from '../data/wordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
+import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -1023,14 +1024,6 @@ const WordListRow = memo(function WordListRow({
   );
 });
 
-function getWordListDisplayName(list: WordList, interfaceLanguage: InterfaceLanguage) {
-  return interfaceLanguage === 'cy' && list.nameCy?.trim() ? list.nameCy : list.name;
-}
-
-function getWordListDisplayDescription(list: WordList, interfaceLanguage: InterfaceLanguage) {
-  return interfaceLanguage === 'cy' && list.descriptionCy?.trim() ? list.descriptionCy : list.description;
-}
-
 function getWordListStageLabel(stage: string, t: Translate) {
   if (stage === 'Foundations') return t('wordLists.stageFoundations');
   if (stage === 'Core') return t('wordLists.stageCore');
@@ -1064,8 +1057,8 @@ export function WordListModal({
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return lists;
     return lists.filter(list => {
-      const displayName = getWordListDisplayName(list, interfaceLanguage);
-      const displayDescription = getWordListDisplayDescription(list, interfaceLanguage);
+      const displayName = getListDisplayName(list, interfaceLanguage);
+      const displayDescription = getListDisplayDescription(list, interfaceLanguage);
       return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
     });
   }, [interfaceLanguage, lists, query]);
@@ -1107,7 +1100,7 @@ export function WordListModal({
                   <WordListRow
                     key={list.id}
                     list={list}
-                    displayName={getWordListDisplayName(list, interfaceLanguage)}
+                    displayName={getListDisplayName(list, interfaceLanguage)}
                     checked={selectedSet.has(list.id)}
                     onToggle={toggleList}
                   />

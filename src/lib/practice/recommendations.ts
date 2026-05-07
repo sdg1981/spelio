@@ -1,7 +1,8 @@
 import type { PracticeWord, WordList } from '../../data/wordLists';
-import type { Translate } from '../../i18n';
+import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
 import { hasDifficultWords } from './sessionEngine';
+import { getListDisplayName } from './wordListDisplay';
 import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
@@ -15,8 +16,8 @@ function findList(lists: WordList[], id?: string | null) {
   return id ? lists.find(list => list.id === id) : undefined;
 }
 
-function asListRecommendation(list: WordList, t?: Translate): Recommendation {
-  return { kind: 'list', listId: list.id, title: t ? t('home.continueLearning') : 'Continue learning', subtitle: list.name };
+function asListRecommendation(list: WordList, t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {
+  return { kind: 'list', listId: list.id, title: t ? t('home.continueLearning') : 'Continue learning', subtitle: getListDisplayName(list, interfaceLanguage) };
 }
 
 function wasJustPractised(storage: SpelioStorage, listId: string) {
@@ -50,7 +51,7 @@ function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordLis
   });
 }
 
-export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate): Recommendation {
+export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {
   const difficultWordsExist = hasDifficultWords(storage, lists);
   const selectedLists = getSelectedLists(storage.selectedListIds, lists);
 
@@ -74,7 +75,7 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
     return {
       kind: 'list',
       title: t ? t('home.continueMixedPractice') : 'Continue mixed practice',
-      subtitle: getSelectedListLabel(storage.selectedListIds, lists, t)
+      subtitle: getSelectedListLabel(storage.selectedListIds, lists, t, interfaceLanguage)
     };
   }
 
@@ -93,10 +94,10 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
     const nextList = findList(lists, current.nextListId);
 
     if (currentProgress?.completed === true && nextList && wasJustPractised(storage, current.id)) {
-      return asListRecommendation(nextList, t);
+      return asListRecommendation(nextList, t, interfaceLanguage);
     }
 
-    return asListRecommendation(current, t);
+    return asListRecommendation(current, t, interfaceLanguage);
   }
 
   const fallback = lists[0];
@@ -104,6 +105,6 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
     kind: 'list',
     listId: fallback?.id,
     title: t ? t('home.continueLearning') : 'Continue learning',
-    subtitle: fallback?.name ?? (t ? t('home.selectWordList') : 'Select a word list')
+    subtitle: fallback ? getListDisplayName(fallback, interfaceLanguage) : (t ? t('home.selectWordList') : 'Select a word list')
   };
 }
