@@ -55,7 +55,27 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
     throw new Error(payload?.error ?? (response.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${response.status}).`));
   }
 
-  return response.blob();
+  const contentType = response.headers.get('content-type') ?? '';
+  const audioBuffer = await response.arrayBuffer();
+  const audioBytes = new Uint8Array(audioBuffer);
+
+  if (audioBytes.byteLength < 100) {
+    throw new Error('Azure synthesis returned an unexpectedly small audio payload.');
+  }
+
+  if (audioBytes[0] === 123) {
+    throw new Error('Azure synthesis returned JSON instead of MP3 audio.');
+  }
+
+  const looksLikeMp3 =
+    (audioBytes[0] === 0x49 && audioBytes[1] === 0x44 && audioBytes[2] === 0x33) ||
+    (audioBytes[0] === 0xff && (audioBytes[1] & 0xe0) === 0xe0);
+
+  if (!looksLikeMp3) {
+    throw new Error(`Azure synthesis returned a non-MP3 payload${contentType ? ` (${contentType})` : ''}.`);
+  }
+
+  return new Blob([audioBuffer], { type: 'audio/mpeg' });
 }
 
 export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {

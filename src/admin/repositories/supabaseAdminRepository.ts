@@ -260,10 +260,11 @@ export const supabaseAdminRepository: AdminRepository = {
     const client = requireSupabase();
     const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    if (file.size < 100) throw new Error('Audio upload was blocked because the generated file was unexpectedly small.');
     const path = createAudioStoragePath(word);
     const { error } = await client.storage
       .from('audio')
-      .upload(path, file, { contentType: 'audio/mpeg', upsert: true });
+      .upload(path, file, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
     if (error) throw error;
     const { data } = client.storage.from('audio').getPublicUrl(path);
     if (!data.publicUrl) throw new Error('Audio upload did not return a public URL.');

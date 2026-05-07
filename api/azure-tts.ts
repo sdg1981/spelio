@@ -11,7 +11,11 @@ type ApiResponse = {
   status: (code: number) => ApiResponse;
   json: (body: { ok: boolean; error?: string }) => void;
   setHeader: (name: string, value: string | string[]) => void;
-  send: (body: Uint8Array) => void;
+  send: (body: unknown) => void;
+};
+
+declare const Buffer: {
+  from: (value: ArrayBuffer) => Uint8Array;
 };
 
 const voice = 'cy-GB-NiaNeural';
@@ -51,10 +55,14 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       .json({ ok: false, error: azureResponse.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${azureResponse.status}).` });
   }
 
-  const audio = new Uint8Array(await azureResponse.arrayBuffer());
+  const audioBuffer = await azureResponse.arrayBuffer();
+  if (audioBuffer.byteLength < 100) {
+    return response.status(502).json({ ok: false, error: 'Azure returned an unexpectedly small audio payload.' });
+  }
+
   response.setHeader('Content-Type', 'audio/mpeg');
   response.setHeader('Cache-Control', 'no-store');
-  return response.status(200).send(audio);
+  return response.status(200).send(Buffer.from(audioBuffer));
 }
 
 function parseBody(body: unknown): { text?: unknown } | null {
