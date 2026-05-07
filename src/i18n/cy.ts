@@ -1,4 +1,8 @@
 export const cy = {
+  language: {
+    switchToEnglish: 'Newid iaith y rhyngwyneb i Saesneg',
+    switchToWelsh: 'Newid iaith y rhyngwyneb i Gymraeg'
+  },
   home: {
     firstHeadingLine1: 'Teipiwch beth rydych yn ei glywed.',
     firstHeadingLine2: 'Dysgwch sillafu Cymraeg.',

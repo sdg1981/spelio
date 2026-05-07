@@ -1,4 +1,8 @@
 export const en = {
+  language: {
+    switchToEnglish: 'Switch interface language to English',
+    switchToWelsh: 'Switch interface language to Welsh'
+  },
   home: {
     firstHeadingLine1: 'Type what you hear.',
     firstHeadingLine2: 'Learn Welsh spelling.',

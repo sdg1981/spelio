@@ -2,6 +2,7 @@ import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
 import { List, Play, RotateCcw } from './Icons';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
 
@@ -55,6 +56,12 @@ export function Home({
 
   return (
     <main className="homepage-bg">
+      <LanguageSwitcher
+        interfaceLanguage={interfaceLanguage}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+        variant="homepageTop"
+      />
       <section className={`page-shell home-shell ${shellStateClass}`}>
         <div className="home-logo">
           <Logo animateCursor />

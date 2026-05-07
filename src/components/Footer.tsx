@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Heart } from './Icons';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import type { InterfaceLanguage, Translate } from '../i18n';
 
 type FooterProps = {
@@ -87,11 +88,12 @@ export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageC
   return (
     <>
       <footer className={classes} aria-label={t('footer.ariaLabel')}>
-        <span className="footer-language-switcher" aria-label={t('settings.interfaceLanguage')}>
-          <button className={interfaceLanguage === 'en' ? 'active' : ''} type="button" onClick={() => onInterfaceLanguageChange('en')}>English</button>
-          <span aria-hidden="true">·</span>
-          <button className={interfaceLanguage === 'cy' ? 'active' : ''} type="button" onClick={() => onInterfaceLanguageChange('cy')}>Cymraeg</button>
-        </span>
+        <LanguageSwitcher
+          interfaceLanguage={interfaceLanguage}
+          onInterfaceLanguageChange={onInterfaceLanguageChange}
+          t={t}
+          variant="footer"
+        />
         <span className="footer-line">
           <span className="footer-made-with">
             {t('footer.madeWith')} <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> {t('footer.forWales')}
