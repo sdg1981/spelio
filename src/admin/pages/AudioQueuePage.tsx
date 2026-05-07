@@ -4,6 +4,7 @@ import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AudioStatusPill } from '../components/audioStatus';
 import { AdminButton, AdminCard } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
+import { hasPlayableAudioUrl, playAudioUrl } from '../../lib/audioPlayback';
 
 export function AudioQueuePage({ repository }: { repository: AdminRepository }) {
   const [allWords, setAllWords] = useState<AdminWordWithListName[]>([]);
@@ -93,7 +94,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
               </div>
               <AudioStatusPill status={word.audioStatus} />
               <div className="flex flex-wrap justify-end gap-2">
-                <AdminButton onClick={() => word.audioUrl && void new Audio(word.audioUrl).play()} disabled={!word.audioUrl}>
+                <AdminButton onClick={() => void playAudioUrl(word.audioUrl)} disabled={!hasPlayableAudioUrl(word.audioUrl)}>
                   <Play size={15} /> Preview
                 </AdminButton>
                 <AdminButton onClick={() => runAction(() => word.audioStatus === 'failed' ? repository.retryAudioGeneration(word.id) : repository.generateAudioForWord(word.id), 'Audio generation finished.')} disabled={busy}>

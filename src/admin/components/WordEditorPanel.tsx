@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp, Info, Play, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { AdminWord } from '../types';
+import { hasPlayableAudioUrl, playAudioUrl } from '../../lib/audioPlayback';
 import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminTextarea, Field } from './primitives';
 
@@ -25,6 +26,7 @@ export function WordEditorPanel({
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const hasAudioPreview = hasPlayableAudioUrl(word.audioUrl);
 
   return (
     <aside className="rounded-lg border border-slate-200 bg-white shadow-[0_18px_42px_rgba(7,21,34,.035)] xl:sticky xl:top-8">
@@ -88,10 +90,10 @@ export function WordEditorPanel({
           <h3 className="font-black">Audio</h3>
           <AudioStatusPill status={word.audioStatus} />
         </div>
-        <p className="mb-4 text-sm text-slate-500">{word.audioUrl ? 'Audio file is linked for this word.' : 'No audio file for this word yet.'}</p>
+        <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
         <div className="flex flex-wrap gap-2">
-          {word.audioUrl && (
-            <AdminButton onClick={() => void new Audio(word.audioUrl).play()}>
+          {hasAudioPreview && (
+            <AdminButton onClick={() => void playAudioUrl(word.audioUrl)}>
               <Play size={15} /> Preview
             </AdminButton>
           )}

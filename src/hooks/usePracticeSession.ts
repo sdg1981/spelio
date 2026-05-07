@@ -8,6 +8,7 @@ import type { SessionWord } from '../lib/practice/sessionEngine';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
+import { playAudioUrl } from '../lib/audioPlayback';
 
 interface LetterState {
   value: string;
@@ -197,8 +198,7 @@ export function usePracticeSession({
     inputLockedRef.current = false;
 
     if (storage.settings.audioPrompts && currentWord.audioUrl) {
-      const audio = new Audio(currentWord.audioUrl);
-      audio.play().catch(() => undefined);
+      void playAudioUrl(currentWord.audioUrl);
     }
   }, [currentWord?.id]);
 
@@ -225,9 +225,9 @@ export function usePracticeSession({
       return;
     }
 
-    const audio = new Audio(currentWord.audioUrl);
-    audio.currentTime = 0;
-    audio.play().catch(() => showStatus(t('practice.audioUnavailable')));
+    playAudioUrl(currentWord.audioUrl).then(played => {
+      if (!played) showStatus(t('practice.audioUnavailable'));
+    });
   }, [currentWord?.id, t]);
 
   function persistWordProgress(word: PracticeWord, patch: WordProgressPatch) {
