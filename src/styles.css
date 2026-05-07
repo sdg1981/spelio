@@ -57,6 +57,8 @@
 .wordlist-body .search-input{margin-top:32px;}
 .sticky-done{position:sticky;bottom:0;z-index:2;flex:0 0 auto;background:linear-gradient(to bottom,rgba(255,255,255,.94),#fff 28%);box-shadow:0 -12px 32px rgba(7,21,34,.045);margin-top:0;padding:26px 0 32px;}
 .check-row{cursor:pointer;}
+.collection-title{margin-bottom:18px;color:var(--ink);font-size:18px;font-weight:900;letter-spacing:-.03em;}
+.stage-group+.stage-group{margin-top:28px;}
 .check-row:hover .check-name{color:var(--red);}
 .check-left{flex:1 1 auto;}
 .check-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -107,6 +109,8 @@
   .wordlist-body{padding-top:30px;padding-bottom:22px;}
   .list-grid{display:block;max-height:none;overflow:visible;margin-top:28px;}
   .list-grid>div+div{margin-top:42px;}
+  .collection-title{font-size:22px;}
+  .stage-group+.stage-group{margin-top:34px;}
   .sticky-done{padding:22px 0 26px;}
   .done-row{gap:18px;}
   .done-button{min-width:132px;}

@@ -1,5 +1,27 @@
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'generated' | 'failed';
 export type AdminDialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
+export type AdminCollectionType = 'spelio_core' | 'curriculum' | 'course' | 'school' | 'teacher' | 'personal' | 'custom';
+export type AdminCollectionOwnerType = 'spelio' | 'school' | 'teacher' | 'user' | null;
+
+export const DEFAULT_COLLECTION_ID = 'spelio_core_welsh';
+
+export interface AdminWordListCollection {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: AdminCollectionType;
+  sourceLanguage: string;
+  targetLanguage: string;
+  curriculumKeyStage: string | null;
+  curriculumArea: string | null;
+  ownerType: AdminCollectionOwnerType;
+  ownerId: string | null;
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface AdminWord {
   id: string;
@@ -22,6 +44,8 @@ export interface AdminWord {
 
 export interface AdminWordList {
   id: string;
+  collectionId: string;
+  collectionName: string;
   name: string;
   nameCy: string;
   description: string;

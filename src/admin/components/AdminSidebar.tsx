@@ -9,6 +9,7 @@ const navGroups = [
     label: 'Content',
     items: [
       { label: 'Overview', path: '/admin', icon: BarChart3 },
+      { label: 'Collections', path: '/admin/collections', icon: FolderTree },
       { label: 'Word Lists', path: '/admin/word-lists', icon: Files },
       { label: 'Words', path: '/admin/words', icon: BookOpen },
       { label: 'Audio Queue', path: '/admin/audio', icon: Headphones },

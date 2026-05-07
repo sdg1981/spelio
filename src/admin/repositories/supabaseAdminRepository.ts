@@ -1,11 +1,13 @@
 import { supabase } from '../../lib/supabaseClient';
-import type { AdminStructureOption, AdminWord, AdminWordList, AudioStatus, ImportValidationResult } from '../types';
+import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ImportValidationResult } from '../types';
+import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload } from './importValidation';
 
 type WordListRow = {
   id: string;
+  collection_id?: string | null;
   name: string;
   name_cy?: string | null;
   description: string;
@@ -24,7 +26,26 @@ type WordListRow = {
   updated_at: string;
   stages?: { name: string } | null;
   focus_categories?: { name: string } | null;
+  word_list_collections?: { name: string } | null;
   words?: WordRow[];
+};
+
+type CollectionRow = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: AdminCollectionType;
+  source_language: string;
+  target_language: string;
+  curriculum_key_stage: string | null;
+  curriculum_area: string | null;
+  owner_type: AdminCollectionOwnerType;
+  owner_id: string | null;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 type WordRow = {
@@ -66,11 +87,45 @@ export const supabaseAdminRepository: AdminRepository = {
     if (error) throw error;
   },
 
+  async listCollections() {
+    const client = requireSupabase();
+    const { data, error } = await client.from('word_list_collections').select('*').order('order_index', { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(mapCollectionRow);
+  },
+
+  async getCollection(id: string) {
+    const client = requireSupabase();
+    const { data, error } = await client.from('word_list_collections').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapCollectionRow(data) : null;
+  },
+
+  async createCollection(collection: AdminWordListCollection) {
+    const client = requireSupabase();
+    const { data, error } = await client.from('word_list_collections').insert(toCollectionRow(collection)).select('*').single();
+    if (error) throw error;
+    return mapCollectionRow(data);
+  },
+
+  async saveCollection(collection: AdminWordListCollection) {
+    const client = requireSupabase();
+    const { data, error } = await client.from('word_list_collections').update(toCollectionRow(collection)).eq('id', collection.id).select('*').single();
+    if (error) throw error;
+    return mapCollectionRow(data);
+  },
+
+  async deleteCollection(id: string) {
+    const client = requireSupabase();
+    const { error } = await client.from('word_list_collections').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   async listWordLists() {
     const client = requireSupabase();
     const { data, error } = await client
       .from('word_lists')
-      .select('*, stages(name), focus_categories(name), words(*)')
+      .select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)')
       .order('order_index', { ascending: true });
     if (error) throw error;
     return (data ?? []).map(mapWordListRow);
@@ -80,7 +135,7 @@ export const supabaseAdminRepository: AdminRepository = {
     const client = requireSupabase();
     const { data, error } = await client
       .from('word_lists')
-      .select('*, stages(name), focus_categories(name), words(*)')
+      .select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)')
       .eq('id', id)
       .maybeSingle();
     if (error) throw error;
@@ -89,14 +144,14 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async saveWordList(list: AdminWordList) {
     const client = requireSupabase();
-    const { data, error } = await client.from('word_lists').update(toWordListRow(list)).eq('id', list.id).select('*, stages(name), focus_categories(name), words(*)').single();
+    const { data, error } = await client.from('word_lists').update(toWordListRow(list)).eq('id', list.id).select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)').single();
     if (error) throw error;
     return mapWordListRow(data);
   },
 
   async createWordList(list: AdminWordList) {
     const client = requireSupabase();
-    const { data, error } = await client.from('word_lists').insert(toWordListRow(list)).select('*, stages(name), focus_categories(name), words(*)').single();
+    const { data, error } = await client.from('word_lists').insert(toWordListRow(list)).select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)').single();
     if (error) throw error;
     return mapWordListRow(data);
   },
@@ -154,7 +209,10 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async validateImport(payload: unknown): Promise<ImportValidationResult> {
-    return validateImportPayload(payload);
+    const client = requireSupabase();
+    const { data, error } = await client.from('word_list_collections').select('id');
+    if (error) throw error;
+    return validateImportPayload(payload, (data ?? []).map(collection => collection.id));
   },
 
   async listStages() {
@@ -180,10 +238,32 @@ async function listStructure(table: 'stages' | 'focus_categories'): Promise<Admi
   return (data ?? []).map(row => ({ id: row.id, name: row.name, order: row.order_index, active: row.is_active }));
 }
 
+function mapCollectionRow(row: CollectionRow): AdminWordListCollection {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    type: row.type,
+    sourceLanguage: row.source_language,
+    targetLanguage: row.target_language,
+    curriculumKeyStage: row.curriculum_key_stage,
+    curriculumArea: row.curriculum_area,
+    ownerType: row.owner_type,
+    ownerId: row.owner_id,
+    order: row.order_index,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
 function mapWordListRow(row: WordListRow): AdminWordList {
   const words = [...(row.words ?? [])].sort((a, b) => a.order_index - b.order_index).map(mapWordRow);
   return {
     id: row.id,
+    collectionId: row.collection_id ?? DEFAULT_COLLECTION_ID,
+    collectionName: row.word_list_collections?.name ?? 'Spelio Core Welsh',
     name: row.name,
     nameCy: row.name_cy ?? '',
     description: row.description,
@@ -230,6 +310,7 @@ function mapWordRow(row: WordRow): AdminWord {
 function toWordListRow(list: AdminWordList) {
   return {
     id: list.id,
+    collection_id: list.collectionId || DEFAULT_COLLECTION_ID,
     name: list.name,
     name_cy: list.nameCy || null,
     description: list.description,
@@ -244,6 +325,24 @@ function toWordListRow(list: AdminWordList) {
     order_index: list.order,
     next_list_id: list.nextListId,
     is_active: list.isActive
+  };
+}
+
+function toCollectionRow(collection: AdminWordListCollection) {
+  return {
+    id: collection.id,
+    slug: collection.slug,
+    name: collection.name,
+    description: collection.description,
+    type: collection.type,
+    source_language: collection.sourceLanguage,
+    target_language: collection.targetLanguage,
+    curriculum_key_stage: collection.curriculumKeyStage || null,
+    curriculum_area: collection.curriculumArea || null,
+    owner_type: collection.ownerType,
+    owner_id: collection.ownerId || null,
+    order_index: collection.order,
+    is_active: collection.isActive
   };
 }
 

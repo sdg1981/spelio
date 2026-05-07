@@ -1,16 +1,20 @@
 import type { AudioStatus, ImportValidationResult } from '../types';
+import { DEFAULT_COLLECTION_ID } from '../types';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'generated', 'failed']);
+const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
+const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
 
-export function validateImportPayload(payload: unknown): ImportValidationResult {
+export function validateImportPayload(payload: unknown, existingCollectionIds: string[] = []): ImportValidationResult {
   const parsed = typeof payload === 'string' ? safeParse(payload) : payload;
   const warnings: string[] = [];
   const listIds = new Set<string>();
   const duplicateListIds = new Set<string>();
   const wordIds = new Set<string>();
   const duplicateWordIds = new Set<string>();
+  const collectionIds = new Set<string>([DEFAULT_COLLECTION_ID, ...existingCollectionIds]);
 
   if (!isRecord(parsed) || !Array.isArray(parsed.lists)) {
     return {
@@ -26,6 +30,24 @@ export function validateImportPayload(payload: unknown): ImportValidationResult 
   let totalWords = 0;
   let missingAudio = 0;
 
+  if (Array.isArray(parsed.collections)) {
+    parsed.collections.forEach((collection, collectionIndex) => {
+      if (!isRecord(collection)) {
+        warnings.push(`Collection ${collectionIndex + 1} must be an object.`);
+        return;
+      }
+      const collectionId = stringValue(collection.id);
+      if (!collectionId) warnings.push(`Collection ${collectionIndex + 1} is missing id.`);
+      else collectionIds.add(collectionId);
+      if (!stringValue(collection.slug)) warnings.push(`Collection ${collectionId || collectionIndex + 1} is missing slug.`);
+      if (!stringValue(collection.name)) warnings.push(`Collection ${collectionId || collectionIndex + 1} is missing name.`);
+      const type = stringValue(collection.type);
+      if (type && !validCollectionTypes.has(type)) warnings.push(`Collection ${collectionId || collectionIndex + 1} has invalid type "${type}".`);
+      const ownerType = collection.ownerType === null ? '' : stringValue(collection.ownerType);
+      if (ownerType && !validOwnerTypes.has(ownerType)) warnings.push(`Collection ${collectionId || collectionIndex + 1} has invalid ownerType "${ownerType}".`);
+    });
+  }
+
   parsed.lists.forEach((list, listIndex) => {
     if (!isRecord(list)) {
       warnings.push(`List ${listIndex + 1} must be an object.`);
@@ -36,6 +58,11 @@ export function validateImportPayload(payload: unknown): ImportValidationResult 
     if (!listId) warnings.push(`List ${listIndex + 1} is missing id.`);
     else if (listIds.has(listId)) duplicateListIds.add(listId);
     else listIds.add(listId);
+
+    const collectionId = stringValue(list.collectionId) || DEFAULT_COLLECTION_ID;
+    if (collectionId && !collectionIds.has(collectionId)) {
+      warnings.push(`List ${listId || listIndex + 1} references unknown collectionId "${collectionId}".`);
+    }
 
     ['name', 'description', 'language', 'dialect', 'stage'].forEach(field => {
       if (!stringValue(list[field])) warnings.push(`List ${listId || listIndex + 1} is missing ${field}.`);

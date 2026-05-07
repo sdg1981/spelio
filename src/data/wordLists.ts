@@ -4,6 +4,44 @@ export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
 export type DialectPreference = 'mixed' | 'north' | 'south_standard';
 export type LanguageCode = 'en' | 'cy' | string;
+export type WordListCollectionType = 'spelio_core' | 'curriculum' | 'course' | 'school' | 'teacher' | 'personal' | 'custom';
+export type WordListCollectionOwnerType = 'spelio' | 'school' | 'teacher' | 'user' | null;
+
+export const DEFAULT_WORD_LIST_COLLECTION_ID = 'spelio_core_welsh';
+
+export interface WordListCollection {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: WordListCollectionType;
+  sourceLanguage: LanguageCode;
+  targetLanguage: LanguageCode;
+  curriculumKeyStage?: string | null;
+  curriculumArea?: string | null;
+  ownerType: WordListCollectionOwnerType;
+  ownerId?: string | null;
+  order: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const defaultWordListCollection: WordListCollection = {
+  id: DEFAULT_WORD_LIST_COLLECTION_ID,
+  slug: 'spelio-core-welsh',
+  name: 'Spelio Core Welsh',
+  description: 'Core Welsh spelling practice lists for the Spelio MVP.',
+  type: 'spelio_core',
+  sourceLanguage: 'en',
+  targetLanguage: 'cy',
+  curriculumKeyStage: null,
+  curriculumArea: null,
+  ownerType: 'spelio',
+  ownerId: null,
+  order: 1,
+  isActive: true
+};
 
 export interface PracticeWord {
   id: string;
@@ -28,6 +66,8 @@ export interface PracticeWord {
 
 export interface WordList {
   id: string;
+  collectionId: string;
+  collection?: WordListCollection;
   name: string;
   nameCy?: string;
   description: string;
@@ -65,6 +105,7 @@ type DatasetWord = {
 
 type DatasetList = {
   id: string;
+  collectionId?: string;
   name: string;
   nameCy?: string;
   description: string;
@@ -83,7 +124,11 @@ type DatasetList = {
 };
 
 const rawLists = (dataset.lists as DatasetList[]);
-const datasetMetadata = dataset as { sourceLanguage?: LanguageCode; targetLanguage?: LanguageCode };
+const datasetMetadata = dataset as { sourceLanguage?: LanguageCode; targetLanguage?: LanguageCode; collections?: WordListCollection[] };
+const collectionMap = new Map(
+  (datasetMetadata.collections?.length ? datasetMetadata.collections : [defaultWordListCollection])
+    .map(collection => [collection.id, collection])
+);
 
 const usageNotesByWordId = new Map(
   (dataset.lists as DatasetList[])
@@ -97,6 +142,8 @@ export const wordLists: WordList[] = rawLists
   .sort((a, b) => a.order - b.order)
   .map(list => ({
     id: list.id,
+    collectionId: list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID,
+    collection: collectionMap.get(list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID) ?? defaultWordListCollection,
     name: list.name,
     nameCy: list.nameCy ?? '',
     description: list.description,

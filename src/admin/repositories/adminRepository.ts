@@ -1,5 +1,5 @@
 import type { AdminFocusFilters } from './filters';
-import type { AdminStructureOption, AdminWord, AdminWordList, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportValidationResult } from '../types';
 
 export interface AdminWordWithListName extends AdminWord {
   listName: string;
@@ -8,6 +8,11 @@ export interface AdminWordWithListName extends AdminWord {
 export interface AdminRepository {
   authMode: 'password' | 'emailPassword';
   authenticateAdmin(credentials: { email?: string; password: string }): Promise<void>;
+  listCollections(): Promise<AdminWordListCollection[]>;
+  getCollection(id: string): Promise<AdminWordListCollection | null>;
+  createCollection(collection: AdminWordListCollection): Promise<AdminWordListCollection>;
+  saveCollection(collection: AdminWordListCollection): Promise<AdminWordListCollection>;
+  deleteCollection(id: string): Promise<void>;
   listWordLists(): Promise<AdminWordList[]>;
   getWordList(id: string): Promise<AdminWordList | null>;
   saveWordList(list: AdminWordList): Promise<AdminWordList>;

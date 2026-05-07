@@ -5,22 +5,25 @@ import { AdminButton, AdminCard, AdminInput } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
 import { getAudioHealth } from '../repositories';
-import type { AdminStructureOption, AdminWordList } from '../types';
+import type { AdminStructureOption, AdminWordList, AdminWordListCollection } from '../types';
+import { DEFAULT_COLLECTION_ID } from '../types';
 
 export function WordListsPage({ navigate, repository }: { navigate: (path: string) => void; repository: AdminRepository }) {
   const [query, setQuery] = useState('');
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
   const [stages, setStages] = useState<AdminStructureOption[]>([]);
   const [focusCategories, setFocusCategories] = useState<AdminStructureOption[]>([]);
+  const [collections, setCollections] = useState<AdminWordListCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   useEffect(() => {
-    Promise.all([repository.listWordLists(), repository.listStages(), repository.listFocusCategories()])
-      .then(([lists, nextStages, nextFocusCategories]) => {
+    Promise.all([repository.listWordLists(), repository.listStages(), repository.listFocusCategories(), repository.listCollections()])
+      .then(([lists, nextStages, nextFocusCategories, nextCollections]) => {
         setWordLists(lists);
         setStages(nextStages);
         setFocusCategories(nextFocusCategories);
+        setCollections(nextCollections);
       })
       .catch(error => {
         console.error(error);
@@ -28,17 +31,20 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
       })
       .finally(() => setLoading(false));
   }, [repository]);
-  const lists = useMemo(() => wordLists.filter(list => `${list.name} ${list.stage} ${list.focus}`.toLowerCase().includes(query.toLowerCase())), [query, wordLists]);
+  const lists = useMemo(() => wordLists.filter(list => `${list.name} ${list.stage} ${list.focus} ${list.collectionName}`.toLowerCase().includes(query.toLowerCase())), [query, wordLists]);
 
   async function createList() {
     const name = window.prompt('Name this word list', 'New Word List');
     if (!name) return;
     const stage = stages[0] ?? { id: 'foundations', name: 'Foundations' };
     const focus = focusCategories[0] ?? { id: 'core-vocabulary', name: 'Core Vocabulary' };
+    const collection = collections.find(item => item.id === DEFAULT_COLLECTION_ID) ?? collections[0];
     const id = slug(name);
     const now = new Date().toISOString();
     const list: AdminWordList = {
       id,
+      collectionId: collection?.id ?? DEFAULT_COLLECTION_ID,
+      collectionName: collection?.name ?? 'Spelio Core Welsh',
       name,
       nameCy: '',
       description: 'New editorial word list.',
@@ -90,21 +96,22 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b border-slate-200 text-xs font-medium text-slate-500">
               <tr>
-                {['Name', 'Stage', 'Focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
+                {['Name', 'Collection', 'Stage', 'Focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading && (
-                <tr><td colSpan={8} className="px-5 py-10 text-center text-slate-500">Loading word lists...</td></tr>
+                <tr><td colSpan={9} className="px-5 py-10 text-center text-slate-500">Loading word lists...</td></tr>
               )}
               {!loading && lists.length === 0 && (
-                <tr><td colSpan={8} className="px-5 py-10 text-center text-slate-500">No word lists found.</td></tr>
+                <tr><td colSpan={9} className="px-5 py-10 text-center text-slate-500">No word lists found.</td></tr>
               )}
               {lists.map(list => {
                 const audio = getAudioHealth(list);
                 return (
                   <tr key={list.id} className="cursor-pointer hover:bg-slate-50" onClick={() => navigate(`/admin/word-lists/${list.id}`)}>
                     <td className="px-5 py-4 font-bold text-slate-950">{list.name}</td>
+                    <td className="px-5 py-4 text-slate-600">{list.collectionName}</td>
                     <td className="px-5 py-4 text-slate-600">{list.stage}</td>
                     <td className="px-5 py-4 text-slate-600">{list.focus}</td>
                     <td className="px-5 py-4 text-slate-600">{list.difficulty}</td>

@@ -1,5 +1,6 @@
 import dataset from '../../data/spelio_welsh_35_list_dataset_dialect_v1_1.json';
-import type { AdminDialect, AdminWord, AdminWordList, AudioStatus } from '../types';
+import type { AdminDialect, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus } from '../types';
+import { DEFAULT_COLLECTION_ID } from '../types';
 
 type RawWord = {
   id: string;
@@ -19,6 +20,7 @@ type RawWord = {
 
 type RawList = {
   id: string;
+  collectionId?: string;
   name: string;
   nameCy?: string;
   description: string;
@@ -41,9 +43,33 @@ const baseCreatedAt = '2025-05-12';
 const baseUpdatedAt = '2025-05-19';
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+export const adminWordListCollections: AdminWordListCollection[] = [
+  {
+    id: DEFAULT_COLLECTION_ID,
+    slug: 'spelio-core-welsh',
+    name: 'Spelio Core Welsh',
+    description: 'Core Welsh spelling practice lists for the Spelio MVP.',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    curriculumKeyStage: null,
+    curriculumArea: null,
+    ownerType: 'spelio',
+    ownerId: null,
+    order: 1,
+    isActive: true,
+    createdAt: baseCreatedAt,
+    updatedAt: baseUpdatedAt
+  }
+];
+
+const collectionNameById = new Map(adminWordListCollections.map(collection => [collection.id, collection.name]));
+
 export const adminWordLists: AdminWordList[] = rawLists
   .map(list => ({
     id: list.id,
+    collectionId: list.collectionId ?? DEFAULT_COLLECTION_ID,
+    collectionName: collectionNameById.get(list.collectionId ?? DEFAULT_COLLECTION_ID) ?? 'Spelio Core Welsh',
     name: list.name,
     nameCy: list.nameCy ?? '',
     description: list.description,

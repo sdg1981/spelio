@@ -1063,11 +1063,15 @@ export function WordListModal({
     });
   }, [interfaceLanguage, lists, query]);
   const groups = useMemo(() => {
-    return filteredLists.reduce<Record<string, WordList[]>>((acc, list) => {
-      (acc[list.stage] ??= []).push(list);
+    return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
+      const collectionName = list.collection?.name ?? 'Spelio Core Welsh';
+      const collection = (acc[collectionName] ??= {});
+      (collection[list.stage] ??= []).push(list);
       return acc;
     }, {});
   }, [filteredLists]);
+  const showCollections = Object.keys(groups).length > 1;
+  const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
 
   const toggleList = useCallback((listId: string) => {
     setSelectedIds(previous => (
@@ -1093,7 +1097,7 @@ export function WordListModal({
           <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
 
           <div className="list-grid">
-            {Object.entries(groups).map(([group, groupLists]) => (
+            {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
               <div key={group}>
                 <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
                 {groupLists.map(list => (
@@ -1104,6 +1108,25 @@ export function WordListModal({
                     checked={selectedSet.has(list.id)}
                     onToggle={toggleList}
                   />
+                ))}
+              </div>
+            ))}
+            {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
+              <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
+                <h3 className="collection-title">{collectionName}</h3>
+                {Object.entries(stageGroups).map(([group, groupLists]) => (
+                  <div key={`${collectionName}-${group}`} className="stage-group">
+                    <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
+                    {groupLists.map(list => (
+                      <WordListRow
+                        key={list.id}
+                        list={list}
+                        displayName={getListDisplayName(list, interfaceLanguage)}
+                        checked={selectedSet.has(list.id)}
+                        onToggle={toggleList}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
             ))}

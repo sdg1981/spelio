@@ -7,13 +7,14 @@ import { UnsavedChangesBar } from '../components/UnsavedChangesBar';
 import { WordEditorPanel } from '../components/WordEditorPanel';
 import { WordRowsTable } from '../components/WordRowsTable';
 import type { AdminRepository } from '../repositories';
-import type { AdminWord, AdminWordList } from '../types';
+import type { AdminWord, AdminWordList, AdminWordListCollection } from '../types';
 import type { AdminStructureOption } from '../types';
 
 export function WordListEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [source, setSource] = useState<AdminWordList | null>(null);
   const [list, setList] = useState<AdminWordList | null>(null);
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
+  const [collections, setCollections] = useState<AdminWordListCollection[]>([]);
   const [stages, setStages] = useState<AdminStructureOption[]>([]);
   const [focusCategories, setFocusCategories] = useState<AdminStructureOption[]>([]);
   const [selectedWordId, setSelectedWordId] = useState('');
@@ -30,14 +31,16 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     Promise.all([
       repository.getWordList(id),
       repository.listWordLists(),
+      repository.listCollections(),
       repository.listStages(),
       repository.listFocusCategories()
-    ]).then(([nextList, nextWordLists, nextStages, nextFocusCategories]) => {
+    ]).then(([nextList, nextWordLists, nextCollections, nextStages, nextFocusCategories]) => {
       const fallback = nextWordLists[0] ?? null;
       const resolved = nextList ?? fallback;
       setSource(resolved);
       setList(resolved);
       setWordLists(nextWordLists);
+      setCollections(nextCollections);
       setStages(nextStages);
       setFocusCategories(nextFocusCategories);
       setSelectedWordId(resolved?.words[7]?.id ?? resolved?.words[0]?.id ?? '');
@@ -220,6 +223,10 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               <Field label="Description"><AdminInput value={list.description} onChange={event => updateList({ description: event.target.value })} /></Field>
               <Field label="Welsh display name (optional)"><AdminInput value={list.nameCy} onChange={event => updateList({ nameCy: event.target.value })} /></Field>
               <Field label="Welsh display description (optional)"><AdminInput value={list.descriptionCy} onChange={event => updateList({ descriptionCy: event.target.value })} /></Field>
+              <Field label="Collection"><AdminSelect value={list.collectionId} onChange={event => {
+                const collection = collections.find(item => item.id === event.target.value);
+                updateList({ collectionId: event.target.value, collectionName: collection?.name ?? event.target.value });
+              }}>{collections.map(collection => <option key={collection.id} value={collection.id}>{collection.name}</option>)}</AdminSelect></Field>
               <Field label="Stage"><AdminSelect value={list.stageId} onChange={event => {
                 const stage = stages.find(item => item.id === event.target.value);
                 updateList({ stageId: event.target.value, stage: stage?.name ?? event.target.value });

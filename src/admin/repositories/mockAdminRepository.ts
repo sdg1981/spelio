@@ -1,14 +1,23 @@
-import { adminDialects, adminFocusCategories, adminStages, adminWordLists } from '../data/mockAdminData';
+import { adminDialects, adminFocusCategories, adminStages, adminWordListCollections, adminWordLists } from '../data/mockAdminData';
 import type { AdminFocusFilters } from './filters';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import { getAudioHealth } from './adminRepository';
-import type { AdminStructureOption, AdminWord, AdminWordList, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
+let collections = adminWordListCollections.map(collection => ({ ...collection }));
 
 function cloneList(list: AdminWordList): AdminWordList {
   return { ...list, words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] })) };
+}
+
+function cloneCollection(collection: AdminWordListCollection): AdminWordListCollection {
+  return { ...collection };
+}
+
+function collectionName(id: string) {
+  return collections.find(collection => collection.id === id)?.name ?? 'Spelio Core Welsh';
 }
 
 function structureOption(name: string, order: number): AdminStructureOption {
@@ -22,23 +31,50 @@ export const mockAdminRepository: AdminRepository = {
     if (!credentials.password.trim()) throw new Error('Enter the founder password to continue.');
   },
 
+  async listCollections() {
+    return collections.sort((a, b) => a.order - b.order).map(cloneCollection);
+  },
+
+  async getCollection(id: string) {
+    const collection = collections.find(item => item.id === id);
+    return collection ? cloneCollection(collection) : null;
+  },
+
+  async createCollection(collection: AdminWordListCollection) {
+    collections = [...collections, cloneCollection(collection)].sort((a, b) => a.order - b.order);
+    return cloneCollection(collection);
+  },
+
+  async saveCollection(collection: AdminWordListCollection) {
+    collections = collections.map(item => item.id === collection.id ? cloneCollection(collection) : item);
+    lists = lists.map(list => list.collectionId === collection.id ? { ...list, collectionName: collection.name } : list);
+    return cloneCollection(collection);
+  },
+
+  async deleteCollection(id: string) {
+    if (lists.some(list => list.collectionId === id)) throw new Error('Move word lists out of this collection before deleting it.');
+    collections = collections.filter(collection => collection.id !== id);
+  },
+
   async listWordLists() {
-    return lists.map(cloneList);
+    return lists.map(list => cloneList({ ...list, collectionName: collectionName(list.collectionId) }));
   },
 
   async getWordList(id: string) {
     const list = lists.find(item => item.id === id);
-    return list ? cloneList(list) : null;
+    return list ? cloneList({ ...list, collectionName: collectionName(list.collectionId) }) : null;
   },
 
   async saveWordList(list: AdminWordList) {
-    lists = lists.map(item => item.id === list.id ? cloneList(list) : item);
-    return cloneList(list);
+    const saved = { ...list, collectionName: collectionName(list.collectionId) };
+    lists = lists.map(item => item.id === list.id ? cloneList(saved) : item);
+    return cloneList(saved);
   },
 
   async createWordList(list: AdminWordList) {
-    lists = [...lists, cloneList(list)].sort((a, b) => a.order - b.order);
-    return cloneList(list);
+    const saved = { ...list, collectionName: collectionName(list.collectionId) };
+    lists = [...lists, cloneList(saved)].sort((a, b) => a.order - b.order);
+    return cloneList(saved);
   },
 
   async deleteWordList(id: string) {
@@ -89,7 +125,7 @@ export const mockAdminRepository: AdminRepository = {
   },
 
   async validateImport(payload: unknown): Promise<ImportValidationResult> {
-    const validation = validateImportPayload(payload);
+    const validation = validateImportPayload(payload, collections.map(collection => collection.id));
     const parsed = typeof payload === 'string' ? safeParse(payload) : payload;
     const importedLists = isRecord(parsed) && Array.isArray(parsed.lists) ? parsed.lists : [];
     const ids = importedLists.map(item => isRecord(item) ? String(item.id ?? '') : '').filter(Boolean);
