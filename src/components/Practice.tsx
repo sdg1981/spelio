@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
+import { Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -563,6 +563,7 @@ export function Practice({
           <WordListModal
             lists={lists}
             initialSelectedIds={storage.selectedListIds}
+            completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
             interfaceLanguage={interfaceLanguage}
@@ -706,6 +707,7 @@ export function Practice({
         <WordListModal
           lists={lists}
           initialSelectedIds={storage.selectedListIds}
+          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
           interfaceLanguage={interfaceLanguage}
@@ -1002,11 +1004,15 @@ const WordListRow = memo(function WordListRow({
   list,
   displayName,
   checked,
+  completed,
+  completedLabel,
   onToggle
 }: {
   list: WordList;
   displayName: string;
   checked: boolean;
+  completed: boolean;
+  completedLabel: string;
   onToggle: (listId: string) => void;
 }) {
   return (
@@ -1020,6 +1026,11 @@ const WordListRow = memo(function WordListRow({
         />
         <span className="check-name">{displayName}</span>
       </span>
+      {completed && (
+        <span className="wordlist-completed-indicator" title={completedLabel} aria-label={completedLabel} role="img">
+          <Check size={16} strokeWidth={2.2} aria-hidden="true" />
+        </span>
+      )}
     </label>
   );
 });
@@ -1038,6 +1049,7 @@ function getWordListStageLabel(stage: string, t: Translate) {
 export function WordListModal({
   lists,
   initialSelectedIds,
+  completedListIds = [],
   onClose,
   onDone,
   interfaceLanguage,
@@ -1045,6 +1057,7 @@ export function WordListModal({
 }: {
   lists: WordList[];
   initialSelectedIds: string[];
+  completedListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
   interfaceLanguage: InterfaceLanguage;
@@ -1053,6 +1066,7 @@ export function WordListModal({
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState(() => initialSelectedIds);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return lists;
@@ -1106,6 +1120,8 @@ export function WordListModal({
                     list={list}
                     displayName={getListDisplayName(list, interfaceLanguage)}
                     checked={selectedSet.has(list.id)}
+                    completed={completedSet.has(list.id)}
+                    completedLabel={t('wordLists.completed')}
                     onToggle={toggleList}
                   />
                 ))}
@@ -1123,6 +1139,8 @@ export function WordListModal({
                         list={list}
                         displayName={getListDisplayName(list, interfaceLanguage)}
                         checked={selectedSet.has(list.id)}
+                        completed={completedSet.has(list.id)}
+                        completedLabel={t('wordLists.completed')}
                         onToggle={toggleList}
                       />
                     ))}

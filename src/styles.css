@@ -62,6 +62,7 @@
 .check-row:hover .check-name{color:var(--red);}
 .check-left{flex:1 1 auto;}
 .check-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wordlist-completed-indicator{display:grid;place-items:center;flex:0 0 auto;align-self:center;margin-left:auto;color:#2f8f5b;opacity:.76;}
 .wordlist-checkbox{
   appearance:none;
   position:relative;

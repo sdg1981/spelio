@@ -88,6 +88,7 @@ export const cy = {
     list: 'rhestr',
     lists: 'rhestr',
     searchPlaceholder: 'Chwilio rhestrau geiriau...',
+    completed: 'Wedi cwblhau',
     clearAll: 'Clirio popeth',
     done: 'Gorffen',
     stageFoundations: 'Sylfeini',

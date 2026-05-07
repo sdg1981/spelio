@@ -88,6 +88,7 @@ export const en = {
     list: 'list',
     lists: 'lists',
     searchPlaceholder: 'Search word lists...',
+    completed: 'Completed',
     clearAll: 'Clear all',
     done: 'Done',
     stageFoundations: 'Foundations',

@@ -228,6 +228,7 @@ export default function App() {
         <WordListModal
           lists={wordLists}
           initialSelectedIds={storage.selectedListIds}
+          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
           interfaceLanguage={interfaceLanguage}
@@ -256,6 +257,7 @@ export default function App() {
         <WordListModal
           lists={wordLists}
           initialSelectedIds={storage.selectedListIds}
+          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
           interfaceLanguage={interfaceLanguage}
