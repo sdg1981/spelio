@@ -29,7 +29,9 @@ export interface PracticeWord {
 export interface WordList {
   id: string;
   name: string;
+  nameCy?: string;
   description: string;
+  descriptionCy?: string;
   language: 'Welsh';
   sourceLanguage: LanguageCode;
   targetLanguage: LanguageCode;
@@ -64,7 +66,9 @@ type DatasetWord = {
 type DatasetList = {
   id: string;
   name: string;
+  nameCy?: string;
   description: string;
+  descriptionCy?: string;
   language: string;
   sourceLanguage?: LanguageCode;
   targetLanguage?: LanguageCode;
@@ -94,7 +98,9 @@ export const wordLists: WordList[] = rawLists
   .map(list => ({
     id: list.id,
     name: list.name,
+    nameCy: list.nameCy ?? '',
     description: list.description,
+    descriptionCy: list.descriptionCy ?? '',
     language: 'Welsh',
     sourceLanguage: list.sourceLanguage ?? datasetMetadata.sourceLanguage ?? 'en',
     targetLanguage: list.targetLanguage ?? datasetMetadata.targetLanguage ?? 'cy',

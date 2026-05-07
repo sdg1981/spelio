@@ -23,7 +23,9 @@ export interface AdminWord {
 export interface AdminWordList {
   id: string;
   name: string;
+  nameCy: string;
   description: string;
+  descriptionCy: string;
   language: string;
   sourceLanguage: string;
   targetLanguage: string;

@@ -20,7 +20,9 @@ type RawWord = {
 type RawList = {
   id: string;
   name: string;
+  nameCy?: string;
   description: string;
+  descriptionCy?: string;
   language: string;
   sourceLanguage?: string;
   targetLanguage?: string;
@@ -43,7 +45,9 @@ export const adminWordLists: AdminWordList[] = rawLists
   .map(list => ({
     id: list.id,
     name: list.name,
+    nameCy: list.nameCy ?? '',
     description: list.description,
+    descriptionCy: list.descriptionCy ?? '',
     language: list.language === 'cy' ? 'Welsh' : list.language,
     sourceLanguage: list.sourceLanguage ?? 'en',
     targetLanguage: list.targetLanguage ?? 'cy',

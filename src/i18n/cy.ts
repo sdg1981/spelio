@@ -85,7 +85,14 @@ export const cy = {
     lists: 'rhestr',
     searchPlaceholder: 'Chwilio rhestrau geiriau...',
     clearAll: 'Clirio popeth',
-    done: 'Gorffen'
+    done: 'Gorffen',
+    stageFoundations: 'Sylfeini',
+    stageCore: 'Craidd',
+    stageSpelling: 'Sillafu',
+    stageUsage: 'Defnydd',
+    stageMixed: 'Cymysg',
+    stageReview: 'Adolygu',
+    stageConfidence: 'Hyder'
   },
   end: {
     trickyEncouragement: 'Roedd honna’n anodd - gadewch i ni ymarfer y geiriau hynny eto.',

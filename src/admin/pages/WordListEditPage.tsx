@@ -218,6 +218,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Field label="Name"><AdminInput value={list.name} onChange={event => updateList({ name: event.target.value })} /></Field>
               <Field label="Description"><AdminInput value={list.description} onChange={event => updateList({ description: event.target.value })} /></Field>
+              <Field label="Welsh display name (optional)"><AdminInput value={list.nameCy} onChange={event => updateList({ nameCy: event.target.value })} /></Field>
+              <Field label="Welsh display description (optional)"><AdminInput value={list.descriptionCy} onChange={event => updateList({ descriptionCy: event.target.value })} /></Field>
               <Field label="Stage"><AdminSelect value={list.stageId} onChange={event => {
                 const stage = stages.find(item => item.id === event.target.value);
                 updateList({ stageId: event.target.value, stage: stage?.name ?? event.target.value });

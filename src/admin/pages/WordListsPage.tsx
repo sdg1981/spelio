@@ -40,7 +40,9 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
     const list: AdminWordList = {
       id,
       name,
+      nameCy: '',
       description: 'New editorial word list.',
+      descriptionCy: '',
       language: 'Welsh',
       sourceLanguage: 'en',
       targetLanguage: 'cy',

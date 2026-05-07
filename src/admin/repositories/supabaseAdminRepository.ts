@@ -7,7 +7,9 @@ import { validateImportPayload } from './importValidation';
 type WordListRow = {
   id: string;
   name: string;
+  name_cy?: string | null;
   description: string;
+  description_cy?: string | null;
   language: string;
   source_language?: string | null;
   target_language?: string | null;
@@ -183,7 +185,9 @@ function mapWordListRow(row: WordListRow): AdminWordList {
   return {
     id: row.id,
     name: row.name,
+    nameCy: row.name_cy ?? '',
     description: row.description,
+    descriptionCy: row.description_cy ?? '',
     language: row.language,
     sourceLanguage: row.source_language ?? 'en',
     targetLanguage: row.target_language ?? 'cy',
@@ -227,7 +231,9 @@ function toWordListRow(list: AdminWordList) {
   return {
     id: list.id,
     name: list.name,
+    name_cy: list.nameCy || null,
     description: list.description,
+    description_cy: list.descriptionCy || null,
     language: list.language,
     source_language: list.sourceLanguage || 'en',
     target_language: list.targetLanguage || 'cy',

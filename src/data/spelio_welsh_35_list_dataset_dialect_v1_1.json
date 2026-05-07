@@ -185,7 +185,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Geiriau Cyntaf — Cymraeg Sydyn",
+      "descriptionCy": "Geiriau Cymraeg hanfodol y byddwch yn eu hadnabod a’u defnyddio ar unwaith. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "foundations_verbs",
@@ -340,7 +342,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Berfau Cyntaf — Gweithredoedd Craidd",
+      "descriptionCy": "Berfau Cymraeg hanfodol ar gyfer bywyd pob dydd."
     },
     {
       "id": "foundations_first_phrases",
@@ -495,7 +499,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Cyntaf — Defnyddio Berfau",
+      "descriptionCy": "Ymadroddion Cymraeg syml wedi’u hadeiladu o ferfau cyffredin."
     },
     {
       "id": "foundations_small_words",
@@ -665,7 +671,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Geiriau Bach Defnyddiol — Cysylltwyr",
+      "descriptionCy": "Geiriau Cymraeg bach sy’n cysylltu syniadau ac yn adeiladu brawddegau. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "foundations_actions",
@@ -820,7 +828,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Gweithredoedd Pob Dydd — Ymadroddion Estynedig",
+      "descriptionCy": "Gweithredoedd cyffredin fel ymadroddion Cymraeg defnyddiol."
     },
     {
       "id": "foundations_places",
@@ -975,7 +985,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Lleoedd Pob Dydd",
+      "descriptionCy": "Lleoedd cyffredin mewn Cymraeg pob dydd."
     },
     {
       "id": "foundations_time",
@@ -1144,7 +1156,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Siarad am Amser — Craidd",
+      "descriptionCy": "Geiriau ac ymadroddion Cymraeg syml ar gyfer siarad am amser. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "foundations_numbers",
@@ -1299,7 +1313,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Rhifau — 1 i 10",
+      "descriptionCy": "Rhifau Cymraeg sylfaenol ar gyfer sefyllfaoedd pob dydd."
     },
     {
       "id": "foundations_mixed_01",
@@ -1454,7 +1470,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymarfer Cymysg — Sylfeini",
+      "descriptionCy": "Cymysgedd o eiriau ac ymadroddion i atgyfnerthu beth rydych wedi’i ddysgu."
     },
     {
       "id": "foundations_mixed_02",
@@ -1609,7 +1627,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymarfer Cymysg — Defnydd Go Iawn",
+      "descriptionCy": "Ymarfer Cymraeg go iawn gyda chymysgedd o eiriau ac ymadroddion defnyddiol."
     },
     {
       "id": "stage2_food",
@@ -1764,7 +1784,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Bwyd a Diod — Hanfodion",
+      "descriptionCy": "Geiriau Cymraeg cyffredin am fwyd a diod pob dydd."
     },
     {
       "id": "stage2_people",
@@ -1919,7 +1941,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Pobl a Theulu",
+      "descriptionCy": "Geiriau am bobl a theulu mewn Cymraeg pob dydd."
     },
     {
       "id": "stage2_work",
@@ -2074,7 +2098,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Gwaith a Bywyd Pob Dydd",
+      "descriptionCy": "Geiriau Cymraeg defnyddiol ar gyfer gwaith a threfn bob dydd."
     },
     {
       "id": "stage2_weather",
@@ -2229,7 +2255,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Tywydd — Craidd",
+      "descriptionCy": "Geiriau Cymraeg sylfaenol ar gyfer siarad am y tywydd."
     },
     {
       "id": "stage2_adjectives",
@@ -2384,7 +2412,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ansoddeiriau Cyffredin",
+      "descriptionCy": "Ansoddeiriau Cymraeg defnyddiol ar gyfer disgrifio pethau pob dydd."
     },
     {
       "id": "stage2_adverbs",
@@ -2542,7 +2572,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Adferfau Cyffredin",
+      "descriptionCy": "Adferfau Cymraeg defnyddiol ar gyfer siarad bob dydd."
     },
     {
       "id": "stage2_ll",
@@ -2697,7 +2729,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ffocws Sillafu — LL",
+      "descriptionCy": "Ymarfer geiriau Cymraeg gyda’r sain “ll”."
     },
     {
       "id": "stage2_ch",
@@ -2853,7 +2887,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ffocws Sillafu — CH",
+      "descriptionCy": "Ymarfer geiriau Cymraeg gyda’r sain “ch”."
     },
     {
       "id": "stage2_phrases_going",
@@ -3008,7 +3044,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Byr — Mynd i Rywle",
+      "descriptionCy": "Ymadroddion Cymraeg defnyddiol ar gyfer siarad am fynd i leoedd."
     },
     {
       "id": "stage2_phrases_wanting",
@@ -3248,7 +3286,9 @@
           "variantGroupId": "",
           "usageNote": "Common short phrase for needing to do something."
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Byr — Eisiau ac Angen",
+      "descriptionCy": "Ymadroddion Cymraeg defnyddiol ar gyfer mynegi eisiau ac angen. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "stage3_f_vs_ff",
@@ -3403,7 +3443,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Cyferbyniad Sillafu — F vs FF",
+      "descriptionCy": "Ymarfer y gwahaniaeth rhwng “f” ac “ff” yn Gymraeg."
     },
     {
       "id": "stage3_d_vs_dd",
@@ -3558,7 +3600,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Cyferbyniad Sillafu — D vs DD",
+      "descriptionCy": "Ymarfer y gwahaniaeth rhwng “d” a “dd” yn Gymraeg."
     },
     {
       "id": "stage3_wy",
@@ -3713,7 +3757,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Patrymau Llafariaid — WY",
+      "descriptionCy": "Ymarfer geiriau Cymraeg gyda’r patrwm “wy”."
     },
     {
       "id": "stage3_ae",
@@ -3868,7 +3914,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Patrymau Llafariaid — AE",
+      "descriptionCy": "Ymarfer geiriau Cymraeg gyda’r patrwm “ae”."
     },
     {
       "id": "stage3_time_phrases",
@@ -4023,7 +4071,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Byr — Amser a Threfn",
+      "descriptionCy": "Ymadroddion Cymraeg defnyddiol ar gyfer trefn bob dydd."
     },
     {
       "id": "stage3_coming",
@@ -4178,7 +4228,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Byr — Dod a Mynd",
+      "descriptionCy": "Ymadroddion Cymraeg defnyddiol ar gyfer symud a chyfeiriad."
     },
     {
       "id": "stage3_to_phrases",
@@ -4336,7 +4388,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Cymraeg Go Iawn — Ymadroddion “i”",
+      "descriptionCy": "Ymarfer ymadroddion Cymraeg go iawn sy’n defnyddio “i”."
     },
     {
       "id": "stage4_in_phrases",
@@ -4495,7 +4549,9 @@
           "variantGroupId": "",
           "usageNote": "Fixed phrase with a changed initial sound."
         }
-      ]
+      ],
+      "nameCy": "Cymraeg Go Iawn — “yn” ac “yng”",
+      "descriptionCy": "Ymarfer ymadroddion Cymraeg go iawn sy’n defnyddio “yn” ac “yng”."
     },
     {
       "id": "stage4_connectors",
@@ -4654,7 +4710,9 @@
           "variantGroupId": "",
           "usageNote": "Learn this as a fixed expression."
         }
-      ]
+      ],
+      "nameCy": "Cysylltwyr Defnyddiol — Cam Nesaf",
+      "descriptionCy": "Geiriau Cymraeg defnyddiol sy’n gwneud siarad ac ysgrifennu’n fwy cysylltiedig."
     },
     {
       "id": "stage4_questions",
@@ -4811,7 +4869,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Gofyn Cwestiynau — Ymadroddion",
+      "descriptionCy": "Geiriau cwestiwn Cymraeg cyffredin ac ymadroddion cwestiwn byr."
     },
     {
       "id": "stage4_sentences",
@@ -4983,7 +5043,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Brawddegau Pob Dydd — Cychwyn",
+      "descriptionCy": "Brawddegau Cymraeg byr a defnyddiol. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "stage4_work_phrases",
@@ -5138,7 +5200,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymadroddion Gwaith a Bywyd",
+      "descriptionCy": "Ymadroddion Cymraeg defnyddiol ar gyfer sefyllfaoedd pob dydd."
     },
     {
       "id": "stage5_my_phrases",
@@ -5299,7 +5363,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Cymraeg Go Iawn — “fy”",
+      "descriptionCy": "Ymarfer ymadroddion Cymraeg go iawn sy’n defnyddio “fy”."
     },
     {
       "id": "stage5_mixed",
@@ -5472,7 +5538,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Ymarfer Cymysg — Cymraeg Pob Dydd",
+      "descriptionCy": "Cymysgedd o eiriau ac ymadroddion Cymraeg defnyddiol ar gyfer ymarfer go iawn. Yn cynnwys amrywiadau tafodieithol ar lefel gair."
     },
     {
       "id": "stage5_long_words",
@@ -5627,7 +5695,9 @@
           "dialectNote": "",
           "variantGroupId": ""
         }
-      ]
+      ],
+      "nameCy": "Geiriau Cymraeg Hirach — Craidd",
+      "descriptionCy": "Ymarfer sillafu geiriau Cymraeg hirach yn hyderus."
     }
   ]
 }

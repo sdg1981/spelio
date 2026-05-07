@@ -85,7 +85,14 @@ export const en = {
     lists: 'lists',
     searchPlaceholder: 'Search word lists...',
     clearAll: 'Clear all',
-    done: 'Done'
+    done: 'Done',
+    stageFoundations: 'Foundations',
+    stageCore: 'Core',
+    stageSpelling: 'Spelling',
+    stageUsage: 'Usage',
+    stageMixed: 'Mixed',
+    stageReview: 'Review',
+    stageConfidence: 'Confidence'
   },
   end: {
     trickyEncouragement: 'That was a tricky one - let’s practise those words again.',

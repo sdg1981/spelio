@@ -564,6 +564,7 @@ export function Practice({
             initialSelectedIds={storage.selectedListIds}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
+            interfaceLanguage={interfaceLanguage}
             t={t}
           />
         )}
@@ -706,6 +707,7 @@ export function Practice({
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
+          interfaceLanguage={interfaceLanguage}
           t={t}
         />
       )}
@@ -997,10 +999,12 @@ function SettingsModal({
 
 const WordListRow = memo(function WordListRow({
   list,
+  displayName,
   checked,
   onToggle
 }: {
   list: WordList;
+  displayName: string;
   checked: boolean;
   onToggle: (listId: string) => void;
 }) {
@@ -1013,23 +1017,44 @@ const WordListRow = memo(function WordListRow({
           checked={checked}
           onChange={() => onToggle(list.id)}
         />
-        <span className="check-name">{list.name}</span>
+        <span className="check-name">{displayName}</span>
       </span>
     </label>
   );
 });
+
+function getWordListDisplayName(list: WordList, interfaceLanguage: InterfaceLanguage) {
+  return interfaceLanguage === 'cy' && list.nameCy?.trim() ? list.nameCy : list.name;
+}
+
+function getWordListDisplayDescription(list: WordList, interfaceLanguage: InterfaceLanguage) {
+  return interfaceLanguage === 'cy' && list.descriptionCy?.trim() ? list.descriptionCy : list.description;
+}
+
+function getWordListStageLabel(stage: string, t: Translate) {
+  if (stage === 'Foundations') return t('wordLists.stageFoundations');
+  if (stage === 'Core') return t('wordLists.stageCore');
+  if (stage === 'Spelling') return t('wordLists.stageSpelling');
+  if (stage === 'Usage') return t('wordLists.stageUsage');
+  if (stage === 'Mixed') return t('wordLists.stageMixed');
+  if (stage === 'Review') return t('wordLists.stageReview');
+  if (stage === 'Confidence') return t('wordLists.stageConfidence');
+  return stage;
+}
 
 export function WordListModal({
   lists,
   initialSelectedIds,
   onClose,
   onDone,
+  interfaceLanguage,
   t
 }: {
   lists: WordList[];
   initialSelectedIds: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
+  interfaceLanguage: InterfaceLanguage;
   t: Translate;
 }) {
   const [query, setQuery] = useState('');
@@ -1038,8 +1063,12 @@ export function WordListModal({
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return lists;
-    return lists.filter(list => list.name.toLowerCase().includes(normalizedQuery));
-  }, [lists, query]);
+    return lists.filter(list => {
+      const displayName = getWordListDisplayName(list, interfaceLanguage);
+      const displayDescription = getWordListDisplayDescription(list, interfaceLanguage);
+      return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
+    });
+  }, [interfaceLanguage, lists, query]);
   const groups = useMemo(() => {
     return filteredLists.reduce<Record<string, WordList[]>>((acc, list) => {
       (acc[list.stage] ??= []).push(list);
@@ -1073,11 +1102,12 @@ export function WordListModal({
           <div className="list-grid">
             {Object.entries(groups).map(([group, groupLists]) => (
               <div key={group}>
-                <h3 className="group-title">{group}</h3>
+                <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
                 {groupLists.map(list => (
                   <WordListRow
                     key={list.id}
                     list={list}
+                    displayName={getWordListDisplayName(list, interfaceLanguage)}
                     checked={selectedSet.has(list.id)}
                     onToggle={toggleList}
                   />

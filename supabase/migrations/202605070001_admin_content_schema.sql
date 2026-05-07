@@ -35,7 +35,9 @@ create table public.dialect_options (
 create table public.word_lists (
   id text primary key,
   name text not null,
+  name_cy text,
   description text not null default '',
+  description_cy text,
   language text not null default 'Welsh',
   source_language text not null default 'en',
   target_language text not null default 'cy',

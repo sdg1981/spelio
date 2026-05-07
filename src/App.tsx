@@ -229,6 +229,7 @@ export default function App() {
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          interfaceLanguage={interfaceLanguage}
           t={t}
         />
       )}
@@ -256,6 +257,7 @@ export default function App() {
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          interfaceLanguage={interfaceLanguage}
           t={t}
         />
       )}
