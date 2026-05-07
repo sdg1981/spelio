@@ -1,6 +1,6 @@
 import { Copy, GripVertical, Pencil, Play, Trash2, Wand2, ArrowUp, ArrowDown } from 'lucide-react';
 import type { AdminWord } from '../types';
-import { hasPlayableAudioUrl, playAudioUrl } from '../../lib/audioPlayback';
+import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AdminButton } from './primitives';
 import { AudioStatusPill } from './audioStatus';
 
@@ -84,6 +84,7 @@ export function WordRowsTable({
                 <td className="px-4 py-3">
                   <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={!hasPlayableAudioUrl(word.audioUrl)} onClick={event => {
                     event.stopPropagation();
+                    logAudioPlaybackClick('admin-word-row-preview', word.audioUrl);
                     void playAudioUrl(word.audioUrl);
                   }} aria-label="Preview audio">
                     <Play size={14} fill="currentColor" />

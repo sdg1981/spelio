@@ -8,6 +8,7 @@ import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
+import { logAudioPlaybackClick } from '../lib/audioPlayback';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -538,6 +539,7 @@ export function Practice({
   }
 
   function handleWordPillClick() {
+    logAudioPlaybackClick('learner-word-pill', currentWord?.audioUrl);
     if (!storage.settings.audioPrompts) return;
 
     playAudio();

@@ -14,10 +14,23 @@ export function hasPlayableAudioUrl(audioUrl?: string | null) {
   return getPlayableAudioUrl(audioUrl) !== null;
 }
 
+export function logAudioPlaybackClick(source: string, audioUrl?: string | null) {
+  logAudioPlaybackDiagnostic('click handler fired', { source, audioUrl });
+}
+
 export async function playAudioUrl(audioUrl?: string | null) {
+  logAudioPlaybackDiagnostic('playback requested', { audioUrl });
+
+  if (!audioUrl?.trim()) {
+    logAudioPlaybackDiagnostic('URL validation failed', { audioUrl, reason: 'missing_or_empty' });
+    return false;
+  }
+
   const playableUrl = getPlayableAudioUrl(audioUrl);
+  logAudioPlaybackDiagnostic('URL validation result', { audioUrl, playableUrl, passed: Boolean(playableUrl) });
+
   if (!playableUrl) {
-    logAudioPlaybackError('Missing or invalid audio URL.', audioUrl);
+    logAudioPlaybackDiagnostic('playback aborted', { audioUrl, reason: 'invalid_url' });
     return false;
   }
 
@@ -26,15 +39,18 @@ export async function playAudioUrl(audioUrl?: string | null) {
     audio.preload = 'auto';
     audio.src = playableUrl;
     audio.currentTime = 0;
+    logAudioPlaybackDiagnostic('audio.play() called', { audioUrl: playableUrl });
     await audio.play();
+    logAudioPlaybackDiagnostic('audio.play() resolved', { audioUrl: playableUrl });
     return true;
   } catch (error) {
-    logAudioPlaybackError(error, playableUrl);
+    logAudioPlaybackDiagnostic('audio.play() rejected', { audioUrl: playableUrl, error });
     return false;
   }
 }
 
-function logAudioPlaybackError(error: unknown, audioUrl?: string | null) {
+function logAudioPlaybackDiagnostic(message: string, details: Record<string, unknown>) {
+  // TODO: Remove temporary audio playback diagnostics before production if noisy.
   if (!import.meta.env.DEV) return;
-  console.error('[audioPlayback] Could not play audio.', { audioUrl, error });
+  console.info(`[audioPlayback] ${message}`, details);
 }

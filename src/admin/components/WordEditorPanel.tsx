@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp, Info, Play, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { AdminWord } from '../types';
-import { hasPlayableAudioUrl, playAudioUrl } from '../../lib/audioPlayback';
+import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminTextarea, Field } from './primitives';
 
@@ -93,7 +93,10 @@ export function WordEditorPanel({
         <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
         <div className="flex flex-wrap gap-2">
           {hasAudioPreview && (
-            <AdminButton onClick={() => void playAudioUrl(word.audioUrl)}>
+            <AdminButton onClick={() => {
+              logAudioPlaybackClick('admin-word-editor-preview', word.audioUrl);
+              void playAudioUrl(word.audioUrl);
+            }}>
               <Play size={15} /> Preview
             </AdminButton>
           )}
