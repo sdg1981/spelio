@@ -44,13 +44,13 @@ export function ActionRow({
   onClick
 }: ActionProps) {
   const iconClass = accent === 'red' ? 'icon-red' : accent === 'blue' ? 'icon-blue' : '';
-  const classes = ['action-row', primary ? 'card-primary' : '', className].filter(Boolean).join(' ');
+  const classes = ['action-row', !subtitle ? 'action-row-single' : '', primary ? 'card-primary' : '', className].filter(Boolean).join(' ');
   const ArrowIcon = arrowVariant === 'arrow' ? ArrowRight : ChevronRight;
 
   return (
     <button className={classes} onClick={onClick}>
       <span className={`icon-circle ${iconClass}`}>{icon}</span>
-      <span className="min-w-0 flex-1">
+      <span className="action-row-copy min-w-0 flex-1">
         <span className="action-row-title">{title}</span>
         {subtitle && <span className={`action-row-sub ${subtitleClassName}`.trim()}>{subtitle}</span>}
       </span>

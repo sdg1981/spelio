@@ -137,7 +137,6 @@ export function EndScreen({
             <ActionRow
               icon={<Play size={30} />}
               title={t('home.continueLearning')}
-              subtitle={t('end.pickUpWhereLeftOff')}
               arrowVariant="arrow"
               onClick={onContinue}
             />
@@ -146,7 +145,6 @@ export function EndScreen({
             <ActionRow
               icon={<Play size={30} />}
               title={t('end.practiseMixAgain')}
-              subtitle={t('end.repeatSelectedLists')}
               arrowVariant="arrow"
               onClick={onContinue}
             />
@@ -154,7 +152,6 @@ export function EndScreen({
           <ActionRow
             icon={<SlidersHorizontal size={30} />}
             title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
-            subtitle={shouldChooseAnotherList ? t('end.returnHomepage') : t('end.chooseDifferentNext')}
             arrowVariant="arrow"
             onClick={shouldChooseAnotherList ? onHome : onChangeLists}
           />

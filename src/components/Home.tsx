@@ -92,7 +92,6 @@ export function Home({
             <ActionRow
               icon={<Play size={30} />}
               title={t('home.continueLearning')}
-              subtitle={t('home.fromWhereLeftOff')}
               accent="red"
               arrowVariant="arrow"
               onClick={onContinue}
@@ -102,8 +101,6 @@ export function Home({
           <ActionRow
             icon={<List size={30} />}
             title={selectListLabel}
-            subtitle={!isFirst ? t('home.chooseDifferentList') : undefined}
-            subtitleClassName="home-desktop-subtitle"
             arrowVariant="arrow"
             onClick={onSelectList}
           />
@@ -111,8 +108,7 @@ export function Home({
           {showRecapEntry && (
             <ActionRow
               icon={<RotateCcw size={28} />}
-              title={t('home.fromEarlier')}
-              subtitle={t('home.revisitWords')}
+              title={t('home.revisitWords')}
               trailing={recapCountLabel}
               arrowVariant="arrow"
               onClick={onRecapReview}

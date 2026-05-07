@@ -1423,6 +1423,12 @@
   color:#071522;
 }
 
+.home-action-list .action-row-single .action-row-copy,
+.end-action-list .action-row-single .action-row-copy{
+  display:flex;
+  align-items:center;
+}
+
 .home-footer{
   margin-top:118px;
   padding-top:0;
