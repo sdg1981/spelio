@@ -8,6 +8,7 @@ import type { SessionResult, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
+import { formatCumulativeProgress } from './lib/practice/progress';
 
 type Screen = 'home' | 'practice' | 'end';
 
@@ -44,6 +45,14 @@ export default function App() {
       storage.settings.dialectPreference,
       storage.selectedListIds
     ]
+  );
+  const homeProgressSummary = useMemo(
+    () => formatCumulativeProgress(storage, wordLists),
+    [storage.learningStats, storage.wordProgress]
+  );
+  const endProgressSummary = useMemo(
+    () => formatCumulativeProgress(storage, wordLists, { prefix: 'Total progress' }),
+    [storage.learningStats, storage.wordProgress]
   );
 
   useEffect(() => {
@@ -155,6 +164,7 @@ export default function App() {
       <EndScreen
         result={lastResult}
         recommendation={recommendation}
+        progressSummary={endProgressSummary}
         hasDifficultWords={difficultWords}
         onContinue={() => {
           startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId });
@@ -177,6 +187,7 @@ export default function App() {
       <Home
         mode={homeMode}
         recommendation={recommendation}
+        progressSummary={homeProgressSummary}
         hasDifficultWords={difficultWords}
         recapWordCount={recapWordCount}
         onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}

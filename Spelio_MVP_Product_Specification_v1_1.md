@@ -150,6 +150,8 @@ Behaviour:
 - Select word list opens the word list modal.
 - If no eligible difficult words currently exist, the recap/review action must be hidden.
 - The homepage must not show Review difficult words as an action if selecting it would lead to an empty review session.
+- Returning-user homepage may show one subtle cumulative progress line below the primary CTA and above secondary actions, for example “142 spellings learned · 38 minutes practised”. Hide it when there is no meaningful progress.
+- Progress wording must stay calm and minimal. Do not show charts, percentages, XP, badges, streaks, levels, goals, or dashboard-style stats.
 
 ### 5.3 Returning-user struggled homepage
 
@@ -505,7 +507,10 @@ Content:
   - Correct
   - Incorrect
   - Revealed
-  - Time
+- Do not show raw elapsed session time in the main stats row.
+- Optional subtle cumulative progress line:
+  - “Total progress: 142 spellings learned”
+  - “Total progress: 142 spellings learned · 38 minutes practised”
 - Primary recommended action
 - Secondary action
 - Tertiary action
@@ -557,6 +562,20 @@ Incorrect:
 Revealed:
 
 - A word where one or more letters were revealed.
+
+Spellings learned:
+
+- Count a spelling as learned only when it is currently cleanly completed and not difficult.
+- Exclude currently difficult or unresolved Review difficult words.
+- Revealed-only or seen-only words do not count.
+- If a previously difficult word is later completed cleanly and is no longer difficult, it may count as learned.
+- Dialect variants that represent the same `variantGroupId` learning item should not be double-counted.
+
+Minutes practised:
+
+- Means active practice time, not raw elapsed session duration.
+- Count active interaction time in whole minutes.
+- Ignore or cap idle gaps so interruptions do not inflate cumulative practice time.
 
 Rules:
 
@@ -872,6 +891,12 @@ Use local storage shape:
   "selectedListIds": ["foundations_first_words"],
   "currentPathPosition": "foundations_first_words",
   "normalSessionCount": 0,
+  "learningStats": {
+    "totalActiveMs": 0,
+    "totalSessionsCompleted": 0,
+    "firstPractisedAt": null,
+    "lastPractisedAt": null
+  },
   "lastSessionDate": null,
   "lastSessionResult": {},
   "wordProgress": {},
@@ -910,6 +935,10 @@ Word progress should support:
   }
 }
 ```
+
+Learning stats should remain compact aggregate summaries. Do not store raw timing logs, per-keystroke histories, full answer-entry logs, or exact typed answers.
+
+Active practice time should be accumulated from relevant practice interactions such as typing, reveal, peek, audio replay, completion, and navigation through practice. Long idle gaps should be ignored or capped.
 
 Reset progress should remove this storage key and any known legacy MVP storage keys, then recreate default storage in memory.
 
@@ -1106,6 +1135,7 @@ Do not collect:
 - Account IDs
 - Exact typed answers
 - Full keystroke logs
+- Raw long-term timing logs
 - Session replay
 - Unnecessary device fingerprinting
 - Precise location data
@@ -1458,6 +1488,8 @@ Do not include in MVP:
 - Leaderboards
 - Streaks
 - Badges/coins/gamification
+- Learner-facing progress dashboard
+- Charts or noisy progress analytics
 - Multi-language support beyond data model readiness
 - User-level dashboards
 - Tutor dashboard

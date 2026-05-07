@@ -1314,6 +1314,20 @@
   text-align:center;
 }
 
+.home-progress-line{
+  width:100%;
+  max-width:560px;
+  margin:22px 0 0;
+  color:#7a8490;
+  font-size:15px;
+  line-height:1.35;
+  text-align:center;
+}
+
+.home-progress-line+.home-action-list{
+  margin-top:24px;
+}
+
 .home-action-list{
   width:100%;
   max-width:560px;
@@ -1491,6 +1505,21 @@
     padding:0 28px;
     font-size:21px;
     font-weight:800;
+  }
+
+  .home-progress-line{
+    max-width:none;
+    margin-top:18px;
+    font-size:14px;
+    text-align:left;
+  }
+
+  .home-copy-first+.home-primary+.home-progress-line{
+    text-align:center;
+  }
+
+  .home-progress-line+.home-action-list{
+    margin-top:28px;
   }
 
   .home-primary svg{
@@ -2468,6 +2497,13 @@
 
 .end-recommendation-next .end-stats-line{
   margin-top:0;
+}
+
+.end-progress-line{
+  margin:10px 0 0!important;
+  color:#7a8490!important;
+  font-size:15px!important;
+  line-height:1.35!important;
 }
 
 .end-recommendation-next h2{

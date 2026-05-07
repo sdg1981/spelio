@@ -9,6 +9,7 @@ type HomeMode = 'first' | 'returning' | 'struggled';
 export function Home({
   mode,
   recommendation,
+  progressSummary,
   hasDifficultWords,
   recapWordCount,
   onStart,
@@ -19,6 +20,7 @@ export function Home({
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
+  progressSummary?: string | null;
   hasDifficultWords: boolean;
   recapWordCount: number;
   onStart: () => void;
@@ -66,6 +68,10 @@ export function Home({
         </div>
 
         <PrimaryButton className="home-primary" onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
+
+        {!isFirst && progressSummary && (
+          <p className="home-progress-line">{progressSummary}</p>
+        )}
 
         <div className="action-list home-action-list">
           {shouldPrioritiseReview && hasDifficultWords && (

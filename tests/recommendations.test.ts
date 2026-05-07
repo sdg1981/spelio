@@ -3,6 +3,7 @@ import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { classifySession, createPracticeSession, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
+  addLearningStats,
   applyManualWordListSelection,
   applyWordProgressPatch,
   applyPracticeStartListSelection,
@@ -13,6 +14,7 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getRecommendation } from '../src/lib/practice/recommendations';
+import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -506,6 +508,71 @@ test('clean completion of a previously difficult word in a later session clears 
   storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
   assertEqual(storage.wordProgress[difficultWord.id]?.difficult, false, 'Later clean completion should clear difficult');
   assertEqual(hasDifficultWords(storage), false, 'No current difficult words should remain');
+});
+
+test('learned spelling count excludes currently difficult and revealed-only words', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[1], { incorrect: true }, '2026-05-05T00:00:05.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[1], { completed: true, cleanCompleted: false }, '2026-05-05T00:00:10.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[2], { revealed: true }, '2026-05-05T00:00:15.000Z');
+
+  assertEqual(countLearnedSpellings(storage, wordLists), 1, 'Only the cleanly completed spelling should count as learned');
+});
+
+test('learned spelling count includes a previously difficult word after clean completion', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(countLearnedSpellings(storage, wordLists), 1, 'A resolved difficult spelling should count once it is cleanly completed');
+});
+
+test('learned spelling count does not double-count dialect variants', () => {
+  const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
+  assert(wanting, 'Expected stage2_phrases_wanting to exist');
+  const variants = wanting.words.filter(word => word.variantGroupId === 'want coffee').slice(0, 2);
+  assertEqual(variants.length, 2, 'Expected two variants for the setup item');
+
+  let storage = wantingStorage('mixed');
+  for (const word of variants) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  assertEqual(countLearnedSpellings(storage, wordLists), 1, 'Sibling variants should count as one learned spelling item');
+});
+
+test('cumulative progress line hides for zero meaningful progress', () => {
+  assertEqual(formatCumulativeProgress(createDefaultStorage(), wordLists), null, 'Brand new storage should not show cumulative progress');
+});
+
+test('reset progress creates storage with empty cumulative stats', () => {
+  const storage = createDefaultStorage();
+
+  assertEqual(storage.learningStats?.totalActiveMs, 0, 'Fresh storage should not retain active practice time');
+  assertEqual(formatCumulativeProgress(storage, wordLists), null, 'Fresh storage should not show cumulative progress');
+});
+
+test('active practice time caps long idle gaps', () => {
+  const started = 1_000;
+  const afterFirstInput = addActiveInteractionTime({ wordStartedAt: started, lastInteractionAt: null, activeMs: 0 }, 6_000);
+  const afterIdle = addActiveInteractionTime(afterFirstInput, 126_000);
+
+  assertEqual(afterFirstInput.activeMs, 5_000, 'First interaction should count the initial active gap');
+  assertEqual(afterIdle.activeMs, 30_000, 'Long idle gaps should only count up to the idle threshold');
+});
+
+test('learning stats store compact cumulative active time', () => {
+  const storage = addLearningStats(createDefaultStorage(), 90_000, '2026-05-05T00:00:00.000Z');
+
+  assertEqual(storage.learningStats?.totalActiveMs, 90_000, 'Active time should be stored as an aggregate');
+  assertEqual(formatCumulativeProgress(storage, wordLists), '1 minute practised', 'Progress text should round down to whole practised minutes');
 });
 
 test('Review difficult words is hidden when no difficult words remain', () => {

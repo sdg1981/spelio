@@ -5,12 +5,6 @@ import { Check, Play, SlidersHorizontal } from './Icons';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
 
-function formatTime(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const remaining = seconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(remaining).padStart(2, '0')}`;
-}
-
 function getEncouragement(result: SessionResult) {
   const mostlyRevealed = result.revealedWords >= Math.ceil(result.totalWords / 2);
   const veryDifficult = result.correctWords <= Math.floor(result.totalWords / 2) || result.revealedLetters >= result.totalWords;
@@ -26,6 +20,7 @@ function getEncouragement(result: SessionResult) {
 export function EndScreen({
   result,
   recommendation,
+  progressSummary,
   hasDifficultWords,
   onContinue,
   onReview,
@@ -34,6 +29,7 @@ export function EndScreen({
 }: {
   result: SessionResult;
   recommendation: Recommendation;
+  progressSummary?: string | null;
   hasDifficultWords: boolean;
   onContinue: () => void;
   onReview: () => void;
@@ -62,8 +58,7 @@ export function EndScreen({
   const stats = [
     `${result.correctWords} correct`,
     `${result.incorrectWords} incorrect`,
-    ...(result.revealedWords > 0 ? [`${result.revealedWords} revealed`] : []),
-    formatTime(result.durationSeconds)
+    ...(result.revealedWords > 0 ? [`${result.revealedWords} revealed`] : [])
   ];
 
   return (
@@ -88,6 +83,9 @@ export function EndScreen({
               </span>
             ))}
           </div>
+          {progressSummary && (
+            <p className="end-progress-line">{progressSummary}</p>
+          )}
           {!shouldPrioritiseReview && (
             <>
               <h2>Next up</h2>

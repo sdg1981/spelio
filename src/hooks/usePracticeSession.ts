@@ -4,7 +4,8 @@ import { validateLetter } from '../lib/practice/validator';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
-import { applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
+import { addLearningStats, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
+import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 
 interface LetterState {
   value: string;
@@ -122,6 +123,12 @@ export function usePracticeSession({
   const storageRef = useRef(storage);
   const incorrectWordIdsRef = useRef(new Set<string>());
   const revealedWordIdsRef = useRef(new Set<string>());
+  const sessionActiveMsRef = useRef(0);
+  const wordTimingRef = useRef<ActiveWordTiming>({
+    wordStartedAt: Date.now(),
+    lastInteractionAt: null,
+    activeMs: 0
+  });
 
   useEffect(() => {
     storageRef.current = storage;
@@ -160,12 +167,23 @@ export function usePracticeSession({
     });
     incorrectWordIdsRef.current = new Set<string>();
     revealedWordIdsRef.current = new Set<string>();
+    sessionActiveMsRef.current = 0;
+    wordTimingRef.current = {
+      wordStartedAt: Date.now(),
+      lastInteractionAt: null,
+      activeMs: 0
+    };
     recapIssueRef.current = false;
     setLetters(createInitialLetters((recapWord ?? session.words[0])?.welshAnswer ?? ''));
   }, [sessionIdentity]);
 
   useEffect(() => {
     if (!currentWord) return;
+    wordTimingRef.current = {
+      wordStartedAt: Date.now(),
+      lastInteractionAt: null,
+      activeMs: 0
+    };
     setLetters(createInitialLetters(currentWord.welshAnswer));
     setWrongIndex(null);
     setIsCompletingRevealedWord(false);
@@ -179,6 +197,13 @@ export function usePracticeSession({
     }
   }, [currentWord?.id]);
 
+  function recordPracticeInteraction() {
+    const previous = wordTimingRef.current;
+    const next = addActiveInteractionTime(previous, Date.now());
+    sessionActiveMsRef.current += Math.max(0, next.activeMs - previous.activeMs);
+    wordTimingRef.current = next;
+  }
+
   function showStatus(message: string, tone: PracticeStatusTone = 'neutral') {
     setStatus(message);
     setStatusTone(tone);
@@ -188,6 +213,7 @@ export function usePracticeSession({
 
   const playAudio = useCallback(() => {
     if (!storageRef.current.settings.audioPrompts) return;
+    recordPracticeInteraction();
 
     if (!currentWord?.audioUrl) {
       showStatus('Audio unavailable');
@@ -238,6 +264,7 @@ export function usePracticeSession({
         ? storageRef.current.completedNormalSessionCount
         : (storageRef.current.completedNormalSessionCount ?? 0) + 1
     };
+    nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
     nextStorage = updateListCompletion(nextStorage, lists, result);
 
     const completedSingleListId = result.listIds.length === 1 ? result.listIds[0] : null;
@@ -269,6 +296,7 @@ export function usePracticeSession({
 
   function completeWord(forceDifficult = false) {
     if (!currentWord) return;
+    recordPracticeInteraction();
 
     const completingRecap = isRecapActive;
     const hadIssueInThisSession =
@@ -332,6 +360,7 @@ export function usePracticeSession({
     if (!currentWord || isComplete || inputLockedRef.current) return;
 
     if (isInputSpace(char)) return;
+    recordPracticeInteraction();
 
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
@@ -386,6 +415,7 @@ export function usePracticeSession({
 
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
+    recordPracticeInteraction();
 
     const answer = currentWord.welshAnswer;
     const nextIndex = findNextInputIndex(answer, letters);
@@ -426,6 +456,7 @@ export function usePracticeSession({
 
   const markCurrentWordRevealed = useCallback(() => {
     if (!currentWord || isComplete) return;
+    recordPracticeInteraction();
 
     persistWordProgress(currentWord, { revealed: true });
     if (isRecapActive) {
