@@ -2621,6 +2621,10 @@
   line-height:1.35!important;
 }
 
+.end-progress-line-chunk{
+  white-space:nowrap;
+}
+
 .end-recommendation-next h2{
   margin-top:14px;
 }

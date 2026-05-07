@@ -45,6 +45,23 @@ function CircularScore({
   );
 }
 
+function ProgressSummaryLine({ summary }: { summary: string }) {
+  const [firstPart, ...remainingParts] = summary.split(' · ');
+
+  if (remainingParts.length === 0) {
+    return <p className="end-progress-line">{summary}</p>;
+  }
+
+  return (
+    <p className="end-progress-line">
+      {firstPart}
+      {remainingParts.map(part => (
+        <span className="end-progress-line-chunk" key={part}> · {part}</span>
+      ))}
+    </p>
+  );
+}
+
 export function EndScreen({
   result,
   recommendation,
@@ -100,7 +117,7 @@ export function EndScreen({
         <div className="end-copy">
           <h1>{t('end.sessionComplete')}</h1>
           {progressSummary && (
-            <p className="end-progress-line">{progressSummary}</p>
+            <ProgressSummaryLine summary={progressSummary} />
           )}
         </div>
 
