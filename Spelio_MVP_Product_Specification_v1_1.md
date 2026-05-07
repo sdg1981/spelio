@@ -89,7 +89,70 @@ All public screens should include the shared footer copy:
 
 - Made with love for Wales. © CURRENT_YEAR Spelio
 
+Public learner screens should also include a small, low-contrast interface language switcher in the shared footer, for example:
+
+- English · Cymraeg
+
+The footer language switcher appears on public learner screens only, including homepage, practice screen, and end screen. It must not appear in the admin panel.
+
 The app should use the Spelio SVG favicon.
+
+### 4.1 Public interface language
+
+The public learner app supports a lightweight interface language setting:
+
+- English
+- Cymraeg
+
+This applies to public learner interface copy only:
+
+- homepage
+- practice screen
+- settings modal
+- word list modal
+- end screen
+- footer
+- status messages, buttons, and headings
+
+The admin panel remains English-only for MVP.
+
+`interfaceLanguage` is separate from:
+
+- `dialectPreference` / Welsh style
+- English prompt visibility
+- `sourceLanguage` / `targetLanguage` content metadata
+
+Changing the interface language must not alter:
+
+- selected word list
+- active session word pool
+- dialect variant selection
+- prompt/answer data
+- scoring or progress
+
+### 4.2 File-based UI translations
+
+MVP interface translations are file-based, not database-backed and not admin-editable.
+
+Conceptual structure:
+
+```text
+src/i18n/en.ts
+src/i18n/cy.ts
+src/i18n/index.ts
+```
+
+The translation helper should fall back safely to English when a key is missing.
+
+Do not add database-backed UI translations for MVP.
+
+The app uses one shared design and styling system. Do not introduce separate language-specific CSS files, stylesheets, themes, or layout variants.
+
+Layouts should be resilient to Welsh labels being longer than English:
+
+- avoid hardcoded English-width assumptions
+- allow wrapping or responsive sizing where needed
+- keep controls calm and visually consistent across interface languages
 
 ## 5. Homepage design
 
@@ -277,6 +340,8 @@ Bottom strip should be subtle:
 
 The practice screen uses the same shared footer copy and styling as the homepage.
 
+The practice screen footer may include the small public interface language switcher. This switcher updates the same `interfaceLanguage` setting used by the Settings modal and must not affect the current practice word, word pool, dialect selection, scoring, or progress.
+
 ### 6.5 Status messages
 
 **UX intent:** Feedback should feel supportive, not intrusive. Messages should be brief, subtle, and never stack or overwhelm the user.
@@ -312,12 +377,25 @@ Rules:
 - Do not let notes interrupt typing flow.
 - If note display feels too cluttered, it is acceptable for MVP to store/manage notes in admin first and delay learner display.
 
+Language rule:
+
+- `usageNote` and free-text `dialectNote` are authored learner content, not interface copy.
+- Do not automatically translate `usageNote` or free-text `dialectNote`.
+- In the English interface, `usageNote` may display where note display is already supported.
+- In the English interface, free-text `dialectNote` may display where note display is already supported.
+- In the Welsh interface, hide `usageNote`.
+- In the Welsh interface, hide free-text `dialectNote`.
+- In the Welsh interface, show only a small generated dialect label derived from structured dialect metadata where appropriate.
+
 ## 7. Settings modal
 
 Settings should be minimal.
 
 Fields:
 
+- Interface language
+  - English
+  - Cymraeg
 - Welsh spelling
   - Flexible
   - Strict
@@ -337,12 +415,24 @@ Fields:
 
 Defaults:
 
+- Interface language: English
 - Welsh spelling: Flexible
 - Welsh style: Mixed Welsh
 - Audio prompts: On
 - Sound effects: On
 
 Welsh style is stored as `dialectPreference` and affects word-level variant selection only. It must not affect word-list visibility.
+
+Interface language is stored as `interfaceLanguage` and affects learner-facing interface copy only. It is not the Welsh style setting, not the English prompt visibility setting, and not content language-pair metadata.
+
+Changing interface language from Settings should update public interface copy immediately where practical, without changing the selected word list, active session word pool, dialect variant selection, prompt/answer data, scoring, or progress.
+
+Interface language can be changed from:
+
+- the existing public Settings modal accessed from the practice-screen settings cog
+- the small public footer language switcher
+
+The footer language switcher should be low contrast and should not become a prominent header or onboarding step.
 
 ### 7.1 Welsh spelling modes
 
@@ -435,6 +525,22 @@ Each word should have:
 - dialectNote: optional short explanation
 - variantGroupId: optional shared ID linking variants of the same prompt
 
+Dialect labels shown in the public learner UI should be generated from structured dialect metadata and translation keys, not from free-text `dialectNote`.
+
+Generated dialect label examples:
+
+- North Wales
+  - English: North Wales form
+  - Welsh: Ffurf Gogledd Cymru
+- South Wales / Standard
+  - English: South Wales / Standard form
+  - Welsh: Ffurf De Cymru / Safonol
+- Standard
+  - English: Standard form
+  - Welsh: Ffurf safonol
+- Both
+  - normally show no dialect label
+
 Examples:
 
 - now → nawr — South Wales / Standard — variantGroupId: now
@@ -447,6 +553,42 @@ Dialect is handled at word/item level. The Welsh style setting affects variant s
 Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh should include a balanced mix of available North Wales and South Wales / Standard variants within the same session where possible, avoiding a simple first-in-dataset-order bias while still showing only one variant from each group.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
+
+### 8.3.1 Language-pair metadata
+
+Word lists/content packs should include future-safe language-pair metadata:
+
+- `sourceLanguage`
+- `targetLanguage`
+
+For current Welsh MVP content:
+
+```json
+{
+  "sourceLanguage": "en",
+  "targetLanguage": "cy"
+}
+```
+
+This is metadata only for MVP.
+
+Do not add multilingual prompt arrays yet.
+
+Do not convert current content into multi-prompt objects.
+
+### 8.3.2 Prompt/answer abstraction
+
+The practice engine should prefer generic internal concepts:
+
+- `prompt`
+- `answer`
+
+while preserving compatibility with existing current-content fields:
+
+- `englishPrompt`
+- `welshAnswer`
+
+This avoids hardcoding the product permanently to English → Welsh while keeping current dataset and database compatibility.
 
 ### 8.4 Multi-list selection
 
@@ -906,12 +1048,17 @@ Use local storage shape:
     "audioPrompts": true,
     "soundEffects": true,
     "welshSpelling": "flexible",
-    "dialectPreference": "mixed"
+    "dialectPreference": "mixed",
+    "interfaceLanguage": "en"
   }
 }
 ```
 
 Older stored settings without `dialectPreference` should default safely to `mixed`.
+
+Older stored settings without `interfaceLanguage` should default safely to `en`.
+
+`interfaceLanguage` must remain independent from `dialectPreference`, English prompt visibility, and content language-pair metadata.
 
 If normal completed session count cannot be inferred reliably from lastSessionResult or listProgress, store `normalSessionCount` as the minimal additional field.
 
@@ -985,6 +1132,8 @@ Each word list should include:
 - name
 - description
 - language
+- sourceLanguage
+- targetLanguage
 - dialect: Both / Mixed / North Wales / South Wales / Standard / Other
 - stage/group
 - difficulty: 1–5
@@ -995,6 +1144,22 @@ Each word list should include:
 - updatedAt
 
 List-level dialect is a summary/display field only. The actual practice filtering is controlled by word-level dialect.
+
+For current Welsh MVP content, word lists should default to:
+
+```json
+{
+  "sourceLanguage": "en",
+  "targetLanguage": "cy"
+}
+```
+
+In Supabase/database persistence, the `word_lists` table should include:
+
+- `source_language` default `"en"`
+- `target_language` default `"cy"`
+
+Do not rename existing `english_prompt` or `welsh_answer` database fields in MVP.
 
 ### 16.4 Word fields
 
@@ -1020,6 +1185,8 @@ Each word should include:
 acceptedAlternatives should not be used for different-length dialect variants. Use separate word items linked by variantGroupId instead.
 
 No additional learner-facing note fields are required for MVP. More detailed note categories should remain editorial guidance or internal notes, not separate schema fields.
+
+Do not add `usageNoteTranslations`, `dialectNoteTranslations`, multilingual learner-note tables, or database-backed translated note fields for MVP.
 
 ### 16.4.1 usageNote rules
 
@@ -1280,6 +1447,15 @@ If the current word has dialect other than Both, the app may show a subtle diale
 
 - North Wales form
 - South Wales / Standard form
+- Standard form
+
+Generated dialect labels must come from translation keys and structured dialect metadata, not from free-text `dialectNote`.
+
+Welsh generated dialect label examples:
+
+- Ffurf Gogledd Cymru
+- Ffurf De Cymru / Safonol
+- Ffurf safonol
 
 If a word has a dialectNote:
 
@@ -1303,6 +1479,14 @@ Display rules:
 - Do not animate or draw attention to these notes.
 - These notes should support the learner without becoming instructional clutter.
 - If this feels too cluttered for MVP, store and manage notes in admin first and delay learner display.
+
+Interface-language rule:
+
+- English interface: `usageNote` and free-text `dialectNote` may display where already supported.
+- Welsh interface: hide `usageNote` and free-text `dialectNote`.
+- Welsh interface: use generated dialect labels from translation keys where appropriate.
+- Both: normally show no dialect label.
+- Do not add note translation fields or tables for MVP.
 
 ### 19.3 Correct letter
 
@@ -1457,12 +1641,17 @@ Recommended MVP stack:
 - Vite
 - Vercel
 - Local storage for progress/settings
+- File-based public UI translations
 - Serverless API routes for admin/Azure integration
 - Simple storage for word/audio data initially
 
 Do not start with a separate Node server unless required.
 
 The app should be built mobile-first and PWA-friendly.
+
+Do not add database-backed or admin-editable UI translations for MVP.
+
+Do not introduce separate language-specific CSS files or themes. Use the shared styling system and make layouts resilient to longer Welsh labels.
 
 ### 21.1 Future app options
 
@@ -1491,6 +1680,11 @@ Do not include in MVP:
 - Learner-facing progress dashboard
 - Charts or noisy progress analytics
 - Multi-language support beyond data model readiness
+- Database-backed UI translations
+- Admin-editable translations
+- Multilingual prompt arrays
+- usageNoteTranslations or dialectNoteTranslations
+- Language-specific stylesheets/themes
 - User-level dashboards
 - Tutor dashboard
 - Cohort management

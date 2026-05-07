@@ -25,6 +25,8 @@ export interface AdminWordList {
   name: string;
   description: string;
   language: string;
+  sourceLanguage: string;
+  targetLanguage: string;
   dialect: AdminDialect;
   stageId: string;
   stage: string;

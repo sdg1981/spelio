@@ -4,6 +4,8 @@ import { CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, 
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
+import { getAnswer, getPrompt } from '../data/wordLists';
+import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
@@ -102,6 +104,13 @@ function GhostAnswer({
   );
 }
 
+function getDialectLabel(word: PracticeWord, t: Translate) {
+  if (word.dialect === 'Both') return null;
+  if (word.dialect === 'North Wales') return t('practice.northForm');
+  if (word.dialect === 'South Wales / Standard') return t('practice.southStandardForm');
+  if (word.dialect === 'Standard') return t('practice.standardForm');
+  return t('practice.dialectSpecificForm');
+}
 
 export function Practice({
   lists,
@@ -116,7 +125,10 @@ export function Practice({
   onBackHome,
   onWordListsDone,
   onResetProgress,
-  initialModal = null
+  initialModal = null,
+  interfaceLanguage,
+  onInterfaceLanguageChange,
+  t
 }: {
   lists: WordList[];
   storage: SpelioStorage;
@@ -131,6 +143,9 @@ export function Practice({
   onWordListsDone: (selectedIds: string[]) => void;
   onResetProgress: () => void;
   initialModal?: 'settings' | 'wordlist' | null;
+  interfaceLanguage: InterfaceLanguage;
+  onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
+  t: Translate;
 }) {
   const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
@@ -185,7 +200,7 @@ export function Practice({
     revealNext,
     markCurrentWordRevealed,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete, t });
 
   const clearPeekTimers = useCallback(() => {
     if (peekTimerRef.current) {
@@ -217,7 +232,7 @@ export function Practice({
     if (wasPeeking) {
       isPeekingRef.current = false;
       setIsPeeking(false);
-      if (showMemoryStatus) showLocalStatus('Now try from memory');
+      if (showMemoryStatus) showLocalStatus(t('practice.nowTryFromMemory'));
     }
 
     if (restoreFocus) restorePracticeInputFocus();
@@ -229,7 +244,7 @@ export function Practice({
     peekActivatedRef.current = true;
 
     if (peekUsedForCurrentWord) {
-      showLocalStatus('Peek used');
+      showLocalStatus(t('practice.peekUsed'));
       restorePracticeInputFocus();
       return;
     }
@@ -361,7 +376,7 @@ export function Practice({
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
 
-  const currentWordComplete = currentWord ? findIncompleteLetterIndex(currentWord.welshAnswer, letters) < 0 : false;
+  const currentWordComplete = currentWord ? findIncompleteLetterIndex(getAnswer(currentWord), letters) < 0 : false;
 
   useEffect(() => {
     if (currentWordComplete) finishPeek(false);
@@ -452,19 +467,19 @@ export function Practice({
 
   function toggleEnglishPrompt() {
     if (!storage.settings.audioPrompts && storage.settings.englishVisible) {
-      showLocalStatus('English needed when audio is off');
+      showLocalStatus(t('practice.promptNeededWhenAudioOff'));
       return;
     }
 
     const nextVisible = !storage.settings.englishVisible;
     updateSettings({ englishVisible: nextVisible });
-    showLocalStatus(nextVisible ? 'English on' : 'English off');
+    showLocalStatus(nextVisible ? t('practice.promptOn') : t('practice.promptOff'));
   }
 
   function toggleAudioPrompts() {
     const nextAudioPrompts = !storage.settings.audioPrompts;
     updateSettings(nextAudioPrompts ? { audioPrompts: true } : { audioPrompts: false, englishVisible: true });
-    showLocalStatus(nextAudioPrompts ? 'Audio on' : 'Audio off');
+    showLocalStatus(nextAudioPrompts ? t('practice.audioOn') : t('practice.audioOff'));
   }
 
   function handleEnglishToggle(event?: MouseEvent<HTMLButtonElement>) {
@@ -534,14 +549,14 @@ export function Practice({
     return (
       <main className="app-bg practice-app relative overflow-hidden">
         <Progress value={0} count="0 / 0" />
-        <button className="practice-mark-button" onClick={onBackHome} aria-label="Back to home">
+        <button className="practice-mark-button" onClick={onBackHome} aria-label={t('practice.backToHome')}>
           <span>S<span aria-hidden="true">_</span></span>
         </button>
         <section className="page-shell practice-shell">
-          <div className="status-line">Select a word list to begin</div>
-          <button className="done-button mt-10" onClick={() => setModal('wordlist')}>Select word list</button>
-          <button className="clear-button mt-8" onClick={onBackHome}>Back to home</button>
-          <Footer className="home-footer" variant="home" />
+          <div className="status-line">{t('practice.selectListToBegin')}</div>
+          <button className="done-button mt-10" onClick={() => setModal('wordlist')}>{t('home.selectWordList')}</button>
+          <button className="clear-button mt-8" onClick={onBackHome}>{t('practice.backToHome')}</button>
+          <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
         </section>
         {modal === 'wordlist' && (
           <WordListModal
@@ -549,24 +564,30 @@ export function Practice({
             initialSelectedIds={storage.selectedListIds}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
+            t={t}
           />
         )}
       </main>
     );
   }
 
-  const answerLayoutClass = getAnswerLayoutClass(currentWord.welshAnswer);
+  const answer = getAnswer(currentWord);
+  const prompt = getPrompt(currentWord);
+  const answerLayoutClass = getAnswerLayoutClass(answer);
   const wordComplete = currentWordComplete;
   const displayStatus = status ?? localStatus;
   const displayTone = status ? statusTone : 'neutral';
-  const wordInsights = [currentWord.dialectNote, currentWord.usageNote]
-    .map(note => note?.trim())
-    .filter((note): note is string => Boolean(note));
+  const dialectLabel = getDialectLabel(currentWord, t);
+  const wordInsights = interfaceLanguage === 'en'
+    ? [currentWord.dialectNote, currentWord.usageNote]
+      .map(note => note?.trim())
+      .filter((note): note is string => Boolean(note))
+    : [];
 
   return (
     <main className="app-bg practice-app relative overflow-hidden">
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
-      <button className="practice-mark-button" onClick={onBackHome} aria-label="Back to home">
+      <button className="practice-mark-button" onClick={onBackHome} aria-label={t('practice.backToHome')}>
         <span>S<span aria-hidden="true">_</span></span>
       </button>
 
@@ -577,18 +598,19 @@ export function Practice({
         onOpenChange={handleSettingsModalOpenChange}
         onResetProgress={onResetProgress}
         initiallyOpen={initialModal === 'settings'}
+        t={t}
       />
 
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
           {storage.settings.audioPrompts && <Repeat className="text-[#d90000]" size={23} />}
-          {storage.settings.englishVisible && <span>{currentWord.englishPrompt}</span>}
+          {storage.settings.englishVisible && <span>{prompt}</span>}
         </button>
-        {currentWord.dialect !== 'Both' && (
-          <div className="dialect-label">{currentWord.dialect === 'North Wales' ? 'North Wales form' : currentWord.dialect === 'South Wales / Standard' || currentWord.dialect === 'Standard' ? 'South Wales / Standard form' : 'Dialect-specific form'}</div>
+        {dialectLabel && (
+          <div className="dialect-label">{dialectLabel}</div>
         )}
         {wordInsights.length > 0 && (
-          <div className="word-insight" aria-label="Word insight">
+          <div className="word-insight" aria-label={t('practice.wordInsight')}>
             {wordInsights.map(note => (
               <span key={note}>{note}</span>
             ))}
@@ -614,7 +636,7 @@ export function Practice({
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
-          aria-label="Type Welsh answer"
+          aria-label={t('practice.typeAnswer')}
           onBlur={() => {
             mobileKeyboardEnabledRef.current = false;
           }}
@@ -625,15 +647,15 @@ export function Practice({
           onClick={focusMobileInput}
           className="letter-input-tap-zone"
         >
-          <LetterSlots word={currentWord.welshAnswer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
-          <GhostAnswer answer={currentWord.welshAnswer} layoutClass={answerLayoutClass} visible={isPeeking} />
+          <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
+          <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
 
         <AnimatedStatusLine status={displayStatus} tone={displayTone} />
         {showKeyboardHint && (
           <div className="keyboard-shortcut-hint">
             <Keyboard size={14} strokeWidth={1.8} aria-hidden="true" />
-            <span>Space to replay audio • → to reveal next letter</span>
+            <span>{t('practice.keyboardHint')}</span>
           </div>
         )}
 
@@ -642,27 +664,27 @@ export function Practice({
             onClick={handleEnglishToggle}
             onPointerDown={handleEnglishPointerDown}
             onPointerUp={handleEnglishPointerUp}
-            aria-label="Toggle English prompt"
+            aria-label={t('practice.togglePrompt')}
             aria-pressed={storage.settings.englishVisible}
           >
             <MessageSquareQuote size={22} />
-            <span className="english-toggle-label">English</span>
+            <span className="english-toggle-label">{t('practice.promptToggle')}</span>
           </button>
 
           <button
             onClick={handleAudioToggle}
             onPointerDown={handleAudioPointerDown}
             onPointerUp={handleAudioPointerUp}
-            aria-label="Toggle audio prompts"
+            aria-label={t('practice.toggleAudio')}
             aria-pressed={storage.settings.audioPrompts}
           >
             {storage.settings.audioPrompts ? <Volume2 size={22} /> : <VolumeX size={22} />}
-            <span>Audio</span>
+            <span>{t('practice.audio')}</span>
           </button>
 
           <button
             className="reveal-button"
-            aria-label="Reveal next letter"
+            aria-label={t('practice.revealNext')}
             onPointerDown={handleRevealPointerDown}
             onPointerUp={handleRevealPointerUp}
             onPointerCancel={endPeekHold}
@@ -671,11 +693,11 @@ export function Practice({
             onClick={handleRevealLetter}
           >
             <Eye size={23} />
-            <span>Reveal</span>
+            <span>{t('practice.reveal')}</span>
           </button>
         </div>
 
-        <Footer className="home-footer" variant="home" />
+        <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
 
       {modal === 'wordlist' && (
@@ -684,6 +706,7 @@ export function Practice({
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
+          t={t}
         />
       )}
     </main>
@@ -732,7 +755,7 @@ function AnimatedStatusLine({
     <div className={`status-line status-line-${visibleStatus ? visibleTone : tone}`}>
       {visibleStatus && (
         <span className={`status-message ${leaving ? 'leaving' : 'entering'}`} key={visibleStatus}>
-          {visibleStatus === 'Incorrect. Try again.' && <CircleX size={22} />}
+          {visibleTone === 'error' && <CircleX size={22} />}
           {visibleStatus}
         </span>
       )}
@@ -766,7 +789,8 @@ const SettingsLauncher = memo(function SettingsLauncher({
   onChange,
   onOpenChange,
   onResetProgress,
-  initiallyOpen = false
+  initiallyOpen = false,
+  t
 }: {
   settings: SpelioSettings;
   activePracticeSession: boolean;
@@ -774,6 +798,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
   onOpenChange: (open: boolean) => void;
   onResetProgress: () => void;
   initiallyOpen?: boolean;
+  t: Translate;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
 
@@ -784,7 +809,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
 
   return (
     <>
-      <button className="settings-cog" onClick={() => setModalOpen(true)} aria-label="Open settings">
+      <button className="settings-cog" onClick={() => setModalOpen(true)} aria-label={t('settings.open')}>
         <Settings size={22} />
       </button>
       {open && (
@@ -794,6 +819,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
           onChange={onChange}
           onClose={() => setModalOpen(false)}
           onResetProgress={onResetProgress}
+          t={t}
         />
       )}
     </>
@@ -805,13 +831,15 @@ function SettingsModal({
   activePracticeSession,
   onChange,
   onClose,
-  onResetProgress
+  onResetProgress,
+  t
 }: {
   settings: SpelioSettings;
   activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onClose: () => void;
   onResetProgress: () => void;
+  t: Translate;
 }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [welshStyleNoticeVisible, setWelshStyleNoticeVisible] = useState(false);
@@ -835,62 +863,82 @@ function SettingsModal({
     <Overlay>
       <section className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <div className="settings-modal-header flex items-center justify-between">
-          <h2 className="modal-title" id="settings-title">Settings</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close settings">×</button>
+          <h2 className="modal-title" id="settings-title">{t('settings.title')}</h2>
+          <button className="modal-close" onClick={onClose} aria-label={t('settings.close')}>×</button>
         </div>
 
         <div className="settings-modal-body">
           <div>
-            <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh spelling</h3>
-            <p className="mt-2 field-note">Choose how strictly Welsh characters are checked.</p>
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.interfaceLanguage')}</h3>
 
             <div className="mt-7 space-y-7">
-              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'flexible' })}>
-                <Radio active={settings.welshSpelling === 'flexible'} />
+              <button className="flex gap-5 text-left" onClick={() => onChange({ interfaceLanguage: 'en' })}>
+                <Radio active={settings.interfaceLanguage === 'en'} />
                 <span>
-                  <b className="block text-[18px] md:text-[15px]">Flexible (recommended)</b>
-                  <span className="mt-2 block field-note">Accepts unaccented and accented characters.</span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.english')}</b>
                 </span>
               </button>
 
-              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'strict' })}>
-                <Radio active={settings.welshSpelling === 'strict'} />
+              <button className="flex gap-5 text-left" onClick={() => onChange({ interfaceLanguage: 'cy' })}>
+                <Radio active={settings.interfaceLanguage === 'cy'} />
                 <span>
-                  <b className="block text-[18px] md:text-[15px]">Strict</b>
-                  <span className="mt-2 block field-note">Requires correct accents and diacritics.</span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.cymraeg')}</b>
                 </span>
               </button>
             </div>
           </div>
 
           <div className="mt-10 border-t border-[#edf0f2] pt-8">
-            <h3 className="text-[16px] md:text-[15px] font-extrabold">Welsh style</h3>
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.welshSpelling')}</h3>
+            <p className="mt-2 field-note">{t('settings.welshSpellingNote')}</p>
+
+            <div className="mt-7 space-y-7">
+              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'flexible' })}>
+                <Radio active={settings.welshSpelling === 'flexible'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.flexible')}</b>
+                  <span className="mt-2 block field-note">{t('settings.flexibleNote')}</span>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ welshSpelling: 'strict' })}>
+                <Radio active={settings.welshSpelling === 'strict'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.strict')}</b>
+                  <span className="mt-2 block field-note">{t('settings.strictNote')}</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-[#edf0f2] pt-8">
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.welshStyle')}</h3>
 
             <div className="mt-7 space-y-7">
               <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('mixed')}>
                 <Radio active={settings.dialectPreference === 'mixed'} />
                 <span>
-                  <b className="block text-[18px] md:text-[15px]">Mixed Welsh</b>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.mixedWelsh')}</b>
                 </span>
               </button>
 
               <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('north')}>
                 <Radio active={settings.dialectPreference === 'north'} />
                 <span>
-                  <b className="block text-[18px] md:text-[15px]">North Wales</b>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.northWales')}</b>
                 </span>
               </button>
 
               <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('south_standard')}>
                 <Radio active={settings.dialectPreference === 'south_standard'} />
                 <span>
-                  <b className="block text-[18px] md:text-[15px]">South Wales / Standard</b>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.southStandard')}</b>
                 </span>
               </button>
             </div>
             {welshStyleNoticeVisible && (
               <p className="mt-5 field-note" role="status">
-                Welsh style will apply from your next session.
+                {t('settings.styleAppliesNextSession')}
               </p>
             )}
           </div>
@@ -898,16 +946,16 @@ function SettingsModal({
           <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
             <div className="flex items-center justify-between gap-8">
               <span>
-                <b className="block text-[18px] md:text-[15px]">Audio prompts</b>
-                <span className="mt-2 block field-note">Play audio when each word appears.</span>
+                <b className="block text-[18px] md:text-[15px]">{t('settings.audioPrompts')}</b>
+                <span className="mt-2 block field-note">{t('settings.audioPromptsNote')}</span>
               </span>
               <Toggle active={settings.audioPrompts} onClick={() => onChange({ audioPrompts: !settings.audioPrompts })} />
             </div>
 
             <div className="flex items-center justify-between gap-8">
               <span>
-                <b className="block text-[18px] md:text-[15px]">Sound effects</b>
-                <span className="mt-2 block field-note">Play sounds for correct and incorrect answers.</span>
+                <b className="block text-[18px] md:text-[15px]">{t('settings.soundEffects')}</b>
+                <span className="mt-2 block field-note">{t('settings.soundEffectsNote')}</span>
               </span>
               <Toggle active={settings.soundEffects} onClick={() => onChange({ soundEffects: !settings.soundEffects })} />
             </div>
@@ -915,29 +963,29 @@ function SettingsModal({
 
           <div className="mt-10 border-t border-[#edf0f2] pt-7">
             <button className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
-              Reset progress
+              {t('settings.resetProgress')}
             </button>
           </div>
         </div>
 
         <div className="settings-modal-footer">
-          <button className="w-full rounded-[8px] border border-[#dfe4e8] bg-white py-5 text-[22px] md:text-[16px]" onClick={onClose}>Close</button>
+          <button className="w-full rounded-[8px] border border-[#dfe4e8] bg-white py-5 text-[22px] md:text-[16px]" onClick={onClose}>{t('settings.closeButton')}</button>
         </div>
       </section>
 
       {confirmingReset && (
         <div className="confirm-layer" role="presentation">
           <section className="modal modal-small reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title">
-            <h2 className="modal-title" id="reset-progress-title">Reset progress?</h2>
+            <h2 className="modal-title" id="reset-progress-title">{t('settings.resetProgressTitle')}</h2>
             <p className="modal-text mt-5">
-              This will clear all your progress, settings, and history on this device.
+              {t('settings.resetProgressBody')}
             </p>
             <div className="mt-9 flex justify-end gap-3">
               <button className="confirm-cancel-button" onClick={() => setConfirmingReset(false)} type="button">
-                Cancel
+                {t('settings.cancel')}
               </button>
               <button className="confirm-reset-button" onClick={handleResetConfirm} type="button">
-                Reset
+                {t('settings.reset')}
               </button>
             </div>
           </section>
@@ -975,12 +1023,14 @@ export function WordListModal({
   lists,
   initialSelectedIds,
   onClose,
-  onDone
+  onDone,
+  t
 }: {
   lists: WordList[];
   initialSelectedIds: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
+  t: Translate;
 }) {
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState(() => initialSelectedIds);
@@ -1010,15 +1060,15 @@ export function WordListModal({
       <section className="modal modal-wide modal-accent wordlist-modal">
         <div className="modal-header flex items-start justify-between gap-4">
           <div>
-            <h2 className="modal-title">Word Lists</h2>
-            <p className="modal-text mt-3">Words will be mixed from all selected lists.</p>
+            <h2 className="modal-title">{t('wordLists.title')}</h2>
+            <p className="modal-text mt-3">{t('wordLists.description')}</p>
           </div>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
         <div className="wordlist-body">
-          <div className="selected-box">Selected: {selectedIds.length} {selectedIds.length === 1 ? 'list' : 'lists'}</div>
-          <input className="search-input" placeholder="Search word lists..." value={query} onChange={event => setQuery(event.target.value)} />
+          <div className="selected-box">{t('wordLists.selected')}: {selectedIds.length} {selectedIds.length === 1 ? t('wordLists.list') : t('wordLists.lists')}</div>
+          <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
 
           <div className="list-grid">
             {Object.entries(groups).map(([group, groupLists]) => (
@@ -1038,8 +1088,8 @@ export function WordListModal({
         </div>
 
         <div className="done-row sticky-done">
-          <button className="clear-button" onClick={() => setSelectedIds([])}>Clear all</button>
-          <button className="done-button" onClick={() => onDone(selectedIds)}>Done</button>
+          <button className="clear-button" onClick={() => setSelectedIds([])}>{t('wordLists.clearAll')}</button>
+          <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
         </div>
       </section>
     </Overlay>

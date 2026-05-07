@@ -2,19 +2,20 @@ import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
 import { Check, Play, SlidersHorizontal } from './Icons';
+import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
 
-function getEncouragement(result: SessionResult) {
+function getEncouragement(result: SessionResult, t: Translate) {
   const mostlyRevealed = result.revealedWords >= Math.ceil(result.totalWords / 2);
   const veryDifficult = result.correctWords <= Math.floor(result.totalWords / 2) || result.revealedLetters >= result.totalWords;
 
-  if (mostlyRevealed || veryDifficult) return 'That was a tricky one — let’s practise those words again.';
+  if (mostlyRevealed || veryDifficult) return t('end.trickyEncouragement');
   if (result.incorrectWords > 0 || result.revealedWords > 0 || result.incorrectAttempts > 0 || result.revealedLetters > 0) {
-    return 'Good effort — a quick review will help these stick.';
+    return t('end.reviewHelps');
   }
 
-  return 'Great work — you’re ready to keep going.';
+  return t('end.greatWork');
 }
 
 export function EndScreen({
@@ -25,7 +26,10 @@ export function EndScreen({
   onContinue,
   onReview,
   onChangeLists,
-  onHome
+  onHome,
+  interfaceLanguage,
+  onInterfaceLanguageChange,
+  t
 }: {
   result: SessionResult;
   recommendation: Recommendation;
@@ -35,30 +39,32 @@ export function EndScreen({
   onReview: () => void;
   onChangeLists: () => void;
   onHome: () => void;
+  interfaceLanguage: InterfaceLanguage;
+  onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
+  t: Translate;
 }) {
-  const recommendationLooksLikeReview = recommendation.title.toLowerCase().includes('difficult');
   const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
   const shouldChooseAnotherList = recommendation.kind === 'choose_list';
-  const recommendedListName = !hasDifficultWords && recommendationLooksLikeReview
-    ? 'Keep building from your selected word list'
+  const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
+    ? t('end.keepBuilding')
     : recommendation.subtitle;
   const primaryTitle = shouldPrioritiseReview
-    ? 'Review difficult words'
+    ? t('home.reviewDifficult')
     : shouldChooseAnotherList
-      ? 'Choose another word list'
-      : 'Continue learning';
+      ? t('home.chooseAnotherList')
+      : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview
     ? onReview
     : shouldChooseAnotherList
       ? onChangeLists
       : onContinue;
   const encouragement = shouldPrioritiseReview
-    ? 'That was a tricky one — let’s practise those words again.'
-    : getEncouragement(result);
+    ? t('end.trickyEncouragement')
+    : getEncouragement(result, t);
   const stats = [
-    `${result.correctWords} correct`,
-    `${result.incorrectWords} incorrect`,
-    ...(result.revealedWords > 0 ? [`${result.revealedWords} revealed`] : [])
+    `${result.correctWords} ${t('end.correct')}`,
+    `${result.incorrectWords} ${t('end.incorrect')}`,
+    ...(result.revealedWords > 0 ? [`${result.revealedWords} ${t('end.revealed')}`] : [])
   ];
 
   return (
@@ -69,13 +75,13 @@ export function EndScreen({
         <div className="end-success-orb"><Check size={52} strokeWidth={2.2} /></div>
 
         <div className="end-copy">
-          <h1>Session complete</h1>
+          <h1>{t('end.sessionComplete')}</h1>
           <p>{encouragement}</p>
         </div>
 
         <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
-          {shouldPrioritiseReview && <h2>Focus on tricky words</h2>}
-          <div className="end-stats-line" aria-label="Session stats">
+          {shouldPrioritiseReview && <h2>{t('home.focusTricky')}</h2>}
+          <div className="end-stats-line" aria-label={t('end.sessionStats')}>
             {stats.map((item, index) => (
               <span key={item}>
                 {index > 0 && <span className="end-stat-separator" aria-hidden="true">•</span>}
@@ -88,7 +94,7 @@ export function EndScreen({
           )}
           {!shouldPrioritiseReview && (
             <>
-              <h2>Next up</h2>
+              <h2>{t('end.nextUp')}</h2>
               <p>{recommendedListName}</p>
             </>
           )}
@@ -100,8 +106,8 @@ export function EndScreen({
           {shouldPrioritiseReview && (
             <ActionRow
               icon={<Play size={30} />}
-              title="Continue learning"
-              subtitle="Pick up where you left off"
+              title={t('home.continueLearning')}
+              subtitle={t('end.pickUpWhereLeftOff')}
               arrowVariant="arrow"
               onClick={onContinue}
             />
@@ -109,22 +115,22 @@ export function EndScreen({
           {shouldChooseAnotherList && (
             <ActionRow
               icon={<Play size={30} />}
-              title="Practise this mix again"
-              subtitle="Repeat your selected lists"
+              title={t('end.practiseMixAgain')}
+              subtitle={t('end.repeatSelectedLists')}
               arrowVariant="arrow"
               onClick={onContinue}
             />
           )}
           <ActionRow
             icon={<SlidersHorizontal size={30} />}
-            title={shouldChooseAnotherList ? 'Back to home' : 'Change word list'}
-            subtitle={shouldChooseAnotherList ? 'Return to the homepage' : 'Choose different lists for your next session'}
+            title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
+            subtitle={shouldChooseAnotherList ? t('end.returnHomepage') : t('end.chooseDifferentNext')}
             arrowVariant="arrow"
             onClick={shouldChooseAnotherList ? onHome : onChangeLists}
           />
         </div>
 
-        <Footer />
+        <Footer interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
     </main>
   );

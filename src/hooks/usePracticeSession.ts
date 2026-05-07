@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PracticeWord, WordList } from '../data/wordLists';
+import { getAnswer } from '../data/wordLists';
+import type { Translate } from '../i18n';
 import { validateLetter } from '../lib/practice/validator';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
@@ -33,7 +35,7 @@ function isInputSpace(char: string) {
 }
 
 function getAnswerCandidates(word: PracticeWord) {
-  return [word.welshAnswer, ...(word.acceptedAlternatives ?? [])];
+  return [getAnswer(word), ...(word.acceptedAlternatives ?? [])];
 }
 
 function validateInputAtIndex(char: string, word: PracticeWord, index: number, mode: SpelioSettings['welshSpelling']) {
@@ -76,7 +78,8 @@ export function usePracticeSession({
   includeRecapDue = false,
   sessionKey = 0,
   onStorageChange,
-  onComplete
+  onComplete,
+  t = key => key
 }: {
   lists: WordList[];
   storage: SpelioStorage;
@@ -86,6 +89,7 @@ export function usePracticeSession({
   sessionKey?: number;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
+  t?: Translate;
 }) {
   const session = useMemo(
     () => createPracticeSession(lists, sessionStorage, reviewDifficult, includeRecapDue),
@@ -99,7 +103,7 @@ export function usePracticeSession({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRecapActive, setIsRecapActive] = useState(Boolean(recapWord));
   const currentWord = isRecapActive ? recapWord : session.words[currentIndex];
-  const [letters, setLetters] = useState<LetterState[]>(() => createInitialLetters(currentWord?.welshAnswer ?? ''));
+  const [letters, setLetters] = useState<LetterState[]>(() => createInitialLetters(currentWord ? getAnswer(currentWord) : ''));
   const [status, setStatus] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<PracticeStatusTone>('neutral');
   const [wrongIndex, setWrongIndex] = useState<number | null>(null);
@@ -174,7 +178,8 @@ export function usePracticeSession({
       activeMs: 0
     };
     recapIssueRef.current = false;
-    setLetters(createInitialLetters((recapWord ?? session.words[0])?.welshAnswer ?? ''));
+    const firstWord = recapWord ?? session.words[0];
+    setLetters(createInitialLetters(firstWord ? getAnswer(firstWord) : ''));
   }, [sessionIdentity]);
 
   useEffect(() => {
@@ -184,7 +189,7 @@ export function usePracticeSession({
       lastInteractionAt: null,
       activeMs: 0
     };
-    setLetters(createInitialLetters(currentWord.welshAnswer));
+    setLetters(createInitialLetters(getAnswer(currentWord)));
     setWrongIndex(null);
     setIsCompletingRevealedWord(false);
     isCompletingRevealedWordRef.current = false;
@@ -216,14 +221,14 @@ export function usePracticeSession({
     recordPracticeInteraction();
 
     if (!currentWord?.audioUrl) {
-      showStatus('Audio unavailable');
+      showStatus(t('practice.audioUnavailable'));
       return;
     }
 
     const audio = new Audio(currentWord.audioUrl);
     audio.currentTime = 0;
-    audio.play().catch(() => showStatus('Audio unavailable'));
-  }, [currentWord?.id]);
+    audio.play().catch(() => showStatus(t('practice.audioUnavailable')));
+  }, [currentWord?.id, t]);
 
   function persistWordProgress(word: PracticeWord, patch: WordProgressPatch) {
     const currentStorage = storageRef.current;
@@ -314,7 +319,8 @@ export function usePracticeSession({
 
     if (completingRecap) {
       window.setTimeout(() => {
-        setLetters(createInitialLetters(session.words[currentIndex]?.welshAnswer ?? ''));
+        const nextWord = session.words[currentIndex];
+        setLetters(createInitialLetters(nextWord ? getAnswer(nextWord) : ''));
         setWrongIndex(null);
         inputLockedRef.current = false;
         setIsRecapActive(false);
@@ -322,7 +328,7 @@ export function usePracticeSession({
         setStatusTone('neutral');
       }, 320);
 
-      showStatus('Correct', 'success');
+      showStatus(t('practice.correct'), 'success');
       if (storage.settings.soundEffects) playTone('success');
       return;
     }
@@ -352,7 +358,7 @@ export function usePracticeSession({
       return next;
     });
 
-    showStatus('Correct', 'success');
+    showStatus(t('practice.correct'), 'success');
     if (storage.settings.soundEffects) playTone('success');
   }
 
@@ -362,7 +368,7 @@ export function usePracticeSession({
     if (isInputSpace(char)) return;
     recordPracticeInteraction();
 
-    const answer = currentWord.welshAnswer;
+    const answer = getAnswer(currentWord);
     const nextIndex = findNextInputIndex(answer, letters);
     if (nextIndex < 0) return;
 
@@ -383,7 +389,7 @@ export function usePracticeSession({
     inputLockedRef.current = true;
     setLetters(nextLetters);
     setWrongIndex(nextIndex);
-    showStatus('Incorrect. Try again.', 'error');
+    showStatus(t('practice.incorrectTryAgain'), 'error');
     persistWordProgress(currentWord, { incorrect: true });
     if (isRecapActive) {
       recapIssueRef.current = true;
@@ -411,19 +417,19 @@ export function usePracticeSession({
       setWrongIndex(null);
       inputLockedRef.current = false;
     }, 820);
-  }, [currentWord?.id, isComplete, isRecapActive, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
+  }, [currentWord?.id, isComplete, isRecapActive, letters, storage.settings.welshSpelling, storage.settings.soundEffects, t]);
 
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
     recordPracticeInteraction();
 
-    const answer = currentWord.welshAnswer;
+    const answer = getAnswer(currentWord);
     const nextIndex = findNextInputIndex(answer, letters);
     if (nextIndex < 0) return;
 
     const nextLetters = letters.map((letter, index) => index === nextIndex ? { value: answer[nextIndex], revealed: true } : letter);
     setLetters(nextLetters);
-    showStatus('Letter revealed');
+    showStatus(t('practice.letterRevealed'));
     persistWordProgress(currentWord, { revealed: true });
     if (isRecapActive) {
       recapIssueRef.current = true;
@@ -452,7 +458,7 @@ export function usePracticeSession({
         completeWord(true);
       }, REVEALED_WORD_COMPLETION_DELAY_MS);
     }
-  }, [currentWord?.id, isComplete, isRecapActive, letters]);
+  }, [currentWord?.id, isComplete, isRecapActive, letters, t]);
 
   const markCurrentWordRevealed = useCallback(() => {
     if (!currentWord || isComplete) return;
@@ -486,7 +492,7 @@ export function usePracticeSession({
     total: session.words.length
   };
   const activeIndex = currentWord && !isComplete && !inputLockedRef.current
-    ? findNextInputIndex(currentWord.welshAnswer, letters)
+    ? findNextInputIndex(getAnswer(currentWord), letters)
     : -1;
 
   return {
@@ -500,7 +506,7 @@ export function usePracticeSession({
     isCompletingRevealedWord,
     stats: publicStats,
     progressValue: session.words.length ? (stats.correctWords / session.words.length) * 100 : 0,
-    progressCount: isRecapActive ? 'Quick recap' : `${Math.min(stats.correctWords + 1, session.words.length)} / ${session.words.length}`,
+    progressCount: isRecapActive ? t('practice.quickRecap') : `${Math.min(stats.correctWords + 1, session.words.length)} / ${session.words.length}`,
     hasWords: session.words.length > 0,
     handleInput,
     revealNext,

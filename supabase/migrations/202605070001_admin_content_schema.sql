@@ -37,6 +37,8 @@ create table public.word_lists (
   name text not null,
   description text not null default '',
   language text not null default 'Welsh',
+  source_language text not null default 'en',
+  target_language text not null default 'cy',
   dialect text not null references public.dialect_options(id),
   stage_id text references public.stages(id),
   focus_category_id text references public.focus_categories(id),

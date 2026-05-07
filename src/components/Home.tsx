@@ -2,6 +2,7 @@ import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
 import { List, Play, RotateCcw } from './Icons';
+import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
@@ -16,7 +17,10 @@ export function Home({
   onContinue,
   onReview,
   onRecapReview,
-  onSelectList
+  onSelectList,
+  interfaceLanguage,
+  onInterfaceLanguageChange,
+  t
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
@@ -28,20 +32,23 @@ export function Home({
   onReview: () => void;
   onRecapReview: () => void;
   onSelectList: () => void;
+  interfaceLanguage: InterfaceLanguage;
+  onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
+  t: Translate;
 }) {
   const isFirst = mode === 'first';
   const shouldPrioritiseReview = hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
   const shouldChooseAnotherList = !shouldPrioritiseReview && recommendation.kind === 'choose_list';
-  const homeHeading = shouldPrioritiseReview ? 'Focus on tricky words' : 'Continue learning';
+  const homeHeading = shouldPrioritiseReview ? t('home.focusTricky') : t('home.continueLearning');
   const primaryLabel = isFirst
-    ? 'Start spelling practice'
+    ? t('home.startPractice')
     : shouldPrioritiseReview
-      ? 'Review difficult words'
+      ? t('home.reviewDifficult')
       : shouldChooseAnotherList
-        ? 'Choose another word list'
-        : 'Continue learning';
+        ? t('home.chooseAnotherList')
+        : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
-  const selectListLabel = isFirst ? 'Select word list' : 'Change word list';
+  const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const showRecapEntry = mode === 'returning' && recapWordCount > 0 && !shouldPrioritiseReview;
   const recapCountLabel = recapWordCount >= 5 ? '5+' : String(recapWordCount);
@@ -56,13 +63,13 @@ export function Home({
         <div className={`home-copy ${isFirst ? 'home-copy-first' : ''}`}>
           <h1 className={`home-heading ${isFirst ? 'home-heading-first' : ''}`}>
             {isFirst ? (
-              <><span>Type what you hear.</span><br /><span>Learn Welsh spelling.</span></>
+              <><span>{t('home.firstHeadingLine1')}</span><br /><span>{t('home.firstHeadingLine2')}</span></>
             ) : homeHeading}
           </h1>
 
           {!isFirst && (
             <p className="home-support">
-              {shouldPrioritiseReview ? 'Based on your last session' : recommendation.subtitle}
+              {shouldPrioritiseReview ? t('home.basedOnLastSession') : recommendation.subtitle}
             </p>
           )}
         </div>
@@ -77,8 +84,8 @@ export function Home({
           {shouldPrioritiseReview && hasDifficultWords && (
             <ActionRow
               icon={<Play size={30} />}
-              title="Continue learning"
-              subtitle="From where you left off"
+              title={t('home.continueLearning')}
+              subtitle={t('home.fromWhereLeftOff')}
               accent="red"
               arrowVariant="arrow"
               onClick={onContinue}
@@ -88,7 +95,7 @@ export function Home({
           <ActionRow
             icon={<List size={30} />}
             title={selectListLabel}
-            subtitle={!isFirst ? 'Choose a different list' : undefined}
+            subtitle={!isFirst ? t('home.chooseDifferentList') : undefined}
             subtitleClassName="home-desktop-subtitle"
             arrowVariant="arrow"
             onClick={onSelectList}
@@ -97,8 +104,8 @@ export function Home({
           {showRecapEntry && (
             <ActionRow
               icon={<RotateCcw size={28} />}
-              title="From earlier"
-              subtitle="Revisit a few words"
+              title={t('home.fromEarlier')}
+              subtitle={t('home.revisitWords')}
               trailing={recapCountLabel}
               arrowVariant="arrow"
               onClick={onRecapReview}
@@ -106,7 +113,7 @@ export function Home({
           )}
         </div>
 
-        <Footer className="home-footer" variant="home" />
+        <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
     </main>
   );

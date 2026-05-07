@@ -1,13 +1,17 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Heart } from './Icons';
+import type { InterfaceLanguage, Translate } from '../i18n';
 
 type FooterProps = {
   className?: string;
   variant?: 'default' | 'home';
+  interfaceLanguage: InterfaceLanguage;
+  onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
+  t: Translate;
 };
 
-export function Footer({ className = '' }: FooterProps) {
+export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageChange, t }: FooterProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
   const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
@@ -44,7 +48,7 @@ export function Footer({ className = '' }: FooterProps) {
       try {
         await navigator.share({
           title: 'Spelio',
-          text: 'Really nice Welsh spelling practice app — well worth a try.',
+          text: t('footer.shareText'),
           url: shareUrl
         });
         showShareStatus('shared');
@@ -67,56 +71,48 @@ export function Footer({ className = '' }: FooterProps) {
   return (
     <>
       <footer className={classes} aria-label={`Made with love for Wales. Copyright ${year} Spelio`}>
+        <span className="footer-language-switcher" aria-label={t('settings.interfaceLanguage')}>
+          <button className={interfaceLanguage === 'en' ? 'active' : ''} type="button" onClick={() => onInterfaceLanguageChange('en')}>English</button>
+          <span aria-hidden="true">·</span>
+          <button className={interfaceLanguage === 'cy' ? 'active' : ''} type="button" onClick={() => onInterfaceLanguageChange('cy')}>Cymraeg</button>
+        </span>
         <span className="footer-line">
           <span className="footer-made-with">
-            Made with <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> for Wales
+            {t('footer.madeWith')} <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> {t('footer.forWales')}
           </span> · © {year} Spelio
         </span>
-        <span className="footer-links" aria-label="Footer links">
-          <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button>
+        <span className="footer-links" aria-label={t('footer.linksLabel')}>
+          <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>{t('footer.feedback')}</button>
           <span aria-hidden="true">·</span>
-          <button className="footer-link footer-share-link" type="button" onClick={handleShare}>Share</button>
+          <button className="footer-link footer-share-link" type="button" onClick={handleShare}>{t('footer.share')}</button>
           <span className="footer-share-separator" aria-hidden="true">·</span>
-          <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>Privacy</button>
+          <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>{t('footer.privacy')}</button>
           <span aria-hidden="true">·</span>
-          <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>About</button>
+          <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>{t('footer.about')}</button>
         </span>
       </footer>
-      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} />}
       {infoModal === 'privacy' && (
-        <InfoModal title="Privacy" titleId="privacy-title" onClose={() => setInfoModal(null)}>
-          <p>Spelio is designed to work without an account.</p>
-          <p>
-            Your spelling progress, settings, difficult words, and session history are stored locally on your device using your browser’s storage.
-            This helps Spelio remember what you have practised and recommend what to do next.
-          </p>
-          <p>You can delete this local progress at any time using Reset progress in Settings.</p>
-          <p>
-            Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed,
-            word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is
-            useful and what needs improving.
-          </p>
-          <p>Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.</p>
+        <InfoModal title={t('footer.privacyTitle')} titleId="privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
+          <p>{t('footer.privacyBody1')}</p>
+          <p>{t('footer.privacyBody2')}</p>
+          <p>{t('footer.privacyBody3')}</p>
+          <p>{t('footer.privacyBody4')}</p>
+          <p>{t('footer.privacyBody5')}</p>
         </InfoModal>
       )}
       {infoModal === 'about' && (
-        <InfoModal title="About Spelio" titleId="about-title" onClose={() => setInfoModal(null)}>
-          <p>Beta version 0.2</p>
-          <p>Spelio is a focused Welsh spelling practice app.</p>
-          <p>
-            It helps learners practise Welsh words and short phrases through short, repeatable spelling sessions designed to improve recall, spelling accuracy, confidence, and the connection between spoken and written Welsh.
-          </p>
-          <p>Spelio is designed to complement other ways of learning Welsh rather than replace them.</p>
-          <p>
-            The project started while learning Welsh personally. As a dyslexic learner, I found that hearing words often wasn’t enough — I needed
-            to see words, type them, and practise their spelling to properly remember them. Spelio was built to create the kind of simple, focused
-            practice tool I wished already existed alongside the other Welsh learning resources I was using.
-          </p>
+        <InfoModal title={t('footer.aboutTitle')} titleId="about-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
+          <p>{t('footer.aboutBody1')}</p>
+          <p>{t('footer.aboutBody2')}</p>
+          <p>{t('footer.aboutBody3')}</p>
+          <p>{t('footer.aboutBody4')}</p>
+          <p>{t('footer.aboutBody5')}</p>
         </InfoModal>
       )}
       <div className={`app-toast ${shareStatus ? 'visible' : ''}`} role="status" aria-live="polite">
-        {shareStatus === 'shared' && 'Shared'}
-        {shareStatus === 'copied' && 'Link copied'}
+        {shareStatus === 'shared' && t('footer.shared')}
+        {shareStatus === 'copied' && t('footer.copied')}
       </div>
     </>
   );
@@ -126,12 +122,14 @@ function InfoModal({
   title,
   titleId,
   children,
-  onClose
+  onClose,
+  closeLabel
 }: {
   title: string;
   titleId: string;
   children: ReactNode;
   onClose: () => void;
+  closeLabel: string;
 }) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -147,7 +145,7 @@ function InfoModal({
       <section className="modal modal-small footer-info-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="footer-info-modal-header">
           <h2 className="modal-title" id={titleId}>{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={`Close ${title}`} type="button">×</button>
+          <button className="modal-close" onClick={onClose} aria-label={`${closeLabel} ${title}`} type="button">×</button>
         </div>
         <div className="footer-info-modal-body modal-text">
           {children}
@@ -191,7 +189,7 @@ function toggleSelection(value: string, selectedValues: string[]) {
   return [...selectedValues, value];
 }
 
-function FeedbackModal({ onClose }: { onClose: () => void }) {
+function FeedbackModal({ onClose, t }: { onClose: () => void; t: Translate }) {
   const titleId = useId();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -217,10 +215,10 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
     const trimmedMessage = message.trim();
     const nextErrors: { email?: string; message?: string } = {};
 
-    if (!trimmedMessage) nextErrors.message = 'Message is required.';
-    if (trimmedMessage.length > maxFeedbackMessageLength) nextErrors.message = 'Keep feedback under 5,000 characters.';
-    if (trimmedEmail && !looksLikeEmail(trimmedEmail)) nextErrors.email = 'Enter a valid email address.';
-    if (trimmedEmail.length > maxFeedbackEmailLength) nextErrors.email = 'Email address is too long.';
+    if (!trimmedMessage) nextErrors.message = t('footer.emailRequired');
+    if (trimmedMessage.length > maxFeedbackMessageLength) nextErrors.message = t('footer.messageTooLong');
+    if (trimmedEmail && !looksLikeEmail(trimmedEmail)) nextErrors.email = t('footer.invalidEmail');
+    if (trimmedEmail.length > maxFeedbackEmailLength) nextErrors.email = t('footer.emailTooLong');
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
@@ -262,24 +260,24 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
     <div className="overlay" role="presentation">
       <section className="modal modal-small feedback-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="feedback-modal-header">
-          <h2 className="modal-title" id={titleId}>Feedback</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close feedback" type="button">×</button>
+          <h2 className="modal-title" id={titleId}>{t('footer.feedback')}</h2>
+          <button className="modal-close" onClick={onClose} aria-label={`${t('footer.close')} ${t('footer.feedback')}`} type="button">×</button>
         </div>
 
         <div className="feedback-modal-body">
           {state === 'sent' ? (
             <div className="feedback-success" role="status" aria-live="polite">
-              <p>Thank you — feedback sent.</p>
+              <p>{t('footer.feedbackSent')}</p>
             </div>
           ) : (
             <>
               <p className="modal-text feedback-intro">
-                Spelio is still early — feedback, corrections, and suggestions are welcome.
+                {t('footer.feedbackIntro')}
               </p>
 
               <form className="feedback-form" onSubmit={handleSubmit} noValidate>
                 <label className="feedback-field">
-                  <span>Email address <span className="feedback-optional">optional</span></span>
+                  <span>{t('footer.emailAddress')} <span className="feedback-optional">{t('footer.optional')}</span></span>
                   <input
                     className="feedback-input"
                     type="email"
@@ -304,7 +302,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 </label>
 
                 <label className="feedback-field">
-                  <span>Message</span>
+                  <span>{t('footer.message')}</span>
                   <textarea
                     className="feedback-input feedback-message"
                     value={message}
@@ -318,7 +316,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 </label>
 
                 <fieldset className="feedback-check-section">
-                  <legend className="feedback-section-label">Quick notes <span className="feedback-optional">optional</span></legend>
+                  <legend className="feedback-section-label">{t('footer.quickNotes')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
                   <div className="feedback-check-grid">
                     {feedbackSignalOptions.map(option => (
                       <label className="feedback-check" key={option}>
@@ -334,7 +332,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 </fieldset>
 
                 <fieldset className="feedback-check-section">
-                  <legend className="feedback-section-label">I’m learning Welsh with <span className="feedback-optional">optional</span></legend>
+                  <legend className="feedback-section-label">{t('footer.learningWith')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
                   <div className="feedback-chip-grid">
                     {learningMethodOptions.map(option => (
                       <label className="feedback-chip" key={option}>
@@ -351,11 +349,11 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
 
                 <div className="feedback-actions">
                   <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
-                    {state === 'sending' && 'Sending...'}
-                    {state === 'error' && 'Sorry, something went wrong. Please try again.'}
+                    {state === 'sending' && t('footer.sending')}
+                    {state === 'error' && t('footer.feedbackError')}
                   </span>
                   <button className="done-button feedback-submit" type="submit" disabled={state === 'sending'}>
-                    Send feedback
+                    {t('footer.sendFeedback')}
                   </button>
                 </div>
               </form>

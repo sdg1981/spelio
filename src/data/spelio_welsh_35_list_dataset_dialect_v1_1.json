@@ -2,6 +2,8 @@
   "schemaVersion": "1.1",
   "product": "Spelio",
   "language": "cy",
+  "sourceLanguage": "en",
+  "targetLanguage": "cy",
   "description": "Canonical 35-list Welsh spelling practice starter dataset.",
   "notes": [
     "Original Spelio content structure designed for short adult spelling practice sessions.",

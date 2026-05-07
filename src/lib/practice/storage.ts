@@ -1,4 +1,6 @@
 import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
+import type { InterfaceLanguage } from '../../i18n';
+import { normaliseInterfaceLanguage } from '../../i18n';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 
@@ -20,6 +22,7 @@ export interface SpelioSettings {
   soundEffects: boolean;
   welshSpelling: WelshSpellingMode;
   dialectPreference: DialectPreference;
+  interfaceLanguage: InterfaceLanguage;
 }
 
 export interface WordProgress {
@@ -85,7 +88,8 @@ export const defaultSettings: SpelioSettings = {
   audioPrompts: true,
   soundEffects: true,
   welshSpelling: 'flexible',
-  dialectPreference: 'mixed'
+  dialectPreference: 'mixed',
+  interfaceLanguage: 'en'
 };
 
 function createDefaultLearningStats(): LearningStats {
@@ -163,7 +167,8 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       audioPrompts,
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
       welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
-      dialectPreference: normaliseDialectPreference(settings.dialectPreference)
+      dialectPreference: normaliseDialectPreference(settings.dialectPreference),
+      interfaceLanguage: normaliseInterfaceLanguage(settings.interfaceLanguage)
     }
   };
 }

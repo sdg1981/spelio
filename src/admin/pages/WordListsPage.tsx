@@ -42,6 +42,8 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
       name,
       description: 'New editorial word list.',
       language: 'Welsh',
+      sourceLanguage: 'en',
+      targetLanguage: 'cy',
       dialect: 'Mixed',
       stageId: stage.id,
       stage: stage.name,

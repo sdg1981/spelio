@@ -22,6 +22,8 @@ type RawList = {
   name: string;
   description: string;
   language: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
   dialect: AdminDialect;
   stage: string;
   focus?: string;
@@ -43,6 +45,8 @@ export const adminWordLists: AdminWordList[] = rawLists
     name: list.name,
     description: list.description,
     language: list.language === 'cy' ? 'Welsh' : list.language,
+    sourceLanguage: list.sourceLanguage ?? 'en',
+    targetLanguage: list.targetLanguage ?? 'cy',
     dialect: list.dialect,
     stageId: slug(list.stage),
     stage: list.stage,

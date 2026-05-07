@@ -1,4 +1,5 @@
 import type { PracticeWord, WordList } from '../../data/wordLists';
+import type { Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
 
 export const ACTIVE_IDLE_THRESHOLD_MS = 25_000;
@@ -47,17 +48,22 @@ export function countLearnedSpellings(storage: SpelioStorage, lists: WordList[])
   return Array.from(items.values()).filter(item => item.hasCleanCompletion && !item.hasCurrentDifficulty).length;
 }
 
-export function formatCumulativeProgress(storage: SpelioStorage, lists: WordList[], options?: { prefix?: string }) {
+export function formatCumulativeProgress(storage: SpelioStorage, lists: WordList[], options?: { prefix?: string; t?: Translate }) {
   const learnedSpellings = countLearnedSpellings(storage, lists);
   const activeMinutes = Math.floor((storage.learningStats?.totalActiveMs ?? 0) / 60_000);
+  const t = options?.t;
   const parts: string[] = [];
 
   if (learnedSpellings > 0) {
-    parts.push(`${learnedSpellings} ${learnedSpellings === 1 ? 'spelling' : 'spellings'} learned`);
+    const spelling = t ? t(learnedSpellings === 1 ? 'progress.spelling' : 'progress.spellings') : learnedSpellings === 1 ? 'spelling' : 'spellings';
+    const learned = t ? t('progress.learned') : 'learned';
+    parts.push(`${learnedSpellings} ${spelling} ${learned}`);
   }
 
   if (activeMinutes > 0) {
-    parts.push(`${activeMinutes} ${activeMinutes === 1 ? 'minute' : 'minutes'} practised`);
+    const minute = t ? t(activeMinutes === 1 ? 'progress.minute' : 'progress.minutes') : activeMinutes === 1 ? 'minute' : 'minutes';
+    const practised = t ? t('progress.practised') : 'practised';
+    parts.push(`${activeMinutes} ${minute} ${practised}`);
   }
 
   if (parts.length === 0) return null;

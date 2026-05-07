@@ -3,12 +3,17 @@ import dataset from './spelio_welsh_35_list_dataset_dialect_v1_1.json';
 export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
 export type DialectPreference = 'mixed' | 'north' | 'south_standard';
+export type LanguageCode = 'en' | 'cy' | string;
 
 export interface PracticeWord {
   id: string;
   listId: string;
+  prompt: string;
+  answer: string;
   englishPrompt: string;
   welshAnswer: string;
+  sourceLanguage: LanguageCode;
+  targetLanguage: LanguageCode;
   acceptedAlternatives?: string[];
   audioUrl?: string;
   audioStatus?: 'missing' | 'generated' | 'failed';
@@ -26,6 +31,8 @@ export interface WordList {
   name: string;
   description: string;
   language: 'Welsh';
+  sourceLanguage: LanguageCode;
+  targetLanguage: LanguageCode;
   dialect: Dialect;
   stage: string;
   focus?: string;
@@ -38,6 +45,8 @@ export interface WordList {
 
 type DatasetWord = {
   id: string;
+  prompt?: string;
+  answer?: string;
   englishPrompt: string;
   welshAnswer: string;
   acceptedAlternatives?: string[];
@@ -57,6 +66,8 @@ type DatasetList = {
   name: string;
   description: string;
   language: string;
+  sourceLanguage?: LanguageCode;
+  targetLanguage?: LanguageCode;
   dialect: Dialect;
   stage: string;
   focus?: string;
@@ -68,6 +79,7 @@ type DatasetList = {
 };
 
 const rawLists = (dataset.lists as DatasetList[]);
+const datasetMetadata = dataset as { sourceLanguage?: LanguageCode; targetLanguage?: LanguageCode };
 
 const usageNotesByWordId = new Map(
   (dataset.lists as DatasetList[])
@@ -84,6 +96,8 @@ export const wordLists: WordList[] = rawLists
     name: list.name,
     description: list.description,
     language: 'Welsh',
+    sourceLanguage: list.sourceLanguage ?? datasetMetadata.sourceLanguage ?? 'en',
+    targetLanguage: list.targetLanguage ?? datasetMetadata.targetLanguage ?? 'cy',
     dialect: list.dialect,
     stage: list.stage,
     focus: list.focus,
@@ -96,8 +110,12 @@ export const wordLists: WordList[] = rawLists
       .map(word => ({
         id: word.id,
         listId: list.id,
+        prompt: word.prompt ?? word.englishPrompt,
+        answer: word.answer ?? word.welshAnswer,
         englishPrompt: word.englishPrompt,
         welshAnswer: word.welshAnswer,
+        sourceLanguage: list.sourceLanguage ?? datasetMetadata.sourceLanguage ?? 'en',
+        targetLanguage: list.targetLanguage ?? datasetMetadata.targetLanguage ?? 'cy',
         acceptedAlternatives: word.acceptedAlternatives ?? [],
         audioUrl: word.audioUrl ?? '',
         audioStatus: word.audioStatus ?? 'missing',
@@ -110,3 +128,11 @@ export const wordLists: WordList[] = rawLists
         variantGroupId: word.variantGroupId ?? ''
       }))
   }));
+
+export function getPrompt(word: Pick<PracticeWord, 'prompt' | 'englishPrompt'>) {
+  return word.prompt || word.englishPrompt;
+}
+
+export function getAnswer(word: Pick<PracticeWord, 'answer' | 'welshAnswer'>) {
+  return word.answer || word.welshAnswer;
+}

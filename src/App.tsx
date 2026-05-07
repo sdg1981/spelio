@@ -9,6 +9,7 @@ import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpe
 import { getRecommendation } from './lib/practice/recommendations';
 import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
+import { createTranslator, type InterfaceLanguage } from './i18n';
 
 type Screen = 'home' | 'practice' | 'end';
 
@@ -43,6 +44,8 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
+  const interfaceLanguage = storage.settings.interfaceLanguage;
+  const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
   const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recapWordCount = useMemo(() => getRecapWordCount(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
@@ -57,12 +60,12 @@ export default function App() {
     ]
   );
   const homeProgressSummary = useMemo(
-    () => formatCumulativeProgress(storage, wordLists),
-    [storage.learningStats, storage.wordProgress]
+    () => formatCumulativeProgress(storage, wordLists, { t }),
+    [storage.learningStats, storage.wordProgress, t]
   );
   const endProgressSummary = useMemo(
-    () => formatCumulativeProgress(storage, wordLists, { prefix: 'Total progress' }),
-    [storage.learningStats, storage.wordProgress]
+    () => formatCumulativeProgress(storage, wordLists, { prefix: t('progress.totalProgress'), t }),
+    [storage.learningStats, storage.wordProgress, t]
   );
 
   useEffect(() => {
@@ -77,6 +80,16 @@ export default function App() {
 
   function updateStorage(next: SpelioStorage) {
     setStorage(next);
+  }
+
+  function updateInterfaceLanguage(language: InterfaceLanguage) {
+    setStorage(previous => ({
+      ...previous,
+      settings: {
+        ...previous.settings,
+        interfaceLanguage: language
+      }
+    }));
   }
 
   function startPractice(options?: { review?: boolean; listId?: string; allowRecapReview?: boolean }) {
@@ -168,6 +181,9 @@ export default function App() {
       onBackHome={() => setScreen('home')}
       onWordListsDone={saveSelectedWordLists}
       onResetProgress={resetProgress}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
     />
   ) : activeScreen === 'end' && lastResult ? (
     <>
@@ -182,6 +198,9 @@ export default function App() {
         onReview={() => startPractice({ review: true })}
         onChangeLists={() => setWordListModalOpen(true)}
         onHome={() => setScreen('home')}
+        interfaceLanguage={interfaceLanguage}
+        onInterfaceLanguageChange={updateInterfaceLanguage}
+        t={t}
       />
       {wordListModalOpen && (
         <WordListModal
@@ -189,6 +208,7 @@ export default function App() {
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          t={t}
         />
       )}
     </>
@@ -205,6 +225,9 @@ export default function App() {
         onReview={() => startPractice({ review: true })}
         onRecapReview={() => startPractice({ review: true, allowRecapReview: true })}
         onSelectList={() => setWordListModalOpen(true)}
+        interfaceLanguage={interfaceLanguage}
+        onInterfaceLanguageChange={updateInterfaceLanguage}
+        t={t}
       />
       {wordListModalOpen && (
         <WordListModal
@@ -212,6 +235,7 @@ export default function App() {
           initialSelectedIds={storage.selectedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          t={t}
         />
       )}
     </>
@@ -223,7 +247,7 @@ export default function App() {
         {screenContent}
       </ScreenTransition>
       <div className={`app-toast ${resetStatusVisible ? 'visible' : ''}`} role="status" aria-live="polite">
-        Progress reset — you’re starting fresh
+        {t('progress.resetFresh')}
       </div>
     </>
   );

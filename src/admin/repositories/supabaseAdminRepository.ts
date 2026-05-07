@@ -9,6 +9,8 @@ type WordListRow = {
   name: string;
   description: string;
   language: string;
+  source_language?: string | null;
+  target_language?: string | null;
   dialect: string;
   stage_id: string | null;
   focus_category_id: string | null;
@@ -183,6 +185,8 @@ function mapWordListRow(row: WordListRow): AdminWordList {
     name: row.name,
     description: row.description,
     language: row.language,
+    sourceLanguage: row.source_language ?? 'en',
+    targetLanguage: row.target_language ?? 'cy',
     dialect: row.dialect as AdminWordList['dialect'],
     stageId: row.stage_id ?? '',
     stage: row.stages?.name ?? row.stage_id ?? '',
@@ -225,6 +229,8 @@ function toWordListRow(list: AdminWordList) {
     name: list.name,
     description: list.description,
     language: list.language,
+    source_language: list.sourceLanguage || 'en',
+    target_language: list.targetLanguage || 'cy',
     dialect: list.dialect,
     stage_id: list.stageId || null,
     focus_category_id: list.focusCategoryId || null,
