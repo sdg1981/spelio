@@ -2,13 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
+import { LearningMilestoneModal } from './components/LearningMilestoneModal';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
-import { formatCumulativeProgress } from './lib/practice/progress';
+import { countLearnedSpellings, formatCumulativeProgress } from './lib/practice/progress';
+import { checkForMilestone, type Milestone } from './lib/practice/milestones';
 
 type Screen = 'home' | 'practice' | 'end';
 
@@ -32,6 +34,7 @@ export default function App() {
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
+  const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null);
   const resetStatusTimerRef = useRef<number | null>(null);
   const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recapWordCount = useMemo(() => getRecapWordCount(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
@@ -58,6 +61,13 @@ export default function App() {
   useEffect(() => {
     saveSpelioStorage(storage);
   }, [storage]);
+
+  useEffect(() => {
+    if (screen !== 'end' || !lastResult || activeMilestone) return;
+
+    const totalLearnedSpellings = countLearnedSpellings(storage, wordLists);
+    setActiveMilestone(checkForMilestone(totalLearnedSpellings, storage.shownMilestones));
+  }, [activeMilestone, lastResult, screen, storage.shownMilestones, storage.wordProgress]);
 
   useEffect(() => {
     return () => {
@@ -127,6 +137,7 @@ export default function App() {
     setWordListModalOpen(false);
     setLastResult(null);
     setShowFirstSessionKeyboardHint(false);
+    setActiveMilestone(null);
     setScreen('home');
     setResetStatusVisible(true);
 
@@ -135,6 +146,16 @@ export default function App() {
       setResetStatusVisible(false);
       resetStatusTimerRef.current = null;
     }, 1800);
+  }
+
+  function dismissMilestone() {
+    if (!activeMilestone) return;
+
+    setStorage(previous => ({
+      ...previous,
+      shownMilestones: Array.from(new Set([...previous.shownMilestones, activeMilestone.threshold]))
+    }));
+    setActiveMilestone(null);
   }
 
   const homeMode = !storage.lastSessionDate
@@ -215,6 +236,9 @@ export default function App() {
       <div className={`app-toast ${resetStatusVisible ? 'visible' : ''}`} role="status" aria-live="polite">
         Progress reset — you’re starting fresh
       </div>
+      {activeMilestone && activeScreen === 'end' && (
+        <LearningMilestoneModal milestone={activeMilestone} onDismiss={dismissMilestone} />
+      )}
     </>
   );
 }
