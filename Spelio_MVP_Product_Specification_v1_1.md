@@ -493,7 +493,7 @@ Groups might include:
 - Core Welsh
 - Nature
 - Opposites
-- Course Packs
+- Course Collections
 - Personal
 
 Example lists:
@@ -508,6 +508,56 @@ Example lists:
 - Food & Drink — Both
 - SSiW Lesson 01 — North Wales
 - SSiW Lesson 02 — North Wales
+
+### 8.2.1 Collections
+
+Spelio supports a lightweight Collection layer above individual word lists:
+
+```text
+Collection
+  → Word lists
+    → Words
+```
+
+Terminology:
+
+- “Collection” = higher-level grouping of word lists
+- “Word list” = individual selectable practice list
+
+Avoid “Pack” in backend, data, and admin naming.
+
+Collections are an organisational/content-grouping layer intended to support future:
+
+- Spelio core content
+- Curriculum collections
+- Course-aligned collections
+- School-created collections
+- Teacher-created collections
+- Personal/user collections
+
+Collections do not change practice behaviour in MVP.
+
+The public word-list modal should be collection-aware.
+
+Recommended hierarchy when multiple collections exist:
+
+```text
+Collection
+  Stage/group
+    Word lists
+```
+
+Example:
+
+```text
+Spelio Core Welsh
+  Foundations
+    First Words — Immediate Welsh
+```
+
+If only one collection exists, the UI may still appear similar to the current grouped MVP layout. The architecture should still be ready for multiple collections later.
+
+This must remain lightweight and calm. Do not turn the word-list modal into a dashboard, course browser, permissions view, or reporting surface.
 
 ### 8.3 Dialect handling
 
@@ -556,7 +606,7 @@ Different-length dialect variants should not be handled as acceptedAlternatives.
 
 ### 8.3.1 Language-pair metadata
 
-Word lists/content packs should include future-safe language-pair metadata:
+Word lists and collections should include future-safe language-pair metadata:
 
 - `sourceLanguage`
 - `targetLanguage`
@@ -731,6 +781,8 @@ Rules:
 
 ### 10.1 Word list vs session
 
+A collection is an organisational grouping of word lists.
+
 A word list can contain any number of words.
 
 A session is a short chunk of practice.
@@ -802,6 +854,22 @@ Rules:
 ### 10.4 Session integrity
 
 **Critical rule:** This behaviour must be enforced strictly with no exceptions. Mixing session state leads to corrupted practice flows and incorrect progress tracking.
+
+Collections are organisational only for MVP.
+
+Practice sessions still operate from selected word list IDs.
+
+Collections must not alter:
+
+- no-auto-start rule
+- session generation
+- dialect handling
+- Review difficult words
+- scoring
+- recommendation logic
+- local progress logic
+
+No MVP practice/session logic should branch on collection type, ownerType, or ownerId.
 
 Changing word lists mid-session:
 
@@ -1116,6 +1184,7 @@ Purpose: allow the founder to add and manage word lists without editing code.
 
 Admin should allow:
 
+- View collection metadata
 - Create word list
 - Edit word list
 - Delete word list
@@ -1126,9 +1195,12 @@ Admin should allow:
 
 ### 16.3 Word list fields
 
+Each word list belongs to a collection through `collectionId`.
+
 Each word list should include:
 
 - id
+- collectionId
 - name
 - description
 - language
@@ -1145,6 +1217,8 @@ Each word list should include:
 
 List-level dialect is a summary/display field only. The actual practice filtering is controlled by word-level dialect.
 
+Existing word-list fields remain unchanged. Do not remove or rename current English/Welsh MVP content fields.
+
 For current Welsh MVP content, word lists should default to:
 
 ```json
@@ -1156,10 +1230,97 @@ For current Welsh MVP content, word lists should default to:
 
 In Supabase/database persistence, the `word_lists` table should include:
 
+- `collection_id` referencing the collection entity/table
 - `source_language` default `"en"`
 - `target_language` default `"cy"`
 
 Do not rename existing `english_prompt` or `welsh_answer` database fields in MVP.
+
+### 16.3.1 Collection fields
+
+The admin/data architecture should include a collection-level model/entity, represented in Supabase as `word_list_collections` or equivalent.
+
+Conceptual collection shape:
+
+- id
+- slug
+- name
+- description
+- type
+- sourceLanguage
+- targetLanguage
+- curriculumKeyStage?
+- curriculumArea?
+- ownerType?
+- ownerId?
+- order
+- isActive
+- createdAt
+- updatedAt
+
+Allowed collection type examples:
+
+- spelio_core
+- curriculum
+- course
+- school
+- teacher
+- personal
+- custom
+
+Allowed ownerType examples:
+
+- spelio
+- school
+- teacher
+- user
+- null
+
+Clarifications:
+
+- `slug` should be stable and unique.
+- Do not rely on display-name uniqueness.
+- `slug` is intended for future routing, filtering, imports, analytics grouping, and integrations.
+- Curriculum fields are optional metadata only.
+- Collection type does not affect practice/session logic in MVP.
+- ownerType identifies the category of owner.
+- ownerId identifies a future specific school, teacher, or user.
+
+For MVP:
+
+- Spelio-owned collections use ownerType: `"spelio"`.
+- Spelio-owned collections may use ownerId: `null`.
+- Ownership support is schema-only for now.
+
+The MVP does not include:
+
+- ownership enforcement
+- school accounts
+- teacher accounts
+- permissions systems
+- multi-tenant architecture
+
+Default seeded MVP collection:
+
+```json
+{
+  "id": "spelio_core_welsh",
+  "slug": "spelio-core-welsh",
+  "name": "Spelio Core Welsh",
+  "description": "Core Welsh spelling practice lists for the Spelio MVP.",
+  "type": "spelio_core",
+  "sourceLanguage": "en",
+  "targetLanguage": "cy",
+  "ownerType": "spelio",
+  "ownerId": null,
+  "order": 1,
+  "isActive": true
+}
+```
+
+Existing Welsh MVP word lists belong to this default collection.
+
+The Collections layer exists to reduce future refactor risk for curriculum integrations, course pathways, school deployments, teacher lists, personal lists, and future language-pair expansions. Those systems are intentionally postponed beyond MVP.
 
 ### 16.4 Word fields
 
@@ -1749,6 +1910,7 @@ Build:
 Build:
 
 - Login/password gate
+- Lightweight Collections metadata layer
 - Word list CRUD
 - Word CRUD
 - Azure Voice generation
