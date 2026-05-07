@@ -3,6 +3,7 @@ import type { AdminFocusFilters } from './filters';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
+import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
@@ -121,6 +122,57 @@ export const mockAdminRepository: AdminRepository = {
           .sort((a, b) => a.order - b.order)
       };
     });
+  },
+
+  async getAudioQueue() {
+    return createAudioQueueSnapshot(await this.listWords());
+  },
+
+  async queueAudioGeneration(wordIds: string[]) {
+    const ids = new Set(wordIds);
+    lists = lists.map(list => ({
+      ...list,
+      words: list.words.map(word => ids.has(word.id) && (word.audioStatus === 'missing' || word.audioStatus === 'failed')
+        ? { ...word, audioStatus: 'queued' }
+        : word)
+    }));
+    return (await this.listWords()).filter(word => ids.has(word.id));
+  },
+
+  async generateAudioForWord(wordId: string) {
+    await this.queueAudioGeneration([wordId]);
+    const word = await this.getWord(wordId);
+    if (!word) throw new Error('Word not found.');
+    const generatingWord = { ...word, audioStatus: 'generating' as const };
+    await this.saveWord(generatingWord);
+    const readyWord = { ...generatingWord, audioStatus: 'ready' as const, audioUrl: createMockAudioUrl(word) };
+    await this.saveWord(readyWord);
+    return { word: readyWord, ok: true };
+  },
+
+  async generateAudioBatch(wordIds: string[]) {
+    // TODO: Replace this sequential browser loop with a protected background worker queue.
+    const results = [];
+    for (const wordId of wordIds) {
+      try {
+        results.push(await this.generateAudioForWord(wordId));
+      } catch (error) {
+        const word = await this.getWord(wordId);
+        if (!word) throw error;
+        const failedWord = { ...word, audioStatus: 'failed' as const };
+        await this.saveWord(failedWord);
+        results.push({ word: failedWord, ok: false, error: error instanceof Error ? error.message : 'Audio generation failed.' });
+      }
+    }
+    return results;
+  },
+
+  async retryAudioGeneration(wordId: string) {
+    return this.generateAudioForWord(wordId);
+  },
+
+  async uploadAudioFile(word: AdminWord) {
+    return createMockAudioUrl(word);
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {

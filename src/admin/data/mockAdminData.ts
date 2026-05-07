@@ -131,6 +131,6 @@ export function getAudioHealth(list: AdminWordList) {
   const total = list.words.length || 1;
   const missing = list.words.filter(word => word.audioStatus === 'missing').length;
   const failed = list.words.filter(word => word.audioStatus === 'failed').length;
-  const generated = list.words.filter(word => word.audioStatus === 'generated').length;
+  const generated = list.words.filter(word => word.audioStatus === 'ready').length;
   return { missing, failed, generated, percent: Math.round((generated / total) * 100) };
 }

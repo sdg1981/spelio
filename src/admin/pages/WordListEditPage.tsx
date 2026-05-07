@@ -21,6 +21,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [audioBusy, setAudioBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const selectedWord = useMemo(() => list?.words.find(word => word.id === selectedWordId) ?? list?.words[0], [list?.words, selectedWordId]);
@@ -167,6 +168,59 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     }
   }
 
+  async function refreshCurrentList(listId: string) {
+    const refreshed = await repository.getWordList(listId);
+    if (refreshed) {
+      setList(refreshed);
+      setSource(refreshed);
+    }
+  }
+
+  async function generateWordAudio(word: AdminWord) {
+    if (dirty) {
+      setErrorMessage('Save word changes before generating audio.');
+      return;
+    }
+    try {
+      setAudioBusy(true);
+      setErrorMessage('');
+      setStatusMessage('');
+      const result = await repository.generateAudioForWord(word.id);
+      await refreshCurrentList(word.listId);
+      setStatusMessage(result.ok ? 'Audio generated.' : result.error ?? 'Audio generation failed.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'Audio generation failed.'));
+    } finally {
+      setAudioBusy(false);
+    }
+  }
+
+  async function generateMissingAudioForList() {
+    if (!list) return;
+    if (dirty) {
+      setErrorMessage('Save word changes before generating audio.');
+      return;
+    }
+    const wordIds = list.words.filter(word => word.audioStatus === 'missing' || word.audioStatus === 'failed').map(word => word.id);
+    if (!wordIds.length) {
+      setStatusMessage('No missing or failed audio to generate.');
+      return;
+    }
+    try {
+      setAudioBusy(true);
+      setErrorMessage('');
+      setStatusMessage(`Generating ${wordIds.length} audio item(s)...`);
+      const results = await repository.generateAudioBatch(wordIds);
+      await refreshCurrentList(list.id);
+      const failed = results.filter(result => !result.ok).length;
+      setStatusMessage(failed ? `Audio generation finished with ${failed} failure(s).` : `Generated ${results.length} audio item(s).`);
+    } catch (error) {
+      setErrorMessage(readError(error, 'Batch audio generation failed.'));
+    } finally {
+      setAudioBusy(false);
+    }
+  }
+
   async function deleteList() {
     if (!list || !window.confirm(`Delete "${list.name}" and all of its words?`)) return;
     try {
@@ -249,14 +303,25 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               onSelectWord={word => setSelectedWordId(word.id)}
               onQuickAdd={addWord}
               onAddWord={addWord}
-              onGenerateMissingAudio={() => setStatusMessage('Audio generation is not connected yet.')}
+              onGenerateMissingAudio={generateMissingAudioForList}
               onDuplicateWord={duplicateWord}
               onDeleteWord={deleteWord}
               onMoveWord={moveWord}
             />
           </AdminCard>
         </div>
-        {selectedWord && <WordEditorPanel word={selectedWord} index={selectedIndex} total={list.words.length} onClose={() => setSelectedWordId(list.words[0]?.id)} onChange={updateWord} />}
+        {selectedWord && (
+          <WordEditorPanel
+            word={selectedWord}
+            index={selectedIndex}
+            total={list.words.length}
+            onClose={() => setSelectedWordId(list.words[0]?.id)}
+            onChange={updateWord}
+            onGenerateAudio={generateWordAudio}
+            onRetryAudio={generateWordAudio}
+            audioBusy={audioBusy}
+          />
+        )}
       </div>
       <UnsavedChangesBar visible={dirty} onDiscard={() => { setList(source); setDirty(false); setErrorMessage(''); setStatusMessage('Discarded changes.'); }} onSave={saveChanges} />
     </>

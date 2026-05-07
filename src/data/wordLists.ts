@@ -54,7 +54,7 @@ export interface PracticeWord {
   targetLanguage: LanguageCode;
   acceptedAlternatives?: string[];
   audioUrl?: string;
-  audioStatus?: 'missing' | 'generated' | 'failed';
+  audioStatus?: 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
   notes?: string;
   order: number;
   difficulty?: number;
@@ -93,7 +93,7 @@ type DatasetWord = {
   welshAnswer: string;
   acceptedAlternatives?: string[];
   audioUrl?: string;
-  audioStatus?: 'missing' | 'generated' | 'failed';
+  audioStatus?: 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
   notes?: string;
   order: number;
   difficulty?: number;

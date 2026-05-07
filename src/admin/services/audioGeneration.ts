@@ -1,0 +1,86 @@
+import type { AdminWord, AudioStatus } from '../types';
+
+export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
+export const AZURE_SPEECH_LOCALE = 'cy-GB';
+export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
+
+export type AudioQueueCounts = Record<AudioStatus, number>;
+
+export interface AudioQueueSnapshot<TWord extends AdminWord = AdminWord> {
+  words: TWord[];
+  counts: AudioQueueCounts;
+}
+
+export interface AudioGenerationResult {
+  word: AdminWord;
+  ok: boolean;
+  error?: string;
+}
+
+export function createAudioQueueSnapshot<TWord extends AdminWord>(words: TWord[]): AudioQueueSnapshot<TWord> {
+  return {
+    words,
+    counts: {
+      missing: words.filter(word => word.audioStatus === 'missing').length,
+      queued: words.filter(word => word.audioStatus === 'queued').length,
+      generating: words.filter(word => word.audioStatus === 'generating').length,
+      ready: words.filter(word => word.audioStatus === 'ready').length,
+      failed: words.filter(word => word.audioStatus === 'failed').length
+    }
+  };
+}
+
+export function normalizeAudioStatus(status: unknown): AudioStatus {
+  return status === 'ready' || status === 'queued' || status === 'generating' || status === 'failed'
+    ? status
+    : 'missing';
+}
+
+export function normalizeLegacyAudioStatus(status: unknown): AudioStatus {
+  if (status === 'generated') return 'ready';
+  return normalizeAudioStatus(status);
+}
+
+export async function synthesizeWelshMp3(text: string): Promise<Blob> {
+  const response = await fetch('/api/azure-tts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ text })
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(payload?.error ?? (response.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${response.status}).`));
+  }
+
+  return response.blob();
+}
+
+export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {
+  return `cy/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
+}
+
+export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {
+  return `/audio/gweithio.m4a#${encodeURIComponent(word.id)}`;
+}
+
+export function createWelshSsml(text: string) {
+  // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
+  const safeText = escapeXml(text.trim());
+  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}">${safeText}</voice></speak>`;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'audio';
+}

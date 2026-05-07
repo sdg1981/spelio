@@ -4,6 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
+import { createAudioQueueSnapshot, createAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3 } from '../services/audioGeneration';
 
 type WordListRow = {
   id: string;
@@ -55,7 +56,7 @@ type WordRow = {
   welsh_answer: string;
   accepted_alternatives: unknown;
   audio_url: string;
-  audio_status: AudioStatus;
+  audio_status: string;
   notes: string;
   usage_note: string;
   dialect: AdminWord['dialect'];
@@ -206,6 +207,67 @@ export const supabaseAdminRepository: AdminRepository = {
     const results = await Promise.all(orderedWordIds.map((id, index) => client.from('words').update({ order_index: index + 1 }).eq('id', id).eq('list_id', listId)));
     const failure = results.find(result => result.error);
     if (failure?.error) throw failure.error;
+  },
+
+  async getAudioQueue() {
+    return createAudioQueueSnapshot(await this.listWords());
+  },
+
+  async queueAudioGeneration(wordIds: string[]) {
+    const client = requireSupabase();
+    if (!wordIds.length) return [];
+    const { error } = await client
+      .from('words')
+      .update({ audio_status: 'queued' })
+      .in('id', wordIds)
+      .in('audio_status', ['missing', 'failed']);
+    if (error) throw error;
+    const queuedIds = new Set(wordIds);
+    return (await this.listWords()).filter(word => queuedIds.has(word.id));
+  },
+
+  async generateAudioForWord(wordId: string) {
+    const word = await this.getWord(wordId);
+    if (!word) throw new Error('Word not found.');
+    const previousAudioUrl = word.audioUrl;
+
+    try {
+      await this.saveWord({ ...word, audioStatus: 'generating' });
+      const audio = await synthesizeWelshMp3(word.welshAnswer);
+      const audioUrl = await this.uploadAudioFile(word, audio);
+      const readyWord = await this.saveWord({ ...word, audioUrl, audioStatus: 'ready' });
+      return { word: readyWord, ok: true };
+    } catch (error) {
+      const failedWord = await this.saveWord({ ...word, audioUrl: previousAudioUrl, audioStatus: 'failed' });
+      return { word: failedWord, ok: false, error: error instanceof Error ? error.message : 'Audio generation failed.' };
+    }
+  },
+
+  async generateAudioBatch(wordIds: string[]) {
+    // TODO: Move batch synthesis to a server-side job queue before production-scale generation.
+    const results = [];
+    for (const wordId of wordIds) {
+      results.push(await this.generateAudioForWord(wordId));
+    }
+    return results;
+  },
+
+  async retryAudioGeneration(wordId: string) {
+    return this.generateAudioForWord(wordId);
+  },
+
+  async uploadAudioFile(word: AdminWord, file: Blob) {
+    const client = requireSupabase();
+    const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
+    if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    const path = createAudioStoragePath(word);
+    const { error } = await client.storage
+      .from('audio')
+      .upload(path, file, { contentType: 'audio/mpeg', upsert: true });
+    if (error) throw error;
+    const { data } = client.storage.from('audio').getPublicUrl(path);
+    if (!data.publicUrl) throw new Error('Audio upload did not return a public URL.');
+    return data.publicUrl;
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
@@ -377,7 +439,7 @@ function mapWordRow(row: WordRow): AdminWord {
     welshAnswer: row.welsh_answer,
     acceptedAlternatives: Array.isArray(row.accepted_alternatives) ? row.accepted_alternatives.map(String) : [],
     audioUrl: row.audio_url,
-    audioStatus: row.audio_status,
+    audioStatus: normalizeLegacyAudioStatus(row.audio_status),
     notes: row.notes,
     usageNote: row.usage_note,
     dialect: row.dialect,

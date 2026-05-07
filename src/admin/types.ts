@@ -1,4 +1,4 @@
-export type AudioStatus = 'missing' | 'queued' | 'generating' | 'generated' | 'failed';
+export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 export type AdminDialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
 export type AdminCollectionType = 'spelio_core' | 'curriculum' | 'course' | 'school' | 'teacher' | 'personal' | 'custom';
 export type AdminCollectionOwnerType = 'spelio' | 'school' | 'teacher' | 'user' | null;

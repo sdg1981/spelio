@@ -1,21 +1,27 @@
-import { ChevronDown, ChevronUp, Info, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info, Play, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { AdminWord } from '../types';
+import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminTextarea, Field } from './primitives';
-import { StatusPill } from './StatusPill';
 
 export function WordEditorPanel({
   word,
   index,
   total,
   onClose,
-  onChange
+  onChange,
+  onGenerateAudio,
+  onRetryAudio,
+  audioBusy
 }: {
   word: AdminWord;
   index: number;
   total: number;
   onClose: () => void;
   onChange: (patch: Partial<AdminWord>) => void;
+  onGenerateAudio: (word: AdminWord) => void;
+  onRetryAudio: (word: AdminWord) => void;
+  audioBusy?: boolean;
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -80,12 +86,23 @@ export function WordEditorPanel({
       <div className="border-b border-slate-200 p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-black">Audio</h3>
-          {word.audioStatus === 'generated' ? <StatusPill tone="green">Ready</StatusPill> : word.audioStatus === 'failed' ? <StatusPill tone="amber">Failed</StatusPill> : <StatusPill tone="red">Missing</StatusPill>}
+          <AudioStatusPill status={word.audioStatus} />
         </div>
         <p className="mb-4 text-sm text-slate-500">{word.audioUrl ? 'Audio file is linked for this word.' : 'No audio file for this word yet.'}</p>
         <div className="flex flex-wrap gap-2">
-          <AdminButton variant="primary" onClick={() => onChange({ audioStatus: 'generated', audioUrl: '/audio/mock.m4a' })}>Generate audio</AdminButton>
-          <AdminButton onClick={() => onChange({ audioStatus: 'failed' })}>Mark as failed</AdminButton>
+          {word.audioUrl && (
+            <AdminButton onClick={() => void new Audio(word.audioUrl).play()}>
+              <Play size={15} /> Preview
+            </AdminButton>
+          )}
+          <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy}>
+            <Wand2 size={15} /> {word.audioStatus === 'ready' ? 'Regenerate audio' : 'Generate audio'}
+          </AdminButton>
+          {word.audioStatus === 'failed' && (
+            <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy}>
+              <RefreshCw size={15} /> Retry
+            </AdminButton>
+          )}
         </div>
       </div>
       <div className="p-5">

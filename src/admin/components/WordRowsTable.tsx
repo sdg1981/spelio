@@ -1,7 +1,7 @@
 import { Copy, GripVertical, Pencil, Play, Trash2, Wand2, ArrowUp, ArrowDown } from 'lucide-react';
 import type { AdminWord } from '../types';
 import { AdminButton } from './primitives';
-import { StatusPill } from './StatusPill';
+import { AudioStatusPill } from './audioStatus';
 
 const filters = ['All', 'Missing audio', 'Missing notes', 'North Wales', 'South Wales', 'Has variants'];
 
@@ -81,12 +81,15 @@ export function WordRowsTable({
                 <td className="px-4 py-3 font-medium text-slate-950">{word.welshAnswer}</td>
                 <td className="px-4 py-3 text-slate-700">{word.dialect}</td>
                 <td className="px-4 py-3">
-                  <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50" onClick={event => event.stopPropagation()} aria-label="Preview audio">
+                  <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={!word.audioUrl} onClick={event => {
+                    event.stopPropagation();
+                    if (word.audioUrl) void new Audio(word.audioUrl).play();
+                  }} aria-label="Preview audio">
                     <Play size={14} fill="currentColor" />
                   </button>
                 </td>
                 <td className="px-4 py-3">
-                  {word.audioStatus === 'generated' ? <StatusPill tone="green">Ready</StatusPill> : word.audioStatus === 'failed' ? <StatusPill tone="amber">Failed</StatusPill> : <StatusPill tone="red">Missing</StatusPill>}
+                  <AudioStatusPill status={word.audioStatus} />
                   {word.variantGroupId && <span className="ml-2 rounded-full bg-orange-50 px-2 py-1 text-xs font-bold text-orange-700">1</span>}
                 </td>
                 <td className="px-4 py-3">

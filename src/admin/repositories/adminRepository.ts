@@ -1,5 +1,6 @@
 import type { AdminFocusFilters } from './filters';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
+import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
 
 export interface AdminWordWithListName extends AdminWord {
   listName: string;
@@ -24,6 +25,12 @@ export interface AdminRepository {
   createWord(word: AdminWord): Promise<AdminWord>;
   deleteWord(id: string): Promise<void>;
   reorderWords(listId: string, orderedWordIds: string[]): Promise<void>;
+  getAudioQueue(): Promise<AudioQueueSnapshot<AdminWordWithListName>>;
+  queueAudioGeneration(wordIds: string[]): Promise<AdminWordWithListName[]>;
+  generateAudioForWord(wordId: string): Promise<AudioGenerationResult>;
+  generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
+  retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
+  uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;
   importContent(payload: unknown): Promise<ImportContentResult>;
   validateImport(payload: unknown): Promise<ImportValidationResult>;
@@ -36,7 +43,7 @@ export function getAudioHealth(list: AdminWordList) {
   const total = list.words.length || 1;
   const missing = list.words.filter(word => word.audioStatus === 'missing').length;
   const failed = list.words.filter(word => word.audioStatus === 'failed').length;
-  const generated = list.words.filter(word => word.audioStatus === 'generated').length;
+  const generated = list.words.filter(word => word.audioStatus === 'ready').length;
   const queued = list.words.filter(word => word.audioStatus === 'queued' || word.audioStatus === 'generating').length;
   return { missing, failed, generated, queued, percent: Math.round((generated / total) * 100) };
 }

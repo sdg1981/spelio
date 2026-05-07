@@ -2,7 +2,7 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminCard, AdminInput } from '../components/primitives';
-import { StatusPill } from '../components/StatusPill';
+import { AudioStatusPill } from '../components/audioStatus';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
 
 export function WordsPage({ navigate, repository }: { navigate: (path: string) => void; repository: AdminRepository }) {
@@ -26,7 +26,7 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
               <div className="font-bold text-slate-950">{word.englishPrompt}</div>
               <div className="font-medium text-slate-700">{word.welshAnswer}</div>
               <div className="text-sm text-slate-500">{word.dialect}</div>
-              <StatusPill tone={word.audioStatus === 'generated' ? 'green' : 'red'}>{word.audioStatus === 'generated' ? 'Ready' : 'Missing audio'}</StatusPill>
+              <AudioStatusPill status={word.audioStatus} />
             </button>
           ))}
         </div>

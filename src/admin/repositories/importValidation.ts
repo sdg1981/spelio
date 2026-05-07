@@ -3,7 +3,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
-const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'generated', 'failed']);
+const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'ready', 'failed']);
 const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
 const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
 
