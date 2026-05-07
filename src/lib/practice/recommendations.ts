@@ -1,4 +1,5 @@
 import type { PracticeWord, WordList } from '../../data/wordLists';
+import type { Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
 import { hasDifficultWords } from './sessionEngine';
 import { getSelectedListLabel, getSelectedLists } from './wordListSelection';
@@ -14,8 +15,8 @@ function findList(lists: WordList[], id?: string | null) {
   return id ? lists.find(list => list.id === id) : undefined;
 }
 
-function asListRecommendation(list: WordList): Recommendation {
-  return { kind: 'list', listId: list.id, title: 'Continue learning', subtitle: list.name };
+function asListRecommendation(list: WordList, t?: Translate): Recommendation {
+  return { kind: 'list', listId: list.id, title: t ? t('home.continueLearning') : 'Continue learning', subtitle: list.name };
 }
 
 function wasJustPractised(storage: SpelioStorage, listId: string) {
@@ -49,7 +50,7 @@ function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordLis
   });
 }
 
-export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Recommendation {
+export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate): Recommendation {
   const difficultWordsExist = hasDifficultWords(storage, lists);
   const selectedLists = getSelectedLists(storage.selectedListIds, lists);
 
@@ -57,23 +58,23 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
     if (difficultWordsExist) {
       return {
         kind: 'review',
-        title: 'Review difficult words',
-        subtitle: 'From your mixed selection'
+        title: t ? t('home.reviewDifficult') : 'Review difficult words',
+        subtitle: t ? t('home.fromMixedSelection') : 'From your mixed selection'
       };
     }
 
     if (mixedSelectionIsComplete(storage, selectedLists)) {
       return {
         kind: 'choose_list',
-        title: 'Choose another word list',
-        subtitle: 'You’ve completed this mixed selection'
+        title: t ? t('home.chooseAnotherList') : 'Choose another word list',
+        subtitle: t ? t('home.mixedSelectionComplete') : 'You’ve completed this mixed selection'
       };
     }
 
     return {
       kind: 'list',
-      title: 'Continue mixed practice',
-      subtitle: getSelectedListLabel(storage.selectedListIds, lists)
+      title: t ? t('home.continueMixedPractice') : 'Continue mixed practice',
+      subtitle: getSelectedListLabel(storage.selectedListIds, lists, t)
     };
   }
 
@@ -81,8 +82,8 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
     return {
       kind: 'review',
       listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,
-      title: 'Review difficult words',
-      subtitle: 'Based on your last session'
+      title: t ? t('home.reviewDifficult') : 'Review difficult words',
+      subtitle: t ? t('home.basedOnLastSession') : 'Based on your last session'
     };
   }
 
@@ -92,17 +93,17 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[]): Re
     const nextList = findList(lists, current.nextListId);
 
     if (currentProgress?.completed === true && nextList && wasJustPractised(storage, current.id)) {
-      return asListRecommendation(nextList);
+      return asListRecommendation(nextList, t);
     }
 
-    return asListRecommendation(current);
+    return asListRecommendation(current, t);
   }
 
   const fallback = lists[0];
   return {
     kind: 'list',
     listId: fallback?.id,
-    title: 'Continue learning',
-    subtitle: fallback?.name ?? 'Select a word list'
+    title: t ? t('home.continueLearning') : 'Continue learning',
+    subtitle: fallback?.name ?? (t ? t('home.selectWordList') : 'Select a word list')
   };
 }

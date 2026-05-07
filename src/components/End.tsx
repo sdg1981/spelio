@@ -70,7 +70,7 @@ export function EndScreen({
   return (
     <main className="end-bg">
       <section className="page-shell end-shell end-v2-shell">
-        <div className="end-logo"><Logo onClick={onHome} /></div>
+        <div className="end-logo"><Logo onClick={onHome} backHomeLabel={t('practice.backToHome')} /></div>
 
         <div className="end-success-orb"><Check size={52} strokeWidth={2.2} /></div>
 

@@ -3,11 +3,13 @@ import { useState } from 'react';
 export function Logo({
   small = false,
   onClick,
-  animateCursor = false
+  animateCursor = false,
+  backHomeLabel = 'Back to home'
 }: {
   small?: boolean;
   onClick?: () => void;
   animateCursor?: boolean;
+  backHomeLabel?: string;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -33,7 +35,7 @@ export function Logo({
       type="button"
       className="border-0 bg-transparent p-0"
       onClick={onClick}
-      aria-label="Back to home"
+      aria-label={backHomeLabel}
     >
       {logo}
     </button>

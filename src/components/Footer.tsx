@@ -18,6 +18,22 @@ export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageC
   const shareStatusTimer = useRef<number | null>(null);
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
+  const feedbackSignalOptions = [
+    t('footer.feedbackUseful'),
+    t('footer.feedbackUseAgain'),
+    t('footer.feedbackHelpedSpelling'),
+    t('footer.feedbackRecommend'),
+    t('footer.feedbackConfusing')
+  ];
+  const learningMethodOptions = [
+    t('footer.methodSaySomething'),
+    t('footer.methodDuolingo'),
+    t('footer.methodDysguCymraeg'),
+    t('footer.methodSchool'),
+    t('footer.methodSelfStudy'),
+    t('footer.methodMultiple'),
+    t('footer.methodOther')
+  ];
 
   useEffect(() => {
     return () => {
@@ -70,7 +86,7 @@ export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageC
 
   return (
     <>
-      <footer className={classes} aria-label={`Made with love for Wales. Copyright ${year} Spelio`}>
+      <footer className={classes} aria-label={t('footer.ariaLabel')}>
         <span className="footer-language-switcher" aria-label={t('settings.interfaceLanguage')}>
           <button className={interfaceLanguage === 'en' ? 'active' : ''} type="button" onClick={() => onInterfaceLanguageChange('en')}>English</button>
           <span aria-hidden="true">·</span>
@@ -91,7 +107,7 @@ export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageC
           <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>{t('footer.about')}</button>
         </span>
       </footer>
-      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} />}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} feedbackSignalOptions={feedbackSignalOptions} learningMethodOptions={learningMethodOptions} />}
       {infoModal === 'privacy' && (
         <InfoModal title={t('footer.privacyTitle')} titleId="privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
           <p>{t('footer.privacyBody1')}</p>
@@ -159,24 +175,6 @@ type FeedbackState = 'idle' | 'sending' | 'sent' | 'error';
 
 const maxFeedbackMessageLength = 5000;
 const maxFeedbackEmailLength = 254;
-const feedbackSignalOptions = [
-  'I found this useful',
-  'I’d use this again',
-  'This helped me practise Welsh spelling',
-  'I’d recommend this to another learner',
-  'I found something confusing or frustrating'
-];
-
-const learningMethodOptions = [
-  'SaySomethinginWelsh',
-  'Duolingo',
-  'Dysgu Cymraeg',
-  'School / college',
-  'Self-study',
-  'Multiple methods',
-  'Other'
-];
-
 function looksLikeEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -189,7 +187,17 @@ function toggleSelection(value: string, selectedValues: string[]) {
   return [...selectedValues, value];
 }
 
-function FeedbackModal({ onClose, t }: { onClose: () => void; t: Translate }) {
+function FeedbackModal({
+  onClose,
+  t,
+  feedbackSignalOptions,
+  learningMethodOptions
+}: {
+  onClose: () => void;
+  t: Translate;
+  feedbackSignalOptions: string[];
+  learningMethodOptions: string[];
+}) {
   const titleId = useId();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');

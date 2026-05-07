@@ -13,7 +13,11 @@ export const en = {
     fromWhereLeftOff: 'From where you left off',
     chooseDifferentList: 'Choose a different list',
     fromEarlier: 'From earlier',
-    revisitWords: 'Revisit a few words'
+    revisitWords: 'Revisit a few words',
+    fromMixedSelection: 'From your mixed selection',
+    mixedSelectionComplete: 'You’ve completed this mixed selection',
+    continueMixedPractice: 'Continue mixed practice',
+    customMixedWordList: 'Custom mixed word list'
   },
   practice: {
     backToHome: 'Back to home',
@@ -101,6 +105,7 @@ export const en = {
     chooseDifferentNext: 'Choose different lists for your next session'
   },
   footer: {
+    ariaLabel: 'Made with love for Wales. Copyright 2026 Spelio',
     madeWith: 'Made with',
     forWales: 'for Wales',
     linksLabel: 'Footer links',
@@ -137,7 +142,23 @@ export const en = {
     aboutBody2: 'Spelio is a focused Welsh spelling practice app.',
     aboutBody3: 'It helps learners practise Welsh words and short phrases through short, repeatable spelling sessions designed to improve recall, spelling accuracy, confidence, and the connection between spoken and written Welsh.',
     aboutBody4: 'Spelio is designed to complement other ways of learning Welsh rather than replace them.',
-    aboutBody5: 'The project started while learning Welsh personally. As a dyslexic learner, I found that hearing words often wasn’t enough - I needed to see words, type them, and practise their spelling to properly remember them. Spelio was built to create the kind of simple, focused practice tool I wished already existed alongside the other Welsh learning resources I was using.'
+    aboutBody5: 'The project started while learning Welsh personally. As a dyslexic learner, I found that hearing words often wasn’t enough - I needed to see words, type them, and practise their spelling to properly remember them. Spelio was built to create the kind of simple, focused practice tool I wished already existed alongside the other Welsh learning resources I was using.',
+    feedbackUseful: 'I found this useful',
+    feedbackUseAgain: 'I’d use this again',
+    feedbackHelpedSpelling: 'This helped me practise Welsh spelling',
+    feedbackRecommend: 'I’d recommend this to another learner',
+    feedbackConfusing: 'I found something confusing or frustrating',
+    methodSaySomething: 'SaySomethinginWelsh',
+    methodDuolingo: 'Duolingo',
+    methodDysguCymraeg: 'Dysgu Cymraeg',
+    methodSchool: 'School / college',
+    methodSelfStudy: 'Self-study',
+    methodMultiple: 'Multiple methods',
+    methodOther: 'Other'
+  },
+  browser: {
+    unsupportedTitle: 'Browser Not Fully Supported',
+    unsupportedBody: 'Spelio may not work correctly on this browser or device. Please try updating your browser or using a recent version of Chrome, Safari, Edge, or Firefox.'
   },
   progress: {
     spelling: 'spelling',

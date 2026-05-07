@@ -13,7 +13,11 @@ export const cy = {
     fromWhereLeftOff: 'O ble wnaethoch chi stopio',
     chooseDifferentList: 'Dewis rhestr wahanol',
     fromEarlier: 'O gynharach',
-    revisitWords: 'Ailedrych ar ychydig eiriau'
+    revisitWords: 'Ailedrych ar ychydig eiriau',
+    fromMixedSelection: 'O’ch dewis cymysg',
+    mixedSelectionComplete: 'Rydych wedi cwblhau’r dewis cymysg hwn',
+    continueMixedPractice: 'Parhau ag ymarfer cymysg',
+    customMixedWordList: 'Rhestr eiriau gymysg'
   },
   practice: {
     backToHome: 'Yn ol i’r hafan',
@@ -101,6 +105,7 @@ export const cy = {
     chooseDifferentNext: 'Dewis rhestrau gwahanol ar gyfer eich sesiwn nesaf'
   },
   footer: {
+    ariaLabel: 'Wedi’i wneud gyda chariad i Gymru. Hawlfraint 2026 Spelio',
     madeWith: 'Wedi’i wneud gyda',
     forWales: 'i Gymru',
     linksLabel: 'Dolenni troedyn',
@@ -115,7 +120,7 @@ export const cy = {
     aboutTitle: 'Am Spelio',
     close: 'Cau',
     feedbackSent: 'Diolch - adborth wedi’i anfon.',
-    feedbackIntro: 'Mae Spelio yn dal yn gynnar - mae adborth, cywiriadau ac awgrymiadau yn croeso.',
+    feedbackIntro: 'Mae Spelio yn dal yn gynnar - mae croeso i adborth, cywiriadau ac awgrymiadau.',
     emailAddress: 'Cyfeiriad e-bost',
     optional: 'dewisol',
     message: 'Neges',
@@ -127,7 +132,33 @@ export const cy = {
     emailRequired: 'Mae angen neges.',
     messageTooLong: 'Cadwch adborth o dan 5,000 nod.',
     invalidEmail: 'Rhowch gyfeiriad e-bost dilys.',
-    emailTooLong: 'Mae’r cyfeiriad e-bost yn rhy hir.'
+    emailTooLong: 'Mae’r cyfeiriad e-bost yn rhy hir.',
+    privacyBody1: 'Mae Spelio wedi’i gynllunio i weithio heb gyfrif.',
+    privacyBody2: 'Mae eich cynnydd sillafu, eich gosodiadau, eich geiriau anodd a hanes eich sesiynau yn cael eu cadw’n lleol ar eich dyfais gan ddefnyddio storfa eich porwr. Mae hyn yn helpu Spelio i gofio beth rydych wedi’i ymarfer ac i awgrymu beth i’w wneud nesaf.',
+    privacyBody3: 'Gallwch ddileu’r cynnydd lleol hwn unrhyw bryd drwy ddefnyddio “Ailosod cynnydd” yn y Gosodiadau.',
+    privacyBody4: 'Yn ystod y cyfnod beta, gall Spelio gasglu gwybodaeth ddefnydd ddienw er mwyn helpu i wella’r ap, megis sesiynau a ddechreuwyd, sesiynau a gwblhawyd, rhestrau geiriau a ymarferwyd, ac a yw nodweddion fel adolygu neu ddatgelu yn cael eu defnyddio. Defnyddir y wybodaeth hon dim ond i ddeall beth sy’n ddefnyddiol a beth sydd angen ei wella.',
+    privacyBody5: 'Nid yw Spelio yn gwerthu data personol, nid yw’n defnyddio tracwyr hysbysebu, ac nid oes angen cyfrif defnyddiwr.',
+    aboutBody1: 'Fersiwn beta 0.2',
+    aboutBody2: 'Mae Spelio yn ap ymarfer sillafu Cymraeg syml a chanolbwyntiedig.',
+    aboutBody3: 'Mae’n helpu dysgwyr i ymarfer geiriau ac ymadroddion byr Cymraeg mewn sesiynau byr, ailadroddadwy sy’n gwella cofio, cywirdeb sillafu, hyder, a’r cysylltiad rhwng Cymraeg llafar ac ysgrifenedig.',
+    aboutBody4: 'Mae Spelio wedi’i gynllunio i ategu ffyrdd eraill o ddysgu Cymraeg, nid i gymryd eu lle.',
+    aboutBody5: 'Dechreuodd y prosiect wrth ddysgu Cymraeg yn bersonol. Fel dysgwr dyslecsig, roeddwn i’n gweld nad oedd clywed geiriau’n ddigon bob tro - roedd angen i mi weld geiriau, eu teipio, ac ymarfer eu sillafu er mwyn eu cofio’n iawn. Adeiladwyd Spelio i greu’r math o offeryn ymarfer syml a chanolbwyntiedig yr oeddwn i’n dymuno ei gael ochr yn ochr â’r adnoddau Cymraeg eraill roeddwn yn eu defnyddio.',
+    feedbackUseful: 'Roedd hyn yn ddefnyddiol',
+    feedbackUseAgain: 'Byddwn i’n defnyddio hyn eto',
+    feedbackHelpedSpelling: 'Helpodd hyn fi i ymarfer sillafu Cymraeg',
+    feedbackRecommend: 'Byddwn i’n argymell hyn i ddysgwr arall',
+    feedbackConfusing: 'Roedd rhywbeth yn ddryslyd neu’n rhwystredig',
+    methodSaySomething: 'SaySomethinginWelsh',
+    methodDuolingo: 'Duolingo',
+    methodDysguCymraeg: 'Dysgu Cymraeg',
+    methodSchool: 'Ysgol / coleg',
+    methodSelfStudy: 'Hunan-astudio',
+    methodMultiple: 'Sawl dull',
+    methodOther: 'Arall'
+  },
+  browser: {
+    unsupportedTitle: 'Nid yw’r porwr yn cael ei gefnogi’n llawn',
+    unsupportedBody: 'Efallai na fydd Spelio yn gweithio’n gywir ar y porwr neu’r ddyfais hon. Ceisiwch ddiweddaru eich porwr neu ddefnyddio fersiwn diweddar o Chrome, Safari, Edge neu Firefox.'
   },
   progress: {
     spelling: 'sillafiad',

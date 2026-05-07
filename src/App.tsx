@@ -24,6 +24,22 @@ function sameListSelection(left: string[], right: string[]) {
   return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
+function isWelshInterfaceRoute() {
+  return window.location.pathname === '/cy' || window.location.pathname.startsWith('/cy/');
+}
+
+function applyInterfaceLanguageRoute(storage: SpelioStorage): SpelioStorage {
+  if (!isWelshInterfaceRoute() || storage.settings.interfaceLanguage === 'cy') return storage;
+
+  return {
+    ...storage,
+    settings: {
+      ...storage.settings,
+      interfaceLanguage: 'cy'
+    }
+  };
+}
+
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) {
     return (
@@ -33,7 +49,7 @@ export default function App() {
     );
   }
 
-  const [storage, setStorage] = useState<SpelioStorage>(() => loadSpelioStorage());
+  const [storage, setStorage] = useState<SpelioStorage>(() => applyInterfaceLanguageRoute(loadSpelioStorage()));
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
   const [includeRecapDue, setIncludeRecapDue] = useState(false);
@@ -49,14 +65,15 @@ export default function App() {
   const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recapWordCount = useMemo(() => getRecapWordCount(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
-    () => getRecommendation(storage, wordLists),
+    () => getRecommendation(storage, wordLists, t),
     [
       difficultWords,
       storage.currentPathPosition,
       storage.lastSessionResult,
       storage.listProgress,
       storage.settings.dialectPreference,
-      storage.selectedListIds
+      storage.selectedListIds,
+      t
     ]
   );
   const homeProgressSummary = useMemo(
@@ -83,6 +100,10 @@ export default function App() {
   }
 
   function updateInterfaceLanguage(language: InterfaceLanguage) {
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+      window.history.replaceState(null, '', language === 'cy' ? '/cy' : '/');
+    }
+
     setStorage(previous => ({
       ...previous,
       settings: {
@@ -142,7 +163,7 @@ export default function App() {
 
   function resetProgress() {
     clearSpelioStorageData();
-    const freshStorage = createDefaultStorage();
+    const freshStorage = applyInterfaceLanguageRoute(createDefaultStorage());
 
     setStorage(freshStorage);
     setReviewMode(false);

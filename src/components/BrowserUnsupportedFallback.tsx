@@ -1,12 +1,16 @@
+import { createTranslator } from '../i18n';
+
 export function BrowserUnsupportedFallback() {
+  const t = createTranslator(window.location.pathname === '/cy' || window.location.pathname.startsWith('/cy/') ? 'cy' : 'en');
+
   return (
     <main className="app-bg">
       <section className="page-shell home-shell" style={{ justifyContent: 'center', textAlign: 'center' }}>
         <h1 className="modal-title" style={{ margin: 0 }}>
-          Browser Not Fully Supported
+          {t('browser.unsupportedTitle')}
         </h1>
         <p className="modal-text" style={{ maxWidth: 420, margin: '18px 0 0' }}>
-          Spelio may not work correctly on this browser or device. Please try updating your browser or using a recent version of Chrome, Safari, Edge, or Firefox.
+          {t('browser.unsupportedBody')}
         </p>
       </section>
     </main>
