@@ -4,6 +4,8 @@ import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
+import type { WordList } from './data/wordLists';
+import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
@@ -15,8 +17,8 @@ type Screen = 'home' | 'practice' | 'end';
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
-function normalizeSelectedListIds(selectedIds: string[]) {
-  const fallback = wordLists[0] ? [wordLists[0].id] : [];
+function normalizeSelectedListIds(selectedIds: string[], lists: WordList[]) {
+  const fallback = lists[0] ? [lists[0].id] : [];
   return selectedIds.length ? selectedIds : fallback;
 }
 
@@ -59,16 +61,18 @@ export default function App() {
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
+  const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
-  const difficultWords = useMemo(() => hasDifficultWords(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
-  const recapWordCount = useMemo(() => getRecapWordCount(storage, wordLists), [storage.settings.dialectPreference, storage.wordProgress]);
+  const difficultWords = useMemo(() => hasDifficultWords(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
+  const recapWordCount = useMemo(() => getRecapWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
-    () => getRecommendation(storage, wordLists, t, interfaceLanguage),
+    () => getRecommendation(storage, publicWordLists, t, interfaceLanguage),
     [
       difficultWords,
       interfaceLanguage,
+      publicWordLists,
       storage.currentPathPosition,
       storage.lastSessionResult,
       storage.listProgress,
@@ -78,12 +82,12 @@ export default function App() {
     ]
   );
   const homeProgressSummary = useMemo(
-    () => formatCumulativeProgress(storage, wordLists, { t }),
-    [storage.learningStats, storage.wordProgress, t]
+    () => formatCumulativeProgress(storage, publicWordLists, { t }),
+    [publicWordLists, storage.learningStats, storage.wordProgress, t]
   );
   const endProgressSummary = useMemo(
-    () => formatCumulativeProgress(storage, wordLists, { prefix: t('progress.totalProgress'), t }),
-    [storage.learningStats, storage.wordProgress, t]
+    () => formatCumulativeProgress(storage, publicWordLists, { prefix: t('progress.totalProgress'), t }),
+    [publicWordLists, storage.learningStats, storage.wordProgress, t]
   );
 
   useEffect(() => {
@@ -93,6 +97,19 @@ export default function App() {
   useEffect(() => {
     return () => {
       if (resetStatusTimerRef.current) window.clearTimeout(resetStatusTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadPublicContent().then(content => {
+      if (cancelled) return;
+      setPublicWordLists(content.lists);
+    });
+
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -147,7 +164,7 @@ export default function App() {
   }
 
   function saveSelectedWordLists(selectedIds: string[]) {
-    const ids = normalizeSelectedListIds(selectedIds);
+    const ids = normalizeSelectedListIds(selectedIds, publicWordLists);
     const changed = !sameListSelection(ids, storage.selectedListIds);
 
     if (!changed) {
@@ -191,7 +208,7 @@ export default function App() {
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const screenContent = activeScreen === 'practice' ? (
     <Practice
-      lists={wordLists}
+      lists={publicWordLists}
       storage={storage}
       sessionStorage={practiceStartStorage ?? storage}
       reviewDifficult={reviewMode}
@@ -226,7 +243,7 @@ export default function App() {
       />
       {wordListModalOpen && (
         <WordListModal
-          lists={wordLists}
+          lists={publicWordLists}
           initialSelectedIds={storage.selectedListIds}
           completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
@@ -255,7 +272,7 @@ export default function App() {
       />
       {wordListModalOpen && (
         <WordListModal
-          lists={wordLists}
+          lists={publicWordLists}
           initialSelectedIds={storage.selectedListIds}
           completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
