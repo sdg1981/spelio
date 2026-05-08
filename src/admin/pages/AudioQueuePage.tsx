@@ -49,24 +49,31 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
     setVisibleCount(PAGE_SIZE);
   }, [statusFilter]);
 
+  const effectiveWords = useMemo(() => {
+    if (!generatingWordIds.size && !batchGeneratingWordIds.size) return allWords;
+    return allWords.map(word => generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id)
+      ? { ...word, audioStatus: 'generating' as const }
+      : word
+    );
+  }, [allWords, batchGeneratingWordIds, generatingWordIds]);
+
   const counts = useMemo(() => ({
-    missing: allWords.filter(word => word.audioStatus === 'missing').length,
-    queued: allWords.filter(word => word.audioStatus === 'queued').length,
-    generating: allWords.filter(word => word.audioStatus === 'generating').length,
-    failed: allWords.filter(word => word.audioStatus === 'failed').length,
-    ready: allWords.filter(word => word.audioStatus === 'ready').length
-  }), [allWords]);
+    missing: effectiveWords.filter(word => word.audioStatus === 'missing').length,
+    queued: effectiveWords.filter(word => word.audioStatus === 'queued').length,
+    generating: effectiveWords.filter(word => word.audioStatus === 'generating').length,
+    failed: effectiveWords.filter(word => word.audioStatus === 'failed').length,
+    ready: effectiveWords.filter(word => word.audioStatus === 'ready').length
+  }), [effectiveWords]);
 
   const filteredWords = useMemo(
-    () => statusFilter === 'all' ? allWords.filter(word => word.audioStatus !== 'ready') : allWords.filter(word => word.audioStatus === statusFilter),
-    [allWords, statusFilter]
+    () => statusFilter === 'all' ? effectiveWords.filter(word => word.audioStatus !== 'ready') : effectiveWords.filter(word => word.audioStatus === statusFilter),
+    [effectiveWords, statusFilter]
   );
   const visibleWords = filteredWords.slice(0, visibleCount);
   const selectedVisibleIds = selectedIds.filter(id => visibleWords.some(word => word.id === id));
-  const selectedGeneratableIds = selectedIds.filter(id => allWords.some(word => word.id === id && word.audioStatus !== 'ready'));
-  const selectedVisibleGeneratableIds = selectedIds.filter(id => visibleWords.some(word => word.id === id && word.audioStatus !== 'ready'));
+  const selectedVisibleGeneratableIds = selectedIds.filter(id => visibleWords.some(word => word.id === id && canGenerateAudio(word)));
   const visibleMissingIds = visibleWords.filter(word => word.audioStatus === 'missing').map(word => word.id);
-  const selectedMissingIds = selectedIds.filter(id => allWords.some(word => word.id === id && word.audioStatus === 'missing'));
+  const selectedMissingIds = selectedIds.filter(id => effectiveWords.some(word => word.id === id && word.audioStatus === 'missing'));
   const allVisibleSelected = visibleWords.length > 0 && visibleWords.every(word => selectedIds.includes(word.id));
 
   async function runAction(action: () => Promise<unknown>, success: string) {
@@ -100,6 +107,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
       batchGeneratingWordIdsRef.current = new Set(wordIds);
       setSelectedBatchBusy(true);
       setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
+      clearSelection();
       await runAction(() => repository.generateAudioBatch(wordIds), `Generated ${wordIds.length} selected audio item(s).`);
     } finally {
       selectedBatchBusyRef.current = false;
@@ -110,10 +118,11 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   }
 
   async function generateAudioForQueueWord(word: AdminWordWithListName) {
-    if (generatingWordIdsRef.current.has(word.id) || batchGeneratingWordIdsRef.current.has(word.id)) return;
+    if (!canGenerateAudio(word) || generatingWordIdsRef.current.has(word.id) || batchGeneratingWordIdsRef.current.has(word.id)) return;
     try {
       generatingWordIdsRef.current = new Set(generatingWordIdsRef.current).add(word.id);
       setGeneratingWordIds(new Set(generatingWordIdsRef.current));
+      setSelectedIds(current => current.filter(id => id !== word.id));
       await runAction(
         () => word.audioStatus === 'failed' ? repository.retryAudioGeneration(word.id) : repository.generateAudioForWord(word.id),
         'Audio generation finished.'
@@ -139,6 +148,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   }
 
   function updateStatusFilter(nextFilter: StatusFilter) {
+    if (nextFilter !== statusFilter) clearSelection();
     setStatusFilter(nextFilter);
   }
 
@@ -156,9 +166,9 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
               </AdminButton>
               <div className="mt-1 text-xs font-medium leading-5 text-slate-500">Find words without generated audio and add them to the queue.</div>
             </div>
-            <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedGeneratableIds)} disabled={selectedBatchBusy || selectedGeneratableIds.length === 0} aria-disabled={selectedBatchBusy}>
+            <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedVisibleGeneratableIds)} disabled={selectedBatchBusy || selectedVisibleGeneratableIds.length === 0} aria-disabled={selectedBatchBusy}>
               {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
-              {selectedBatchBusy ? 'Generating...' : 'Generate selected'}
+              {selectedBatchBusy ? `Generating ${batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length}...` : 'Generate selected'}
             </AdminButton>
           </div>
         }
@@ -206,8 +216,8 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses only selected rows that are not already generated.
-            {selectedVisibleIds.length > 0 && selectedVisibleGeneratableIds.length !== selectedVisibleIds.length && <> {selectedVisibleIds.length - selectedVisibleGeneratableIds.length} generated item(s) will be skipped.</>}
+            Generate selected uses only visible selected rows that are not already generating or generated.
+            {selectedVisibleIds.length > 0 && selectedVisibleGeneratableIds.length !== selectedVisibleIds.length && <> {selectedVisibleIds.length - selectedVisibleGeneratableIds.length} ineligible item(s) will be skipped.</>}
           </div>
         </div>
         <div className="divide-y divide-slate-100">
@@ -215,6 +225,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             const wordBusy = generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id);
             const runningLabel = word.audioStatus === 'failed' ? 'Regenerating...' : 'Generating...';
             const isGenerated = word.audioStatus === 'ready';
+            const isGenerating = word.audioStatus === 'generating';
 
             return (
               <div key={word.id} className="grid gap-3 px-5 py-4 lg:grid-cols-[auto_1fr_140px_auto] lg:items-center">
@@ -237,9 +248,9 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
                   }} disabled={!hasPlayableAudioUrl(word.audioUrl)}>
                     <Play size={15} /> Preview
                   </AdminButton>
-                  <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || isGenerated} aria-disabled={wordBusy || isGenerated}>
+                  <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || isGenerated || isGenerating} aria-disabled={wordBusy || isGenerated || isGenerating}>
                     {wordBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
-                    {wordBusy ? runningLabel : isGenerated ? 'Generated' : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}
+                    {wordBusy ? runningLabel : isGenerated ? 'Generated' : isGenerating ? 'Generating...' : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}
                   </AdminButton>
                 </div>
               </div>
@@ -276,6 +287,10 @@ function getEmptyStateCopy(statusFilter: StatusFilter) {
   if (statusFilter === 'failed') return 'No failed audio jobs.';
   if (statusFilter === 'ready') return 'No generated audio found.';
   return 'No audio items found.';
+}
+
+function canGenerateAudio(word: AdminWordWithListName) {
+  return word.audioStatus !== 'ready' && word.audioStatus !== 'generating';
 }
 
 function readError(error: unknown, fallback: string) {
