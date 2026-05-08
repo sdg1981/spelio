@@ -2380,12 +2380,12 @@
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:38px;
+    margin-top:24px;
   }
 
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
-    margin-top:42px;
+    margin-top:24px;
   }
 
   .practice-app .letter-grid,
@@ -2527,12 +2527,12 @@
   }
 
   .practice-app .letter-input-tap-zone{
-    margin-top:28px;
+    margin-top:20px;
   }
 
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
-    margin-top:34px;
+    margin-top:20px;
   }
 
   .practice-app .letter-grid{
@@ -3130,12 +3130,12 @@
   text-transform:uppercase;
 }
 
-@media (max-width:520px){
+@media (max-width:767px){
   .practice-app .learner-note{
-    min-height:48px;
+    min-height:17px;
   }
 
   .practice-app .learner-note-dialect{
-    font-size:15px;
+    font-size:12px;
   }
 }
