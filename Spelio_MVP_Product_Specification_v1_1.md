@@ -1769,6 +1769,25 @@ Initial generic hint registry:
 
 Pattern hints should initially be implemented as a curated generic rule registry, not manually stored on every word.
 
+#### Future learner-instinct hints
+
+The hint registry may later expand to include common English-spelling transfer mistakes and learner-instinct corrections where these are high-confidence, broadly useful, and unlikely to mislead learners.
+
+Examples may include:
+- English-style y endings where Welsh commonly uses i
+- English k → Welsh c habits
+- English v → Welsh f habits
+- English th → Welsh dd habits
+
+These should remain lightweight learner-awareness hints rather than full pronunciation or phonics teaching.
+
+Where a hint encourages the learner to “listen closely” or similar, the app may optionally replay the current word audio once after a short delay if:
+- audio prompts are enabled
+- audio is available
+- the replay is unlikely to feel repetitive or intrusive
+
+Automatic replay should remain subtle, infrequent, and secondary to the learner-controlled audio pill.
+
 Initial patterns may include:
 
 - dd
