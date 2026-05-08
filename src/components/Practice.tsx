@@ -10,9 +10,6 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practi
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 
-const SUCCESS_UNDERLINE_STAGGER_MS = 42;
-const SUCCESS_UNDERLINE_DURATION_MS = 160;
-
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
     <div className="progress-top">
@@ -51,14 +48,9 @@ function LetterSlots({
 }) {
   let globalIndex = 0;
   let visibleLetterIndex = 0;
-  const visibleLetterCount = word.replace(/\s/g, '').length;
-  const wordCompleteDelay = Math.max(0, visibleLetterCount - 1) * SUCCESS_UNDERLINE_STAGGER_MS + SUCCESS_UNDERLINE_DURATION_MS;
-  const wordCompleteStyle = wordComplete
-    ? { '--word-complete-delay': `${wordCompleteDelay}ms` } as CSSProperties
-    : undefined;
 
   return (
-    <div className={`letter-grid ${layoutClass} ${wordComplete ? 'word-complete' : ''}`.trim()} style={wordCompleteStyle}>
+    <div className={`letter-grid ${layoutClass} ${wordComplete ? 'word-complete' : ''}`.trim()}>
       {word.split(' ').map((wordPart, wordIndex) => {
         const startIndex = globalIndex;
         globalIndex += wordPart.length + 1;
@@ -77,7 +69,7 @@ function LetterSlots({
                 <span
                   key={`${index}-${slot?.value || 'empty'}-${slot?.revealed ? 'revealed' : 'typed'}-${isMistake ? 'wrong' : 'ok'}`}
                   className={`letter-slot ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed ? 'typed' : ''}`}
-                  style={wordComplete ? { '--letter-wave-delay': `${animationIndex * SUCCESS_UNDERLINE_STAGGER_MS}ms` } as CSSProperties : undefined}
+                  style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 42}ms` } as CSSProperties : undefined}
                 >
                   {isMistake ? '×' : slot?.value || '_'}
                 </span>
