@@ -44,7 +44,6 @@ export const cy = {
     audioUnavailable: 'Dim sain ar gael',
     incorrectTryAgain: 'Anghywir. Ceisiwch eto.',
     correct: 'Cywir',
-    letterRevealed: 'Llythyren wedi’i dangos',
     quickRecap: 'Adolygiad cyflym',
     northForm: 'Ffurf Gogledd Cymru',
     southStandardForm: 'Ffurf De Cymru / Safonol',

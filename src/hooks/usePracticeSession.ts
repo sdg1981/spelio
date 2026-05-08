@@ -446,7 +446,6 @@ export function usePracticeSession({
 
     const nextLetters = letters.map((letter, index) => index === nextIndex ? { value: answer[nextIndex], revealed: true } : letter);
     setLetters(nextLetters);
-    showStatus(t('practice.letterRevealed'));
     persistWordProgress(currentWord, { revealed: true });
     if (isRecapActive) {
       recapIssueRef.current = true;

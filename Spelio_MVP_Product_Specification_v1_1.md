@@ -357,7 +357,6 @@ Status area should be temporary only.
 
 Examples:
 
-- “Letter revealed”
 - “English on”
 - “English off”
 - “Audio unavailable”
@@ -1710,7 +1709,7 @@ Interface-language rule:
 ### 19.5 Reveal letter
 
 - Tap/click fills the next missing letter.
-- Status: “Letter revealed.”
+- Reveal feedback is communicated visually through the inserted letter and active-slot progression; no temporary “Letter revealed” status is shown.
 - Mark word difficult.
 - Does not play success sound.
 - After revealing a letter, mobile keyboard should remain visible.

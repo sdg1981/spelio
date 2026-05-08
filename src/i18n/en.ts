@@ -44,7 +44,6 @@ export const en = {
     audioUnavailable: 'Audio unavailable',
     incorrectTryAgain: 'Incorrect. Try again.',
     correct: 'Correct',
-    letterRevealed: 'Letter revealed',
     quickRecap: 'Quick recap',
     northForm: 'North Wales form',
     southStandardForm: 'South Wales / Standard form',
