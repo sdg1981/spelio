@@ -412,6 +412,100 @@ Pattern lists should feel like useful practice, not phonics worksheets.
 
 ---
 
+## 10.1 Spelling Pattern Hint Guidance
+
+Spelio may use generic spelling pattern hints during practice to help learners connect Welsh sounds with Welsh spelling patterns.
+
+These hints are primarily app-level behaviour, not manually authored content.
+
+Content authors should normally rely on the generic hint registry rather than writing per-word spelling hints.
+
+Pattern hints should:
+
+- support common Welsh spelling patterns
+- be short and calm
+- avoid turning the app into a phonics course
+- avoid absolute pronunciation claims where dialect or word-level variation exists
+- avoid revealing the full target answer unnecessarily
+- support spelling awareness rather than grammar explanation
+
+High-value hint patterns may include:
+
+- dd
+- f
+- ff
+- ll
+- ch
+- rh
+- ng
+- ngh
+- ae
+- ai
+- au
+- ei
+- eu
+- oe
+- wy
+- Welsh w functioning as a vowel
+- Welsh y functioning as a vowel
+- rare English-letter habits such as k, q, v, x, z
+
+Vowel and diphthong hints should be especially cautious.
+
+Prefer awareness wording such as:
+
+- “Listen closely to the wy sound.”
+- “Welsh w can sometimes act like a vowel.”
+- “Welsh y can sometimes act like a vowel.”
+
+Avoid oversimplified wording such as:
+
+- “w sounds like o”
+- “y always sounds like…”
+- broad pronunciation rules that may vary by dialect, stress, position, or word
+
+Optional word-level controls:
+
+Word records may optionally support:
+
+- spellingHintId
+- disablePatternHints
+
+These fields should normally be empty or omitted.
+
+Use spellingHintId only when:
+
+- a specific reviewed hint should be forced for a word
+- the generic hint registry is not sufficient
+- the item has been linguistically reviewed or is high confidence
+
+Use disablePatternHints only when:
+
+- a generic hint would be misleading for this word
+- pronunciation or spelling behaviour is exceptional
+- dialect or usage variation makes the generic hint unsafe
+- the word should be excluded from pattern hints until reviewed
+
+Do not use these fields as a routine content-authoring burden.
+
+Do not create bespoke hints for every word.
+
+Do not duplicate generic hint wording inside usageNote, dialectNote, or notes.
+
+Relationship to usageNote:
+
+- usageNote remains for practical usage guidance, not live spelling-pattern hints.
+- Do not use usageNote to explain every spelling pattern.
+- If a spelling issue can be handled by the generic hint system, prefer the generic hint system.
+- usageNote must still not reveal the exact target answer during active spelling.
+
+Relationship to notes:
+
+- notes may be used internally to flag uncertainty about whether a word should disable pattern hints or use a specific spellingHintId.
+- notes should not become a hidden second hint system.
+
+---
+
 ## 11. Phrase-Based Lists
 
 Phrase lists should use short, practical chunks.
@@ -900,12 +994,16 @@ Each word should ideally include:
 - dialect
 - dialectNote
 - variantGroupId
+- spellingHintId
+- disablePatternHints
 - order
 - difficulty
 
 Do not add empty optional fields purely for completeness unless the app schema requires them.
 
 Optional fields should remain optional where possible.
+
+spellingHintId and disablePatternHints are optional controls and should not be populated purely for completeness.
 
 ---
 
@@ -1000,6 +1098,9 @@ Before accepting a list, check:
 - Does usageNote avoid revealing the target answer?
 - Does dialectNote avoid revealing the target answer?
 - Do learner-facing notes avoid spoiling the spelling task?
+- Are generic spelling pattern hints likely to be safe for this item?
+- Should pattern hints be disabled for any exceptional word?
+- Is a specific spellingHintId needed only where genuinely justified?
 
 ### Learner experience
 
@@ -1013,6 +1114,7 @@ Before accepting a list, check:
 - Are answer lengths compatible with slot rendering?
 - Are variants separated properly?
 - Are notes not overloaded?
+- Are usageNote, dialectNote, and notes not being misused as spelling hint fields?
 
 ---
 
@@ -1157,6 +1259,8 @@ For each word include:
 - dialect
 - dialectNote where relevant
 - variantGroupId where variants exist
+- spellingHintId where genuinely justified
+- disablePatternHints where genuinely justified
 - order
 - difficulty
 
@@ -1171,6 +1275,9 @@ Rules:
 - When generating or reviewing word lists with AI, explicitly ask the AI to identify high-risk learner-confusion items and add short usageNote or dialectNote values only where they are genuinely useful.
 - Keep usageNote short and rare, except where high-risk learner-confusion triggers make it mandatory.
 - Do not put dialect information in usageNote.
+- Leave spellingHintId and disablePatternHints empty unless there is a clear reason.
+- Do not invent bespoke spelling hints for every word.
+- Flag uncertain hint cases in notes for later Welsh review.
 - Keep lists coherent and practical.
 - Prefer simpler spelling over higher usefulness if unsure.
 ```

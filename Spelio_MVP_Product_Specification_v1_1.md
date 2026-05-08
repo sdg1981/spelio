@@ -1706,6 +1706,165 @@ Interface-language rule:
 - Do not show ordinary written error status text.
 - Mark word difficult.
 
+### Spelling pattern hints
+
+Spelio should support lightweight contextual spelling hints during practice.
+
+Purpose:
+
+- Help learners connect Welsh sounds to Welsh spelling patterns.
+- Turn common mistakes into useful learning moments.
+- Keep the practice flow calm, fast, and non-instructional.
+
+This is not a full phonics engine and should not attempt to explain every Welsh pronunciation rule.
+
+Hint behaviour:
+
+- When a learner types an incorrect character, the app may show a small contextual hint if the mistake matches a known high-confidence Welsh spelling pattern.
+- Hints should appear after the first relevant mistake.
+- Hints should be short, calm, and visually subtle.
+- Hints should avoid long explanations.
+- Hints should avoid absolute claims where exceptions exist.
+- Hints should not automatically reveal the answer.
+- Hints should not block typing.
+- Hints should not appear in a modal.
+- Hints should not replace existing red error feedback.
+- Hints should not count separately from existing incorrect/reveal scoring.
+
+#### Hint display placement
+
+Pattern hints should use the same quiet learner-note area intended for usageNote, dialectNote, and generated dialect labels.
+
+Hints must not create an additional new line or stacked message area on the practice screen.
+
+When a pattern hint is active, it may temporarily replace any currently visible usageNote, dialectNote, or generated dialect label in that note area.
+
+Hints should:
+
+- appear in the existing note location
+- remain visually quiet and low contrast
+- avoid pushing the answer area or controls down
+- avoid layout shift where possible
+- disappear automatically after a short period, approximately 3–5 seconds
+- not stack with usageNote or dialectNote
+- not use the temporary status message area
+- not appear as a modal, toast, popover, or separate card
+
+After the hint disappears, the normal learner note area may return to its previous state if appropriate.
+
+If there is no existing note area visible during active spelling, reserve or reuse the same physical location so that hints do not alter the screen layout.
+
+Hint levels:
+
+1. Pattern hint: a short explanation of a likely Welsh spelling pattern or learner misconception.
+2. Optional reveal help: if the learner continues to struggle at the same position, the app may offer a stronger user-controlled help action such as revealing the next spelling chunk.
+
+Revealing must remain user-controlled. The app must not automatically reveal letters after a mistake.
+
+Initial generic hint registry:
+
+Pattern hints should initially be implemented as a curated generic rule registry, not manually stored on every word.
+
+Initial patterns may include:
+
+- dd
+- f
+- ff
+- ll
+- ch
+- rh
+- wy
+- ae
+- oe
+- ai
+- ei
+- rare English-letter habits such as k, q, v, x, z
+
+Example English hints:
+
+- dd: “Listen for the soft ‘th’ sound — in Welsh this is often written dd.”
+- f: “In Welsh, f often sounds like English ‘v’.”
+- ff: “In Welsh, the English ‘f’ sound is usually written ff.”
+- ll: “Listen closely — this is the Welsh ll sound.”
+- ch: “Listen closely — this is the Welsh ch sound.”
+- k: “Welsh rarely uses the letter k.”
+
+Chunk-aware reveal:
+
+When reveal help is used near a known Welsh spelling chunk, reveal the whole chunk rather than only one character where appropriate.
+
+Examples:
+
+- dd
+- ll
+- ff
+- ch
+- rh
+- wy
+- ae
+- oe
+- ai
+- ei
+
+Using chunk-aware reveal should mark the word as revealed/difficult using existing reveal logic.
+
+Multilingual/i18n handling:
+
+- Hint detection logic should be language-neutral.
+- Hint messages should be rendered through the existing i18n system.
+- The English interface may use English-friendly comparisons, such as “soft th sound”.
+- The Welsh interface should avoid assuming English phonics and use more neutral wording where appropriate.
+- Do not store translated hint text on individual words for MVP.
+
+Optional word-level controls:
+
+Word records may support optional fields:
+
+- spellingHintId
+- disablePatternHints
+
+Most words should not need these fields. Generic pattern rules should be the default.
+
+These optional fields exist only to:
+
+- suppress misleading hints
+- force a specific hint in edge cases
+- support future reviewed content
+
+The fields should be optional and should not be required when creating or importing words.
+
+Admin handling:
+
+- If implemented, admin should expose these fields quietly in the advanced/learner notes area, not in the main word editing flow.
+- Do not require admins to fill them in for normal content creation.
+
+#### Additional vowel-awareness hints
+
+Additional awareness hints may later be added for Welsh vowel behaviour and common diphthongs where the guidance is high-value and unlikely to mislead learners.
+
+Examples may include:
+
+- Welsh w functioning as a vowel
+- Welsh y functioning as a vowel
+- common diphthongs such as wy, au, ei, oe, eu
+
+These hints should remain lightweight and awareness-based rather than acting as full pronunciation explanations.
+
+Avoid absolute pronunciation claims where dialect or pronunciation variation exists.
+
+Prefer wording such as:
+
+- “Listen closely to the wy sound.”
+- “Welsh w can sometimes act like a vowel.”
+- “Welsh y can sometimes act like a vowel.”
+
+Avoid oversimplified statements such as:
+
+- “w sounds like o”
+- “y always sounds like…”
+
+The MVP should not become a full Welsh phonetics or pronunciation system.
+
 ### 19.5 Reveal letter
 
 - Tap/click fills the next missing letter.
