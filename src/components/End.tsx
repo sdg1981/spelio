@@ -1,7 +1,7 @@
 import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
-import { Play, SlidersHorizontal } from './Icons';
+import { ListCheck, Play, SlidersHorizontal } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
@@ -150,7 +150,7 @@ export function EndScreen({
             />
           )}
           <ActionRow
-            icon={<SlidersHorizontal size={30} />}
+            icon={shouldChooseAnotherList ? <SlidersHorizontal size={30} /> : <ListCheck size={30} />}
             title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
             arrowVariant="arrow"
             onClick={shouldChooseAnotherList ? onHome : onChangeLists}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
-import { List, Play, RotateCcw, Settings } from './Icons';
+import { ListCheck, Play, RotateCcw, Settings } from './Icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SettingsModal } from './Practice';
 import type { InterfaceLanguage, Translate } from '../i18n';
@@ -122,7 +122,7 @@ export function Home({
           )}
 
           <ActionRow
-            icon={<List size={30} />}
+            icon={<ListCheck size={30} />}
             title={selectListLabel}
             arrowVariant="arrow"
             onClick={onSelectList}
