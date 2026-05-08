@@ -13,7 +13,7 @@ import {
   type SessionResult,
   type SpelioStorage
 } from '../src/lib/practice/storage';
-import { getRecommendation } from '../src/lib/practice/recommendations';
+import { getNormalContinuationRecommendation, getRecommendation } from '../src/lib/practice/recommendations';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -111,11 +111,12 @@ function markWantingWordDifficult(storage: SpelioStorage, predicate: (word: Prac
 }
 
 function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord> = {}): PracticeWord {
+  const englishPrompt = overrides.englishPrompt ?? id;
+  const welshAnswer = overrides.welshAnswer ?? id;
+
   return {
     id,
     listId: overrides.listId ?? 'test_missing_preferred',
-    englishPrompt: id,
-    welshAnswer: id,
     acceptedAlternatives: [],
     audioUrl: '',
     audioStatus: 'missing',
@@ -126,16 +127,25 @@ function makeTestWord(id: string, order: number, overrides: Partial<PracticeWord
     dialectNote: '',
     usageNote: '',
     variantGroupId: '',
-    ...overrides
+    ...overrides,
+    englishPrompt,
+    welshAnswer,
+    prompt: overrides.prompt ?? englishPrompt,
+    answer: overrides.answer ?? welshAnswer,
+    sourceLanguage: overrides.sourceLanguage ?? 'en',
+    targetLanguage: overrides.targetLanguage ?? 'cy'
   };
 }
 
 function makeLargeList(id: string, startOrder: number, wordCount: number): WordList {
   return {
     id,
+    collectionId: 'test',
     name: id,
     description: '',
     language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
     dialect: 'Both',
     stage: 'Test',
     difficulty: 1,
@@ -154,9 +164,12 @@ function makeLargeVariantList(): WordList {
   const id = 'test_large_variant_single';
   return {
     id,
+    collectionId: 'test',
     name: 'Large variant single',
     description: '',
     language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
     dialect: 'Mixed',
     stage: 'Test',
     difficulty: 1,
@@ -192,9 +205,12 @@ function makeLargeVariantList(): WordList {
 function missingPreferredVariantList(): WordList {
   return {
     id: 'test_missing_preferred',
+    collectionId: 'test',
     name: 'Missing preferred variant',
     description: '',
     language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
     dialect: 'Mixed',
     stage: 'Test',
     difficulty: 1,
@@ -214,51 +230,22 @@ function missingPreferredVariantList(): WordList {
 function recapSelectionList(): WordList {
   return {
     id: 'test_recap_selection',
+    collectionId: 'test',
     name: 'Recap selection',
     description: '',
     language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
     dialect: 'Both',
     stage: 'Test',
     difficulty: 3,
     order: 1,
     isActive: true,
     words: [
-      {
-        id: 'active_hard_recent',
-        listId: 'test_recap_selection',
-        englishPrompt: 'active hard',
-        welshAnswer: 'caled',
-        order: 1,
-        difficulty: 5,
-        dialect: 'Both'
-      },
-      {
-        id: 'resolved_hard_recent',
-        listId: 'test_recap_selection',
-        englishPrompt: 'resolved hard',
-        welshAnswer: 'anodd',
-        order: 2,
-        difficulty: 5,
-        dialect: 'Both'
-      },
-      {
-        id: 'resolved_easy_older',
-        listId: 'test_recap_selection',
-        englishPrompt: 'resolved easy',
-        welshAnswer: 'hawdd',
-        order: 3,
-        difficulty: 2,
-        dialect: 'Both'
-      },
-      {
-        id: 'resolved_easy_seen_once',
-        listId: 'test_recap_selection',
-        englishPrompt: 'resolved easy once',
-        welshAnswer: 'eto',
-        order: 4,
-        difficulty: 1,
-        dialect: 'Both'
-      }
+      makeTestWord('active_hard_recent', 1, { listId: 'test_recap_selection', englishPrompt: 'active hard', welshAnswer: 'caled', difficulty: 5 }),
+      makeTestWord('resolved_hard_recent', 2, { listId: 'test_recap_selection', englishPrompt: 'resolved hard', welshAnswer: 'anodd', difficulty: 5 }),
+      makeTestWord('resolved_easy_older', 3, { listId: 'test_recap_selection', englishPrompt: 'resolved easy', welshAnswer: 'hawdd', difficulty: 2 }),
+      makeTestWord('resolved_easy_seen_once', 4, { listId: 'test_recap_selection', englishPrompt: 'resolved easy once', welshAnswer: 'eto', difficulty: 1 })
     ]
   };
 }
@@ -582,6 +569,95 @@ test('Review difficult words is hidden when no difficult words remain', () => {
   assertEqual(hasDifficultWords(storage), false, 'No difficult words should remain after clean completion');
   assertEqual(recommendation.kind, 'list', 'Recommendation should not be review');
   assertEqual(recommendation.title.includes('difficult'), false, 'Primary recommendation should not mention difficult words');
+});
+
+test('struggled primary action routes to difficult review only', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = completeNumbersCleanly(numbersStorage());
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: numbersResult({
+      correctWords: 9,
+      incorrectWords: 1,
+      incorrectAttempts: 1,
+      state: 'struggled'
+    })
+  };
+
+  const recommendation = getRecommendation(storage, wordLists);
+  const reviewSession = createPracticeSession(wordLists, storage, true);
+
+  assertEqual(hasDifficultWords(storage, wordLists), true, 'Setup should leave an eligible difficult word');
+  assertEqual(recommendation.kind, 'review', 'Struggled state should make review the primary recommendation');
+  assertEqual(reviewSession.words.length, 1, 'Dedicated review should use only the difficult pool');
+  assertEqual(reviewSession.words[0]?.id, numbers.words[0].id, 'Dedicated review should use the exact difficult word');
+});
+
+test('struggled secondary continue bypasses review and advances from a completed current list', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = completeNumbersCleanly(numbersStorage());
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: numbersResult({
+      correctWords: 9,
+      incorrectWords: 1,
+      incorrectAttempts: 1,
+      state: 'struggled'
+    })
+  };
+
+  const primaryRecommendation = getRecommendation(storage, wordLists);
+  const normalRecommendation = getNormalContinuationRecommendation(storage, wordLists);
+  const normalStartStorage = applyPracticeStartListSelection(storage, normalRecommendation.listId);
+  const normalSession = createPracticeSession(wordLists, normalStartStorage);
+
+  assertEqual(primaryRecommendation.kind, 'review', 'Setup should make review the primary recommendation');
+  assertEqual(normalRecommendation.kind, 'list', 'Secondary continue should use a normal recommendation');
+  assertEqual(normalRecommendation.listId, 'foundations_mixed_01', 'Secondary continue should advance to the next list');
+  assertEqual(normalSession.words.every(word => word.listId === 'foundations_mixed_01'), true, 'Normal continue should not start the review pool');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, true, 'Normal continue routing should not clear difficult status');
+});
+
+test('struggled secondary continue stays on an incomplete current list', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionDate: '2026-05-05T00:01:30.000Z',
+    lastSessionResult: numbersResult({
+      correctWords: 9,
+      incorrectWords: 1,
+      incorrectAttempts: 1,
+      state: 'struggled'
+    })
+  };
+
+  const primaryRecommendation = getRecommendation(storage, wordLists);
+  const normalRecommendation = getNormalContinuationRecommendation(storage, wordLists);
+
+  assertEqual(primaryRecommendation.kind, 'review', 'Setup should make review the primary recommendation');
+  assertEqual(normalRecommendation.kind, 'list', 'Secondary continue should remain a normal recommendation');
+  assertEqual(normalRecommendation.listId, 'foundations_numbers', 'Incomplete current list should be continued before advancing');
+});
+
+test('normal continuation ignores ineligible difficult variants', () => {
+  const storage = difficultWantingStorage('south_standard', 'North Wales');
+  const recommendation = getRecommendation(storage, wordLists);
+  const normalRecommendation = getNormalContinuationRecommendation(storage, wordLists);
+
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'North-only difficult variant should not be review-relevant in South/Standard mode');
+  assertEqual(recommendation.kind, 'list', 'Primary recommendation should not expose review with no eligible difficult words');
+  assertEqual(normalRecommendation.kind, 'list', 'Normal continue should still be available');
+  assertEqual(normalRecommendation.listId, 'stage2_phrases_wanting', 'Normal continue should stay on the selected incomplete list');
 });
 
 test('primary action does not repeat a completed list when nextListId exists', () => {

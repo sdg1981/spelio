@@ -8,7 +8,7 @@ import type { WordList } from './data/wordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
-import { getRecommendation } from './lib/practice/recommendations';
+import { getNormalContinuationRecommendation, getRecommendation } from './lib/practice/recommendations';
 import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { createTranslator, type InterfaceLanguage } from './i18n';
@@ -78,6 +78,20 @@ export default function App() {
       storage.listProgress,
       storage.settings.dialectPreference,
       storage.selectedListIds,
+      t
+    ]
+  );
+  const normalContinuationRecommendation = useMemo(
+    () => getNormalContinuationRecommendation(storage, publicWordLists, t, interfaceLanguage),
+    [
+      interfaceLanguage,
+      publicWordLists,
+      storage.currentPathPosition,
+      storage.lastSessionResult,
+      storage.listProgress,
+      storage.settings.dialectPreference,
+      storage.selectedListIds,
+      storage.wordProgress,
       t
     ]
   );
@@ -248,7 +262,7 @@ export default function App() {
         progressSummary={endProgressSummary}
         hasDifficultWords={difficultWords}
         onContinue={() => {
-          startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId });
+          startPractice({ listId: normalContinuationRecommendation.listId });
         }}
         onReview={() => startPractice({ review: true })}
         onChangeLists={() => setWordListModalOpen(true)}
@@ -278,7 +292,7 @@ export default function App() {
         hasDifficultWords={difficultWords}
         recapWordCount={recapWordCount}
         onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
-        onContinue={() => startPractice({ listId: recommendation.listId })}
+        onContinue={() => startPractice({ listId: normalContinuationRecommendation.listId })}
         onReview={() => startPractice({ review: true })}
         onRecapReview={() => startPractice({ review: true, allowRecapReview: true })}
         onSelectList={() => setWordListModalOpen(true)}
