@@ -1,6 +1,7 @@
 import { ChevronRight, ExternalLink, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
+import { AdminTimestamp } from '../components/AdminTimestamp';
 import { ContentHealthCard } from '../components/ContentHealthCard';
 import { AdminButton, AdminCard, AdminInput, AdminSelect, Field } from '../components/primitives';
 import { UnsavedChangesBar } from '../components/UnsavedChangesBar';
@@ -305,7 +306,9 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               <Field label="Order"><AdminInput type="number" value={list.order} onChange={event => updateList({ order: Number(event.target.value) })} /></Field>
               <Field label="Next list"><AdminSelect value={list.nextListId ?? ''} onChange={event => updateList({ nextListId: event.target.value || null })}><option value="">None</option>{wordLists.map(next => <option key={next.id} value={next.id}>{next.name}</option>)}</AdminSelect></Field>
             </div>
-            <p className="mt-5 text-sm text-slate-500">Created {list.createdAt} · Updated {list.updatedAt}</p>
+            <p className="mt-5 text-sm text-slate-500">
+              Created <AdminTimestamp value={list.createdAt} /> · Updated <AdminTimestamp value={list.updatedAt} />
+            </p>
           </AdminCard>
           <AdminCard className="overflow-hidden">
             <WordRowsTable

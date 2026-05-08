@@ -1,6 +1,7 @@
 import { Plus, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
+import { AdminTimestamp } from '../components/AdminTimestamp';
 import { AdminButton, AdminCard, AdminInput } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
@@ -118,7 +119,7 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
                     <td className="px-5 py-4 text-slate-600">{list.words.length}</td>
                     <td className="px-5 py-4"><StatusPill tone={audio.missing ? 'red' : 'green'}>{audio.missing ? `${audio.missing} missing` : 'Ready'}</StatusPill></td>
                     <td className="px-5 py-4"><StatusPill tone={list.isActive ? 'green' : 'slate'}>{list.isActive ? 'Active' : 'Draft'}</StatusPill></td>
-                    <td className="px-5 py-4 text-slate-500">{list.updatedAt}</td>
+                    <td className="px-5 py-4 text-slate-500"><AdminTimestamp value={list.updatedAt} /></td>
                   </tr>
                 );
               })}

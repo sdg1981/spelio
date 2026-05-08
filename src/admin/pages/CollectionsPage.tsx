@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
+import { AdminTimestamp } from '../components/AdminTimestamp';
 import { AdminButton, AdminCard } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
@@ -48,7 +49,7 @@ export function CollectionsPage({ repository }: { repository: AdminRepository })
                   <td className="px-5 py-4 text-slate-600">{collection.sourceLanguage} → {collection.targetLanguage}</td>
                   <td className="px-5 py-4 text-slate-600">{collection.ownerType ?? 'none'}</td>
                   <td className="px-5 py-4"><StatusPill tone={collection.isActive ? 'green' : 'slate'}>{collection.isActive ? 'Active' : 'Inactive'}</StatusPill></td>
-                  <td className="px-5 py-4 text-slate-500">{collection.updatedAt}</td>
+                  <td className="px-5 py-4 text-slate-500"><AdminTimestamp value={collection.updatedAt} /></td>
                 </tr>
               ))}
             </tbody>

@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp, Info, Play, RefreshCw, Wand2, X } from 'lucide-
 import { useState } from 'react';
 import type { AdminWord } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
+import { AdminTimestamp } from './AdminTimestamp';
 import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminSpinner, AdminTextarea, Field } from './primitives';
 
@@ -146,8 +147,8 @@ export function WordEditorPanel({
               <div className="grid gap-2 text-xs leading-5 text-slate-500 md:grid-cols-2">
                 <div><span className="font-bold text-slate-700">Word ID:</span> {word.id}</div>
                 <div><span className="font-bold text-slate-700">List ID:</span> {word.listId}</div>
-                <div>Created {word.createdAt}</div>
-                <div>Updated {word.updatedAt}</div>
+                <div>Created <AdminTimestamp value={word.createdAt} /></div>
+                <div>Updated <AdminTimestamp value={word.updatedAt} /></div>
               </div>
             </div>
           )}
@@ -264,8 +265,8 @@ export function WordEditorPanel({
             <div className="flex items-center gap-2"><Info size={15} /> Raw IDs are hidden in normal editing.</div>
             <Field label="Internal notes"><AdminTextarea value={word.notes} onChange={event => onChange({ notes: event.target.value })} /></Field>
             <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
-            <div>Created {word.createdAt}</div>
-            <div>Updated {word.updatedAt}</div>
+            <div>Created <AdminTimestamp value={word.createdAt} /></div>
+            <div>Updated <AdminTimestamp value={word.updatedAt} /></div>
           </div>
         )}
       </div>
