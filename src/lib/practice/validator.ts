@@ -12,6 +12,11 @@ const flexibleMap: Record<string, string> = {
 const apostropheVariants = /['’‘`´ʻ]/g;
 const dashVariants = /[-–—‑]/g;
 const whitespace = /\s+/g;
+const terminalSentencePunctuation = /[?!.,:;]+$/;
+
+export function createPracticeAnswer(value: string): string {
+  return value.trimEnd().replace(terminalSentencePunctuation, '').trimEnd();
+}
 
 export function normalizeForComparison(value: string): string {
   return value
@@ -36,5 +41,5 @@ export function validateLetter(input: string, expected: string, mode: WelshSpell
 }
 
 export function validateAnswer(input: string, expected: string, mode: WelshSpellingMode) {
-  return normalise(input, mode) === normalise(expected, mode);
+  return normalise(createPracticeAnswer(input), mode) === normalise(createPracticeAnswer(expected), mode);
 }

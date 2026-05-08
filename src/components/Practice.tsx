@@ -194,6 +194,7 @@ export function Practice({
     statusTone,
     wrongIndex,
     activeIndex,
+    practiceAnswer,
     isComplete,
     stats,
     progressValue,
@@ -380,7 +381,7 @@ export function Practice({
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
 
-  const currentWordComplete = currentWord ? findIncompleteLetterIndex(getAnswer(currentWord), letters) < 0 : false;
+  const currentWordComplete = currentWord ? findIncompleteLetterIndex(practiceAnswer, letters) < 0 : false;
 
   useEffect(() => {
     if (currentWordComplete) finishPeek(false);
@@ -598,7 +599,7 @@ export function Practice({
     );
   }
 
-  const answer = getAnswer(currentWord);
+  const answer = practiceAnswer;
   const prompt = getPrompt(currentWord);
   const answerLayoutClass = getAnswerLayoutClass(answer);
   const wordComplete = currentWordComplete;
