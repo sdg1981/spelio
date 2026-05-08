@@ -343,7 +343,6 @@ export function usePracticeSession({
         setStatusTone('neutral');
       }, getSuccessAdvanceDelay(getAnswer(currentWord)));
 
-      showStatus(t('practice.correct'), 'success');
       if (storage.settings.soundEffects) playTone('success');
       return;
     }
@@ -373,7 +372,6 @@ export function usePracticeSession({
       return next;
     });
 
-    showStatus(t('practice.correct'), 'success');
     if (storage.settings.soundEffects) playTone('success');
   }
 
@@ -404,7 +402,6 @@ export function usePracticeSession({
     inputLockedRef.current = true;
     setLetters(nextLetters);
     setWrongIndex(nextIndex);
-    showStatus(t('practice.incorrectTryAgain'), 'error');
     persistWordProgress(currentWord, { incorrect: true });
     if (isRecapActive) {
       recapIssueRef.current = true;
@@ -431,8 +428,8 @@ export function usePracticeSession({
       setLetters(previous => previous.map((letter, index) => index === nextIndex ? { value: '' } : letter));
       setWrongIndex(null);
       inputLockedRef.current = false;
-    }, 820);
-  }, [currentWord?.id, isComplete, isRecapActive, letters, storage.settings.welshSpelling, storage.settings.soundEffects, t]);
+    }, 560);
+  }, [currentWord?.id, isComplete, isRecapActive, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;

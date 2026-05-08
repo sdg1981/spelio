@@ -1997,6 +1997,20 @@
   border-bottom-width:3px;
 }
 
+.practice-app .letter-slot.mistake{
+  width:auto;
+  min-width:44px;
+  height:58px;
+  border:0;
+  border-bottom:3px solid var(--red);
+  border-radius:0;
+  color:var(--red);
+  background:transparent;
+  box-shadow:none;
+  font-size:22px;
+  font-weight:800;
+}
+
 .practice-app .letter-grid.compact{
   gap:48px 68px;
 }
@@ -2281,10 +2295,14 @@
   }
 
   .practice-app .letter-slot.mistake{
-    width:34px;
     min-width:34px;
     height:42px;
-    font-size:29px;
+    border:0;
+    border-bottom:2px solid var(--red);
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    font-size:20px;
   }
 
   .practice-app .letter-grid.compact{
