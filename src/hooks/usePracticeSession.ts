@@ -19,9 +19,24 @@ interface LetterState {
 export type PracticeStatusTone = 'success' | 'error' | 'neutral';
 
 const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
+const SUCCESS_UNDERLINE_STAGGER_MS = 42;
+const SUCCESS_UNDERLINE_DURATION_MS = 160;
+const SUCCESS_CONFIRMATION_PAUSE_MS = 450;
 
 function createInitialLetters(answer: string): LetterState[] {
   return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));
+}
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function getSuccessAdvanceDelay(answer: string) {
+  if (prefersReducedMotion()) return SUCCESS_CONFIRMATION_PAUSE_MS;
+
+  const visibleLetterCount = answer.replace(/\s/g, '').length;
+  const finalUnderlineDelay = Math.max(0, visibleLetterCount - 1) * SUCCESS_UNDERLINE_STAGGER_MS;
+  return finalUnderlineDelay + SUCCESS_UNDERLINE_DURATION_MS + SUCCESS_CONFIRMATION_PAUSE_MS;
 }
 
 function findNextInputIndex(answer: string, letters: LetterState[], start = 0) {
@@ -326,7 +341,7 @@ export function usePracticeSession({
         setIsRecapActive(false);
         setStatus(null);
         setStatusTone('neutral');
-      }, 320);
+      }, getSuccessAdvanceDelay(getAnswer(currentWord)));
 
       showStatus(t('practice.correct'), 'success');
       if (storage.settings.soundEffects) playTone('success');
@@ -354,7 +369,7 @@ export function usePracticeSession({
           setStatus(null);
           setStatusTone('neutral');
         }
-      }, 320);
+      }, getSuccessAdvanceDelay(getAnswer(currentWord)));
       return next;
     });
 

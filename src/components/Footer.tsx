@@ -18,6 +18,7 @@ export function Footer({ className = '', variant = 'default', t }: FooterProps) 
   const shareStatusTimer = useRef<number | null>(null);
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
+  const showFooterLinks = variant === 'home';
   const feedbackSignalOptions = [
     t('footer.feedbackUseful'),
     t('footer.feedbackUseAgain'),
@@ -98,18 +99,20 @@ export function Footer({ className = '', variant = 'default', t }: FooterProps) 
           )}
           © {year} Spelio
         </span>
-        <span className="footer-links" aria-label={t('footer.linksLabel')}>
-          <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>{t('footer.feedback')}</button>
-          <span aria-hidden="true">·</span>
-          <button className="footer-link footer-share-link" type="button" onClick={handleShare}>{t('footer.share')}</button>
-          <span className="footer-share-separator" aria-hidden="true">·</span>
-          <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>{t('footer.privacy')}</button>
-          <span aria-hidden="true">·</span>
-          <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>{t('footer.about')}</button>
-        </span>
+        {showFooterLinks && (
+          <span className="footer-links" aria-label={t('footer.linksLabel')}>
+            <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>{t('footer.feedback')}</button>
+            <span aria-hidden="true">·</span>
+            <button className="footer-link footer-share-link" type="button" onClick={handleShare}>{t('footer.share')}</button>
+            <span className="footer-share-separator" aria-hidden="true">·</span>
+            <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>{t('footer.privacy')}</button>
+            <span aria-hidden="true">·</span>
+            <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>{t('footer.about')}</button>
+          </span>
+        )}
       </footer>
-      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} feedbackSignalOptions={feedbackSignalOptions} learningMethodOptions={learningMethodOptions} />}
-      {infoModal === 'privacy' && (
+      {showFooterLinks && feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} feedbackSignalOptions={feedbackSignalOptions} learningMethodOptions={learningMethodOptions} />}
+      {showFooterLinks && infoModal === 'privacy' && (
         <InfoModal title={t('footer.privacyTitle')} titleId="privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
           <p>{t('footer.privacyBody1')}</p>
           <p>{t('footer.privacyBody2')}</p>
@@ -118,7 +121,7 @@ export function Footer({ className = '', variant = 'default', t }: FooterProps) 
           <p>{t('footer.privacyBody5')}</p>
         </InfoModal>
       )}
-      {infoModal === 'about' && (
+      {showFooterLinks && infoModal === 'about' && (
         <InfoModal title={t('footer.aboutTitle')} titleId="about-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
           <p>{t('footer.aboutBody1')}</p>
           <p>{t('footer.aboutBody2')}</p>
