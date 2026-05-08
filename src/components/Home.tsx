@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer } from './Footer';
-import { List, Play, RotateCcw } from './Icons';
+import { List, Play, RotateCcw, Settings } from './Icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { SettingsModal } from './Practice';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
+import type { SpelioSettings } from '../lib/practice/storage';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 
@@ -19,6 +22,9 @@ export function Home({
   onReview,
   onRecapReview,
   onSelectList,
+  settings,
+  onSettingsChange,
+  onResetProgress,
   interfaceLanguage,
   onInterfaceLanguageChange,
   t
@@ -33,10 +39,14 @@ export function Home({
   onReview: () => void;
   onRecapReview: () => void;
   onSelectList: () => void;
+  settings: SpelioSettings;
+  onSettingsChange: (patch: Partial<SpelioSettings>) => void;
+  onResetProgress: () => void;
   interfaceLanguage: InterfaceLanguage;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const isFirst = mode === 'first';
   const shouldPrioritiseReview = hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
   const shouldChooseAnotherList = !shouldPrioritiseReview && recommendation.kind === 'choose_list';
@@ -56,12 +66,22 @@ export function Home({
 
   return (
     <main className="homepage-bg">
-      <LanguageSwitcher
-        interfaceLanguage={interfaceLanguage}
-        onInterfaceLanguageChange={onInterfaceLanguageChange}
-        t={t}
-        variant="homepageTop"
-      />
+      <div className="homepage-utility">
+        <LanguageSwitcher
+          interfaceLanguage={interfaceLanguage}
+          onInterfaceLanguageChange={onInterfaceLanguageChange}
+          t={t}
+          variant="homepageTop"
+        />
+        <button
+          className="homepage-settings-button"
+          type="button"
+          aria-label={t('settings.open')}
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Settings size={15} strokeWidth={2} />
+        </button>
+      </div>
       <section className={`page-shell home-shell ${shellStateClass}`}>
         <div className="home-logo">
           <Logo animateCursor />
@@ -118,6 +138,16 @@ export function Home({
 
         <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
+      {settingsOpen && (
+        <SettingsModal
+          settings={settings}
+          activePracticeSession={false}
+          onChange={onSettingsChange}
+          onClose={() => setSettingsOpen(false)}
+          onResetProgress={onResetProgress}
+          t={t}
+        />
+      )}
     </main>
   );
 }

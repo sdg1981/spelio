@@ -844,7 +844,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
   );
 });
 
-function SettingsModal({
+export function SettingsModal({
   settings,
   activePracticeSession,
   onChange,

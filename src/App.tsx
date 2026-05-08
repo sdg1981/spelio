@@ -6,7 +6,7 @@ import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
-import type { SessionResult, SpelioStorage } from './lib/practice/storage';
+import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
@@ -129,6 +129,22 @@ export default function App() {
         interfaceLanguage: language
       }
     }));
+  }
+
+  function updateSettings(patch: Partial<SpelioSettings>) {
+    setStorage(previous => {
+      const nextSettings = { ...previous.settings, ...patch };
+      if (!nextSettings.audioPrompts) {
+        nextSettings.englishVisible = true;
+      }
+
+      const hasChanged = (Object.keys(nextSettings) as Array<keyof SpelioSettings>).some(settingKey => {
+        return previous.settings[settingKey] !== nextSettings[settingKey];
+      });
+
+      if (!hasChanged) return previous;
+      return { ...previous, settings: nextSettings };
+    });
   }
 
   function startPractice(options?: { review?: boolean; listId?: string; allowRecapReview?: boolean }) {
@@ -266,6 +282,9 @@ export default function App() {
         onReview={() => startPractice({ review: true })}
         onRecapReview={() => startPractice({ review: true, allowRecapReview: true })}
         onSelectList={() => setWordListModalOpen(true)}
+        settings={storage.settings}
+        onSettingsChange={updateSettings}
+        onResetProgress={resetProgress}
         interfaceLanguage={interfaceLanguage}
         onInterfaceLanguageChange={updateInterfaceLanguage}
         t={t}
