@@ -14,6 +14,8 @@ import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/pra
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 
+const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
+
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
     <div className="progress-top">
@@ -161,6 +163,7 @@ export function Practice({
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
   const spellingHintTimerRef = useRef<number | null>(null);
+  const spellingHintAudioReplayTimerRef = useRef<number | null>(null);
   const shownSpellingHintsRef = useRef(new Set<string>());
   const [spellingHint, setSpellingHint] = useState<SpellingPatternHint | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
@@ -323,13 +326,21 @@ export function Practice({
     peekActivatedRef.current = false;
   }, [finishPeek, restorePracticeInputFocus]);
 
+  const clearScheduledSpellingHintAudioReplay = useCallback(() => {
+    if (spellingHintAudioReplayTimerRef.current) {
+      window.clearTimeout(spellingHintAudioReplayTimerRef.current);
+      spellingHintAudioReplayTimerRef.current = null;
+    }
+  }, []);
+
   const clearSpellingHint = useCallback(() => {
     if (spellingHintTimerRef.current) {
       window.clearTimeout(spellingHintTimerRef.current);
       spellingHintTimerRef.current = null;
     }
+    clearScheduledSpellingHintAudioReplay();
     setSpellingHint(null);
-  }, []);
+  }, [clearScheduledSpellingHintAudioReplay]);
 
   const handlePracticeInput = useCallback((char: string) => {
     const result = handleInput(char);
@@ -356,14 +367,34 @@ export function Practice({
     setSpellingHint(hint);
     spellingHintTimerRef.current = window.setTimeout(() => {
       setSpellingHint(null);
+      clearScheduledSpellingHintAudioReplay();
       spellingHintTimerRef.current = null;
     }, 4000);
-  }, [currentWord, handleInput, interfaceLanguage, practiceAnswer]);
+
+    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+    if (storage.settings.audioPrompts && !currentWordAudioUnavailable) {
+      clearScheduledSpellingHintAudioReplay();
+      spellingHintAudioReplayTimerRef.current = window.setTimeout(() => {
+        spellingHintAudioReplayTimerRef.current = null;
+        void playAudio();
+      }, SPELLING_HINT_AUDIO_REPLAY_DELAY_MS);
+    }
+  }, [
+    audioPlaybackFailedWordIds,
+    clearScheduledSpellingHintAudioReplay,
+    currentWord,
+    handleInput,
+    interfaceLanguage,
+    playAudio,
+    practiceAnswer,
+    storage.settings.audioPrompts
+  ]);
 
   useEffect(() => {
     return () => {
       if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
       if (spellingHintTimerRef.current) window.clearTimeout(spellingHintTimerRef.current);
+      if (spellingHintAudioReplayTimerRef.current) window.clearTimeout(spellingHintAudioReplayTimerRef.current);
       clearPeekTimers();
       clearEnglishPromptPeek();
       revealShortcutHeldRef.current = false;
@@ -424,6 +455,7 @@ export function Practice({
 
       if (event.code === 'ArrowUp') {
         event.preventDefault();
+        clearScheduledSpellingHintAudioReplay();
         restorePracticeInputFocus();
         playAudio();
         return;
@@ -480,7 +512,7 @@ export function Practice({
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onWindowBlur);
     };
-  }, [activateEnglishPromptPeek, beginPeekHold, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
+  }, [activateEnglishPromptPeek, beginPeekHold, clearScheduledSpellingHintAudioReplay, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -660,6 +692,8 @@ export function Practice({
   }
 
   function handleWordPillClick(event: MouseEvent<HTMLButtonElement>) {
+    clearScheduledSpellingHintAudioReplay();
+
     const wordPillButton = event.currentTarget;
     const restoreFocusAfterClick = () => {
       window.requestAnimationFrame(() => {
