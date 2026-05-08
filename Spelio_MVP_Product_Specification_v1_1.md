@@ -85,15 +85,21 @@ The MVP contains these core screens and states:
 
 The public user experience should remain extremely simple. The admin panel is private and functional rather than highly polished.
 
-All public screens should include the shared footer copy:
+Public learner screens use a warm neutral app background, currently `#f6f5f2`, while white pills, cards, modals, and button surfaces remain white. This public background must not affect the admin panel.
+
+The homepage footer should include:
 
 - Made with love for Wales. © CURRENT_YEAR Spelio
 
-Public learner screens should also include a small, low-contrast interface language switcher in the shared footer, for example:
+Practice and end screen footers should be simplified to:
+
+- © CURRENT_YEAR Spelio
+
+The homepage should include a small, low-contrast interface language switcher in the top-right utility area, for example:
 
 - English · Cymraeg
 
-The footer language switcher appears on public learner screens only, including homepage, practice screen, and end screen. It must not appear in the admin panel.
+The footer language switcher is not shown on public learner screens. Interface language remains available from the homepage top-right switcher and from Settings. It must not appear in the admin panel.
 
 The app should use the Spelio SVG favicon.
 
@@ -174,7 +180,7 @@ Content:
 - Secondary link:
   - “Select word list →”
 - Faint copyright text:
-  - “© 2025 Spelio”
+  - “© CURRENT_YEAR Spelio”
 
 Behaviour:
 
@@ -182,7 +188,7 @@ Behaviour:
 - “Select word list” opens the word list modal.
 - No account prompt.
 - No dashboard.
-- No settings cog on homepage.
+- A small settings cog may appear in the top-right utility cluster beside the language switcher.
 
 ### 5.2 Returning-user homepage
 
@@ -255,15 +261,16 @@ Desktop and mobile should follow the same mental model:
 
 - Thin progress bar at top
 - Optional small progress count, e.g. “3 / 10”
-- Settings cog top-right
-- Spelio logo
+- Back-to-home arrow top-left
+- Compact Spelio S mark top-right
 - Word/audio pill
 - Letter input row
 - Temporary feedback/status line
 - Bottom utility strip
+- Standalone settings cog below the bottom utility strip
 - Faint copyright footer
 
-The practice screen logo must be smaller on mobile than the homepage logo. It must never push the answer area below the visible viewport. It should scale responsively based on available screen height.
+The practice screen S mark must stay compact and must never push the answer area below the visible viewport. The back arrow and S mark both return explicitly to the homepage.
 
 ### 6.2 Word/audio pill
 
@@ -292,7 +299,7 @@ The answer appears as individual letter slots.
 Rules:
 
 - Correct letters lock in.
-- Incorrect letters appear red briefly, then clear.
+- Incorrect letters show a brief restrained red mark on the active slot, then clear.
 - The active typing position is obvious but not visually harsh.
 - All completed letters return to black.
 - The layout must wrap cleanly for longer words or phrases.
@@ -338,9 +345,7 @@ Bottom strip should be subtle:
 - Light separators
 - No heavy card feeling
 
-The practice screen uses the same shared footer copy and styling as the homepage.
-
-The practice screen footer may include the small public interface language switcher. This switcher updates the same `interfaceLanguage` setting used by the Settings modal and must not affect the current practice word, word pool, dialect selection, scoring, or progress.
+The practice screen footer should remain very faint and should show only the copyright line. It should not include homepage footer links, “Made with love for Wales”, or a footer language switcher.
 
 ### 6.5 Status messages
 
@@ -350,8 +355,6 @@ Status area should be temporary only.
 
 Examples:
 
-- “Incorrect. Try again.”
-- “Correct”
 - “Letter revealed”
 - “English on”
 - “English off”
@@ -429,10 +432,10 @@ Changing interface language from Settings should update public interface copy im
 
 Interface language can be changed from:
 
-- the existing public Settings modal accessed from the practice-screen settings cog
-- the small public footer language switcher
+- the existing public Settings modal accessed from the homepage utility cog or practice-screen settings cog
+- the small public homepage top-right language switcher
 
-The footer language switcher should be low contrast and should not become a prominent header or onboarding step.
+The homepage language switcher should be low contrast and should not become a prominent onboarding step.
 
 ### 7.1 Welsh spelling modes
 
@@ -1649,16 +1652,17 @@ Interface-language rule:
 ### 19.3 Correct letter
 
 - Letter appears black.
-- Brief soft green flash.
+- Active underline advances to the next slot.
 - Move to next slot.
 
 ### 19.4 Incorrect letter
 
-- Letter appears red.
-- Small shake animation.
+- Show a small restrained red “×” on the active slot.
+- Briefly flash the active underline red.
+- Optional small shake animation.
 - Error sound.
-- Clears after 700–900ms.
-- Status: “Incorrect. Try again.”
+- Clears after approximately 450–650ms.
+- Do not show ordinary written error status text.
 - Mark word difficult.
 
 ### 19.5 Reveal letter
@@ -1676,10 +1680,10 @@ Interface-language rule:
 
 ### 19.6 Word completion
 
-- Status: “Correct.”
 - Success sound.
-- Subtle green flash across word.
-- Wait 250–400ms.
+- Animate completed underlines to the shared success green from left to right.
+- Do not add green letter backgrounds, tiles, halos, or written “Correct” status text.
+- Keep the completed word visible briefly after the final underline turns green, approximately 400–550ms.
 - Move to next word.
 
 If the completed word had no incorrect attempts and no revealed letters during that session, remove it from current review by setting `progress.difficult` to false.
@@ -1941,7 +1945,7 @@ No file should be integrated without passing TypeScript checks.
 
 Use this in a new chat:
 
-I am building Spelio, a premium mobile-first Welsh spelling practice web app for adults. I have final design screenshots in the project files for the homepage states, practice screen, settings modal, word list modal, and end screen. Please inspect those screenshots and build the frontend UI in React + TypeScript + Tailwind using static mock data first. Do not add extra features. Match the visual style closely: clean white background, minimal red accent, premium SaaS feel, calm adult tone, strong whitespace, subtle interactions. Build the following screens/states: first-time homepage, returning homepage, struggled homepage, practice screen, settings modal, word list modal, and end screen. Use reusable components and mobile-first responsive layout. Do not implement backend yet. Include the word list modal behaviour from the specification: Done saves selection but never auto-starts practice, and changing lists during practice ends the current session and returns to homepage.
+I am building Spelio, a premium mobile-first Welsh spelling practice web app for adults. I have final design screenshots in the project files for the homepage states, practice screen, settings modal, word list modal, and end screen. Please inspect those screenshots and build the frontend UI in React + TypeScript + Tailwind using static mock data first. Do not add extra features. Match the visual style closely: clean warm-neutral public background, minimal red accent, premium SaaS feel, calm adult tone, strong whitespace, subtle interactions. Build the following screens/states: first-time homepage, returning homepage, struggled homepage, practice screen, settings modal, word list modal, and end screen. Use reusable components and mobile-first responsive layout. Do not implement backend yet. Include the word list modal behaviour from the specification: Done saves selection but never auto-starts practice, and changing lists during practice ends the current session and returns to homepage.
 
 ### Prompt 2 — Build the practice engine
 

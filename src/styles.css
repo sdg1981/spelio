@@ -1440,7 +1440,7 @@
 .home-action-list .action-row{
   min-height:112px;
   gap:28px;
-  padding:22px 4px;
+  padding:22px 20px;
 }
 
 .home-action-list .action-row:hover,
@@ -1667,7 +1667,7 @@
   .home-action-list .action-row{
     min-height:82px;
     gap:22px;
-    padding:14px 0;
+    padding:14px 14px;
   }
 
   .home-action-list .icon-circle{
@@ -2802,7 +2802,7 @@
 .end-action-list .action-row{
   min-height:88px;
   gap:28px;
-  padding:14px 4px;
+  padding:14px 20px;
 }
 
 .end-action-list .action-row:hover,
@@ -2982,7 +2982,7 @@
   .end-action-list .action-row{
     min-height:82px;
     gap:22px;
-    padding:14px 0;
+    padding:14px 14px;
   }
 
   .end-action-list .icon-circle{
