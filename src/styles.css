@@ -2145,6 +2145,55 @@
   font-size:30px;
 }
 
+@media (min-width:1280px) and (min-height:820px){
+  .practice-app .letter-grid{
+    max-width:min(860px, calc(100vw - 96px));
+    gap:60px 80px;
+  }
+
+  .practice-app .letter-word{
+    gap:42px;
+  }
+
+  .practice-app .letter-slot{
+    min-width:52px;
+    height:66px;
+    font-size:50px;
+  }
+
+  .practice-app .letter-slot.mistake{
+    min-width:52px;
+    height:66px;
+    font-size:26px;
+  }
+
+  .practice-app .letter-grid.compact{
+    gap:50px 70px;
+  }
+
+  .practice-app .letter-grid.compact .letter-word{
+    gap:30px;
+  }
+
+  .practice-app .letter-grid.compact .letter-slot{
+    min-width:43px;
+    font-size:42px;
+  }
+
+  .practice-app .letter-grid.extra-compact{
+    gap:40px 60px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-word{
+    gap:20px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-slot{
+    min-width:33px;
+    font-size:35px;
+  }
+}
+
 .practice-app .status-line{
   margin-top:56px;
   min-height:34px;
