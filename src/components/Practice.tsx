@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
 import { ArrowLeft, Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
-import { Logo } from './Logo';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
@@ -724,7 +723,9 @@ function PracticeTopNav({ onBackHome }: { onBackHome: () => void }) {
         <ArrowLeft size={25} strokeWidth={2.2} aria-hidden="true" />
       </button>
       <div className="practice-home-logo">
-        <Logo small onClick={onBackHome} backHomeLabel="Go to home" />
+        <button onClick={onBackHome} aria-label="Go to home" type="button">
+          <span>S<span aria-hidden="true">_</span></span>
+        </button>
       </div>
     </>
   );

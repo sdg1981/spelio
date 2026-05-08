@@ -1773,7 +1773,7 @@
 
 /* Practice screen visual refinement */
 .practice-app{
-  background:#fff;
+  background:#f4f2ef;
 }
 
 .practice-app .progress-top{
@@ -1799,7 +1799,7 @@
   bottom:0;
   width:min(76%,760px);
   height:3px;
-  background:#d6d4d0;
+  background:#ded9d2;
   transform:translateX(-50%);
 }
 
@@ -1837,13 +1837,24 @@
 .practice-home-logo button{
   display:grid;
   place-items:center;
+  border:0;
+  background:transparent;
+  color:#061724;
+  padding:0;
+  font-size:42px;
+  font-weight:900;
+  line-height:.78;
+  letter-spacing:-.1em;
   opacity:.94;
   transition:opacity .18s ease-out,transform .18s ease-out;
 }
 
-.practice-home-logo .logo-svg-small{
-  width:74px;
-  max-width:74px;
+.practice-home-logo button span span{
+  display:inline-block;
+  color:var(--red);
+  letter-spacing:-.04em;
+  transform-origin:center bottom;
+  transition:color .18s ease-out,opacity .18s ease-out,transform .18s ease-out;
 }
 
 .practice-home-back:focus-visible,
@@ -1864,7 +1875,7 @@
   top:auto;
   width:40px;
   height:40px;
-  margin-top:16px;
+  margin-top:32px;
   color:#071522;
   background:transparent;
   box-shadow:none;
@@ -1963,20 +1974,6 @@
   z-index:0;
   border-bottom-color:var(--red);
   border-bottom-width:3px;
-}
-
-.practice-app .letter-slot.active:not(.mistake)::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:5px;
-  z-index:-1;
-  width:54px;
-  height:42px;
-  border-radius:999px;
-  background:radial-gradient(circle, rgba(217,0,0,.14) 0%, rgba(217,0,0,.07) 44%, rgba(217,0,0,0) 72%);
-  transform:translateX(-50%);
-  pointer-events:none;
 }
 
 .practice-app .letter-grid.compact{
@@ -2173,18 +2170,18 @@
 
   .practice-home-logo{
     right:18px;
-    top:17px;
+    top:18px;
   }
 
-  .practice-home-logo .logo-svg-small{
-    width:58px;
-    max-width:58px;
+  .practice-home-logo button{
+    font-size:31px;
+    line-height:.82;
   }
 
   .practice-app .settings-cog{
     width:42px;
     height:42px;
-    margin-top:12px;
+    margin-top:26px;
   }
 
   .practice-app .settings-cog svg{
@@ -2259,13 +2256,6 @@
 
   .practice-app .letter-slot.active:not(.mistake){
     border-bottom-width:2px;
-  }
-
-  .practice-app .letter-slot.active:not(.mistake)::before{
-    bottom:4px;
-    width:42px;
-    height:32px;
-    opacity:.9;
   }
 
   .practice-app .letter-slot.mistake{
