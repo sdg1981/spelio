@@ -11,6 +11,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practi
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
+import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -166,6 +167,7 @@ export function Practice({
   const englishPromptPeekTimerRef = useRef<number | null>(null);
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
+  const revealShortcutHeldRef = useRef(false);
   const revealHandledByPointerRef = useRef(false);
   const englishHandledByPointerRef = useRef(false);
   const audioHandledByPointerRef = useRef(false);
@@ -294,12 +296,12 @@ export function Practice({
     }, 1500);
   }, [audioPlaybackFailedWordIds, currentWord, isComplete, isEnglishPromptPeeking, modal, restorePracticeInputFocus, storage.settings.englishVisible]);
 
-  const beginPeekHold = useCallback(() => {
+  const beginPeekHold = useCallback((delayMs = 300) => {
     if (!currentWord || isComplete || modal || settingsModalOpenRef.current) return;
 
     clearPeekTimers();
     peekActivatedRef.current = false;
-    peekTimerRef.current = window.setTimeout(activatePeek, 300);
+    peekTimerRef.current = window.setTimeout(activatePeek, delayMs);
   }, [activatePeek, clearPeekTimers, currentWord, isComplete, modal]);
 
   const endPeekHold = useCallback(() => {
@@ -322,6 +324,7 @@ export function Practice({
       if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
       clearPeekTimers();
       clearEnglishPromptPeek();
+      revealShortcutHeldRef.current = false;
     };
   }, [clearEnglishPromptPeek, clearPeekTimers]);
 
@@ -337,6 +340,7 @@ export function Practice({
     setIsPeeking(false);
     clearEnglishPromptPeek();
     setPeekUsedForCurrentWord(false);
+    revealShortcutHeldRef.current = false;
     if (wasPeeking) restorePracticeInputFocus();
   }, [clearEnglishPromptPeek, clearPeekTimers, currentWord?.id, restorePracticeInputFocus]);
 
@@ -345,6 +349,7 @@ export function Practice({
       finishPeek(false);
       clearEnglishPromptPeek();
       peekActivatedRef.current = false;
+      revealShortcutHeldRef.current = false;
     }
   }, [clearEnglishPromptPeek, finishPeek, isComplete, modal]);
 
@@ -380,8 +385,19 @@ export function Practice({
       }
 
       if (event.code === 'ArrowRight') {
+        const result = handleRevealShortcutKeyDown({
+          code: event.code,
+          repeat: event.repeat,
+          held: revealShortcutHeldRef.current
+        });
+        if (!result.handled) return;
+
         event.preventDefault();
-        revealNext();
+        revealShortcutHeldRef.current = result.held;
+        for (const action of result.actions) {
+          if (action === 'reveal-next') revealNext();
+          if (action === 'begin-peek-hold') beginPeekHold(KEYBOARD_REVEAL_HOLD_DELAY_MS);
+        }
         restorePracticeInputFocus();
         return;
       }
@@ -391,11 +407,35 @@ export function Practice({
       }
     }
 
+    function onKeyUp(event: KeyboardEvent) {
+      const result = handleRevealShortcutKeyUp({
+        code: event.code,
+        held: revealShortcutHeldRef.current
+      });
+      if (!result.handled) return;
+
+      event.preventDefault();
+      revealShortcutHeldRef.current = result.held;
+      for (const action of result.actions) {
+        if (action === 'end-peek-hold') endPeekHold();
+      }
+    }
+
+    function onWindowBlur() {
+      if (!revealShortcutHeldRef.current) return;
+      revealShortcutHeldRef.current = false;
+      endPeekHold();
+    }
+
     window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onWindowBlur);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onWindowBlur);
     };
-  }, [activateEnglishPromptPeek, currentWord, handleInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
+  }, [activateEnglishPromptPeek, beginPeekHold, currentWord, endPeekHold, handleInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
