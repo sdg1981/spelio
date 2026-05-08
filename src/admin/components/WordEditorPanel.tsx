@@ -13,7 +13,8 @@ export function WordEditorPanel({
   onChange,
   onGenerateAudio,
   onRetryAudio,
-  audioBusy
+  audioBusy,
+  variant = 'panel'
 }: {
   word: AdminWord;
   index: number;
@@ -23,6 +24,7 @@ export function WordEditorPanel({
   onGenerateAudio: (word: AdminWord) => void;
   onRetryAudio: (word: AdminWord) => void;
   audioBusy?: boolean;
+  variant?: 'panel' | 'page';
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -30,6 +32,129 @@ export function WordEditorPanel({
   const isRegenerating = word.audioStatus === 'ready';
   const generateAudioLabel = isRegenerating ? 'Regenerate audio' : 'Generate audio';
   const generatingAudioLabel = isRegenerating ? 'Regenerating...' : 'Generating...';
+
+  if (variant === 'page') {
+    return (
+      <section className="rounded-lg border border-slate-200 bg-white shadow-[0_18px_42px_rgba(7,21,34,.035)]">
+        <div className="border-b border-slate-200 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black tracking-[-0.02em]">Basic details</h2>
+              <p className="mt-2 text-sm text-slate-500">Editing word {index + 1} of {total}</p>
+            </div>
+            <AudioStatusPill status={word.audioStatus} />
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <Field label="English prompt">
+              <AdminInput value={word.englishPrompt} onChange={event => onChange({ englishPrompt: event.target.value })} />
+            </Field>
+            <Field label="Welsh answer">
+              <AdminInput value={word.welshAnswer} onChange={event => onChange({ welshAnswer: event.target.value })} />
+            </Field>
+            <Field label="Dialect">
+              <AdminSelect value={word.dialect} onChange={event => onChange({ dialect: event.target.value as AdminWord['dialect'] })}>
+                <option>Both</option>
+                <option>North Wales</option>
+                <option>South Wales / Standard</option>
+                <option>Standard</option>
+                <option>Other</option>
+              </AdminSelect>
+            </Field>
+            <Field label="Difficulty">
+              <AdminSelect value={word.difficulty} onChange={event => onChange({ difficulty: Number(event.target.value) })}>
+                <option value={1}>1 - Beginner</option>
+                <option value={2}>2 - Easy</option>
+                <option value={3}>3 - Developing</option>
+                <option value={4}>4 - Challenging</option>
+                <option value={5}>5 - Advanced</option>
+              </AdminSelect>
+            </Field>
+          </div>
+        </div>
+        <div className="border-b border-slate-200 p-5">
+          <h2 className="text-lg font-black tracking-[-0.02em]">Learner/content notes</h2>
+          <div className="mt-5 grid gap-4">
+            <Field label="Dialect note">
+              <AdminTextarea value={word.dialectNote} onChange={event => onChange({ dialectNote: event.target.value })} />
+            </Field>
+            <Field label="Usage note">
+              <AdminTextarea value={word.usageNote} onChange={event => onChange({ usageNote: event.target.value })} />
+            </Field>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Accepted alternatives" helper="Only same-slot spelling variations.">
+                <AdminInput value={word.acceptedAlternatives.join(', ')} placeholder="Add alternative" onChange={event => onChange({ acceptedAlternatives: event.target.value.split(',').map(item => item.trim()).filter(Boolean) })} />
+              </Field>
+              <Field label="Variant group ID" helper="Link dialect variants of the same prompt.">
+                <AdminInput value={word.variantGroupId} onChange={event => onChange({ variantGroupId: event.target.value })} />
+              </Field>
+            </div>
+          </div>
+        </div>
+        <div className="border-b border-slate-200 p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-black tracking-[-0.02em]">Audio</h2>
+            <AudioStatusPill status={word.audioStatus} />
+          </div>
+          <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
+          <div className="flex flex-wrap gap-2">
+            {hasAudioPreview && (
+              <AdminButton onClick={() => {
+                logAudioPlaybackClick('admin-word-editor-preview', word.audioUrl);
+                void playAudioUrl(word.audioUrl);
+              }}>
+                <Play size={15} /> Preview
+              </AdminButton>
+            )}
+            <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
+              {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+              {audioBusy ? generatingAudioLabel : generateAudioLabel}
+            </AdminButton>
+            {word.audioStatus === 'failed' && (
+              <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
+                {audioBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
+                {audioBusy ? 'Generating...' : 'Retry'}
+              </AdminButton>
+            )}
+          </div>
+          <div className="mt-5 max-w-xs">
+            <Field label="Audio status">
+              <AdminSelect value={word.audioStatus} onChange={event => onChange({ audioStatus: event.target.value as AdminWord['audioStatus'] })}>
+                <option value="missing">missing</option>
+                <option value="queued">queued</option>
+                <option value="generating">generating</option>
+                <option value="ready">ready</option>
+                <option value="failed">failed</option>
+              </AdminSelect>
+            </Field>
+          </div>
+        </div>
+        <div className="p-5">
+          <button className="flex w-full items-center justify-between text-left font-black text-slate-950" onClick={() => setAdvancedOpen(open => !open)}>
+            Advanced
+            {advancedOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+          {advancedOpen && (
+            <div className="mt-4 grid gap-4 text-sm text-slate-600">
+              <div className="flex items-center gap-2"><Info size={15} /> Technical fields for admin editing.</div>
+              <Field label="Internal notes"><AdminTextarea value={word.notes} onChange={event => onChange({ notes: event.target.value })} /></Field>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Audio URL">
+                  <AdminInput className="font-mono text-xs text-slate-600" value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
+                </Field>
+                <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
+              </div>
+              <div className="grid gap-2 text-xs leading-5 text-slate-500 md:grid-cols-2">
+                <div><span className="font-bold text-slate-700">Word ID:</span> {word.id}</div>
+                <div><span className="font-bold text-slate-700">List ID:</span> {word.listId}</div>
+                <div>Created {word.createdAt}</div>
+                <div>Updated {word.updatedAt}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <aside className="rounded-lg border border-slate-200 bg-white shadow-[0_18px_42px_rgba(7,21,34,.035)] xl:sticky xl:top-8">

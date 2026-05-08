@@ -163,26 +163,7 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
           {errorMessage || statusMessage}
         </div>
       )}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_384px]">
-        <div className="grid gap-6">
-          <AdminCard className="p-5">
-            <h2 className="text-lg font-black tracking-[-0.02em]">Word list context</h2>
-            <dl className="mt-4 grid gap-4 text-sm md:grid-cols-2">
-              <ContextItem label="Word list" value={list?.name ?? 'Unknown word list'} />
-              <ContextItem label="List ID" value={word.listId} />
-              <ContextItem label="Collection" value={list?.collectionName ?? 'Unknown collection'} />
-              <ContextItem label="Position" value={wordIndex >= 0 ? `${wordIndex + 1} of ${wordTotal}` : `Order ${word.order}`} />
-            </dl>
-          </AdminCard>
-          <AdminCard className="p-5">
-            <h2 className="text-lg font-black tracking-[-0.02em]">Current word</h2>
-            <div className="mt-4 grid gap-3 text-sm text-slate-600">
-              <div><span className="font-bold text-slate-950">English:</span> {word.englishPrompt || 'Untitled prompt'}</div>
-              <div><span className="font-bold text-slate-950">Welsh:</span> {word.welshAnswer || 'No answer set'}</div>
-              <div><span className="font-bold text-slate-950">Word ID:</span> {word.id}</div>
-            </div>
-          </AdminCard>
-        </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] xl:items-start">
         <WordEditorPanel
           word={word}
           index={wordIndex >= 0 ? wordIndex : Math.max(0, word.order - 1)}
@@ -192,7 +173,27 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
           onGenerateAudio={generateWordAudio}
           onRetryAudio={generateWordAudio}
           audioBusy={audioBusy}
+          variant="page"
         />
+        <aside className="grid gap-4 xl:sticky xl:top-8">
+          <AdminCard className="p-5">
+            <h2 className="text-base font-black tracking-[-0.02em]">Word list context</h2>
+            <dl className="mt-4 grid gap-3 text-sm">
+              <ContextItem label="Word list" value={list?.name ?? 'Unknown word list'} />
+              <ContextItem label="Collection" value={list?.collectionName ?? 'Unknown collection'} />
+              <ContextItem label="Position" value={wordIndex >= 0 ? `${wordIndex + 1} of ${wordTotal}` : `Order ${word.order}`} />
+              <ContextItem label="List ID" value={word.listId} />
+            </dl>
+          </AdminCard>
+          <AdminCard className="p-5">
+            <h2 className="text-base font-black tracking-[-0.02em]">Current word summary</h2>
+            <dl className="mt-4 grid gap-3 text-sm">
+              <ContextItem label="English prompt" value={word.englishPrompt || 'Untitled prompt'} />
+              <ContextItem label="Welsh answer" value={word.welshAnswer || 'No answer set'} />
+              <ContextItem label="Word ID" value={word.id} />
+            </dl>
+          </AdminCard>
+        </aside>
       </div>
       <UnsavedChangesBar
         visible={dirty}
