@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
+import { ArrowLeft, Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
+import { Logo } from './Logo';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
@@ -552,14 +553,12 @@ export function Practice({
     return (
       <main className="app-bg practice-app relative overflow-hidden">
         <Progress value={0} count="0 / 0" />
-        <button className="practice-mark-button" onClick={onBackHome} aria-label={t('practice.backToHome')}>
-          <span>S<span aria-hidden="true">_</span></span>
-        </button>
+        <PracticeTopNav onBackHome={onBackHome} />
         <section className="page-shell practice-shell">
           <div className="status-line">{t('practice.selectListToBegin')}</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>{t('home.selectWordList')}</button>
           <button className="clear-button mt-8" onClick={onBackHome}>{t('practice.backToHome')}</button>
-          <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
+          <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
         </section>
         {modal === 'wordlist' && (
           <WordListModal
@@ -592,19 +591,7 @@ export function Practice({
   return (
     <main className="app-bg practice-app relative overflow-hidden">
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
-      <button className="practice-mark-button" onClick={onBackHome} aria-label={t('practice.backToHome')}>
-        <span>S<span aria-hidden="true">_</span></span>
-      </button>
-
-      <SettingsLauncher
-        settings={storage.settings}
-        activePracticeSession={Boolean(currentWord && hasWords && !isComplete)}
-        onChange={updateSettings}
-        onOpenChange={handleSettingsModalOpenChange}
-        onResetProgress={onResetProgress}
-        initiallyOpen={initialModal === 'settings'}
-        t={t}
-      />
+      <PracticeTopNav onBackHome={onBackHome} />
 
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
@@ -702,7 +689,17 @@ export function Practice({
           </button>
         </div>
 
-        <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
+        <SettingsLauncher
+          settings={storage.settings}
+          activePracticeSession={Boolean(currentWord && hasWords && !isComplete)}
+          onChange={updateSettings}
+          onOpenChange={handleSettingsModalOpenChange}
+          onResetProgress={onResetProgress}
+          initiallyOpen={initialModal === 'settings'}
+          t={t}
+        />
+
+        <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
 
       {modal === 'wordlist' && (
@@ -717,6 +714,19 @@ export function Practice({
         />
       )}
     </main>
+  );
+}
+
+function PracticeTopNav({ onBackHome }: { onBackHome: () => void }) {
+  return (
+    <>
+      <button className="practice-home-back" onClick={onBackHome} aria-label="Back to home" type="button">
+        <ArrowLeft size={25} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+      <div className="practice-home-logo">
+        <Logo small onClick={onBackHome} backHomeLabel="Go to home" />
+      </div>
+    </>
   );
 }
 

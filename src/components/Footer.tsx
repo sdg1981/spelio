@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Heart } from './Icons';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import type { InterfaceLanguage, Translate } from '../i18n';
 
 type FooterProps = {
@@ -12,7 +11,7 @@ type FooterProps = {
   t: Translate;
 };
 
-export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageChange, t }: FooterProps) {
+export function Footer({ className = '', variant = 'default', t }: FooterProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
   const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
@@ -88,16 +87,16 @@ export function Footer({ className = '', interfaceLanguage, onInterfaceLanguageC
   return (
     <>
       <footer className={classes} aria-label={t('footer.ariaLabel')}>
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="footer"
-        />
         <span className="footer-line">
-          <span className="footer-made-with">
-            {t('footer.madeWith')} <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> {t('footer.forWales')}
-          </span> · © {year} Spelio
+          {variant === 'home' && (
+            <>
+              <span className="footer-made-with">
+                {t('footer.madeWith')} <Heart className="footer-heart" size={14} strokeWidth={2.8} fill="currentColor" aria-hidden="true" /> {t('footer.forWales')}
+              </span>
+              {' · '}
+            </>
+          )}
+          © {year} Spelio
         </span>
         <span className="footer-links" aria-label={t('footer.linksLabel')}>
           <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>{t('footer.feedback')}</button>

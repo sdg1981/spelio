@@ -3,10 +3,7 @@
 
 /* v11 desktop polish + modal overflow fixes */
 .app-bg{
-  background:
-    radial-gradient(circle at 50% 28%, rgba(217,0,0,.045), transparent 22%),
-    radial-gradient(circle at 50% 78%, rgba(7,21,34,.022), transparent 26%),
-    #fff;
+  background:#f4f2ef;
 }
 
 @media (min-width:900px){
@@ -359,17 +356,17 @@
 }
 
 .letter-slot.active:not(.mistake){
-  border-bottom-color:#071522;
-  border-bottom-width:3.5px;
+  border-bottom-color:var(--red);
+  border-bottom-width:3px;
   animation:active-letter-underline 1.6s ease-in-out infinite;
 }
 
 @keyframes active-letter-underline{
   0%,100%{
-    border-bottom-color:rgba(7,21,34,.64);
+    border-bottom-color:rgba(217,0,0,.72);
   }
   50%{
-    border-bottom-color:rgba(7,21,34,.95);
+    border-bottom-color:rgba(217,0,0,1);
   }
 }
 
@@ -1286,7 +1283,7 @@
 /* Final homepage states */
 .homepage-bg{
   min-height:100svh;
-  background:#fdfdfc;
+  background:#f4f2ef;
 }
 
 .home-shell{
@@ -1781,8 +1778,8 @@
 
 .practice-app .progress-top{
   height:86px;
-  background:rgba(255,255,255,.96);
-  box-shadow:0 1px 0 rgba(7,21,34,.04);
+  background:transparent;
+  box-shadow:none;
 }
 
 .practice-app .progress-count{
@@ -1798,63 +1795,82 @@
 
 .practice-app .progress-track{
   position:absolute;
-  left:0;
-  right:0;
+  left:50%;
   bottom:0;
-  height:4px;
-  background:#d9dde2;
+  width:min(76%,760px);
+  height:3px;
+  background:#d6d4d0;
+  transform:translateX(-50%);
 }
 
 .practice-app .progress-fill{
   background:var(--red);
 }
 
-.practice-mark-button{
+.practice-home-back,
+.practice-home-logo{
   position:fixed;
-  left:42px;
-  top:29px;
   z-index:31;
+}
+
+.practice-home-back{
+  left:42px;
+  top:27px;
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
   border:0;
   background:transparent;
-  color:#061724;
+  color:#172433;
   padding:0;
-  font-size:42px;
-  font-weight:900;
-  line-height:.78;
-  letter-spacing:-.1em;
-  opacity:.92;
+  opacity:.78;
   touch-action:manipulation;
   transition:opacity .18s ease-out,color .18s ease-out,transform .18s ease-out;
 }
 
-.practice-mark-button span span{
-  display:inline-block;
-  color:var(--red);
-  letter-spacing:-.04em;
-  transform-origin:center bottom;
-  transition:color .18s ease-out,opacity .18s ease-out,transform .18s ease-out;
+.practice-home-logo{
+  right:42px;
+  top:28px;
 }
 
-.practice-mark-button:focus-visible{
-  outline:2px solid rgba(217,0,0,.28);
-  outline-offset:7px;
+.practice-home-logo button{
+  display:grid;
+  place-items:center;
+  opacity:.94;
+  transition:opacity .18s ease-out,transform .18s ease-out;
+}
+
+.practice-home-logo .logo-svg-small{
+  width:74px;
+  max-width:74px;
+}
+
+.practice-home-back:focus-visible,
+.practice-home-logo button:focus-visible{
+  outline:0;
   border-radius:7px;
+  box-shadow:0 0 0 3px rgba(217,0,0,.16);
 }
 
-.practice-mark-button:active{
+.practice-home-back:active,
+.practice-home-logo button:active{
   transform:scale(.98);
 }
 
 .practice-app .settings-cog{
-  right:42px;
-  top:26px;
+  position:relative;
+  right:auto;
+  top:auto;
   width:40px;
   height:40px;
+  margin-top:16px;
   color:#071522;
   background:transparent;
   box-shadow:none;
+  opacity:.62;
   touch-action:manipulation;
-  transition:background .16s ease-out,color .16s ease-out,transform .16s ease-out,box-shadow .18s ease-out;
+  transition:background .16s ease-out,color .16s ease-out,opacity .16s ease-out,transform .16s ease-out,box-shadow .18s ease-out;
 }
 
 .practice-app .settings-cog svg{
@@ -1932,7 +1948,7 @@
   min-width:44px;
   height:58px;
   color:#071522;
-  border-bottom:4px solid #b9c0c8;
+  border-bottom:3px solid #aeb5bd;
   font-size:42px;
   font-weight:900;
   letter-spacing:0;
@@ -1943,7 +1959,24 @@
 }
 
 .practice-app .letter-slot.active:not(.mistake){
-  border-bottom-width:4px;
+  position:relative;
+  z-index:0;
+  border-bottom-color:var(--red);
+  border-bottom-width:3px;
+}
+
+.practice-app .letter-slot.active:not(.mistake)::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:5px;
+  z-index:-1;
+  width:54px;
+  height:42px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(217,0,0,.14) 0%, rgba(217,0,0,.07) 44%, rgba(217,0,0,0) 72%);
+  transform:translateX(-50%);
+  pointer-events:none;
 }
 
 .practice-app .letter-grid.compact{
@@ -2054,21 +2087,17 @@
 }
 
 @media (hover:hover) and (pointer:fine){
-  .practice-mark-button:hover{
-    color:#03111d;
+  .practice-home-back:hover,
+  .practice-home-logo button:hover{
+    color:#061724;
     opacity:1;
-    transform:translateY(-1px) scale(1.015);
-  }
-
-  .practice-mark-button:hover span span{
-    color:#c60000;
-    opacity:1;
-    transform:scaleX(1.18);
+    transform:translateY(-1px) scale(1.02);
   }
 
   .practice-app .settings-cog:hover{
     color:#061724;
     background:rgba(7,21,34,.045);
+    opacity:.86;
     transform:translateY(-1px) scale(1.03);
   }
 
@@ -2131,21 +2160,31 @@
   }
 
   .practice-app .progress-track{
-    height:3px;
+    width:calc(100% - 48px);
+    height:2px;
   }
 
-  .practice-mark-button{
+  .practice-home-back{
     left:22px;
-    top:18px;
-    font-size:31px;
-    line-height:.82;
+    top:14px;
+    width:40px;
+    height:40px;
+  }
+
+  .practice-home-logo{
+    right:18px;
+    top:17px;
+  }
+
+  .practice-home-logo .logo-svg-small{
+    width:58px;
+    max-width:58px;
   }
 
   .practice-app .settings-cog{
-    right:18px;
-    top:12px;
     width:42px;
     height:42px;
+    margin-top:12px;
   }
 
   .practice-app .settings-cog svg{
@@ -2214,12 +2253,19 @@
   .practice-app .letter-slot{
     min-width:34px;
     height:42px;
-    border-bottom-width:3px;
+    border-bottom-width:2px;
     font-size:30px;
   }
 
   .practice-app .letter-slot.active:not(.mistake){
-    border-bottom-width:3px;
+    border-bottom-width:2px;
+  }
+
+  .practice-app .letter-slot.active:not(.mistake)::before{
+    bottom:4px;
+    width:42px;
+    height:32px;
+    opacity:.9;
   }
 
   .practice-app .letter-slot.mistake{
@@ -2408,11 +2454,11 @@
 }
 
 @media (max-width:380px){
-  .practice-mark-button{
+  .practice-home-back{
     left:20px;
   }
 
-  .practice-app .settings-cog{
+  .practice-home-logo{
     right:16px;
   }
 
@@ -2428,10 +2474,7 @@
 /* Compact end-session screens */
 .end-bg{
   min-height:100svh;
-  background:
-    radial-gradient(circle at 5% 0%, rgba(45,161,94,.055), transparent 26%),
-    radial-gradient(circle at 96% 96%, rgba(45,161,94,.08), transparent 24%),
-    #fdfdfc;
+  background:#f4f2ef;
 }
 
 .end-v2-shell{
