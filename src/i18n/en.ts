@@ -127,7 +127,7 @@ export const en = {
     about: 'About',
     shared: 'Shared',
     copied: 'Link copied',
-    shareText: 'Really nice Welsh spelling practice app - well worth a try.',
+    shareText: 'I’ve discovered this Welsh spelling app — thought you might like to check it out.',
     privacyTitle: 'Privacy',
     aboutTitle: 'About Spelio',
     close: 'Close',
