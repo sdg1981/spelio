@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { ArrowLeft, Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
+import { SquareArrowLeft, SquareArrowRight, SquareArrowUp } from 'lucide-react';
+import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -152,17 +153,19 @@ export function Practice({
 }) {
   const [modal, setModal] = useState<'wordlist' | null>(initialModal === 'wordlist' ? initialModal : null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
+  const [localStatusSecondary, setLocalStatusSecondary] = useState<string | null>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
+  const [isEnglishPromptPeeking, setIsEnglishPromptPeeking] = useState(false);
   const [peekUsedForCurrentWord, setPeekUsedForCurrentWord] = useState(false);
   const peekTimerRef = useRef<number | null>(null);
   const peekAutoHideTimerRef = useRef<number | null>(null);
+  const englishPromptPeekTimerRef = useRef<number | null>(null);
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
-  const spaceHoldStartedRef = useRef(false);
   const revealHandledByPointerRef = useRef(false);
   const englishHandledByPointerRef = useRef(false);
   const audioHandledByPointerRef = useRef(false);
@@ -219,6 +222,14 @@ export function Practice({
     }
   }, []);
 
+  const clearEnglishPromptPeek = useCallback(() => {
+    if (englishPromptPeekTimerRef.current) {
+      window.clearTimeout(englishPromptPeekTimerRef.current);
+      englishPromptPeekTimerRef.current = null;
+    }
+    setIsEnglishPromptPeeking(false);
+  }, []);
+
   const restorePracticeInputFocus = useCallback(() => {
     if (shouldUseMobileKeyboard()) {
       focusMobileInput();
@@ -265,6 +276,24 @@ export function Practice({
     }, 1500);
   }, [currentWord, finishPeek, isComplete, markCurrentWordRevealed, modal, peekUsedForCurrentWord, restorePracticeInputFocus]);
 
+  const activateEnglishPromptPeek = useCallback(() => {
+    if (!currentWord || isComplete || modal || settingsModalOpenRef.current) return;
+
+    restorePracticeInputFocus();
+
+    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+    const promptAlreadyVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable) || isEnglishPromptPeeking;
+    if (promptAlreadyVisible) return;
+
+    if (englishPromptPeekTimerRef.current) window.clearTimeout(englishPromptPeekTimerRef.current);
+    setIsEnglishPromptPeeking(true);
+    englishPromptPeekTimerRef.current = window.setTimeout(() => {
+      setIsEnglishPromptPeeking(false);
+      englishPromptPeekTimerRef.current = null;
+      restorePracticeInputFocus();
+    }, 1500);
+  }, [audioPlaybackFailedWordIds, currentWord, isComplete, isEnglishPromptPeeking, modal, restorePracticeInputFocus, storage.settings.englishVisible]);
+
   const beginPeekHold = useCallback(() => {
     if (!currentWord || isComplete || modal || settingsModalOpenRef.current) return;
 
@@ -292,8 +321,9 @@ export function Practice({
     return () => {
       if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
       clearPeekTimers();
+      clearEnglishPromptPeek();
     };
-  }, [clearPeekTimers]);
+  }, [clearEnglishPromptPeek, clearPeekTimers]);
 
   useEffect(() => {
     isPeekingRef.current = isPeeking;
@@ -305,43 +335,54 @@ export function Practice({
     peekActivatedRef.current = false;
     isPeekingRef.current = false;
     setIsPeeking(false);
+    clearEnglishPromptPeek();
     setPeekUsedForCurrentWord(false);
     if (wasPeeking) restorePracticeInputFocus();
-  }, [clearPeekTimers, currentWord?.id, restorePracticeInputFocus]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, currentWord?.id, restorePracticeInputFocus]);
 
   useEffect(() => {
     if (modal || isComplete || settingsModalOpenRef.current) {
       finishPeek(false);
+      clearEnglishPromptPeek();
       peekActivatedRef.current = false;
     }
-  }, [finishPeek, isComplete, modal]);
+  }, [clearEnglishPromptPeek, finishPeek, isComplete, modal]);
 
   useEffect(() => {
-    if (status) setLocalStatus(null);
+    if (status) {
+      setLocalStatus(null);
+      setLocalStatusSecondary(null);
+    }
   }, [status]);
 
   useEffect(() => {
     function isControlTarget(target: EventTarget | null) {
       if (!(target instanceof HTMLElement)) return false;
+      if (target === mobileInputRef.current) return false;
       return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (modal || settingsModalOpenRef.current || isComplete) return;
+      if (modal || settingsModalOpenRef.current || isComplete || !currentWord) return;
       if (isControlTarget(event.target)) return;
 
-      if (event.code === 'Space') {
+      if (event.code === 'ArrowLeft') {
         event.preventDefault();
-        if (!event.repeat && !spaceHoldStartedRef.current) {
-          spaceHoldStartedRef.current = true;
-          beginPeekHold();
-        }
+        activateEnglishPromptPeek();
+        return;
+      }
+
+      if (event.code === 'ArrowUp') {
+        event.preventDefault();
+        restorePracticeInputFocus();
+        playAudio();
         return;
       }
 
       if (event.code === 'ArrowRight') {
         event.preventDefault();
         revealNext();
+        restorePracticeInputFocus();
         return;
       }
 
@@ -350,26 +391,11 @@ export function Practice({
       }
     }
 
-    function onKeyUp(event: KeyboardEvent) {
-      if (event.code !== 'Space' || isControlTarget(event.target)) return;
-
-      event.preventDefault();
-      const didPeek = peekActivatedRef.current;
-      endPeekHold();
-      spaceHoldStartedRef.current = false;
-
-      if (!didPeek && !modal && !settingsModalOpenRef.current && !isComplete) {
-        playAudio();
-      }
-    }
-
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
     };
-  }, [beginPeekHold, endPeekHold, handleInput, isComplete, modal, playAudio, revealNext]);
+  }, [activateEnglishPromptPeek, currentWord, handleInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -464,10 +490,14 @@ export function Practice({
     }
   }
 
-  function showLocalStatus(message: string) {
+  function showLocalStatus(message: string, secondaryMessage: string | null = null) {
     setLocalStatus(message);
+    setLocalStatusSecondary(secondaryMessage);
     if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
-    localStatusTimerRef.current = window.setTimeout(() => setLocalStatus(null), 1500);
+    localStatusTimerRef.current = window.setTimeout(() => {
+      setLocalStatus(null);
+      setLocalStatusSecondary(null);
+    }, 1500);
   }
 
   function toggleEnglishPrompt() {
@@ -478,7 +508,10 @@ export function Practice({
 
     const nextVisible = !storage.settings.englishVisible;
     updateSettings({ englishVisible: nextVisible });
-    showLocalStatus(nextVisible ? t('practice.promptOn') : t('practice.promptOff'));
+    showLocalStatus(
+      nextVisible ? t('practice.promptOn') : t('practice.promptOff'),
+      nextVisible ? null : t('practice.promptOffShortcutHint')
+    );
   }
 
   function toggleAudioPrompts() {
@@ -604,10 +637,11 @@ export function Practice({
   const answerLayoutClass = getAnswerLayoutClass(answer);
   const wordComplete = currentWordComplete;
   const displayStatus = status ?? localStatus;
+  const displayStatusSecondary = status ? null : localStatusSecondary;
   const displayTone = status ? statusTone : 'neutral';
   const dialectLabel = getDialectLabel(currentWord, t);
   const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
-  const promptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable);
+  const promptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable) || isEnglishPromptPeeking;
   const wordInsights = interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -672,11 +706,18 @@ export function Practice({
           <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
 
-        <AnimatedStatusLine status={displayStatus} tone={displayTone} />
+        <AnimatedStatusLine status={displayStatus} secondaryStatus={displayStatusSecondary} tone={displayTone} />
         {showKeyboardHint && (
           <div className="keyboard-shortcut-hint">
-            <Keyboard size={14} strokeWidth={1.8} aria-hidden="true" />
-            <span>{t('practice.keyboardHint')}</span>
+            <span className="keyboard-shortcut-item">
+              <SquareArrowUp size={14} strokeWidth={1.8} aria-hidden="true" />
+              <span>{t('practice.shortcutReplayAudio')}</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span className="keyboard-shortcut-item">
+              <SquareArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
+              <span>{t('practice.shortcutRevealNextLetter')}</span>
+            </span>
           </div>
         )}
 
@@ -767,12 +808,15 @@ function findIncompleteLetterIndex(answer: string, letters: Array<{ value: strin
 
 function AnimatedStatusLine({
   status,
+  secondaryStatus,
   tone
 }: {
   status: string | null;
+  secondaryStatus?: string | null;
   tone: 'success' | 'error' | 'neutral';
 }) {
   const [visibleStatus, setVisibleStatus] = useState(status);
+  const [visibleSecondaryStatus, setVisibleSecondaryStatus] = useState(secondaryStatus ?? null);
   const [visibleTone, setVisibleTone] = useState(tone);
   const [leaving, setLeaving] = useState(false);
 
@@ -781,6 +825,7 @@ function AnimatedStatusLine({
 
     if (status) {
       setVisibleStatus(status);
+      setVisibleSecondaryStatus(secondaryStatus ?? null);
       setVisibleTone(tone);
       setLeaving(false);
       return undefined;
@@ -790,6 +835,7 @@ function AnimatedStatusLine({
       setLeaving(true);
       timer = window.setTimeout(() => {
         setVisibleStatus(null);
+        setVisibleSecondaryStatus(null);
         setLeaving(false);
       }, 260);
     }
@@ -797,14 +843,22 @@ function AnimatedStatusLine({
     return () => {
       if (timer) window.clearTimeout(timer);
     };
-  }, [status, tone, visibleStatus]);
+  }, [secondaryStatus, status, tone, visibleStatus]);
 
   return (
     <div className={`status-line status-line-${visibleStatus ? visibleTone : tone}`}>
       {visibleStatus && (
         <span className={`status-message ${leaving ? 'leaving' : 'entering'}`} key={visibleStatus}>
-          {visibleTone === 'error' && <CircleX size={22} />}
-          {visibleStatus}
+          <span className="status-message-primary">
+            {visibleTone === 'error' && <CircleX size={22} />}
+            {visibleStatus}
+          </span>
+          {visibleSecondaryStatus && (
+            <span className="status-message-secondary">
+              <SquareArrowLeft size={12} strokeWidth={2} aria-hidden="true" />
+              {visibleSecondaryStatus}
+            </span>
+          )}
         </span>
       )}
     </div>

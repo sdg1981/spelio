@@ -156,7 +156,7 @@ export default function App() {
       return;
     }
 
-    setShowFirstSessionKeyboardHint(!storage.hasStartedPracticeSession);
+    setShowFirstSessionKeyboardHint(!start.review && !start.recap && (storage.completedNormalSessionCount ?? 0) >= 5);
     setStorage(start.storage);
     setPracticeStartStorage(start.storage);
     setPracticeSessionKey(key => key + 1);

@@ -251,6 +251,12 @@
   display:none;
 }
 
+.keyboard-shortcut-item{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+
 @media (min-width:521px){
   .keyboard-shortcut-hint{
     display:inline-flex;
@@ -705,6 +711,29 @@
   justify-content:center;
   gap:10px;
   will-change:opacity,transform;
+}
+
+.status-message-primary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.status-message-secondary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  color:#9aa3ad;
+  font-size:12px;
+  font-weight:500;
+  line-height:1.2;
+}
+
+.status-message-secondary svg{
+  flex:0 0 auto;
+  color:#aab2bb;
 }
 
 .status-message.entering{
@@ -2119,12 +2148,18 @@
 .practice-app .status-message{
   display:inline-flex;
   align-items:center;
-  gap:14px;
+  flex-direction:column;
+  gap:6px;
 }
 
 .practice-app .status-message svg{
   width:24px;
   height:24px;
+}
+
+.practice-app .status-message-secondary svg{
+  width:12px;
+  height:12px;
 }
 
 .practice-app .utility-bar{
@@ -2429,6 +2464,11 @@
     height:20px;
   }
 
+  .practice-app .status-message-secondary svg{
+    width:12px;
+    height:12px;
+  }
+
   .practice-app .utility-bar{
     position:relative;
     left:auto;
@@ -2547,6 +2587,11 @@
   .practice-app .status-message svg{
     width:24px;
     height:24px;
+  }
+
+  .practice-app .status-message-secondary svg{
+    width:12px;
+    height:12px;
   }
 
   .practice-app .utility-bar button{
