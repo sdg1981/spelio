@@ -540,22 +540,36 @@ export function Practice({
     restorePracticeInputFocus();
   }
 
-  function handleWordPillClick() {
+  function handleWordPillClick(event: MouseEvent<HTMLButtonElement>) {
+    const wordPillButton = event.currentTarget;
+    const restoreFocusAfterClick = () => {
+      window.requestAnimationFrame(() => {
+        if (isComplete || !currentWord || modal || settingsModalOpenRef.current || !document.contains(wordPillButton)) return;
+        wordPillButton.blur();
+        restorePracticeInputFocus();
+      });
+    };
+
     logAudioPlaybackClick('learner-word-pill', currentWord?.audioUrl);
     if (currentWord && isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id))) {
       showLocalStatus(t('practice.audioUnavailable'));
       if (shouldUseMobileKeyboard()) {
         window.setTimeout(focusMobileInput, 40);
       }
+      restoreFocusAfterClick();
       return;
     }
 
-    if (!storage.settings.audioPrompts) return;
+    if (!storage.settings.audioPrompts) {
+      restoreFocusAfterClick();
+      return;
+    }
 
     playAudio();
     if (shouldUseMobileKeyboard()) {
       window.setTimeout(focusMobileInput, 40);
     }
+    restoreFocusAfterClick();
   }
 
   if (!hasWords || !currentWord) {
