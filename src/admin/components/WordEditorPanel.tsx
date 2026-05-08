@@ -114,6 +114,20 @@ export function WordEditorPanel({
             </AdminButton>
           )}
         </div>
+        <div className="mt-4 grid gap-4">
+          <Field label="Audio URL">
+            <AdminInput value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
+          </Field>
+          <Field label="Audio status">
+            <AdminSelect value={word.audioStatus} onChange={event => onChange({ audioStatus: event.target.value as AdminWord['audioStatus'] })}>
+              <option value="missing">missing</option>
+              <option value="queued">queued</option>
+              <option value="generating">generating</option>
+              <option value="ready">ready</option>
+              <option value="failed">failed</option>
+            </AdminSelect>
+          </Field>
+        </div>
       </div>
       <div className="p-5">
         <button className="flex w-full items-center justify-between text-left font-black text-slate-950" onClick={() => setAdvancedOpen(open => !open)}>
@@ -124,6 +138,7 @@ export function WordEditorPanel({
           <div className="mt-4 grid gap-3 text-sm text-slate-600">
             <div className="flex items-center gap-2"><Info size={15} /> Raw IDs are hidden in normal editing.</div>
             <Field label="Internal notes"><AdminTextarea value={word.notes} onChange={event => onChange({ notes: event.target.value })} /></Field>
+            <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
             <div>Created {word.createdAt}</div>
             <div>Updated {word.updatedAt}</div>
           </div>
