@@ -645,8 +645,22 @@
 }
 
 .letter-slot{
+  position:relative;
   color:var(--ink);
   transition:border-color .12s ease-out,background .16s ease-out,color .12s ease-out,box-shadow .16s ease-out;
+}
+
+.letter-slot::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-3px;
+  height:3px;
+  background:#346f54;
+  transform:scaleX(0);
+  transform-origin:left center;
+  pointer-events:none;
 }
 
 .letter-slot.typed:not(.mistake){
@@ -665,8 +679,18 @@
   animation:active-letter-underline 1.8s ease-in-out infinite;
 }
 
+.letter-grid.word-complete{
+  animation:word-complete-lock .2s cubic-bezier(.2,.84,.26,1) both;
+  animation-delay:var(--word-complete-delay,160ms);
+}
+
 .word-complete .letter-slot.filled:not(.mistake){
-  animation:letter-success-underline .16s ease-out both;
+  animation:letter-success-response .16s ease-out both;
+  animation-delay:var(--letter-wave-delay,0ms);
+}
+
+.word-complete .letter-slot.filled:not(.mistake)::after{
+  animation:letter-success-underline .16s cubic-bezier(.22,1,.36,1) both;
   animation-delay:var(--letter-wave-delay,0ms);
 }
 
@@ -694,9 +718,21 @@
   70%{transform:translateX(-2px);}
 }
 
+@keyframes letter-success-response{
+  0%{transform:translateY(0);color:var(--ink);text-shadow:none;}
+  58%{transform:translateY(-1.5px);color:var(--ink);text-shadow:0 7px 16px rgba(7,21,34,.08);}
+  100%{transform:translateY(0);color:var(--ink);text-shadow:none;}
+}
+
 @keyframes letter-success-underline{
-  from{border-bottom-color:#d8d2ca;color:var(--ink);}
-  to{border-bottom-color:#346f54;color:var(--ink);}
+  from{transform:scaleX(0);}
+  to{transform:scaleX(1);}
+}
+
+@keyframes word-complete-lock{
+  0%{transform:scale(1);}
+  48%{transform:scale(1.015);}
+  100%{transform:scale(1);}
 }
 
 .status-message{
@@ -806,6 +842,7 @@
   .letter-slot.typed:not(.mistake),
   .letter-slot.revealed:not(.mistake),
   .letter-slot.mistake,
+  .letter-grid.word-complete,
   .word-complete .letter-slot.filled:not(.mistake),
   .status-message,
   .overlay,
@@ -835,6 +872,10 @@
 
   .word-complete .letter-slot.filled:not(.mistake){
     border-bottom-color:#346f54!important;
+  }
+
+  .word-complete .letter-slot.filled:not(.mistake)::after{
+    content:none!important;
   }
 }
 
