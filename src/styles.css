@@ -1676,7 +1676,7 @@
   }
 
   .home-action-list .action-row-title{
-    font-size:22px;
+    font-size:20px;
     line-height:1.16;
   }
 
@@ -1706,7 +1706,7 @@
 
   .home-shell-returning .home-heading,
   .home-shell-review .home-heading{
-    font-size:41px!important;
+    font-size:43px!important;
   }
 
   .home-shell-review .home-action-list{
@@ -1734,7 +1734,7 @@
 
   .home-shell-returning .home-heading,
   .home-shell-review .home-heading{
-    font-size:37px!important;
+    font-size:39px!important;
   }
 
   .home-support{
@@ -3001,7 +3001,7 @@
   }
 
   .end-action-list .action-row-title{
-    font-size:22px;
+    font-size:20px;
   }
 
   .end-action-list .action-row-sub{
