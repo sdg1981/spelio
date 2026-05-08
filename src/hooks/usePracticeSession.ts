@@ -22,7 +22,7 @@ export type PracticeStatusTone = 'success' | 'error' | 'neutral';
 const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
 const SUCCESS_UNDERLINE_STAGGER_MS = 42;
 const SUCCESS_UNDERLINE_DURATION_MS = 160;
-const SUCCESS_CONFIRMATION_PAUSE_MS = 260;
+const SUCCESS_CONFIRMATION_PAUSE_MS = 450;
 
 function createInitialLetters(answer: string): LetterState[] {
   return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));

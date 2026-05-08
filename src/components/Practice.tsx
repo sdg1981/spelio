@@ -71,7 +71,7 @@ function LetterSlots({
                   className={`letter-slot ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed ? 'typed' : ''}`}
                   style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 42}ms` } as CSSProperties : undefined}
                 >
-                  <span className="letter-glyph">{isMistake ? '×' : slot?.value || '_'}</span>
+                  {isMistake ? '×' : slot?.value || '_'}
                 </span>
               );
             })}

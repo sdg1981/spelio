@@ -649,11 +649,6 @@
   transition:border-color .12s ease-out,background .16s ease-out,color .12s ease-out,box-shadow .16s ease-out;
 }
 
-.letter-glyph{
-  display:inline-block;
-  color:inherit;
-}
-
 .letter-slot.typed:not(.mistake){
   animation:letter-correct-pop .13s ease-out both;
 }
@@ -672,11 +667,6 @@
 
 .word-complete .letter-slot.filled:not(.mistake){
   animation:letter-success-underline .16s ease-out both;
-  animation-delay:var(--letter-wave-delay,0ms);
-}
-
-.word-complete .letter-slot.filled:not(.mistake) .letter-glyph{
-  animation:letter-success-lift .18s ease-out both;
   animation-delay:var(--letter-wave-delay,0ms);
 }
 
@@ -707,11 +697,6 @@
 @keyframes letter-success-underline{
   from{border-bottom-color:#d8d2ca;color:var(--ink);}
   to{border-bottom-color:#346f54;color:var(--ink);}
-}
-
-@keyframes letter-success-lift{
-  0%,100%{transform:translateY(0);}
-  48%{transform:translateY(-3px);}
 }
 
 .status-message{
@@ -822,7 +807,6 @@
   .letter-slot.revealed:not(.mistake),
   .letter-slot.mistake,
   .word-complete .letter-slot.filled:not(.mistake),
-  .word-complete .letter-slot.filled:not(.mistake) .letter-glyph,
   .status-message,
   .overlay,
   .modal,
