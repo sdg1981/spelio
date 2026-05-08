@@ -14,6 +14,7 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation } from '../src/lib/practice/recommendations';
+import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -643,6 +644,70 @@ test('struggled secondary continue bypasses review and advances from a completed
   assertEqual(normalRecommendation.listId, 'foundations_mixed_01', 'Secondary continue should advance to the next list');
   assertEqual(normalSession.words.every(word => word.listId === 'foundations_mixed_01'), true, 'Normal continue should not start the review pool');
   assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, true, 'Normal continue routing should not clear difficult status');
+});
+
+test('homepage secondary Continue learning creates a normal start, not review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = completeNumbersCleanly(numbersStorage());
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: numbersResult({
+      correctWords: 9,
+      incorrectWords: 1,
+      incorrectAttempts: 1,
+      state: 'struggled'
+    })
+  };
+
+  const primaryStart = createPrimaryRecommendationPracticeStart(storage, wordLists);
+  const secondaryStart = createNormalContinuationPracticeStart(storage, wordLists);
+  const secondarySession = createPracticeSession(wordLists, secondaryStart.storage, secondaryStart.review);
+  const reviewSession = createPracticeSession(wordLists, storage, true);
+
+  assertEqual(primaryStart.mode, 'review', 'Primary start should be dedicated review');
+  assertEqual(primaryStart.review, true, 'Primary start should pass review mode');
+  assertEqual(secondaryStart.mode, 'normal', 'Homepage secondary start should be normal');
+  assertEqual(secondaryStart.review, false, 'Homepage secondary start should not pass review mode');
+  assertEqual(secondaryStart.recommendation?.listId, 'foundations_mixed_01', 'Homepage secondary start should use normal continuation listId');
+  assertEqual(secondaryStart.storage.selectedListIds[0], 'foundations_mixed_01', 'Homepage secondary start should move to nextListId');
+  assertEqual(secondarySession.words.every(word => word.listId === 'foundations_mixed_01'), true, 'Homepage secondary session pool should come from normal continuation');
+  assertEqual(secondarySession.words.map(word => word.id).join('|') === reviewSession.words.map(word => word.id).join('|'), false, 'Homepage secondary session should not reuse the review-only pool');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, true, 'Bypassing review should leave difficult status intact');
+});
+
+test('end-screen secondary Continue learning creates a normal start, not review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = completeNumbersCleanly(numbersStorage());
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionDate: '2026-05-05T00:01:30.000Z',
+    lastSessionResult: numbersResult({
+      correctWords: 9,
+      incorrectWords: 1,
+      incorrectAttempts: 1,
+      state: 'struggled'
+    })
+  };
+
+  const reviewStart = createReviewPracticeStart(storage);
+  const secondaryStart = createNormalContinuationPracticeStart(storage, wordLists);
+  const secondarySession = createPracticeSession(wordLists, secondaryStart.storage, secondaryStart.review);
+  const reviewSession = createPracticeSession(wordLists, reviewStart.storage, reviewStart.review);
+
+  assertEqual(reviewStart.mode, 'review', 'End primary review start should be dedicated review');
+  assertEqual(reviewStart.review, true, 'End primary review start should pass review mode');
+  assertEqual(secondaryStart.mode, 'normal', 'End secondary start should be normal');
+  assertEqual(secondaryStart.review, false, 'End secondary start should not pass review mode');
+  assertEqual(secondaryStart.storage.selectedListIds[0], 'foundations_mixed_01', 'End secondary start should move to nextListId');
+  assertEqual(secondarySession.words.every(word => word.listId === 'foundations_mixed_01'), true, 'End secondary session pool should come from normal continuation');
+  assertEqual(secondarySession.words.map(word => word.id).join('|') === reviewSession.words.map(word => word.id).join('|'), false, 'End secondary session should not reuse the review-only pool');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, true, 'Bypassing review should leave difficult status intact');
 });
 
 test('struggled secondary continue stays on an incomplete current list', () => {
