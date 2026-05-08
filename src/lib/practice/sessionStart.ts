@@ -5,8 +5,9 @@ import { getNormalContinuationRecommendation, getRecommendation } from './recomm
 import { applyPracticeStartListSelection, type SpelioStorage } from './storage';
 
 export type PracticeStart = {
-  mode: 'normal' | 'review';
+  mode: 'normal' | 'review' | 'recap';
   review: boolean;
+  recap: boolean;
   storage: SpelioStorage;
   recommendation?: Recommendation;
 };
@@ -22,6 +23,16 @@ export function createReviewPracticeStart(storage: SpelioStorage): PracticeStart
   return {
     mode: 'review',
     review: true,
+    recap: false,
+    storage: withPracticeStarted(storage)
+  };
+}
+
+export function createRecapPracticeStart(storage: SpelioStorage): PracticeStart {
+  return {
+    mode: 'recap',
+    review: false,
+    recap: true,
     storage: withPracticeStarted(storage)
   };
 }
@@ -37,6 +48,7 @@ export function createNormalContinuationPracticeStart(
   return {
     mode: 'normal',
     review: false,
+    recap: false,
     storage: withPracticeStarted(applyPracticeStartListSelection(storage, recommendation.listId)),
     recommendation
   };
@@ -60,6 +72,7 @@ export function createPrimaryRecommendationPracticeStart(
   return {
     mode: 'normal',
     review: false,
+    recap: false,
     storage: withPracticeStarted(applyPracticeStartListSelection(storage, recommendation.listId)),
     recommendation
   };

@@ -5,6 +5,7 @@ import type { Translate } from '../i18n';
 import { validateLetter } from '../lib/practice/validator';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
+import { isListProgressionReady } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
@@ -112,8 +113,8 @@ export function usePracticeSession({
     [lists, sessionKey, sessionStorage, reviewDifficult, includeRecapDue]
   );
   const recapWord = useMemo(
-    () => selectPreSessionRecapWord(sessionStorage, lists, session.words, reviewDifficult),
-    [lists, sessionKey, reviewDifficult, session.words, sessionStorage]
+    () => selectPreSessionRecapWord(sessionStorage, lists, session.words, reviewDifficult || includeRecapDue),
+    [lists, sessionKey, reviewDifficult, includeRecapDue, session.words, sessionStorage]
   );
   const sessionIdentity = `${recapWord?.id ?? ''}:${session.words.map(word => word.id).join('|')}`;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -280,21 +281,24 @@ export function usePracticeSession({
       ...storageRef.current,
       lastSessionDate: new Date().toISOString(),
       lastSessionResult: result,
-      completedNormalSessionCount: reviewDifficult
+      completedNormalSessionCount: reviewDifficult || includeRecapDue
         ? storageRef.current.completedNormalSessionCount
         : (storageRef.current.completedNormalSessionCount ?? 0) + 1
     };
     nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
-    nextStorage = updateListCompletion(nextStorage, lists, result);
+    if (!reviewDifficult && !includeRecapDue) {
+      nextStorage = updateListCompletion(nextStorage, lists, result);
+    }
 
     const completedSingleListId = result.listIds.length === 1 ? result.listIds[0] : null;
     const completedList = completedSingleListId ? lists.find(list => list.id === completedSingleListId) : undefined;
     const nextListId = completedList?.nextListId;
     const shouldAdvancePath =
       !reviewDifficult &&
+      !includeRecapDue &&
       completedList !== undefined &&
       typeof nextListId === 'string' &&
-      nextStorage.listProgress[completedList.id]?.completed &&
+      isListProgressionReady(nextStorage, completedList) &&
       nextStorage.currentPathPosition === completedList.id &&
       nextStorage.selectedListIds.length === 1 &&
       nextStorage.selectedListIds[0] === completedList.id;
@@ -312,13 +316,14 @@ export function usePracticeSession({
     setIsComplete(true);
     if (storageRef.current.settings.soundEffects) playTone('completion');
     onComplete(result, nextStorage);
-  }, [lists, onComplete, onStorageChange, reviewDifficult, session.listIds, session.words.length, stats, storage]);
+  }, [lists, onComplete, onStorageChange, reviewDifficult, includeRecapDue, session.listIds, session.words.length, stats, storage]);
 
   function completeWord(forceDifficult = false) {
     if (!currentWord) return;
     recordPracticeInteraction();
 
-    const completingRecap = isRecapActive;
+    const completingInjectedRecap = isRecapActive;
+    const completingRecap = completingInjectedRecap || includeRecapDue;
     const hadIssueInThisSession =
       forceDifficult ||
       (completingRecap && recapIssueRef.current) ||
@@ -332,7 +337,7 @@ export function usePracticeSession({
       recapCompletedClean: completingRecap && !hadIssueInThisSession
     });
 
-    if (completingRecap) {
+    if (completingInjectedRecap) {
       window.setTimeout(() => {
         const nextWord = session.words[currentIndex];
         setLetters(createInitialLetters(nextWord ? getAnswer(nextWord) : ''));

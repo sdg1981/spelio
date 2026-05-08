@@ -8,6 +8,7 @@ import { SettingsModal } from './Practice';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
 import type { SpelioSettings } from '../lib/practice/storage';
+import { formatRecapWordCount } from '../lib/practice/sessionEngine';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 
@@ -17,6 +18,7 @@ export function Home({
   progressSummary,
   hasDifficultWords,
   difficultWordCount,
+  recapWordCount,
   onStart,
   onContinue,
   onReview,
@@ -34,6 +36,7 @@ export function Home({
   progressSummary?: string | null;
   hasDifficultWords: boolean;
   difficultWordCount: number;
+  recapWordCount: number;
   onStart: () => void;
   onContinue: () => void;
   onReview: () => void;
@@ -61,8 +64,8 @@ export function Home({
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
-  const showRecapEntry = mode === 'returning' && difficultWordCount > 0 && !shouldPrioritiseReview;
-  const revisitCountLabel = difficultWordCount >= 5 ? '5+' : String(difficultWordCount);
+  const revisitCountLabel = formatRecapWordCount(recapWordCount);
+  const showRecapEntry = mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
 
   return (
     <main className="homepage-bg">

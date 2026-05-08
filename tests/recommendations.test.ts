@@ -1,6 +1,6 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
-import { classifySession, createPracticeSession, getDifficultWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   addLearningStats,
@@ -13,8 +13,8 @@ import {
   type SessionResult,
   type SpelioStorage
 } from '../src/lib/practice/storage';
-import { getNormalContinuationRecommendation, getRecommendation } from '../src/lib/practice/recommendations';
-import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
+import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
+import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -498,6 +498,22 @@ test('clean completion of a previously difficult word in a later session clears 
   assertEqual(hasDifficultWords(storage), false, 'No current difficult words should remain');
 });
 
+test('incorrect and revealed words become difficult recap-due items with reset recap count', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[1], { revealed: true }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(0, 2)) {
+    const progress = storage.wordProgress[word.id];
+    assertEqual(progress?.difficult, true, 'Incorrect or revealed word should be marked difficult');
+    assertEqual(progress?.recapDue, true, 'Incorrect or revealed word should become recap due');
+    assertEqual(progress?.cleanRecapCount, 0, 'Incorrect or revealed word should reset clean recap count');
+  }
+});
+
 test('resolved recap-due words do not keep homepage revisit or review visible', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
@@ -517,6 +533,93 @@ test('resolved recap-due words do not keep homepage revisit or review visible', 
   assertEqual(hasDifficultWords(storage, wordLists), false, 'Homepage review visibility should use only current difficult words');
   assertEqual(recommendation.kind, 'list', 'Resolved recap-only words should not keep review as the primary recommendation');
   assertEqual(reviewSession.words.length, 0, 'Dedicated review should not include recap-only words');
+});
+
+test('dedicated review clears difficult after one clean completion but leaves recap due', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+
+  const reviewSession = createPracticeSession(wordLists, storage, true);
+  assertEqual(reviewSession.words.length, 1, 'Dedicated review should use the current difficult pool only');
+  assertEqual(reviewSession.words[0]?.id, numbers.words[0].id, 'Dedicated review should include the difficult word');
+
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, false, 'One clean review completion should clear difficult');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Clean review completion should leave recap due for reinforcement');
+});
+
+test('From earlier uses recapDue words and starts recap mode', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  const storage: SpelioStorage = {
+    ...numbersStorage(),
+    wordProgress: {
+      [numbers.words[0].id]: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0
+      },
+      [numbers.words[1].id]: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: true,
+        recapDue: false,
+        cleanRecapCount: 0
+      }
+    }
+  };
+
+  const recapStart = createRecapPracticeStart(storage);
+  const recapSession = createPracticeSession(wordLists, recapStart.storage, recapStart.review, recapStart.recap);
+  const reviewSession = createPracticeSession(wordLists, storage, true);
+
+  assertEqual(getRecapWordCount(storage, wordLists), 1, 'From earlier count should use recapDue words');
+  assertEqual(recapStart.mode, 'recap', 'From earlier should start a dedicated recap session');
+  assertEqual(recapStart.review, false, 'From earlier must not start review mode');
+  assertEqual(recapStart.recap, true, 'From earlier should pass recap mode');
+  assertEqual(recapSession.words.length, 1, 'Dedicated recap should use the recapDue pool');
+  assertEqual(recapSession.words[0]?.id, numbers.words[0].id, 'Dedicated recap should not use difficult-only words');
+  assertEqual(reviewSession.words[0]?.id, numbers.words[1].id, 'Dedicated review should remain based on difficult words');
+});
+
+test('From earlier count is hidden at zero and capped above five', () => {
+  assertEqual(formatRecapWordCount(0), null, 'Zero recap count should be hidden');
+  assertEqual(formatRecapWordCount(1), '1', 'Single recap count should be exact');
+  assertEqual(formatRecapWordCount(5), '5', 'Five recap words should remain exact');
+  assertEqual(formatRecapWordCount(6), '5+', 'More than five recap words should be capped');
+});
+
+test('homepage pools keep review and From earlier visibility separate', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let emptyStorage = numbersStorage();
+  assertEqual(hasDifficultWords(emptyStorage, wordLists), false, 'Empty review pool should hide Review difficult words');
+  assertEqual(getRecapWordCount(emptyStorage, wordLists), 0, 'Empty recap pool should hide From earlier');
+
+  let difficultStorage = applyWordProgressPatch(emptyStorage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  difficultStorage = {
+    ...difficultStorage,
+    lastSessionResult: numbersResult({ correctWords: 9, incorrectWords: 1, incorrectAttempts: 1, state: 'struggled' })
+  };
+  assertEqual(hasDifficultWords(difficultStorage, wordLists), true, 'Difficult words should make Review difficult words visible');
+  assertEqual(getRecommendation(difficultStorage, wordLists).kind, 'review', 'Difficult words after a struggled session should drive review');
+
+  let recapOnlyStorage = applyWordProgressPatch(emptyStorage, numbers.words[1], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  recapOnlyStorage = applyWordProgressPatch(recapOnlyStorage, numbers.words[1], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  assertEqual(hasDifficultWords(recapOnlyStorage, wordLists), false, 'Recap-only words should not make Review difficult words visible');
+  assertEqual(getRecapWordCount(recapOnlyStorage, wordLists), 1, 'Recap due words should make From earlier visible');
 });
 
 test('learned spelling count excludes currently difficult and revealed-only words', () => {
@@ -754,6 +857,38 @@ test('primary action does not repeat a completed list when nextListId exists', (
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed list should advance to next valid list');
 });
 
+test('continue learning advances when all eligible current-list items are seen without granting completion tick', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  for (const word of numbers.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const weakResult = numbersResult({
+    correctWords: 8,
+    incorrectWords: 2,
+    incorrectAttempts: 2,
+    state: 'struggled'
+  });
+  storage = updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: weakResult
+    },
+    wordLists,
+    weakResult
+  );
+
+  const recommendation = getNormalContinuationRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, numbers), true, 'All eligible numbers items should be progression-ready once seen');
+  assertEqual(storage.listProgress.foundations_numbers?.completed, false, 'Weak all-seen pass should not grant the strict completion tick');
+  assertEqual(recommendation.listId, 'foundations_mixed_01', 'Continue learning should move to nextListId when all current items have been seen');
+});
+
 test('single-list progression starts the next recommended list with a fresh normal pool', () => {
   let storage = firstWordsStorage('mixed');
   const firstSession = createPracticeSession(wordLists, storage);
@@ -880,6 +1015,75 @@ test('pre-session recap is separate from the next normal session pool', () => {
   assertEqual(normalSession.words.every(word => word.listId === 'foundations_verbs'), true, 'Normal session should still use the intended current list');
 });
 
+test('automatic recap injection selects at most one recapDue word for normal sessions only', () => {
+  const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
+  assert(firstWords, 'Expected foundations_first_words to exist');
+  const please = firstWords.words.find(word => word.englishPrompt === 'please');
+  assert(please, 'Expected please to exist in first words');
+
+  let storage = firstWordsStorage('mixed');
+  storage = applyWordProgressPatch(storage, please, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, please, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    selectedListIds: ['foundations_verbs'],
+    currentPathPosition: 'foundations_verbs',
+    completedNormalSessionCount: 2
+  };
+
+  const normalSession = createPracticeSession(wordLists, storage);
+  const injected = selectPreSessionRecapWord(storage, wordLists, normalSession.words);
+  const reviewInjected = selectPreSessionRecapWord(storage, wordLists, normalSession.words, true);
+
+  assertEqual(injected?.id, please.id, 'Normal sessions may receive one automatic recap word');
+  assertEqual(reviewInjected, undefined, 'Dedicated review sessions should not receive automatic recap injection');
+});
+
+test('automatic recap injection avoids duplicate variantGroupId entries', () => {
+  const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
+  assert(wanting, 'Expected stage2_phrases_wanting to exist');
+  const southCoffee = wanting.words.find(word => word.variantGroupId === 'want coffee' && word.dialect === 'South Wales / Standard');
+  const northCoffee = wanting.words.find(word => word.variantGroupId === 'want coffee' && word.dialect === 'North Wales');
+  assert(southCoffee && northCoffee, 'Expected paired want coffee variants');
+
+  const storage: SpelioStorage = {
+    ...wantingStorage('mixed'),
+    completedNormalSessionCount: 2,
+    wordProgress: {
+      [northCoffee.id]: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0
+      }
+    }
+  };
+
+  const injected = selectPreSessionRecapWord(storage, wordLists, [southCoffee]);
+
+  assertEqual(injected, undefined, 'Automatic recap should not duplicate a variant group already in the session');
+});
+
+test('clean recap completions increment cleanRecapCount and clear after two passes', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 1, 'First clean recap should increment cleanRecapCount');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'First clean recap should keep recap due');
+
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:02:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 2, 'Second clean recap should increment cleanRecapCount again');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, false, 'Second clean recap should clear recap due');
+});
+
 test('ordinary continue learning does not use difficult review words from another list', () => {
   const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
   assert(firstWords, 'Expected foundations_first_words to exist');
@@ -923,7 +1127,7 @@ test('manual list selection invalidates stale next-list recommendation', () => {
   assertEqual(recommendation.listId, wantingListId, 'Manual selection should recommend the selected list, not the previous next list');
 });
 
-test('recommendation uses updated progress rather than stale pre-session state', () => {
+test('recommendation can advance from word progress before strict list completion is committed', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
 
@@ -939,7 +1143,7 @@ test('recommendation uses updated progress rather than stale pre-session state',
     lastSessionResult: result
   };
 
-  assertEqual(getRecommendation(staleStorage, wordLists).listId, 'foundations_numbers', 'Pre-commit progress should still look incomplete');
+  assertEqual(getRecommendation(staleStorage, wordLists).listId, 'foundations_mixed_01', 'All-seen word progress should be enough to recommend the next list');
 
   const updatedStorage = updateListCompletion(staleStorage, wordLists, result);
   assertEqual(getRecommendation(updatedStorage, wordLists).listId, 'foundations_mixed_01', 'Post-commit progress should recommend next list');

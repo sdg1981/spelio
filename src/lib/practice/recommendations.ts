@@ -48,15 +48,13 @@ function groupLearningItems(words: PracticeWord[]) {
   return [...items, ...Array.from(byGroup.values())];
 }
 
-function listHasIncompleteLearningItems(storage: SpelioStorage, list: WordList) {
-  if (storage.listProgress[list.id]?.completed !== true) return true;
-
+export function isListProgressionReady(storage: SpelioStorage, list: WordList) {
   const items = groupLearningItems(list.words.filter(word => dialectMatchesPreference(word, storage)));
 
-  return items.length > 0 && items.some(group => {
-    return !group.some(word => {
+  return items.length > 0 && items.every(group => {
+    return group.some(word => {
       const progress = storage.wordProgress[word.id];
-      return progress?.seen === true && progress.completedCount > 0;
+      return progress?.seen === true;
     });
   });
 }
@@ -72,12 +70,16 @@ function mixedSelectionIsComplete(storage: SpelioStorage, selectedLists: WordLis
   });
 }
 
+function listHasUnseenLearningItems(storage: SpelioStorage, list: WordList) {
+  return !isListProgressionReady(storage, list);
+}
+
 function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], current: WordList) {
   const activeLists = lists.filter(list => list.isActive);
-  const incompleteLists = activeLists.filter(list => listHasIncompleteLearningItems(storage, list));
+  const incompleteLists = activeLists.filter(list => listHasUnseenLearningItems(storage, list));
   const nextList = findList(activeLists, current.nextListId);
 
-  if (nextList && listHasIncompleteLearningItems(storage, nextList)) return nextList;
+  if (nextList && listHasUnseenLearningItems(storage, nextList)) return nextList;
 
   const currentStageNext = incompleteLists.find(list => {
     return list.stage === current.stage && list.order > current.order;
@@ -118,7 +120,7 @@ export function getNormalContinuationRecommendation(storage: SpelioStorage, list
 
   const current = findList(lists, storage.currentPathPosition) ?? findList(lists, storage.selectedListIds[0]);
   if (current) {
-    if (listHasIncompleteLearningItems(storage, current)) {
+    if (!isListProgressionReady(storage, current)) {
       return asListRecommendation(current, t, interfaceLanguage);
     }
 

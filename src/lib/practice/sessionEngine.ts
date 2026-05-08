@@ -244,7 +244,8 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
   const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : [lists[0]?.id].filter(Boolean) as string[];
-  const eligibleLists = reviewDifficult
+  const recapOnly = includeRecapDue && !reviewDifficult;
+  const eligibleLists = reviewDifficult || recapOnly
     ? lists.filter(list => list.isActive)
     : lists.filter(list => selectedIds.includes(list.id) && list.isActive);
   const allCandidates = eligibleLists.flatMap(list => list.words);
@@ -252,8 +253,10 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 
   const pool = reviewDifficult
     ? getReviewCandidates(allCandidates, storage)
+    : recapOnly
+      ? getRecapCandidates(allCandidates, storage)
     : dialectResolvedCandidates;
-  const learningItemScores = reviewDifficult ? undefined : getLearningItemScores(allCandidates, storage);
+  const learningItemScores = reviewDifficult || recapOnly ? undefined : getLearningItemScores(allCandidates, storage);
   const words = selectSessionWords(
     pool,
     eligibleLists.map(list => list.id),
@@ -272,6 +275,11 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
   return getRecapCandidates(activeWords, storage).length;
+}
+
+export function formatRecapWordCount(count: number) {
+  if (count <= 0) return null;
+  return count > 5 ? '5+' : String(count);
 }
 
 export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
@@ -311,9 +319,14 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
   if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
+  const sessionVariantGroupIds = new Set(sessionWords.map(word => word.variantGroupId?.trim()).filter(Boolean));
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
   const candidates = getRecapCandidates(activeWords, storage)
-    .filter(word => !sessionWordIds.has(word.id));
+    .filter(word => {
+      if (sessionWordIds.has(word.id)) return false;
+      const groupId = word.variantGroupId?.trim();
+      return !groupId || !sessionVariantGroupIds.has(groupId);
+    });
 
   return sortPreSessionRecapCandidates(candidates, storage)[0];
 }
