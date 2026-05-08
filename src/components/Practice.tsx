@@ -1378,9 +1378,7 @@ export function WordListModal({
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="wordlist-footer sticky-done">
           {onSuggestWordList && (
             <p className="wordlist-suggestion">
               <span>{t('wordLists.suggestionPrompt')}</span>
@@ -1389,6 +1387,9 @@ export function WordListModal({
               </button>
             </p>
           )}
+        </div>
+
+        <div className="wordlist-footer sticky-done">
           <div className="done-row wordlist-actions">
             <button className="clear-button" onClick={() => setSelectedIds([])}>{t('wordLists.clearAll')}</button>
             <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
