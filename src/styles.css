@@ -1392,8 +1392,8 @@
   width:100%;
   max-width:560px;
   margin-top:40px;
-  border-top:1px solid #e7e2db;
-  border-bottom:1px solid #e7e2db;
+  border-top:0;
+  border-bottom:0;
 }
 
 .home-action-list .action-row{
@@ -1405,6 +1405,7 @@
 .home-action-list .action-row:hover,
 .home-action-list .action-row:active,
 .home-action-list .action-row:focus-visible{
+  border-radius:20px;
   background:#f0ece6;
 }
 
@@ -1968,11 +1969,11 @@
 
 .practice-app .letter-grid{
   max-width:min(720px, calc(100vw - 64px));
-  gap:56px 64px;
+  gap:56px 74px;
 }
 
 .practice-app .letter-word{
-  gap:44px;
+  gap:38px;
 }
 
 .practice-app .letter-slot{
@@ -1997,11 +1998,11 @@
 }
 
 .practice-app .letter-grid.compact{
-  gap:48px 58px;
+  gap:48px 68px;
 }
 
 .practice-app .letter-grid.compact .letter-word{
-  gap:30px;
+  gap:26px;
 }
 
 .practice-app .letter-grid.compact .letter-slot{
@@ -2010,11 +2011,11 @@
 }
 
 .practice-app .letter-grid.extra-compact{
-  gap:38px 48px;
+  gap:38px 58px;
 }
 
 .practice-app .letter-grid.extra-compact .letter-word{
-  gap:20px;
+  gap:17px;
 }
 
 .practice-app .letter-grid.extra-compact .letter-slot{
@@ -2261,11 +2262,11 @@
 
   .practice-app .letter-grid{
     max-width:calc(100vw - 48px);
-    gap:26px 36px;
+    gap:26px 43px;
   }
 
   .practice-app .letter-word{
-    gap:19px;
+    gap:16px;
   }
 
   .practice-app .letter-slot{
@@ -2287,11 +2288,11 @@
   }
 
   .practice-app .letter-grid.compact{
-    gap:24px 30px;
+    gap:24px 36px;
   }
 
   .practice-app .letter-grid.compact .letter-word{
-    gap:13px;
+    gap:11px;
   }
 
   .practice-app .letter-grid.compact .letter-slot{
@@ -2300,11 +2301,11 @@
   }
 
   .practice-app .letter-grid.extra-compact{
-    gap:22px 24px;
+    gap:22px 29px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-word{
-    gap:8px;
+    gap:7px;
   }
 
   .practice-app .letter-grid.extra-compact .letter-slot{
@@ -2737,11 +2738,12 @@
 .end-action-list .action-row:hover,
 .end-action-list .action-row:active,
 .end-action-list .action-row:focus-visible{
+  border-radius:20px;
   background:#f0ece6;
 }
 
 .end-action-list .action-row+.action-row{
-  border-top:1px solid #e7e2db;
+  border-top:0;
 }
 
 .end-action-list .icon-circle{
