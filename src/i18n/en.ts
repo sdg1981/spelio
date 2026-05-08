@@ -150,7 +150,7 @@ export const en = {
     privacyBody3: 'You can delete this local progress at any time using Reset progress in Settings.',
     privacyBody4: 'Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed, word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is useful and what needs improving.',
     privacyBody5: 'Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.',
-    aboutBody1: 'Beta version 0.2',
+    aboutBody1: 'Beta version 0.2. Built by Sam Gerrard.',
     aboutBody2: 'Spelio is a focused Welsh spelling practice app.',
     aboutBody3: 'It helps learners practise Welsh words and short phrases through short, repeatable spelling sessions designed to improve recall, spelling accuracy, confidence, and the connection between spoken and written Welsh.',
     aboutBody4: 'Spelio is designed to complement other ways of learning Welsh rather than replace them.',
