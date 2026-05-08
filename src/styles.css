@@ -1797,9 +1797,9 @@
   position:absolute;
   left:50%;
   bottom:0;
-  width:min(76%,760px);
+  width:min(78vw,760px);
   height:3px;
-  background:#ded9d2;
+  background:#d8d2ca;
   transform:translateX(-50%);
 }
 
@@ -1907,7 +1907,7 @@
   min-width:380px;
   justify-content:center;
   gap:26px;
-  border-color:#e3e8ee;
+  border-color:#dfd9d1;
   padding:24px 42px;
   color:#071522;
   font-size:23px;
@@ -1959,7 +1959,7 @@
   min-width:44px;
   height:58px;
   color:#071522;
-  border-bottom:3px solid #aeb5bd;
+  border-bottom:3px solid #d8d2ca;
   font-size:42px;
   font-weight:900;
   letter-spacing:0;
@@ -2027,7 +2027,7 @@
   max-width:calc(100vw - 64px);
   margin-top:34px;
   margin-bottom:0;
-  border-color:#e0e5ea;
+  border-color:#dfd9d1;
   border-radius:9999px;
   background:rgba(255,255,255,.98);
   box-shadow:0 10px 26px rgba(7,21,34,.045);
@@ -2080,7 +2080,7 @@
   top:28%;
   bottom:28%;
   width:1px;
-  background:#e2e7ec;
+  background:#dfd9d1;
 }
 
 @media (hover:hover) and (pointer:fine){
@@ -2100,7 +2100,7 @@
 
   .practice-app .word-pill:hover{
     transform:translateY(-2px);
-    border-color:#d6dde5;
+    border-color:#d4cec6;
     box-shadow:0 22px 54px rgba(7,21,34,.08);
   }
 
@@ -2157,7 +2157,8 @@
   }
 
   .practice-app .progress-track{
-    width:calc(100% - 48px);
+    width:calc(100% - 72px);
+    max-width:760px;
     height:2px;
   }
 
@@ -2230,7 +2231,7 @@
 
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
-    margin-top:28px;
+    margin-top:42px;
   }
 
   .practice-app .letter-grid,
@@ -2323,7 +2324,7 @@
     max-width:calc(100vw - 36px);
     margin-top:12px;
     margin-bottom:0;
-    border:1px solid #e0e5ea;
+    border:1px solid #dfd9d1;
     border-radius:9999px;
     background:rgba(255,255,255,.98);
     box-shadow:0 8px 22px rgba(7,21,34,.035);
@@ -2368,7 +2369,7 @@
 
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
-    margin-top:20px;
+    margin-top:34px;
   }
 
   .practice-app .letter-grid{
