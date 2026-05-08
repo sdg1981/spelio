@@ -10,6 +10,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { playAudioUrl } from '../lib/audioPlayback';
+import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
 
 interface LetterState {
   value: string;
@@ -123,6 +124,7 @@ export function usePracticeSession({
   const [letters, setLetters] = useState<LetterState[]>(() => createInitialLetters(currentWord ? getAnswer(currentWord) : ''));
   const [status, setStatus] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<PracticeStatusTone>('neutral');
+  const [audioPlaybackFailedWordIds, setAudioPlaybackFailedWordIds] = useState<Set<string>>(() => new Set());
   const [wrongIndex, setWrongIndex] = useState<number | null>(null);
   const [isComplete, setIsComplete] = useState(false);
   const [isCompletingRevealedWord, setIsCompletingRevealedWord] = useState(false);
@@ -169,6 +171,7 @@ export function usePracticeSession({
     setIsComplete(false);
     setStatus(null);
     setStatusTone('neutral');
+    setAudioPlaybackFailedWordIds(new Set());
     setWrongIndex(null);
     setIsCompletingRevealedWord(false);
     isCompletingRevealedWordRef.current = false;
@@ -213,8 +216,16 @@ export function usePracticeSession({
     recapIssueRef.current = false;
     inputLockedRef.current = false;
 
-    if (storage.settings.audioPrompts && currentWord.audioUrl) {
-      void playAudioUrl(currentWord.audioUrl);
+    if (storage.settings.audioPrompts && !isAudioUnavailableForPrompt(currentWord)) {
+      void playAudioUrl(currentWord.audioUrl).then(played => {
+        if (!played) {
+          setAudioPlaybackFailedWordIds(previous => {
+            const next = new Set(previous);
+            next.add(currentWord.id);
+            return next;
+          });
+        }
+      });
     }
   }, [currentWord?.id]);
 
@@ -233,16 +244,31 @@ export function usePracticeSession({
   }
 
   const playAudio = useCallback(() => {
-    if (!storageRef.current.settings.audioPrompts) return;
+    if (!storageRef.current.settings.audioPrompts) return Promise.resolve(false);
     recordPracticeInteraction();
 
     if (!currentWord?.audioUrl) {
+      if (currentWord) {
+        setAudioPlaybackFailedWordIds(previous => {
+          const next = new Set(previous);
+          next.add(currentWord.id);
+          return next;
+        });
+      }
       showStatus(t('practice.audioUnavailable'));
-      return;
+      return Promise.resolve(false);
     }
 
-    playAudioUrl(currentWord.audioUrl).then(played => {
-      if (!played) showStatus(t('practice.audioUnavailable'));
+    return playAudioUrl(currentWord.audioUrl).then(played => {
+      if (!played) {
+        setAudioPlaybackFailedWordIds(previous => {
+          const next = new Set(previous);
+          next.add(currentWord.id);
+          return next;
+        });
+        showStatus(t('practice.audioUnavailable'));
+      }
+      return played;
     });
   }, [currentWord?.id, t]);
 
@@ -520,6 +546,7 @@ export function usePracticeSession({
     activeIndex,
     isComplete,
     isCompletingRevealedWord,
+    audioPlaybackFailedWordIds,
     stats: publicStats,
     progressValue: session.words.length ? (stats.correctWords / session.words.length) * 100 : 0,
     progressCount: isRecapActive ? t('practice.quickRecap') : `${Math.min(stats.correctWords + 1, session.words.length)} / ${session.words.length}`,

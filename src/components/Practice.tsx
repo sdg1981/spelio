@@ -9,6 +9,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
+import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -201,6 +202,7 @@ export function Practice({
     handleInput,
     revealNext,
     markCurrentWordRevealed,
+    audioPlaybackFailedWordIds,
     playAudio
   } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete, t });
 
@@ -540,6 +542,14 @@ export function Practice({
 
   function handleWordPillClick() {
     logAudioPlaybackClick('learner-word-pill', currentWord?.audioUrl);
+    if (currentWord && isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id))) {
+      showLocalStatus(t('practice.audioUnavailable'));
+      if (shouldUseMobileKeyboard()) {
+        window.setTimeout(focusMobileInput, 40);
+      }
+      return;
+    }
+
     if (!storage.settings.audioPrompts) return;
 
     playAudio();
@@ -581,6 +591,8 @@ export function Practice({
   const displayStatus = status ?? localStatus;
   const displayTone = status ? statusTone : 'neutral';
   const dialectLabel = getDialectLabel(currentWord, t);
+  const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+  const promptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable);
   const wordInsights = interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -595,8 +607,11 @@ export function Practice({
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
           {storage.settings.audioPrompts && <Repeat className="text-[#d90000]" size={23} />}
-          {storage.settings.englishVisible && <span>{prompt}</span>}
+          {promptVisible && <span>{prompt}</span>}
         </button>
+        {currentWordAudioUnavailable && !storage.settings.englishVisible && (
+          <div className="audio-fallback-label">{t('practice.audioFallbackPromptShown')}</div>
+        )}
         {dialectLabel && (
           <div className="dialect-label">{dialectLabel}</div>
         )}

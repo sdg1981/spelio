@@ -2016,6 +2016,16 @@
   margin-top:12px;
 }
 
+.practice-app .audio-fallback-label{
+  margin-top:10px;
+  max-width:min(380px, calc(100vw - 72px));
+  color:#7a8490;
+  font-size:12px;
+  font-weight:650;
+  line-height:1.25;
+  text-align:center;
+}
+
 .practice-app .word-insight{
   margin-top:12px;
 }
@@ -2313,6 +2323,12 @@
     margin-top:6px;
     font-size:11px;
     line-height:1.1;
+  }
+
+  .practice-app .audio-fallback-label{
+    margin-top:6px;
+    max-width:min(300px, calc(100vw - 72px));
+    font-size:11px;
   }
 
   .practice-app .word-insight{

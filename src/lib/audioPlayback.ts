@@ -1,18 +1,5 @@
-export function getPlayableAudioUrl(audioUrl?: string | null) {
-  const candidate = audioUrl?.trim();
-  if (!candidate) return null;
-
-  try {
-    const url = new URL(candidate);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
-export function hasPlayableAudioUrl(audioUrl?: string | null) {
-  return getPlayableAudioUrl(audioUrl) !== null;
-}
+export { getPlayableAudioUrl, hasPlayableAudioUrl } from './practice/audioAvailability';
+import { getPlayableAudioUrl } from './practice/audioAvailability';
 
 export function logAudioPlaybackClick(source: string, audioUrl?: string | null) {
   logAudioPlaybackDiagnostic('click handler fired', { source, audioUrl });
