@@ -1,36 +1,161 @@
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
-import { AdminCard, AdminInput } from '../components/primitives';
+import { AdminButton, AdminCard, AdminInput, AdminSpinner } from '../components/primitives';
 import { AudioStatusPill } from '../components/audioStatus';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
+import type { FormEvent } from 'react';
+
+const PAGE_SIZE = 30;
 
 export function WordsPage({ navigate, repository }: { navigate: (path: string) => void; repository: AdminRepository }) {
   const [words, setWords] = useState<AdminWordWithListName[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
-    repository.listWords().then(items => setWords(items.slice(0, 30))).catch(console.error);
+    let isMounted = true;
+    setIsLoading(true);
+    setErrorMessage('');
+
+    repository.listWords()
+      .then(items => {
+        if (!isMounted) return;
+        setWords(items);
+      })
+      .catch(error => {
+        if (!isMounted) return;
+        console.error(error);
+        setErrorMessage(readError(error, 'Could not load words.'));
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [repository]);
+
+  const filteredWords = useMemo(() => {
+    const search = activeSearch.trim().toLowerCase();
+    if (!search) return words;
+
+    return words.filter(word => {
+      const searchableText = [
+        word.englishPrompt,
+        word.welshAnswer,
+        word.id,
+        word.listName,
+        word.listId,
+        word.dialect,
+        word.audioStatus
+      ].join(' ').toLowerCase();
+
+      return searchableText.includes(search);
+    });
+  }, [activeSearch, words]);
+
+  const visibleWords = filteredWords.slice(0, visibleCount);
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setActiveSearch(searchInput.trim());
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function updateSearchInput(value: string) {
+    setSearchInput(value);
+    if (!value.trim() && activeSearch) {
+      setActiveSearch('');
+      setVisibleCount(PAGE_SIZE);
+    }
+  }
+
+  function clearSearch() {
+    setSearchInput('');
+    setActiveSearch('');
+    setVisibleCount(PAGE_SIZE);
+  }
+
   return (
     <>
       <AdminPageHeader title="Words" description="A searchable editorial view across all Welsh spelling words." />
+      {errorMessage && (
+        <div className="mb-5 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          {errorMessage}
+        </div>
+      )}
       <AdminCard className="overflow-hidden">
-        <div className="border-b border-slate-200 p-5">
-          <div className="relative max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
-            <AdminInput className="pl-9" placeholder="Search words" />
+        <form className="flex flex-wrap items-end gap-3 border-b border-slate-200 p-5" onSubmit={submitSearch}>
+          <label className="grid flex-1 gap-2 sm:max-w-md">
+            <span className="text-xs font-bold text-slate-700">Search words</span>
+            <span className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+              <AdminInput
+                aria-label="Search words"
+                className="pl-9"
+                placeholder="English, Welsh, ID, list, dialect, or audio status"
+                value={searchInput}
+                onChange={event => updateSearchInput(event.target.value)}
+              />
+            </span>
+          </label>
+          <AdminButton type="submit" disabled={isLoading} aria-disabled={isLoading}>
+            {isLoading && <AdminSpinner />}
+            Search
+          </AdminButton>
+          {(searchInput || activeSearch) && (
+            <AdminButton onClick={clearSearch} disabled={isLoading}>
+              Clear
+            </AdminButton>
+          )}
+        </form>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3 text-sm text-slate-500">
+          <div>
+            Showing <span className="font-bold text-slate-700">{visibleWords.length}</span> of <span className="font-bold text-slate-700">{filteredWords.length}</span>
+            {activeSearch && <> matching word(s)</>}
           </div>
+          {activeSearch && <div className="font-medium">Search: <span className="font-bold text-slate-700">{activeSearch}</span></div>}
         </div>
         <div className="divide-y divide-slate-100">
-          {words.map(word => (
-            <button key={word.id} className="grid w-full gap-2 px-5 py-4 text-left hover:bg-slate-50 lg:grid-cols-[1fr_1fr_180px_auto] lg:items-center" onClick={() => navigate(`/admin/word-lists/${word.listId}`)}>
-              <div className="font-bold text-slate-950">{word.englishPrompt}</div>
-              <div className="font-medium text-slate-700">{word.welshAnswer}</div>
+          {isLoading && (
+            <div className="flex items-center gap-2 px-5 py-8 text-sm font-bold text-slate-500" role="status" aria-live="polite">
+              <AdminSpinner />
+              Loading words...
+            </div>
+          )}
+          {!isLoading && visibleWords.map(word => (
+            <button key={word.id} className="grid w-full gap-3 px-5 py-4 text-left hover:bg-slate-50 lg:grid-cols-[1fr_1fr_180px_auto] lg:items-center" onClick={() => navigate(`/admin/word-lists/${word.listId}`)}>
+              <div>
+                <div className="font-bold text-slate-950">{word.englishPrompt}</div>
+                <div className="mt-1 text-xs font-medium text-slate-500">{word.id}</div>
+              </div>
+              <div>
+                <div className="font-medium text-slate-700">{word.welshAnswer}</div>
+                <div className="mt-1 text-xs font-medium text-slate-500">List: {word.listName || word.listId}</div>
+              </div>
               <div className="text-sm text-slate-500">{word.dialect}</div>
               <AudioStatusPill status={word.audioStatus} />
             </button>
           ))}
+          {!isLoading && visibleWords.length === 0 && <div className="px-5 py-8 text-sm font-medium text-slate-500">No words found.</div>}
         </div>
+        {!isLoading && visibleWords.length < filteredWords.length && (
+          <div className="border-t border-slate-200 p-5 text-center">
+            <AdminButton onClick={() => setVisibleCount(count => count + PAGE_SIZE)}>
+              Load more
+            </AdminButton>
+          </div>
+        )}
       </AdminCard>
     </>
   );
+}
+
+function readError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
