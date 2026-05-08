@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { AdminWord } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AudioStatusPill } from './audioStatus';
-import { AdminButton, AdminInput, AdminSelect, AdminTextarea, Field } from './primitives';
+import { AdminButton, AdminInput, AdminSelect, AdminSpinner, AdminTextarea, Field } from './primitives';
 
 export function WordEditorPanel({
   word,
@@ -27,6 +27,9 @@ export function WordEditorPanel({
   const [basicOpen, setBasicOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const hasAudioPreview = hasPlayableAudioUrl(word.audioUrl);
+  const isRegenerating = word.audioStatus === 'ready';
+  const generateAudioLabel = isRegenerating ? 'Regenerate audio' : 'Generate audio';
+  const generatingAudioLabel = isRegenerating ? 'Regenerating...' : 'Generating...';
 
   return (
     <aside className="rounded-lg border border-slate-200 bg-white shadow-[0_18px_42px_rgba(7,21,34,.035)] xl:sticky xl:top-8">
@@ -100,12 +103,14 @@ export function WordEditorPanel({
               <Play size={15} /> Preview
             </AdminButton>
           )}
-          <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy}>
-            <Wand2 size={15} /> {word.audioStatus === 'ready' ? 'Regenerate audio' : 'Generate audio'}
+          <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
+            {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+            {audioBusy ? generatingAudioLabel : generateAudioLabel}
           </AdminButton>
           {word.audioStatus === 'failed' && (
-            <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy}>
-              <RefreshCw size={15} /> Retry
+            <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
+              {audioBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
+              {audioBusy ? 'Generating...' : 'Retry'}
             </AdminButton>
           )}
         </div>

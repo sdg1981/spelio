@@ -1,5 +1,5 @@
 import { ChevronRight, ExternalLink, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { ContentHealthCard } from '../components/ContentHealthCard';
 import { AdminButton, AdminCard, AdminInput, AdminSelect, Field } from '../components/primitives';
@@ -21,7 +21,10 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [audioBusy, setAudioBusy] = useState(false);
+  const [generatingAudioWordIds, setGeneratingAudioWordIds] = useState<Set<string>>(() => new Set());
+  const [batchAudioBusy, setBatchAudioBusy] = useState(false);
+  const generatingAudioWordIdsRef = useRef<Set<string>>(new Set());
+  const batchAudioBusyRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const selectedWord = useMemo(() => list?.words.find(word => word.id === selectedWordId) ?? list?.words[0], [list?.words, selectedWordId]);
@@ -177,12 +180,14 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   }
 
   async function generateWordAudio(word: AdminWord) {
+    if (generatingAudioWordIdsRef.current.has(word.id)) return;
     if (dirty) {
       setErrorMessage('Save word changes before generating audio.');
       return;
     }
     try {
-      setAudioBusy(true);
+      generatingAudioWordIdsRef.current = new Set(generatingAudioWordIdsRef.current).add(word.id);
+      setGeneratingAudioWordIds(new Set(generatingAudioWordIdsRef.current));
       setErrorMessage('');
       setStatusMessage('');
       const result = await repository.generateAudioForWord(word.id);
@@ -191,12 +196,16 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     } catch (error) {
       setErrorMessage(readError(error, 'Audio generation failed.'));
     } finally {
-      setAudioBusy(false);
+      const next = new Set(generatingAudioWordIdsRef.current);
+      next.delete(word.id);
+      generatingAudioWordIdsRef.current = next;
+      setGeneratingAudioWordIds(next);
     }
   }
 
   async function generateMissingAudioForList() {
     if (!list) return;
+    if (batchAudioBusyRef.current) return;
     if (dirty) {
       setErrorMessage('Save word changes before generating audio.');
       return;
@@ -207,7 +216,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       return;
     }
     try {
-      setAudioBusy(true);
+      batchAudioBusyRef.current = true;
+      setBatchAudioBusy(true);
       setErrorMessage('');
       setStatusMessage(`Generating ${wordIds.length} audio item(s)...`);
       const results = await repository.generateAudioBatch(wordIds);
@@ -217,7 +227,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     } catch (error) {
       setErrorMessage(readError(error, 'Batch audio generation failed.'));
     } finally {
-      setAudioBusy(false);
+      batchAudioBusyRef.current = false;
+      setBatchAudioBusy(false);
     }
   }
 
@@ -304,6 +315,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               onQuickAdd={addWord}
               onAddWord={addWord}
               onGenerateMissingAudio={generateMissingAudioForList}
+              audioBatchBusy={batchAudioBusy}
               onDuplicateWord={duplicateWord}
               onDeleteWord={deleteWord}
               onMoveWord={moveWord}
@@ -319,7 +331,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
             onChange={updateWord}
             onGenerateAudio={generateWordAudio}
             onRetryAudio={generateWordAudio}
-            audioBusy={audioBusy}
+            audioBusy={generatingAudioWordIds.has(selectedWord.id)}
           />
         )}
       </div>

@@ -1,7 +1,7 @@
 import { Copy, GripVertical, Pencil, Play, Trash2, Wand2, ArrowUp, ArrowDown } from 'lucide-react';
 import type { AdminWord } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
-import { AdminButton } from './primitives';
+import { AdminButton, AdminSpinner } from './primitives';
 import { AudioStatusPill } from './audioStatus';
 
 const filters = ['All', 'Missing audio', 'Missing notes', 'North Wales', 'South Wales', 'Has variants'];
@@ -13,6 +13,7 @@ export function WordRowsTable({
   onQuickAdd,
   onAddWord,
   onGenerateMissingAudio,
+  audioBatchBusy = false,
   onDuplicateWord,
   onDeleteWord,
   onMoveWord
@@ -23,6 +24,7 @@ export function WordRowsTable({
   onQuickAdd: () => void;
   onAddWord: () => void;
   onGenerateMissingAudio: () => void;
+  audioBatchBusy?: boolean;
   onDuplicateWord: (word: AdminWord) => void;
   onDeleteWord: (word: AdminWord) => void;
   onMoveWord: (wordId: string, direction: 'up' | 'down') => void;
@@ -37,9 +39,9 @@ export function WordRowsTable({
         <div className="flex flex-wrap gap-2">
           <AdminButton onClick={onQuickAdd}>+ Quick add</AdminButton>
           <AdminButton onClick={onAddWord}>+ Add word</AdminButton>
-          <AdminButton onClick={onGenerateMissingAudio}>
-            <Wand2 size={16} />
-            Generate missing audio ({words.filter(word => word.audioStatus === 'missing').length})
+          <AdminButton onClick={onGenerateMissingAudio} disabled={audioBatchBusy} aria-disabled={audioBatchBusy}>
+            {audioBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
+            {audioBatchBusy ? 'Generating...' : `Generate missing audio (${words.filter(word => word.audioStatus === 'missing').length})`}
           </AdminButton>
         </div>
       </div>

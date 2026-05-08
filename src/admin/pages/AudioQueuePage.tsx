@@ -1,15 +1,22 @@
 import { Play, RefreshCw, Wand2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AudioStatusPill } from '../components/audioStatus';
-import { AdminButton, AdminCard } from '../components/primitives';
+import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 
 export function AudioQueuePage({ repository }: { repository: AdminRepository }) {
   const [allWords, setAllWords] = useState<AdminWordWithListName[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [queueMissingBusy, setQueueMissingBusy] = useState(false);
+  const [selectedBatchBusy, setSelectedBatchBusy] = useState(false);
+  const [generatingWordIds, setGeneratingWordIds] = useState<Set<string>>(() => new Set());
+  const [batchGeneratingWordIds, setBatchGeneratingWordIds] = useState<Set<string>>(() => new Set());
+  const queueMissingBusyRef = useRef(false);
+  const selectedBatchBusyRef = useRef(false);
+  const generatingWordIdsRef = useRef<Set<string>>(new Set());
+  const batchGeneratingWordIdsRef = useRef<Set<string>>(new Set());
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -32,7 +39,6 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
 
   async function runAction(action: () => Promise<unknown>, success: string) {
     try {
-      setBusy(true);
       setErrorMessage('');
       setStatusMessage('');
       await action();
@@ -40,8 +46,51 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
       setStatusMessage(success);
     } catch (error) {
       setErrorMessage(readError(error, 'Audio action failed.'));
+    }
+  }
+
+  async function queueMissingAudio(wordIds: string[]) {
+    if (queueMissingBusyRef.current || !wordIds.length) return;
+    try {
+      queueMissingBusyRef.current = true;
+      setQueueMissingBusy(true);
+      await runAction(() => repository.queueAudioGeneration(wordIds), `Queued ${wordIds.length} missing audio item(s).`);
     } finally {
-      setBusy(false);
+      queueMissingBusyRef.current = false;
+      setQueueMissingBusy(false);
+    }
+  }
+
+  async function generateSelectedAudio(wordIds: string[]) {
+    if (selectedBatchBusyRef.current || !wordIds.length) return;
+    try {
+      selectedBatchBusyRef.current = true;
+      batchGeneratingWordIdsRef.current = new Set(wordIds);
+      setSelectedBatchBusy(true);
+      setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
+      await runAction(() => repository.generateAudioBatch(wordIds), `Generated ${wordIds.length} selected audio item(s).`);
+    } finally {
+      selectedBatchBusyRef.current = false;
+      batchGeneratingWordIdsRef.current = new Set();
+      setSelectedBatchBusy(false);
+      setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
+    }
+  }
+
+  async function generateAudioForQueueWord(word: AdminWordWithListName) {
+    if (generatingWordIdsRef.current.has(word.id) || batchGeneratingWordIdsRef.current.has(word.id)) return;
+    try {
+      generatingWordIdsRef.current = new Set(generatingWordIdsRef.current).add(word.id);
+      setGeneratingWordIds(new Set(generatingWordIdsRef.current));
+      await runAction(
+        () => word.audioStatus === 'failed' ? repository.retryAudioGeneration(word.id) : repository.generateAudioForWord(word.id),
+        'Audio generation finished.'
+      );
+    } finally {
+      const next = new Set(generatingWordIdsRef.current);
+      next.delete(word.id);
+      generatingWordIdsRef.current = next;
+      setGeneratingWordIds(next);
     }
   }
 
@@ -56,11 +105,13 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
         description="Generate and retry Welsh audio for imported words."
         actions={
           <div className="flex flex-wrap gap-2">
-            <AdminButton onClick={() => runAction(() => repository.queueAudioGeneration(selectedMissingIds.length ? selectedMissingIds : missingIds), `Queued ${(selectedMissingIds.length ? selectedMissingIds : missingIds).length} missing audio item(s).`)} disabled={busy || (selectedMissingIds.length ? selectedMissingIds : missingIds).length === 0}>
-              {selectedMissingIds.length ? 'Queue selected missing' : 'Queue missing'}
+            <AdminButton onClick={() => queueMissingAudio(selectedMissingIds.length ? selectedMissingIds : missingIds)} disabled={queueMissingBusy || (selectedMissingIds.length ? selectedMissingIds : missingIds).length === 0} aria-disabled={queueMissingBusy}>
+              {queueMissingBusy && <AdminSpinner />}
+              {queueMissingBusy ? 'Queueing...' : selectedMissingIds.length ? 'Queue selected missing' : 'Queue missing'}
             </AdminButton>
-            <AdminButton variant="primary" onClick={() => runAction(() => repository.generateAudioBatch(selectedActionIds), `Generated ${selectedActionIds.length} selected audio item(s).`)} disabled={busy || selectedActionIds.length === 0}>
-              <Wand2 size={16} /> Generate selected
+            <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedActionIds)} disabled={selectedBatchBusy || selectedActionIds.length === 0} aria-disabled={selectedBatchBusy}>
+              {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
+              {selectedBatchBusy ? 'Generating...' : 'Generate selected'}
             </AdminButton>
           </div>
         }
@@ -79,7 +130,11 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
           <QueueMetric label="Ready" value={allWords.filter(word => word.audioStatus === 'ready').length} />
         </div>
         <div className="divide-y divide-slate-100">
-          {actionWords.map(word => (
+          {actionWords.map(word => {
+            const wordBusy = generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id);
+            const runningLabel = word.audioStatus === 'failed' ? 'Regenerating...' : 'Generating...';
+
+            return (
             <div key={word.id} className="grid gap-3 px-5 py-4 lg:grid-cols-[auto_1fr_140px_auto] lg:items-center">
               <input
                 type="checkbox"
@@ -100,12 +155,14 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
                 }} disabled={!hasPlayableAudioUrl(word.audioUrl)}>
                   <Play size={15} /> Preview
                 </AdminButton>
-                <AdminButton onClick={() => runAction(() => word.audioStatus === 'failed' ? repository.retryAudioGeneration(word.id) : repository.generateAudioForWord(word.id), 'Audio generation finished.')} disabled={busy}>
-                  <RefreshCw size={15} /> {word.audioStatus === 'failed' ? 'Retry' : 'Generate'}
+                <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy} aria-disabled={wordBusy}>
+                  {wordBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
+                  {wordBusy ? runningLabel : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}
                 </AdminButton>
               </div>
             </div>
-          ))}
+            );
+          })}
           {actionWords.length === 0 && <div className="px-5 py-8 text-sm font-medium text-slate-500">No missing, queued, generating, or failed audio items.</div>}
         </div>
       </AdminCard>

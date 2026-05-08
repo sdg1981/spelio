@@ -6,6 +6,15 @@ export function AdminCard({ children, className = '' }: { children: ReactNode; c
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
+export function AdminSpinner({ className = '' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent ${className}`}
+    />
+  );
+}
+
 export function AdminButton({
   children,
   variant = 'secondary',
@@ -22,7 +31,7 @@ export function AdminButton({
   return (
     <button
       type="button"
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-bold transition ${variants[variant]} ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
