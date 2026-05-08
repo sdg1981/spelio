@@ -1391,6 +1391,12 @@
   padding:22px 4px;
 }
 
+.home-action-list .action-row:hover,
+.home-action-list .action-row:active,
+.home-action-list .action-row:focus-visible{
+  background:#f0ece6;
+}
+
 .home-action-list .action-row-title{
   font-size:25px;
   font-weight:850;
@@ -2715,6 +2721,12 @@
   min-height:88px;
   gap:28px;
   padding:14px 4px;
+}
+
+.end-action-list .action-row:hover,
+.end-action-list .action-row:active,
+.end-action-list .action-row:focus-visible{
+  background:#f0ece6;
 }
 
 .end-action-list .action-row+.action-row{
