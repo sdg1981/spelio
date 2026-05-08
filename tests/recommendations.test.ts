@@ -1067,7 +1067,75 @@ test('automatic recap injection avoids duplicate variantGroupId entries', () => 
   assertEqual(injected, undefined, 'Automatic recap should not duplicate a variant group already in the session');
 });
 
-test('clean recap completions increment cleanRecapCount and clear after two passes', () => {
+test('recapDue word completed cleanly in From earlier clears recap due and shrinks count', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:00:30.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Resolved word should be available for From earlier');
+  assertEqual(getRecapWordCount(storage, wordLists), 1, 'From earlier count should include recap due word before recap completion');
+
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 1, 'First clean recap should increment cleanRecapCount');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, false, 'First clean recap should clear recap due');
+  assertEqual(getRecapWordCount(storage, wordLists), 0, 'From earlier count should shrink after one clean recap completion');
+});
+
+test('recapDue word completed with incorrect attempt remains recap due', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: false, incorrect: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Incorrect recap completion should keep recap due');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 0, 'Incorrect recap completion should not increment cleanRecapCount');
+});
+
+test('recapDue word completed with reveal remains recap due', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: false, revealed: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Revealed recap completion should keep recap due');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 0, 'Revealed recap completion should not increment cleanRecapCount');
+});
+
+test('recapDue word injected into normal session clears after one clean recap completion', () => {
+  const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
+  assert(firstWords, 'Expected foundations_first_words to exist');
+  const please = firstWords.words.find(word => word.englishPrompt === 'please');
+  assert(please, 'Expected please to exist in first words');
+
+  let storage = firstWordsStorage('mixed');
+  storage = applyWordProgressPatch(storage, please, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, please, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:30.000Z');
+  storage = {
+    ...storage,
+    selectedListIds: ['foundations_verbs'],
+    currentPathPosition: 'foundations_verbs',
+    completedNormalSessionCount: 2
+  };
+
+  const normalSession = createPracticeSession(wordLists, storage);
+  const injected = selectPreSessionRecapWord(storage, wordLists, normalSession.words);
+  assertEqual(injected?.id, please.id, 'Normal sessions may inject the eligible recapDue word');
+
+  storage = applyWordProgressPatch(storage, please, { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[please.id]?.cleanRecapCount, 1, 'Injected clean recap should increment cleanRecapCount');
+  assertEqual(storage.wordProgress[please.id]?.recapDue, false, 'Injected clean recap should clear recap due after one pass');
+});
+
+test('From earlier disappears when no recapDue words remain', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
 
@@ -1075,13 +1143,9 @@ test('clean recap completions increment cleanRecapCount and clear after two pass
   storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
   storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:01:00.000Z');
 
-  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 1, 'First clean recap should increment cleanRecapCount');
-  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'First clean recap should keep recap due');
-
-  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:02:00.000Z');
-
-  assertEqual(storage.wordProgress[numbers.words[0].id]?.cleanRecapCount, 2, 'Second clean recap should increment cleanRecapCount again');
-  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, false, 'Second clean recap should clear recap due');
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, false, 'Clean recap should clear the only recapDue word');
+  assertEqual(getRecapWordCount(storage, wordLists), 0, 'From earlier should disappear when no recapDue words remain');
+  assertEqual(formatRecapWordCount(getRecapWordCount(storage, wordLists)), null, 'From earlier count label should be hidden at zero');
 });
 
 test('ordinary continue learning does not use difficult review words from another list', () => {

@@ -266,7 +266,7 @@ export function applyWordProgressPatch(
   const nextRecapDue = madeDifficult
     ? true
     : patch.recapCompletedClean
-      ? nextCleanRecapCount < 2
+      ? false
       : patch.cleanCompleted && (previous.difficult || previous.recapDue)
         ? true
         : previous.recapDue;
