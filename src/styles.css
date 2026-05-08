@@ -1676,7 +1676,7 @@
   }
 
   .home-action-list .action-row-title{
-    font-size:24px;
+    font-size:22px;
     line-height:1.16;
   }
 
@@ -1704,6 +1704,11 @@
     margin-top:78px;
   }
 
+  .home-shell-returning .home-heading,
+  .home-shell-review .home-heading{
+    font-size:41px!important;
+  }
+
   .home-shell-review .home-action-list{
     margin-top:42px;
   }
@@ -1725,6 +1730,11 @@
 
   .home-copy .home-heading-first{
     font-size:34px!important;
+  }
+
+  .home-shell-returning .home-heading,
+  .home-shell-review .home-heading{
+    font-size:37px!important;
   }
 
   .home-support{
@@ -2991,7 +3001,7 @@
   }
 
   .end-action-list .action-row-title{
-    font-size:24px;
+    font-size:22px;
   }
 
   .end-action-list .action-row-sub{
