@@ -76,6 +76,7 @@ export const cy = {
     soundEffects: 'Effeithiau sain',
     soundEffectsNote: 'Chwarae sain ar gyfer atebion cywir ac anghywir.',
     resetProgress: 'Ailosod cynnydd',
+    localProgressNote: 'Mae cynnydd yn cael ei gadw’n lleol ar y ddyfais hon.',
     resetProgressTitle: 'Ailosod cynnydd?',
     resetProgressBody: 'Bydd hyn yn clirio eich cynnydd, gosodiadau a hanes ar y ddyfais hon.',
     cancel: 'Canslo',

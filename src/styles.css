@@ -157,8 +157,8 @@
 .toggle-switch.on{background:var(--red);}
 .toggle-switch span{position:absolute;left:3px;top:3px;height:22px;width:22px;border-radius:999px;background:#fff;transition:transform .16s ease;box-shadow:0 2px 8px rgba(7,21,34,.16);}
 .toggle-switch.on span{transform:translateX(22px);}
-.reset-progress-button{border:0;background:transparent;color:#9f2630;font-size:15px;font-weight:750;padding:8px 0;}
-.reset-progress-button:hover{color:var(--red);}
+.reset-progress-button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:20px;border:1px solid var(--red);border-radius:8px;background:#fff;color:var(--red);font-size:16px;font-weight:800;padding:15px 18px;line-height:1.1;}
+.reset-progress-button:hover{background:#fff7f7;}
 .confirm-layer{position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(7,21,34,.28);border-radius:inherit;padding:20px;}
 .reset-confirm-dialog{max-width:360px;padding:28px;border:1px solid var(--line);}
 .confirm-cancel-button,.confirm-reset-button{border-radius:8px;padding:13px 20px;font-size:15px;font-weight:750;}
@@ -173,7 +173,7 @@
 .settings-modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:40px 32px 34px;}
 .settings-modal-footer{flex:0 0 auto;padding:0 32px 32px;background:#fff;}
 .letter-space{width:20px;height:44px;}
-@media (max-width:520px){.letter-space{width:28px;height:44px}.toggle-switch{height:36px;width:64px}.toggle-switch span{height:30px;width:30px}.toggle-switch.on span{transform:translateX(28px)}.reset-progress-button{font-size:22px}.confirm-layer{position:fixed;border-radius:0;padding:28px}.reset-confirm-dialog{max-width:100%;padding:38px}.confirm-cancel-button,.confirm-reset-button{font-size:22px;padding:18px 24px}.app-toast{bottom:20px;font-size:15px;padding:12px 16px}}
+@media (max-width:520px){.letter-space{width:28px;height:44px}.toggle-switch{height:36px;width:64px}.toggle-switch span{height:30px;width:30px}.toggle-switch.on span{transform:translateX(28px)}.reset-progress-button{font-size:22px;padding:20px 22px}.reset-progress-button svg{width:22px;height:22px}.confirm-layer{position:fixed;border-radius:0;padding:28px}.reset-confirm-dialog{max-width:100%;padding:38px}.confirm-cancel-button,.confirm-reset-button{font-size:22px;padding:18px 24px}.app-toast{bottom:20px;font-size:15px;padding:12px 16px}}
 
 @media (min-width:900px){
   .settings-modal{max-width:520px;}

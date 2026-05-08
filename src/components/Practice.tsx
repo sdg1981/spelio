@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { ArrowLeft, Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Volume2, VolumeX } from './Icons';
+import { ArrowLeft, Check, CircleX, Eye, Keyboard, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -980,7 +980,10 @@ export function SettingsModal({
           </div>
 
           <div className="mt-10 border-t border-[#edf0f2] pt-7">
+            <h3 className="text-[16px] md:text-[15px] font-extrabold text-[var(--red)]">{t('settings.resetProgress')}</h3>
+            <p className="mt-2 field-note">{t('settings.localProgressNote')}</p>
             <button className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
+              <Trash2 size={18} aria-hidden="true" />
               {t('settings.resetProgress')}
             </button>
           </div>

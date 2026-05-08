@@ -76,6 +76,7 @@ export const en = {
     soundEffects: 'Sound effects',
     soundEffectsNote: 'Play sounds for correct and incorrect answers.',
     resetProgress: 'Reset progress',
+    localProgressNote: 'Progress is saved locally on this device.',
     resetProgressTitle: 'Reset progress?',
     resetProgressBody: 'This will clear all your progress, settings, and history on this device.',
     cancel: 'Cancel',
