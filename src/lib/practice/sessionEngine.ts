@@ -217,10 +217,10 @@ function getTrackedCandidates(
   return candidates.filter(Boolean);
 }
 
-function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage, includeRecapDue = false) {
+function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage) {
   return getTrackedCandidates(words, storage, word => {
     const progress = storage.wordProgress[word.id];
-    return progress?.difficult === true || (includeRecapDue && progress?.recapDue === true);
+    return progress?.difficult === true;
   });
 }
 
@@ -251,7 +251,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   const dialectResolvedCandidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference, storage);
 
   const pool = reviewDifficult
-    ? getReviewCandidates(allCandidates, storage, includeRecapDue)
+    ? getReviewCandidates(allCandidates, storage)
     : dialectResolvedCandidates;
   const learningItemScores = reviewDifficult ? undefined : getLearningItemScores(allCandidates, storage);
   const words = selectSessionWords(
@@ -272,6 +272,11 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
   return getRecapCandidates(activeWords, storage).length;
+}
+
+export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
+  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  return getDifficultCandidates(activeWords, storage).length;
 }
 
 function recapDifficultyRank(word: PracticeWord) {

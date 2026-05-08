@@ -16,7 +16,7 @@ export function Home({
   recommendation,
   progressSummary,
   hasDifficultWords,
-  recapWordCount,
+  difficultWordCount,
   onStart,
   onContinue,
   onReview,
@@ -33,7 +33,7 @@ export function Home({
   recommendation: Recommendation;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
-  recapWordCount: number;
+  difficultWordCount: number;
   onStart: () => void;
   onContinue: () => void;
   onReview: () => void;
@@ -61,8 +61,8 @@ export function Home({
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
-  const showRecapEntry = mode === 'returning' && recapWordCount > 0 && !shouldPrioritiseReview;
-  const recapCountLabel = recapWordCount >= 5 ? '5+' : String(recapWordCount);
+  const showRecapEntry = mode === 'returning' && difficultWordCount > 0 && !shouldPrioritiseReview;
+  const revisitCountLabel = difficultWordCount >= 5 ? '5+' : String(difficultWordCount);
 
   return (
     <main className="homepage-bg">
@@ -129,7 +129,7 @@ export function Home({
             <ActionRow
               icon={<RotateCcw size={28} />}
               title={t('home.revisitWords')}
-              trailing={recapCountLabel}
+              trailing={revisitCountLabel}
               arrowVariant="arrow"
               onClick={onRecapReview}
             />

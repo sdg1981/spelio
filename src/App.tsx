@@ -9,7 +9,7 @@ import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, applyPracticeStartListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation } from './lib/practice/recommendations';
-import { getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
+import { getDifficultWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
@@ -54,7 +54,6 @@ export default function App() {
   const [storage, setStorage] = useState<SpelioStorage>(() => applyInterfaceLanguageRoute(loadSpelioStorage()));
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
-  const [includeRecapDue, setIncludeRecapDue] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
@@ -66,7 +65,7 @@ export default function App() {
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
   const difficultWords = useMemo(() => hasDifficultWords(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
-  const recapWordCount = useMemo(() => getRecapWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
+  const difficultWordCount = useMemo(() => getDifficultWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo(
     () => getRecommendation(storage, publicWordLists, t, interfaceLanguage),
     [
@@ -161,14 +160,12 @@ export default function App() {
     });
   }
 
-  function startPractice(options?: { review?: boolean; listId?: string; allowRecapReview?: boolean }) {
+  function startPractice(options?: { review?: boolean; listId?: string }) {
     const listId = options?.listId;
     const review = Boolean(options?.review);
-    const allowRecapReview = Boolean(options?.allowRecapReview);
 
-    if (review && !difficultWords && !(allowRecapReview && recapWordCount > 0)) {
+    if (review && !difficultWords) {
       setReviewMode(false);
-      setIncludeRecapDue(false);
       setScreen('home');
       return;
     }
@@ -183,7 +180,6 @@ export default function App() {
     setPracticeStartStorage(nextStorage);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(review);
-    setIncludeRecapDue(review && allowRecapReview);
     setScreen('practice');
   }
 
@@ -204,7 +200,6 @@ export default function App() {
 
     setStorage(previous => applyManualWordListSelection(previous, ids));
     setReviewMode(false);
-    setIncludeRecapDue(false);
     setWordListModalOpen(false);
     setScreen('home');
   }
@@ -215,7 +210,6 @@ export default function App() {
 
     setStorage(freshStorage);
     setReviewMode(false);
-    setIncludeRecapDue(false);
     setWordListModalOpen(false);
     setLastResult(null);
     setShowFirstSessionKeyboardHint(false);
@@ -242,7 +236,6 @@ export default function App() {
       storage={storage}
       sessionStorage={practiceStartStorage ?? storage}
       reviewDifficult={reviewMode}
-      includeRecapDue={includeRecapDue}
       sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
       onStorageChange={updateStorage}
@@ -290,11 +283,11 @@ export default function App() {
         recommendation={recommendation}
         progressSummary={homeProgressSummary}
         hasDifficultWords={difficultWords}
-        recapWordCount={recapWordCount}
+        difficultWordCount={difficultWordCount}
         onStart={() => startPractice({ review: recommendation.kind === 'review', listId: recommendation.listId })}
         onContinue={() => startPractice({ listId: normalContinuationRecommendation.listId })}
         onReview={() => startPractice({ review: true })}
-        onRecapReview={() => startPractice({ review: true, allowRecapReview: true })}
+        onRecapReview={() => startPractice({ review: true })}
         onSelectList={() => setWordListModalOpen(true)}
         settings={storage.settings}
         onSettingsChange={updateSettings}

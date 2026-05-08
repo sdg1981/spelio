@@ -1,6 +1,6 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
-import { classifySession, createPracticeSession, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, getDifficultWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
 import {
   addLearningStats,
@@ -495,6 +495,27 @@ test('clean completion of a previously difficult word in a later session clears 
   storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
   assertEqual(storage.wordProgress[difficultWord.id]?.difficult, false, 'Later clean completion should clear difficult');
   assertEqual(hasDifficultWords(storage), false, 'No current difficult words should remain');
+});
+
+test('resolved recap-due words do not keep homepage revisit or review visible', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+
+  const recommendation = getRecommendation(storage, wordLists);
+  const reviewSession = createPracticeSession(wordLists, storage, true, true);
+
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, false, 'One clean completion should resolve current difficulty');
+  assertEqual(storage.wordProgress[difficultWord.id]?.recapDue, true, 'Resolved words may still be eligible for lightweight recap');
+  assertEqual(getDifficultWordCount(storage, wordLists), 0, 'Homepage revisit count should use only current difficult words');
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'Homepage review visibility should use only current difficult words');
+  assertEqual(recommendation.kind, 'list', 'Resolved recap-only words should not keep review as the primary recommendation');
+  assertEqual(reviewSession.words.length, 0, 'Dedicated review should not include recap-only words');
 });
 
 test('learned spelling count excludes currently difficult and revealed-only words', () => {
