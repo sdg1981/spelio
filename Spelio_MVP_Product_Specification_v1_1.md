@@ -1731,6 +1731,10 @@ Hint behaviour:
 - Hints should not replace existing red error feedback.
 - Hints should not count separately from existing incorrect/reveal scoring.
 
+Future-capable hint timing:
+
+Pattern hints are primarily reactive in the MVP and may appear after a relevant incorrect attempt. The system may later support gentle proactive hints when a learner meaningfully hesitates at a known high-value spelling pattern or repeatedly replays the audio. This should remain optional, rare, and especially focused on early-stage lists. Proactive hints must not interrupt typing, must not reveal the full answer, and must not make the experience feel like a tutorial. No exact pause threshold is defined in this specification; timing should be tuned through testing.
+
 #### Hint display placement
 
 Pattern hints should use the same quiet learner-note area intended for usageNote, dialectNote, and generated dialect labels.

@@ -61,6 +61,8 @@ export interface PracticeWord {
   dialect: Exclude<Dialect, 'Mixed'>;
   dialectNote?: string;
   usageNote?: string;
+  spellingHintId?: string;
+  disablePatternHints?: boolean;
   variantGroupId?: string;
 }
 
@@ -100,6 +102,8 @@ type DatasetWord = {
   dialect?: PracticeWord['dialect'];
   dialectNote?: string;
   usageNote?: string;
+  spellingHintId?: string;
+  disablePatternHints?: boolean;
   variantGroupId?: string;
 };
 
@@ -178,6 +182,8 @@ export const wordLists: WordList[] = rawLists
         dialect: word.dialect ?? 'Both',
         dialectNote: word.dialectNote ?? '',
         usageNote: word.usageNote ?? usageNotesByWordId.get(word.id) ?? '',
+        spellingHintId: word.spellingHintId ?? '',
+        disablePatternHints: word.disablePatternHints ?? false,
         variantGroupId: word.variantGroupId ?? ''
       }))
   }));

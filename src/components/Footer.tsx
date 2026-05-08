@@ -19,22 +19,8 @@ export function Footer({ className = '', variant = 'default', t }: FooterProps) 
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
   const showFooterLinks = variant === 'home';
-  const feedbackSignalOptions = [
-    t('footer.feedbackUseful'),
-    t('footer.feedbackUseAgain'),
-    t('footer.feedbackHelpedSpelling'),
-    t('footer.feedbackRecommend'),
-    t('footer.feedbackConfusing')
-  ];
-  const learningMethodOptions = [
-    t('footer.methodSaySomething'),
-    t('footer.methodDuolingo'),
-    t('footer.methodDysguCymraeg'),
-    t('footer.methodSchool'),
-    t('footer.methodSelfStudy'),
-    t('footer.methodMultiple'),
-    t('footer.methodOther')
-  ];
+  const feedbackSignalOptions = getFeedbackSignalOptions(t);
+  const learningMethodOptions = getFeedbackLearningMethodOptions(t);
 
   useEffect(() => {
     return () => {
@@ -191,7 +177,29 @@ function toggleSelection(value: string, selectedValues: string[]) {
   return [...selectedValues, value];
 }
 
-function FeedbackModal({
+export function getFeedbackSignalOptions(t: Translate) {
+  return [
+    t('footer.feedbackUseful'),
+    t('footer.feedbackUseAgain'),
+    t('footer.feedbackHelpedSpelling'),
+    t('footer.feedbackRecommend'),
+    t('footer.feedbackConfusing')
+  ];
+}
+
+export function getFeedbackLearningMethodOptions(t: Translate) {
+  return [
+    t('footer.methodSaySomething'),
+    t('footer.methodDuolingo'),
+    t('footer.methodDysguCymraeg'),
+    t('footer.methodSchool'),
+    t('footer.methodSelfStudy'),
+    t('footer.methodMultiple'),
+    t('footer.methodOther')
+  ];
+}
+
+export function FeedbackModal({
   onClose,
   t,
   feedbackSignalOptions,

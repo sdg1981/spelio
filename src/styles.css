@@ -53,6 +53,12 @@
 .wordlist-body .selected-box{margin-top:0;}
 .wordlist-body .search-input{margin-top:32px;}
 .sticky-done{position:sticky;bottom:0;z-index:2;flex:0 0 auto;background:linear-gradient(to bottom,rgba(255,255,255,.94),#fff 28%);box-shadow:0 -12px 32px rgba(7,21,34,.045);margin-top:0;padding:26px 0 32px;}
+.wordlist-footer{border-top:1px solid var(--line);}
+.wordlist-actions{margin-top:0;padding-top:0;border-top:0;}
+.wordlist-suggestion{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin:0 0 16px;color:#9098a1;font-size:13px;line-height:1.35;text-align:right;}
+.wordlist-suggestion-link{border:0;background:transparent;color:#737d87;font:inherit;font-weight:700;padding:0;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;transition:color .16s ease-out;}
+.wordlist-suggestion-link:hover{color:#4f5a65;}
+.wordlist-suggestion-link:focus-visible{outline:0;border-radius:4px;box-shadow:0 0 0 3px rgba(217,0,0,.12);}
 .check-row{cursor:pointer;}
 .collection-title{margin-bottom:18px;color:var(--ink);font-size:18px;font-weight:900;letter-spacing:-.03em;}
 .stage-group+.stage-group{margin-top:28px;}
@@ -3101,4 +3107,35 @@
 
 .action-row-count + .chev{
   margin-left:0;
+}
+
+.practice-app .learner-note{
+  min-height:38px;
+}
+
+.practice-app .learner-note.empty{
+  visibility:hidden;
+}
+
+.practice-app .learner-note.pattern-hint{
+  color:#6f7a85;
+  font-weight:650;
+}
+
+.practice-app .learner-note-dialect{
+  color:#8c95a0;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+@media (max-width:520px){
+  .practice-app .learner-note{
+    min-height:48px;
+  }
+
+  .practice-app .learner-note-dialect{
+    font-size:15px;
+  }
 }

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
+import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
@@ -57,6 +58,7 @@ export default function App() {
   const [reviewMode, setReviewMode] = useState(false);
   const [recapMode, setRecapMode] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
@@ -91,6 +93,8 @@ export default function App() {
     () => formatCumulativeProgress(storage, publicWordLists, { prefix: t('progress.totalProgress'), t }),
     [publicWordLists, storage.learningStats, storage.wordProgress, t]
   );
+  const feedbackSignalOptions = useMemo(() => getFeedbackSignalOptions(t), [t]);
+  const learningMethodOptions = useMemo(() => getFeedbackLearningMethodOptions(t), [t]);
 
   useEffect(() => {
     saveSpelioStorage(storage);
@@ -203,6 +207,11 @@ export default function App() {
     setScreen('home');
   }
 
+  function openFeedbackFromWordLists() {
+    setWordListModalOpen(false);
+    setFeedbackModalOpen(true);
+  }
+
   function resetProgress() {
     clearSpelioStorageData();
     const freshStorage = applyInterfaceLanguageRoute(createDefaultStorage());
@@ -270,6 +279,7 @@ export default function App() {
           completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          onSuggestWordList={openFeedbackFromWordLists}
           interfaceLanguage={interfaceLanguage}
           t={t}
         />
@@ -303,6 +313,7 @@ export default function App() {
           completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
+          onSuggestWordList={openFeedbackFromWordLists}
           interfaceLanguage={interfaceLanguage}
           t={t}
         />
@@ -318,6 +329,14 @@ export default function App() {
       <div className={`app-toast ${resetStatusVisible ? 'visible' : ''}`} role="status" aria-live="polite">
         {t('progress.resetFresh')}
       </div>
+      {feedbackModalOpen && (
+        <FeedbackModal
+          onClose={() => setFeedbackModalOpen(false)}
+          t={t}
+          feedbackSignalOptions={feedbackSignalOptions}
+          learningMethodOptions={learningMethodOptions}
+        />
+      )}
     </>
   );
 }

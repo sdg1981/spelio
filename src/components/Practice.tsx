@@ -12,6 +12,7 @@ import { getListDisplayDescription, getListDisplayName } from '../lib/practice/w
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
+import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -159,6 +160,9 @@ export function Practice({
   const mobileKeyboardEnabledRef = useRef(false);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
+  const spellingHintTimerRef = useRef<number | null>(null);
+  const shownSpellingHintsRef = useRef(new Set<string>());
+  const [spellingHint, setSpellingHint] = useState<SpellingPatternHint | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
   const [isEnglishPromptPeeking, setIsEnglishPromptPeeking] = useState(false);
   const [peekUsedForCurrentWord, setPeekUsedForCurrentWord] = useState(false);
@@ -319,9 +323,47 @@ export function Practice({
     peekActivatedRef.current = false;
   }, [finishPeek, restorePracticeInputFocus]);
 
+  const clearSpellingHint = useCallback(() => {
+    if (spellingHintTimerRef.current) {
+      window.clearTimeout(spellingHintTimerRef.current);
+      spellingHintTimerRef.current = null;
+    }
+    setSpellingHint(null);
+  }, []);
+
+  const handlePracticeInput = useCallback((char: string) => {
+    const result = handleInput(char);
+    if (result.type !== 'incorrect' || !currentWord) return;
+
+    const hint = getSpellingPatternHint({
+      targetAnswer: practiceAnswer,
+      currentInputPosition: result.inputPosition,
+      attempted: result.attempted,
+      word: {
+        spellingHintId: currentWord.spellingHintId,
+        disablePatternHints: currentWord.disablePatternHints
+      },
+      interfaceLanguage
+    });
+
+    if (!hint) return;
+
+    const shownKey = `${currentWord.id}:${result.inputPosition}:${hint.id}`;
+    if (shownSpellingHintsRef.current.has(shownKey)) return;
+    shownSpellingHintsRef.current.add(shownKey);
+
+    if (spellingHintTimerRef.current) window.clearTimeout(spellingHintTimerRef.current);
+    setSpellingHint(hint);
+    spellingHintTimerRef.current = window.setTimeout(() => {
+      setSpellingHint(null);
+      spellingHintTimerRef.current = null;
+    }, 4000);
+  }, [currentWord, handleInput, interfaceLanguage, practiceAnswer]);
+
   useEffect(() => {
     return () => {
       if (localStatusTimerRef.current) window.clearTimeout(localStatusTimerRef.current);
+      if (spellingHintTimerRef.current) window.clearTimeout(spellingHintTimerRef.current);
       clearPeekTimers();
       clearEnglishPromptPeek();
       revealShortcutHeldRef.current = false;
@@ -339,19 +381,22 @@ export function Practice({
     isPeekingRef.current = false;
     setIsPeeking(false);
     clearEnglishPromptPeek();
+    clearSpellingHint();
+    shownSpellingHintsRef.current = new Set();
     setPeekUsedForCurrentWord(false);
     revealShortcutHeldRef.current = false;
     if (wasPeeking) restorePracticeInputFocus();
-  }, [clearEnglishPromptPeek, clearPeekTimers, currentWord?.id, restorePracticeInputFocus]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, clearSpellingHint, currentWord?.id, restorePracticeInputFocus]);
 
   useEffect(() => {
     if (modal || isComplete || settingsModalOpenRef.current) {
       finishPeek(false);
       clearEnglishPromptPeek();
+      if (isComplete) clearSpellingHint();
       peekActivatedRef.current = false;
       revealShortcutHeldRef.current = false;
     }
-  }, [clearEnglishPromptPeek, finishPeek, isComplete, modal]);
+  }, [clearEnglishPromptPeek, clearSpellingHint, finishPeek, isComplete, modal]);
 
   useEffect(() => {
     if (status) {
@@ -403,7 +448,7 @@ export function Practice({
       }
 
       if (event.key.length === 1 && /[a-zA-ZÀ-žŵŷŴŶ'’‘`´ʻ\-–—‑]/.test(event.key)) {
-        handleInput(event.key);
+        handlePracticeInput(event.key);
       }
     }
 
@@ -435,7 +480,7 @@ export function Practice({
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onWindowBlur);
     };
-  }, [activateEnglishPromptPeek, beginPeekHold, currentWord, endPeekHold, handleInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
+  }, [activateEnglishPromptPeek, beginPeekHold, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -680,6 +725,7 @@ export function Practice({
   const displayStatusSecondary = status ? null : localStatusSecondary;
   const displayTone = status ? statusTone : 'neutral';
   const dialectLabel = getDialectLabel(currentWord, t);
+  const spellingHintText = spellingHint ? t(spellingHint.translationKey) : null;
   const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
   const promptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable) || isEnglishPromptPeeking;
   const wordInsights = interfaceLanguage === 'en'
@@ -687,6 +733,7 @@ export function Practice({
       .map(note => note?.trim())
       .filter((note): note is string => Boolean(note))
     : [];
+  const learnerNoteVisible = Boolean(spellingHintText || dialectLabel || wordInsights.length);
 
   return (
     <main className="app-bg practice-app relative overflow-hidden">
@@ -701,16 +748,22 @@ export function Practice({
         {currentWordAudioUnavailable && !storage.settings.englishVisible && (
           <div className="audio-fallback-label">{t('practice.audioFallbackPromptShown')}</div>
         )}
-        {dialectLabel && (
-          <div className="dialect-label">{dialectLabel}</div>
-        )}
-        {wordInsights.length > 0 && (
-          <div className="word-insight" aria-label={t('practice.wordInsight')}>
-            {wordInsights.map(note => (
-              <span key={note}>{note}</span>
-            ))}
-          </div>
-        )}
+        <div
+          className={`word-insight learner-note ${spellingHintText ? 'pattern-hint' : ''} ${learnerNoteVisible ? '' : 'empty'}`.trim()}
+          aria-label={t('practice.wordInsight')}
+          aria-live="polite"
+        >
+          {spellingHintText ? (
+            <span>{spellingHintText}</span>
+          ) : (
+            <>
+              {dialectLabel && <span className="learner-note-dialect">{dialectLabel}</span>}
+              {wordInsights.map(note => (
+                <span key={note}>{note}</span>
+              ))}
+            </>
+          )}
+        </div>
 
         <input
           ref={mobileInputRef}
@@ -723,7 +776,7 @@ export function Practice({
 
             const value = event.target.value;
             const char = value[value.length - 1];
-            if (char) handleInput(char);
+            if (char) handlePracticeInput(char);
             event.target.value = '';
           }}
           inputMode="text"
@@ -1192,6 +1245,7 @@ export function WordListModal({
   completedListIds = [],
   onClose,
   onDone,
+  onSuggestWordList,
   interfaceLanguage,
   t
 }: {
@@ -1200,6 +1254,7 @@ export function WordListModal({
   completedListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
+  onSuggestWordList?: () => void;
   interfaceLanguage: InterfaceLanguage;
   t: Translate;
 }) {
@@ -1291,9 +1346,19 @@ export function WordListModal({
           </div>
         </div>
 
-        <div className="done-row sticky-done">
-          <button className="clear-button" onClick={() => setSelectedIds([])}>{t('wordLists.clearAll')}</button>
-          <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
+        <div className="wordlist-footer sticky-done">
+          {onSuggestWordList && (
+            <p className="wordlist-suggestion">
+              <span>{t('wordLists.suggestionPrompt')}</span>
+              <button className="wordlist-suggestion-link" type="button" onClick={onSuggestWordList}>
+                {t('wordLists.suggestionLink')}
+              </button>
+            </p>
+          )}
+          <div className="done-row wordlist-actions">
+            <button className="clear-button" onClick={() => setSelectedIds([])}>{t('wordLists.clearAll')}</button>
+            <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
+          </div>
         </div>
       </section>
     </Overlay>

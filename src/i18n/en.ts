@@ -95,6 +95,8 @@ export const en = {
     completed: 'Completed',
     clearAll: 'Clear all',
     done: 'Done',
+    suggestionPrompt: 'Got an idea for a word list?',
+    suggestionLink: 'Send a suggestion',
     stageFoundations: 'Foundations',
     stageCore: 'Core',
     stageSpelling: 'Spelling',
@@ -175,6 +177,67 @@ export const en = {
   browser: {
     unsupportedTitle: 'Browser Not Fully Supported',
     unsupportedBody: 'Spelio may not work correctly on this browser or device. Please try updating your browser or using a recent version of Chrome, Safari, Edge, or Firefox.'
+  },
+  spellingHints: {
+    cy: {
+      dd: {
+        softTh: 'Listen for the soft th sound - in Welsh this is often written dd.'
+      },
+      f: {
+        vSound: 'In Welsh, f often sounds like English v.'
+      },
+      ff: {
+        fSound: 'In Welsh, the English f sound is usually written ff.'
+      },
+      ll: {
+        awareness: 'Listen closely - this is the Welsh ll sound.'
+      },
+      ch: {
+        awareness: 'Listen closely - this is the Welsh ch sound.'
+      },
+      rh: {
+        awareness: 'Listen closely for the Welsh rh spelling pattern.'
+      },
+      ng: {
+        awareness: 'Listen closely for the Welsh ng spelling pattern.'
+      },
+      ngh: {
+        awareness: 'Listen closely for the Welsh ngh spelling pattern.'
+      },
+      wy: {
+        awareness: 'This sound is often written wy in Welsh.'
+      },
+      ae: {
+        awareness: 'This vowel pattern is often written ae in Welsh.'
+      },
+      ai: {
+        awareness: 'This vowel pattern is often written ai in Welsh.'
+      },
+      au: {
+        awareness: 'This vowel pattern is often written au in Welsh.'
+      },
+      ei: {
+        awareness: 'This vowel pattern is often written ei in Welsh.'
+      },
+      eu: {
+        awareness: 'This vowel pattern is often written eu in Welsh.'
+      },
+      oe: {
+        awareness: 'This vowel pattern is often written oe in Welsh.'
+      },
+      w: {
+        vowel: 'In Welsh, w can work as part of a vowel sound.'
+      },
+      y: {
+        vowel: 'In Welsh, y can work as part of a vowel sound.'
+      },
+      rareLetter: {
+        k: 'Welsh rarely uses the letter k.',
+        q: 'Welsh rarely uses the letter q.',
+        x: 'Welsh rarely uses the letter x.',
+        z: 'Welsh rarely uses the letter z.'
+      }
+    }
   },
   progress: {
     spelling: 'spelling',

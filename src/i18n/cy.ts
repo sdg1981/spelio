@@ -95,6 +95,8 @@ export const cy = {
     completed: 'Wedi cwblhau',
     clearAll: 'Clirio popeth',
     done: 'Gorffen',
+    suggestionPrompt: 'Oes gennych chi syniad am restr eiriau?',
+    suggestionLink: 'Anfon awgrym',
     stageFoundations: 'Sylfeini',
     stageCore: 'Craidd',
     stageSpelling: 'Sillafu',
@@ -175,6 +177,67 @@ export const cy = {
   browser: {
     unsupportedTitle: 'Nid yw’r porwr yn cael ei gefnogi’n llawn',
     unsupportedBody: 'Efallai na fydd Spelio yn gweithio’n gywir ar y porwr neu’r ddyfais hon. Ceisiwch ddiweddaru eich porwr neu ddefnyddio fersiwn diweddar o Chrome, Safari, Edge neu Firefox.'
+  },
+  spellingHints: {
+    cy: {
+      dd: {
+        softTh: 'Gwrandewch am y sain feddal hon - yn Gymraeg caiff ei sillafu’n aml fel dd.'
+      },
+      f: {
+        vSound: 'Yn Gymraeg, cofiwch y gwahaniaeth rhwng f ac ff.'
+      },
+      ff: {
+        fSound: 'Yn Gymraeg, cofiwch fod ff yn batrwm sillafu penodol.'
+      },
+      ll: {
+        awareness: 'Gwrandewch yn ofalus - dyma sain ll Gymraeg.'
+      },
+      ch: {
+        awareness: 'Gwrandewch yn ofalus - dyma sain ch Gymraeg.'
+      },
+      rh: {
+        awareness: 'Gwrandewch am batrwm sillafu rh Cymraeg.'
+      },
+      ng: {
+        awareness: 'Gwrandewch am batrwm sillafu ng Cymraeg.'
+      },
+      ngh: {
+        awareness: 'Gwrandewch am batrwm sillafu ngh Cymraeg.'
+      },
+      wy: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel wy.'
+      },
+      ae: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel ae.'
+      },
+      ai: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel ai.'
+      },
+      au: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel au.'
+      },
+      ei: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel ei.'
+      },
+      eu: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel eu.'
+      },
+      oe: {
+        awareness: 'Caiff y patrwm llafariad hwn ei sillafu’n aml fel oe.'
+      },
+      w: {
+        vowel: 'Yn Gymraeg, gall w fod yn rhan o sain llafariad.'
+      },
+      y: {
+        vowel: 'Yn Gymraeg, gall y fod yn rhan o sain llafariad.'
+      },
+      rareLetter: {
+        k: 'Anaml mae Cymraeg yn defnyddio’r llythyren k.',
+        q: 'Anaml mae Cymraeg yn defnyddio’r llythyren q.',
+        x: 'Anaml mae Cymraeg yn defnyddio’r llythyren x.',
+        z: 'Anaml mae Cymraeg yn defnyddio’r llythyren z.'
+      }
+    }
   },
   progress: {
     spelling: 'sillafiad',

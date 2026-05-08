@@ -19,6 +19,10 @@ interface LetterState {
 }
 
 export type PracticeStatusTone = 'success' | 'error' | 'neutral';
+export type PracticeInputResult =
+  | { type: 'ignored' }
+  | { type: 'correct'; inputPosition: number; attempted: string }
+  | { type: 'incorrect'; inputPosition: number; attempted: string };
 
 const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
 const SUCCESS_UNDERLINE_STAGGER_MS = 42;
@@ -410,15 +414,15 @@ export function usePracticeSession({
     if (storage.settings.soundEffects) playTone('success');
   }
 
-  const handleInput = useCallback((char: string) => {
-    if (!currentWord || isComplete || inputLockedRef.current) return;
+  const handleInput = useCallback((char: string): PracticeInputResult => {
+    if (!currentWord || isComplete || inputLockedRef.current) return { type: 'ignored' };
 
-    if (isInputSpace(char)) return;
+    if (isInputSpace(char)) return { type: 'ignored' };
     recordPracticeInteraction();
 
     const answer = getPracticeAnswer(currentWord);
     const nextIndex = findNextInputIndex(answer, letters);
-    if (nextIndex < 0) return;
+    if (nextIndex < 0) return { type: 'ignored' };
 
     const expected = answer[nextIndex];
     const correct = validateInputAtIndex(char, currentWord, nextIndex, storage.settings.welshSpelling);
@@ -430,7 +434,7 @@ export function usePracticeSession({
       if (findNextInputIndex(answer, nextLetters, nextIndex + 1) < 0) {
         completeWord();
       }
-      return;
+      return { type: 'correct', inputPosition: nextIndex, attempted: char };
     }
 
     const nextLetters = letters.map((letter, index) => index === nextIndex ? { value: char, wrong: true } : letter);
@@ -464,6 +468,8 @@ export function usePracticeSession({
       setWrongIndex(null);
       inputLockedRef.current = false;
     }, 560);
+
+    return { type: 'incorrect', inputPosition: nextIndex, attempted: char };
   }, [currentWord?.id, isComplete, isRecapActive, letters, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
   const revealNext = useCallback(() => {

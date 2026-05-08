@@ -420,6 +420,10 @@ These hints are primarily app-level behaviour, not manually authored content.
 
 Content authors should normally rely on the generic hint registry rather than writing per-word spelling hints.
 
+Content-authoring note:
+
+Some early-stage words may be selected because they create a useful spelling discovery, not because they are objectively easy. Where a word introduces a high-value Welsh spelling pattern, it may be suitable for generic pattern hints, including future proactive listening hints triggered by hesitation or repeated audio replay. This should not require routine per-word hint authoring. Prefer using the generic hint registry unless a specific reviewed override is genuinely needed.
+
 Pattern hints should:
 
 - support common Welsh spelling patterns
