@@ -205,7 +205,7 @@ Content:
 - Primary CTA:
   - “Start spelling practice →”
 - Secondary action:
-  - “Recap tricky words →” if eligible difficult words currently exist
+  - “Revisit a few words →” if eligible difficult words currently exist
 - Tertiary action:
   - “Select word list →”
 - Faint copyright text
@@ -213,11 +213,11 @@ Content:
 Behaviour:
 
 - Main CTA starts the recommended list/session.
-- A low-priority recap/review link appears near the bottom only when eligible difficult words exist.
-- Public label may be softer, such as “Recap tricky words”; internally this may use the existing Review difficult words mode.
+- A low-priority revisit/review link appears near the bottom only when eligible difficult words currently exist.
+- Public label may be softer, such as “Revisit a few words”; internally this uses the existing Review difficult words mode.
 - If showing a count, show 1, 2, 3, 4, or “5+”. Never show large backlog counts.
 - Select word list opens the word list modal.
-- If no eligible difficult words currently exist, the recap/review action must be hidden.
+- If no eligible difficult words currently exist, the revisit/review action must be hidden.
 - The homepage must not show Review difficult words as an action if selecting it would lead to an empty review session.
 - Returning-user homepage may show one subtle cumulative progress line below the primary CTA and above secondary actions, for example “142 spellings learned · 38 minutes practised”. Hide it when there is no meaningful progress.
 - Progress wording must stay calm and minimal. Do not show charts, percentages, XP, badges, streaks, levels, goals, or dashboard-style stats.
@@ -843,12 +843,17 @@ Starting from the user’s third normal practice session, each new normal sessio
 
 Rules:
 
-- A recap word is a previously difficult word that is still relevant to the active Welsh style.
+- A recap word is a word with `recapDue === true` that is still relevant to the active Welsh style.
+- `recapDue` is created when a word has previously been answered incorrectly or revealed.
+- Recap injection is quiet automatic reinforcement inside normal sessions, not a separate user-selected mode or public UI label.
 - Recap injection should not happen in dedicated Review difficult words sessions.
 - Recap should not reduce session quality or cause duplicate variantGroupId entries.
 - If no eligible recap word exists, run the normal session unchanged.
-- Recap should prefer words that were previously incorrect or revealed, prioritising recent/current difficult words.
-- If the recap word is completed cleanly, update its difficult status using the existing review removal rule.
+- Normal sessions may inject up to one recap-due word.
+- Recap should prefer words that were previously incorrect or revealed, prioritising current difficult words before resolved recap-due words.
+- If the recap word is completed cleanly, update its current difficulty using the existing review removal rule.
+- Recap eligibility clears after the required clean recap passes currently implemented, which is two clean recap completions tracked by `cleanRecapCount`.
+- Recap-due words must not keep the homepage “Revisit a few words” / Review difficult words option visible after current difficult words have been resolved.
 - This is not a full spaced repetition system and should not introduce complex scheduling.
 
 ### 10.4 Session integrity
@@ -971,6 +976,8 @@ If the user struggled but no dialect-eligible difficult words currently exist, t
 
 Review difficult words represents current difficulty, not historical difficulty.
 
+“Review difficult words” / “Revisit a few words” is visible current-difficulty recovery. Automatic recap injection is separate quiet reinforcement inside normal sessions and should not be described as visible review.
+
 ### 13.1 Entry rule
 
 A word enters review if:
@@ -996,6 +1003,8 @@ When this happens, the word should be marked:
 ```text
 progress.difficult === false
 ```
+
+The word may still remain eligible for quiet automatic recap through `recapDue`, but it no longer needs visible review.
 
 ### 13.3 Review session selection
 
@@ -1050,9 +1059,11 @@ Example:
 - 6 difficult words exist.
 - User fixes 3 cleanly.
 - Next review session shows 3.
-- Once all are fixed, the review option disappears.
+- Once all are fixed, the review/revisit option disappears.
 
 This should happen immediately as progress updates.
+
+Resolved recap-due words must not keep the visible review/revisit option on the homepage or end screen.
 
 ## 14. Recommendation logic
 
@@ -1074,6 +1085,8 @@ If user manually selects a later list, the app should continue from that point o
 This creates guided progression rather than locked progression.
 
 Review difficult words must only be recommended when current difficult words exist and are relevant to the learner’s current Welsh style.
+
+`recapDue` words do not count as current difficult words for recommendation purposes. They may be injected quietly into normal sessions, but they must not cause Review difficult words / Revisit a few words to remain visible.
 
 If all currently difficult words belong only to dialect variants that no longer match the active Welsh style, fall back to normal progression recommendations instead of continuing to suggest irrelevant review.
 
@@ -1100,7 +1113,7 @@ Use local storage shape:
 {
   "selectedListIds": ["foundations_first_words"],
   "currentPathPosition": "foundations_first_words",
-  "normalSessionCount": 0,
+  "completedNormalSessionCount": 0,
   "learningStats": {
     "totalActiveMs": 0,
     "totalSessionsCompleted": 0,
@@ -1128,11 +1141,11 @@ Older stored settings without `interfaceLanguage` should default safely to `en`.
 
 `interfaceLanguage` must remain independent from `dialectPreference`, English prompt visibility, and content language-pair metadata.
 
-If normal completed session count cannot be inferred reliably from lastSessionResult or listProgress, store `normalSessionCount` as the minimal additional field.
+If normal completed session count cannot be inferred reliably from lastSessionResult or listProgress, store `completedNormalSessionCount` as the minimal additional field.
 
 Rules:
 
-- Increment normalSessionCount after completed normal sessions.
+- Increment `completedNormalSessionCount` after completed normal sessions.
 - Do not increment it for Review difficult words sessions.
 - Use it to decide when recap injection becomes eligible.
 
@@ -1144,6 +1157,8 @@ Word progress should support:
     "seen": true,
     "completedCount": 1,
     "difficult": false,
+    "recapDue": false,
+    "cleanRecapCount": 0,
     "incorrectAttempts": 0,
     "revealedCount": 0,
     "lastPractisedAt": "ISO_DATE_STRING"
@@ -1857,7 +1872,7 @@ Do not include in MVP:
 - Predictive learner scoring
 - AI recommendation analytics
 
-Lightweight recap of difficult words is included; full spaced repetition scheduling is excluded.
+Lightweight recap of recently weak words is included; full spaced repetition scheduling is excluded.
 
 ## 23. Build priorities
 
@@ -1904,7 +1919,7 @@ Build:
 - Current difficulty review logic
 - Removal of words from review after clean completion
 - Lightweight recap injection after the second completed normal session
-- Homepage recap/review link with 5+ capped count
+- Homepage review/revisit link with 5+ capped count
 
 ### Phase 4 — Admin panel
 
@@ -1957,7 +1972,7 @@ Using the existing Spelio frontend, implement the core practice engine. The app 
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `normalSessionCount`. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap word from current difficult words into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “Recap tricky words →” link with count capped at 5+ when eligible difficult words exist. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list completion logic: a list is complete when every learning item has been seen at least once and the user completes a session for that list with at least 85% accuracy and no revealed letters. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after two clean recap completions tracked by `cleanRecapCount`. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “Revisit a few words →” link with count capped at 5+ when eligible difficult words exist. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
@@ -1975,7 +1990,7 @@ Help me create original Welsh word lists for Spelio. Do not copy any commercial 
 
 Use this before or during build:
 
-Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, lightweight recap injection, capped recap count on the homepage, learner note handling for usageNote and dialectNote, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure including advanced note fields, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
+Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, lightweight recap injection, capped review/revisit count on the homepage, learner note handling for usageNote and dialectNote, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure including advanced note fields, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
 
 ### Prompt 7 — Implement lightweight anonymous analytics and founder observation dashboard
 
@@ -1994,6 +2009,7 @@ The MVP is complete when:
 - Word lists can contain more than 10 words and are practised over multiple sessions.
 - The app tracks local progress.
 - Review difficult words works as current difficulty, shrinks as the user improves, and disappears when resolved.
+- Quiet recap injection can reinforce recently weak words inside normal sessions without keeping the learner in a visible difficult-words state.
 - Changing word lists never auto-starts practice and never mutates an active session.
 - Mobile input works reliably and does not conflict with desktop key handling.
 - The admin panel can create and manage word lists.
