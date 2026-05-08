@@ -144,10 +144,9 @@ function isDifferentFromTarget(target: string, position: number, attempted: stri
 }
 
 export function getSpellingPatternHint(input: GetSpellingPatternHintInput): SpellingPatternHint | null {
-  if (input.word?.disablePatternHints) return null;
-
   const wordHintId = normaliseHintId(input.word?.spellingHintId);
   if (wordHintId) return createHint(wordHintId, 'word');
+  if (input.word?.disablePatternHints) return null;
 
   const target = normaliseInput(input.targetAnswer);
   const attempted = normaliseInput(input.attempted);

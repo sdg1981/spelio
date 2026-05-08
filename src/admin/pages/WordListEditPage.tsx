@@ -360,6 +360,8 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     dialect: 'Both',
     dialectNote: '',
     usageNote: '',
+    spellingHintId: '',
+    disablePatternHints: false,
     variantGroupId: '',
     createdAt: now,
     updatedAt: now

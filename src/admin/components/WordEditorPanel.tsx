@@ -138,6 +138,7 @@ export function WordEditorPanel({
             <div className="mt-4 grid gap-4 text-sm text-slate-600">
               <div className="flex items-center gap-2"><Info size={15} /> Technical fields for admin editing.</div>
               <Field label="Internal notes"><AdminTextarea value={word.notes} onChange={event => onChange({ notes: event.target.value })} /></Field>
+              <SpellingHintControls word={word} onChange={onChange} />
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Audio URL">
                   <AdminInput className="font-mono text-xs text-slate-600" value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
@@ -264,6 +265,7 @@ export function WordEditorPanel({
           <div className="mt-4 grid gap-3 text-sm text-slate-600">
             <div className="flex items-center gap-2"><Info size={15} /> Raw IDs are hidden in normal editing.</div>
             <Field label="Internal notes"><AdminTextarea value={word.notes} onChange={event => onChange({ notes: event.target.value })} /></Field>
+            <SpellingHintControls word={word} onChange={onChange} />
             <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
             <div>Created <AdminTimestamp value={word.createdAt} /></div>
             <div>Updated <AdminTimestamp value={word.updatedAt} /></div>
@@ -271,5 +273,36 @@ export function WordEditorPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function SpellingHintControls({ word, onChange }: { word: AdminWord; onChange: (patch: Partial<AdminWord>) => void }) {
+  return (
+    <div className="grid gap-3 rounded-md border border-slate-100 bg-slate-50/60 p-3">
+      <div>
+        <div className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Advanced spelling hint controls</div>
+        <p className="mt-1 text-xs leading-5 text-slate-500">Optional pattern hint overrides. Leave blank unless a reviewed hint should be forced.</p>
+      </div>
+      <Field label="Spelling hint ID">
+        <AdminInput
+          className="font-mono text-xs text-slate-600"
+          value={word.spellingHintId ?? ''}
+          placeholder="cy.dd.softTh"
+          onChange={event => onChange({ spellingHintId: event.target.value })}
+        />
+      </Field>
+      <label className="flex items-start gap-3 text-xs leading-5 text-slate-600">
+        <input
+          className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950"
+          type="checkbox"
+          checked={word.disablePatternHints === true}
+          onChange={event => onChange({ disablePatternHints: event.target.checked })}
+        />
+        <span>
+          <span className="block font-bold text-slate-700">Disable automatic pattern hints</span>
+          Suppresses generic spelling pattern hints for this word.
+        </span>
+      </label>
+    </div>
   );
 }

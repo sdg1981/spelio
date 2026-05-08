@@ -37,6 +37,8 @@ export interface AdminWord {
   dialect: Exclude<AdminDialect, 'Mixed'>;
   dialectNote: string;
   usageNote: string;
+  spellingHintId?: string;
+  disablePatternHints?: boolean;
   variantGroupId: string;
   createdAt: string;
   updatedAt: string;

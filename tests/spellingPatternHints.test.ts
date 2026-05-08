@@ -95,9 +95,21 @@ assertEqual(
     attempted: 'l',
     word: { disablePatternHints: true, spellingHintId: 'cy.dd.softTh' },
     interfaceLanguage: 'en'
+  })?.id,
+  'cy.dd.softTh',
+  'A valid word-level spellingHintId should still be able to force a reviewed hint.'
+);
+
+assertEqual(
+  getSpellingPatternHint({
+    targetAnswer: 'llaw',
+    currentInputPosition: 0,
+    attempted: 'l',
+    word: { disablePatternHints: true },
+    interfaceLanguage: 'en'
   }),
   null,
-  'disablePatternHints should suppress both generic and word-level hints.'
+  'disablePatternHints should suppress automatic generic hints.'
 );
 
 assertEqual(

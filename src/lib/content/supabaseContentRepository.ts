@@ -59,6 +59,8 @@ type WordRow = {
   audio_url: string | null;
   audio_status: string | null;
   usage_note: string | null;
+  spelling_hint_id?: string | null;
+  disable_pattern_hints?: boolean | null;
   dialect: string | null;
   dialect_note: string | null;
   variant_group_id: string | null;
@@ -151,6 +153,8 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     dialect: asWordDialect(row.dialect),
     dialectNote: row.dialect_note ?? '',
     usageNote: row.usage_note ?? '',
+    spellingHintId: row.spelling_hint_id ?? '',
+    disablePatternHints: row.disable_pattern_hints === true,
     variantGroupId: row.variant_group_id ?? ''
   };
 }
@@ -200,7 +204,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .order('order_index', { ascending: true }),
     client
       .from('words')
-      .select('id,list_id,english_prompt,welsh_answer,accepted_alternatives,audio_url,audio_status,usage_note,dialect,dialect_note,variant_group_id,order_index,difficulty')
+      .select('*')
       .order('order_index', { ascending: true })
   ]);
 

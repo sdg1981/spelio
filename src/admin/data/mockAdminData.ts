@@ -15,6 +15,8 @@ type RawWord = {
   dialect?: AdminWord['dialect'];
   dialectNote?: string;
   usageNote?: string;
+  spellingHintId?: string;
+  disablePatternHints?: boolean;
   variantGroupId?: string;
 };
 
@@ -104,6 +106,8 @@ export const adminWordLists: AdminWordList[] = rawLists
         dialect: word.dialect ?? 'Both',
         dialectNote: word.dialectNote ?? '',
         usageNote: word.usageNote ?? '',
+        spellingHintId: word.spellingHintId ?? '',
+        disablePatternHints: word.disablePatternHints ?? false,
         variantGroupId: word.variantGroupId ?? '',
         createdAt: baseCreatedAt,
         updatedAt: baseUpdatedAt

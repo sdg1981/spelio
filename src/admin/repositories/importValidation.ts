@@ -250,6 +250,12 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (word.variantGroupId !== undefined && word.variantGroupId !== null && typeof word.variantGroupId !== 'string') {
     errors.push(`Word ${label} variantGroupId must be a string, empty, or null.`);
   }
+  if (word.spellingHintId !== undefined && word.spellingHintId !== null && typeof word.spellingHintId !== 'string') {
+    errors.push(`Word ${label} spellingHintId must be a string, empty, or null.`);
+  }
+  if (word.disablePatternHints !== undefined && typeof word.disablePatternHints !== 'boolean') {
+    errors.push(`Word ${label} disablePatternHints must be a boolean when provided.`);
+  }
   if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus)) return null;
 
   const acceptedAlternatives = Array.isArray(word.acceptedAlternatives) ? word.acceptedAlternatives.map(String) : [];
@@ -278,6 +284,8 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     dialect: dialect as AdminWord['dialect'],
     dialectNote,
     usageNote,
+    spellingHintId: stringValue(word.spellingHintId),
+    disablePatternHints: word.disablePatternHints === true,
     variantGroupId: stringValue(word.variantGroupId),
     createdAt: now,
     updatedAt: now

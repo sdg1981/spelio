@@ -59,6 +59,8 @@ type WordRow = {
   audio_status: string;
   notes: string;
   usage_note: string;
+  spelling_hint_id?: string | null;
+  disable_pattern_hints?: boolean | null;
   dialect: AdminWord['dialect'];
   dialect_note: string;
   variant_group_id: string;
@@ -443,6 +445,8 @@ function mapWordRow(row: WordRow): AdminWord {
     audioStatus: normalizeLegacyAudioStatus(row.audio_status),
     notes: row.notes,
     usageNote: row.usage_note,
+    spellingHintId: row.spelling_hint_id ?? '',
+    disablePatternHints: row.disable_pattern_hints === true,
     dialect: row.dialect,
     dialectNote: row.dialect_note,
     variantGroupId: row.variant_group_id,
@@ -503,6 +507,8 @@ function toWordRow(word: AdminWord) {
     audio_status: word.audioStatus,
     notes: word.notes,
     usage_note: word.usageNote,
+    spelling_hint_id: word.spellingHintId?.trim() || null,
+    disable_pattern_hints: word.disablePatternHints === true,
     dialect: word.dialect,
     dialect_note: word.dialectNote,
     variant_group_id: word.variantGroupId,
