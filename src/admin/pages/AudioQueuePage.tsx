@@ -6,6 +6,12 @@ import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import type { AudioStatus } from '../types';
+import {
+  getBulkAudioActionLabel,
+  getBulkAudioRunningLabel,
+  getSelectedVisibleBulkAudioIds,
+  summarizeBulkAudioGeneration
+} from '../services/audioQueueBulk';
 
 const PAGE_SIZE = 40;
 
@@ -29,6 +35,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [generatingWordIds, setGeneratingWordIds] = useState<Set<string>>(() => new Set());
   const [batchGeneratingWordIds, setBatchGeneratingWordIds] = useState<Set<string>>(() => new Set());
+  const [selectedBatchIncludesGenerated, setSelectedBatchIncludesGenerated] = useState(false);
   const queueMissingBusyRef = useRef(false);
   const selectedBatchBusyRef = useRef(false);
   const generatingWordIdsRef = useRef<Set<string>>(new Set());
@@ -71,7 +78,8 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   );
   const visibleWords = filteredWords.slice(0, visibleCount);
   const selectedVisibleIds = selectedIds.filter(id => visibleWords.some(word => word.id === id));
-  const selectedVisibleGeneratableIds = selectedIds.filter(id => visibleWords.some(word => word.id === id && canGenerateAudio(word)));
+  const selectedVisibleGeneratableIds = getSelectedVisibleBulkAudioIds(selectedIds, visibleWords);
+  const selectedVisibleGeneratableWords = visibleWords.filter(word => selectedVisibleGeneratableIds.includes(word.id));
   const visibleMissingIds = visibleWords.filter(word => word.audioStatus === 'missing').map(word => word.id);
   const selectedMissingIds = selectedIds.filter(id => effectiveWords.some(word => word.id === id && word.audioStatus === 'missing'));
   const allVisibleSelected = visibleWords.length > 0 && visibleWords.every(word => selectedIds.includes(word.id));
@@ -105,14 +113,23 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
     try {
       selectedBatchBusyRef.current = true;
       batchGeneratingWordIdsRef.current = new Set(wordIds);
+      setSelectedBatchIncludesGenerated(allWords.some(word => wordIds.includes(word.id) && word.audioStatus === 'ready'));
       setSelectedBatchBusy(true);
       setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
       clearSelection();
-      await runAction(() => repository.generateAudioBatch(wordIds), `Generated ${wordIds.length} selected audio item(s).`);
+      setErrorMessage('');
+      setStatusMessage(`Generating ${wordIds.length} selected audio item(s)...`);
+      const results = await repository.generateAudioBatch(wordIds);
+      await refresh();
+      setStatusMessage(summarizeBulkAudioGeneration(results, wordIds.length));
+    } catch (error) {
+      await refresh().catch(() => undefined);
+      setErrorMessage(readError(error, 'Selected audio generation failed.'));
     } finally {
       selectedBatchBusyRef.current = false;
       batchGeneratingWordIdsRef.current = new Set();
       setSelectedBatchBusy(false);
+      setSelectedBatchIncludesGenerated(false);
       setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
     }
   }
@@ -168,7 +185,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             </div>
             <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedVisibleGeneratableIds)} disabled={selectedBatchBusy || selectedVisibleGeneratableIds.length === 0} aria-disabled={selectedBatchBusy}>
               {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
-              {selectedBatchBusy ? `Generating ${batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length}...` : 'Generate selected'}
+              {selectedBatchBusy ? getBulkAudioRunningLabel(selectedBatchIncludesGenerated, batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length) : getBulkAudioActionLabel(selectedVisibleGeneratableWords)}
             </AdminButton>
           </div>
         }
@@ -216,7 +233,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses only visible selected rows that are not already generating or generated.
+            Generate selected uses only visible selected rows that are missing, failed, or generated.
             {selectedVisibleIds.length > 0 && selectedVisibleGeneratableIds.length !== selectedVisibleIds.length && <> {selectedVisibleIds.length - selectedVisibleGeneratableIds.length} ineligible item(s) will be skipped.</>}
           </div>
         </div>
