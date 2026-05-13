@@ -1,5 +1,6 @@
 declare const process: {
   env: Record<string, string | undefined>;
+  cwd: () => string;
 };
 
 type SpawnedProcess = {
@@ -20,6 +21,13 @@ type OsModule = {
 };
 type PathModule = {
   join: (...parts: string[]) => string;
+};
+type ModuleModule = {
+  createRequire: (url: string) => (specifier: string) => unknown;
+};
+type FfmpegInstallerPackage = {
+  path?: string;
+  version?: string;
 };
 
 type NodeAudioTools = {
@@ -101,29 +109,65 @@ export async function postProcessAzureWavToMp3(wavAudio: ArrayBuffer | Uint8Arra
 }
 
 async function loadNodeAudioTools(): Promise<NodeAudioTools> {
-  const [childProcessModule, fsModule, osModule, pathModule] = await Promise.all([
+  const [childProcessModule, fsModule, osModule, pathModule, moduleModule] = await Promise.all([
     dynamicImport('node:child_process'),
     dynamicImport('node:fs/promises'),
     dynamicImport('node:os'),
-    dynamicImport('node:path')
+    dynamicImport('node:path'),
+    dynamicImport('node:module')
   ]);
 
+  const fs = fsModule as FileSystemPromises;
   return {
     spawn: (childProcessModule as { spawn: Spawn }).spawn,
-    fs: fsModule as FileSystemPromises,
+    fs,
     os: osModule as OsModule,
     path: pathModule as PathModule,
-    ffmpegPath: await resolveFfmpegPath()
+    ffmpegPath: await resolveFfmpegPath((moduleModule as ModuleModule).createRequire, fs)
   };
 }
 
-async function resolveFfmpegPath() {
-  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
+export async function resolveFfmpegPath(
+  createRequire: ModuleModule['createRequire'],
+  fs: Pick<FileSystemPromises, 'readFile'>,
+  env: Record<string, string | undefined> = process.env
+) {
+  if (env.FFMPEG_PATH) {
+    await assertFileExists(fs, env.FFMPEG_PATH, 'FFMPEG_PATH');
+    console.info('FFmpeg binary resolved', {
+      source: 'FFMPEG_PATH',
+      pathExists: true
+    });
+    return env.FFMPEG_PATH;
+  }
 
-  const ffmpegInstaller = await dynamicImport('@ffmpeg-installer/ffmpeg') as { default?: { path?: string }; path?: string };
-  const ffmpegPath = ffmpegInstaller.default?.path ?? ffmpegInstaller.path;
-  if (!ffmpegPath) throw new Error('FFmpeg binary was not found.');
+  let ffmpegInstaller: FfmpegInstallerPackage;
+  try {
+    const require = createRequire(`${process.cwd()}/package.json`);
+    ffmpegInstaller = require('@ffmpeg-installer/ffmpeg') as FfmpegInstallerPackage;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`FFmpeg package could not be resolved: ${message}`);
+  }
+
+  const ffmpegPath = ffmpegInstaller.path;
+  if (!ffmpegPath) throw new Error('FFmpeg package resolved but did not expose a binary path.');
+  await assertFileExists(fs, ffmpegPath, '@ffmpeg-installer/ffmpeg');
+  console.info('FFmpeg package resolved', {
+    source: '@ffmpeg-installer/ffmpeg',
+    pathExists: true,
+    version: ffmpegInstaller.version ?? 'unknown'
+  });
   return ffmpegPath;
+}
+
+async function assertFileExists(fs: Pick<FileSystemPromises, 'readFile'>, filePath: string, source: string) {
+  try {
+    await fs.readFile(filePath);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`FFmpeg binary path from ${source} was not readable: ${message}`);
+  }
 }
 
 function runFfmpeg(spawn: Spawn, ffmpegPath: string, args: string[]) {

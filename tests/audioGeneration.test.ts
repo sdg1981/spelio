@@ -10,7 +10,8 @@ import {
   AUDIO_TRAILING_SILENCE_SAMPLES,
   AUDIO_TRAILING_SILENCE_SECONDS,
   createAudioPostProcessingFilter,
-  createFfmpegPostProcessingArgs
+  createFfmpegPostProcessingArgs,
+  resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
 import { createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
@@ -105,6 +106,26 @@ assert(args.includes('32k'), 'FFmpeg should preserve the existing 32k MP3 bitrat
 void runAsyncAssertions();
 
 async function runAsyncAssertions() {
+  const overrideFfmpegPath = await resolveFfmpegPath(
+    () => {
+      throw new Error('package require should not run when FFMPEG_PATH is set');
+    },
+    {
+      readFile: async () => new Uint8Array([1])
+    },
+    { FFMPEG_PATH: '/custom/ffmpeg' }
+  );
+  assertEqual(overrideFfmpegPath, '/custom/ffmpeg', 'FFmpeg resolution should prefer explicit FFMPEG_PATH.');
+
+  const packageFfmpegPath = await resolveFfmpegPath(
+    () => () => ({ path: '/bundled/ffmpeg', version: 'test-version' }),
+    {
+      readFile: async () => new Uint8Array([1])
+    },
+    {}
+  );
+  assertEqual(packageFfmpegPath, '/bundled/ffmpeg', 'FFmpeg resolution should fall back to bundled package path.');
+
   let requestedOutputFormat = '';
   let requestedSsml = '';
   let postProcessCalled = false;
