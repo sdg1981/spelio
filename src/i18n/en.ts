@@ -79,6 +79,8 @@ export const en = {
     styleAppliesNextSession: 'Welsh style will apply from your next session.',
     audioPrompts: 'Audio prompts',
     audioPromptsNote: 'Play audio when each word appears.',
+    recallPause: 'Recall pause',
+    recallPauseNote: 'Briefly delay English so you can listen first.',
     soundEffects: 'Sound effects',
     soundEffectsNote: 'Play sounds for correct and incorrect answers.',
     resetProgress: 'Reset progress',

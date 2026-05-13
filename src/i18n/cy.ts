@@ -79,6 +79,8 @@ export const cy = {
     styleAppliesNextSession: 'Bydd arddull Cymraeg yn newid o’ch sesiwn nesaf.',
     audioPrompts: 'Awgrymiadau sain',
     audioPromptsNote: 'Chwarae sain pan fydd pob gair yn ymddangos.',
+    recallPause: 'Oedi cofio',
+    recallPauseNote: 'Oedi’r Saesneg yn fyr fel y gallwch wrando’n gyntaf.',
     soundEffects: 'Effeithiau sain',
     soundEffectsNote: 'Chwarae sain ar gyfer atebion cywir ac anghywir.',
     resetProgress: 'Ailosod cynnydd',

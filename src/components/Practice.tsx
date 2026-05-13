@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
 import { SquareArrowLeft, SquareArrowRight, SquareArrowUp } from 'lucide-react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
@@ -11,13 +11,18 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practi
 import { getFullyCompletedListIds } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
-import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
+import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
+
+type RecallPauseVisibility = {
+  wordId: string | null;
+  visible: boolean;
+};
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -178,6 +183,9 @@ export function Practice({
   const peekTimerRef = useRef<number | null>(null);
   const peekAutoHideTimerRef = useRef<number | null>(null);
   const englishPromptPeekTimerRef = useRef<number | null>(null);
+  const recallPauseTimerRef = useRef<number | null>(null);
+  const recallPauseScheduledWordIdRef = useRef<string | null>(null);
+  const [recallPauseVisibility, setRecallPauseVisibility] = useState<RecallPauseVisibility>({ wordId: null, visible: false });
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
   const revealShortcutHeldRef = useRef(false);
@@ -248,6 +256,14 @@ export function Practice({
       englishPromptPeekTimerRef.current = null;
     }
     setIsEnglishPromptPeeking(false);
+  }, []);
+
+  const clearRecallPauseTimer = useCallback(() => {
+    if (recallPauseTimerRef.current) {
+      window.clearTimeout(recallPauseTimerRef.current);
+      recallPauseTimerRef.current = null;
+    }
+    recallPauseScheduledWordIdRef.current = null;
   }, []);
 
   const restorePracticeInputFocus = useCallback(() => {
@@ -408,37 +424,42 @@ export function Practice({
       if (spellingHintAudioReplayTimerRef.current) window.clearTimeout(spellingHintAudioReplayTimerRef.current);
       clearPeekTimers();
       clearEnglishPromptPeek();
+      clearRecallPauseTimer();
       revealShortcutHeldRef.current = false;
     };
-  }, [clearEnglishPromptPeek, clearPeekTimers]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, clearRecallPauseTimer]);
 
   useEffect(() => {
     isPeekingRef.current = isPeeking;
   }, [isPeeking]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     clearPeekTimers();
     const wasPeeking = isPeekingRef.current;
     peekActivatedRef.current = false;
     isPeekingRef.current = false;
     setIsPeeking(false);
     clearEnglishPromptPeek();
+    clearRecallPauseTimer();
     clearSpellingHint();
+    setRecallPauseVisibility({ wordId: currentWord?.id ?? null, visible: false });
     shownSpellingHintsRef.current = new Set();
     setPeekUsedForCurrentWord(false);
     revealShortcutHeldRef.current = false;
     if (wasPeeking) restorePracticeInputFocus();
-  }, [clearEnglishPromptPeek, clearPeekTimers, clearSpellingHint, currentWord?.id, restorePracticeInputFocus]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, clearRecallPauseTimer, clearSpellingHint, currentWord?.id, restorePracticeInputFocus]);
 
   useEffect(() => {
     if (modal || isComplete || settingsModalOpenRef.current) {
       finishPeek(false);
       clearEnglishPromptPeek();
+      clearRecallPauseTimer();
+      if (currentWord) setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       if (isComplete) clearSpellingHint();
       peekActivatedRef.current = false;
       revealShortcutHeldRef.current = false;
     }
-  }, [clearEnglishPromptPeek, clearSpellingHint, finishPeek, isComplete, modal]);
+  }, [clearEnglishPromptPeek, clearRecallPauseTimer, clearSpellingHint, currentWord?.id, finishPeek, isComplete, modal]);
 
   useEffect(() => {
     if (status) {
@@ -541,6 +562,49 @@ export function Practice({
     if (currentWordComplete) finishPeek(false);
   }, [currentWordComplete, finishPeek]);
 
+  useEffect(() => {
+    clearRecallPauseTimer();
+
+    if (!currentWord) {
+      setRecallPauseVisibility({ wordId: null, visible: false });
+      return;
+    }
+
+    const playbackFailed = audioPlaybackFailedWordIds.has(currentWord.id);
+    const shouldDelay = shouldDelayEnglishPrompt(storage.settings, currentWord, playbackFailed);
+    if (!shouldDelay || isComplete || modal || settingsModalOpenRef.current) {
+      setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
+      return;
+    }
+
+    setRecallPauseVisibility({ wordId: currentWord.id, visible: false });
+    const recallPauseDelayMs = getRecallPauseDelayMs({
+      prompt: getPrompt(currentWord),
+      answer: practiceAnswer
+    });
+    recallPauseScheduledWordIdRef.current = currentWord.id;
+    recallPauseTimerRef.current = window.setTimeout(() => {
+      if (recallPauseScheduledWordIdRef.current !== currentWord.id) return;
+      setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
+      recallPauseTimerRef.current = null;
+      recallPauseScheduledWordIdRef.current = null;
+    }, recallPauseDelayMs);
+
+    return clearRecallPauseTimer;
+  }, [
+    audioPlaybackFailedWordIds,
+    clearRecallPauseTimer,
+    currentWord?.audioStatus,
+    currentWord?.audioUrl,
+    currentWord?.id,
+    isComplete,
+    modal,
+    practiceAnswer,
+    storage.settings.audioPrompts,
+    storage.settings.englishVisible,
+    storage.settings.recallPause
+  ]);
+
   const updateSettings = useCallback((patch: Partial<SpelioSettings>) => {
     const nextSettings = { ...storage.settings, ...patch };
     if (!nextSettings.audioPrompts) {
@@ -559,12 +623,14 @@ export function Practice({
     settingsModalOpenRef.current = open;
     if (open) {
       finishPeek(false, false);
+      clearRecallPauseTimer();
+      if (currentWord) setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       blurMobileInput();
       peekActivatedRef.current = false;
     } else {
       restorePracticeInputFocus();
     }
-  }, [finishPeek, restorePracticeInputFocus]);
+  }, [clearRecallPauseTimer, currentWord?.id, finishPeek, restorePracticeInputFocus]);
 
   function applyWordLists(selectedIds: string[]) {
     const ids = normalizeSingleSelectedListIds(selectedIds, lists);
@@ -771,7 +837,24 @@ export function Practice({
   const dialectLabel = getDialectLabel(currentWord, t);
   const spellingHintText = spellingHint ? t(spellingHint.translationKey) : null;
   const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
-  const promptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable) || isEnglishPromptPeeking;
+  const shouldDelayCurrentEnglishPrompt = shouldDelayEnglishPrompt(
+    storage.settings,
+    currentWord,
+    audioPlaybackFailedWordIds.has(currentWord.id)
+  );
+  const basePromptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable);
+  const recallPausePromptReleased =
+    !shouldDelayCurrentEnglishPrompt ||
+    (recallPauseVisibility.wordId === currentWord.id && recallPauseVisibility.visible);
+  const promptDisplay = getEnglishPromptDisplayState({
+    basePromptVisible,
+    shouldDelay: shouldDelayCurrentEnglishPrompt,
+    delayedVisible: recallPausePromptReleased,
+    peeking: isEnglishPromptPeeking
+  });
+  const promptVisible = promptDisplay.visible;
+  const promptDelayed = promptDisplay.reserved;
+  const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
   const wordInsights = interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -787,7 +870,14 @@ export function Practice({
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
           {storage.settings.audioPrompts && <Repeat className="prompt-audio-icon" size={23} />}
-          {promptVisible && <span>{prompt}</span>}
+          {promptUsesRecallPauseShell ? (
+            <span className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
+              <span className="prompt-text-reserve" aria-hidden="true">{prompt}</span>
+              <span className="prompt-text-value" aria-hidden={!promptVisible}>{prompt}</span>
+            </span>
+          ) : (
+            promptVisible && <span>{prompt}</span>
+          )}
         </button>
         {currentWordAudioUnavailable && !storage.settings.englishVisible && (
           <div className="audio-fallback-label">{t('practice.audioFallbackPromptShown')}</div>
@@ -1204,6 +1294,14 @@ export function SettingsModal({
                 <span className="mt-2 block field-note">{t('settings.audioPromptsNote')}</span>
               </span>
               <Toggle active={settings.audioPrompts} onClick={() => onChange({ audioPrompts: !settings.audioPrompts })} />
+            </div>
+
+            <div className="flex items-center justify-between gap-8">
+              <span>
+                <b className="block text-[18px] md:text-[15px]">{t('settings.recallPause')}</b>
+                <span className="mt-2 block field-note">{t('settings.recallPauseNote')}</span>
+              </span>
+              <Toggle active={settings.recallPause} onClick={() => onChange({ recallPause: !settings.recallPause })} />
             </div>
 
             <div className="flex items-center justify-between gap-8">

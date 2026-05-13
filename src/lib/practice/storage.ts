@@ -22,6 +22,7 @@ export interface SessionResult {
 export interface SpelioSettings {
   englishVisible: boolean;
   audioPrompts: boolean;
+  recallPause: boolean;
   soundEffects: boolean;
   welshSpelling: WelshSpellingMode;
   dialectPreference: DialectPreference;
@@ -98,6 +99,7 @@ const LEGACY_STORAGE_KEYS = [
 export const defaultSettings: SpelioSettings = {
   englishVisible: true,
   audioPrompts: true,
+  recallPause: false,
   soundEffects: true,
   welshSpelling: 'flexible',
   dialectPreference: 'mixed',
@@ -234,6 +236,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       ...defaultSettings,
       englishVisible,
       audioPrompts,
+      recallPause: typeof settings.recallPause === 'boolean' ? settings.recallPause : defaultSettings.recallPause,
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
       welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
       dialectPreference: normaliseDialectPreference(settings.dialectPreference),

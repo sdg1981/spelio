@@ -339,6 +339,30 @@ Behaviour:
 - If subtitles are off, the pill may show only the speaker icon, but still remains tappable.
 - If audio is unavailable, tapping the pill should show a subtle temporary status message: “Audio unavailable”.
 
+Recall pause:
+
+- Optional learning mode controlled from Settings.
+- When Recall pause is off, existing word/audio pill behaviour is unchanged.
+- When Recall pause is on, and audio prompts are on, English prompts are on, and audio is available:
+  - Welsh audio plays immediately.
+  - The English prompt/subtitle is hidden from the first render of the word.
+  - The English prompt appears only after a short recall pause.
+  - The English prompt fades in smoothly unless reduced motion is preferred.
+  - The speaker/audio affordance remains visible immediately.
+  - The prompt area should reserve space to avoid layout shift.
+- If audio is unavailable, audio prompts are off, or English prompts are off:
+  - Fall back to normal existing behaviour with no artificial delay.
+- Recall pause must not delay typing/input availability.
+- Recall pause must not delay audio.
+- Recall pause must not affect scoring, review, recap, difficult-word handling, recommendations, hints, usage notes, dialect notes, reveal, completion, or word selection.
+- Delay timing is adaptive but internal and not user-configurable:
+  - Minimum delay: about 1.5 seconds.
+  - Slightly longer for longer prompts/answers.
+  - Suggested implementation: base 1500ms, add around 150ms per prompt word after the first, add around 40ms per answer character after 8 characters, cap around 2400ms.
+  - Do not add a user-facing slider, advanced timing controls, or separate delay-audio setting.
+- English must not flash briefly before being hidden. The delayed English visibility state should be initialised so hidden text is not visible on first render when Recall pause applies.
+- Pending delayed-English timers must be cleared when moving word, leaving practice, opening relevant modals, or unmounting. Stale timers must not reveal English for a previous word on the next word.
+
 ### 6.3 Letter input
 
 The answer appears as individual letter slots.
@@ -454,6 +478,12 @@ Fields:
   - South Wales / Standard
 - Audio prompts
   - On/off
+- Learning mode / Recall pause
+  - On/off
+  - Suggested label: “Recall pause”
+  - Suggested helper text: “Hear the Welsh first, then show English after a moment.”
+  - Optional and not enabled by default
+  - Do not add sliders, timing controls, separate delay-audio settings, or multiple recall modes
 - Sound effects
   - On/off
 - Reset progress
@@ -468,6 +498,7 @@ Defaults:
 - Welsh spelling: Flexible
 - Welsh style: Mixed Welsh
 - Audio prompts: On
+- Recall pause: Off
 - Sound effects: On
 
 Welsh style is stored as `dialectPreference` and affects word-level variant selection only. It must not affect word-list visibility.
@@ -1251,6 +1282,7 @@ Use local storage shape:
   "settings": {
     "englishVisible": true,
     "audioPrompts": true,
+    "recallPause": false,
     "soundEffects": true,
     "welshSpelling": "flexible",
     "dialectPreference": "mixed",
@@ -1262,6 +1294,8 @@ Use local storage shape:
 Older stored settings without `dialectPreference` should default safely to `mixed`.
 
 Older stored settings without `interfaceLanguage` should default safely to `en`.
+
+Older stored settings without `recallPause` should default safely to `false`.
 
 `interfaceLanguage` must remain independent from `dialectPreference`, English prompt visibility, and content language-pair metadata.
 

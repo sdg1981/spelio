@@ -834,6 +834,10 @@
     transform:translateX(-50%)!important;
   }
 
+  .practice-app .prompt-text-value{
+    transition:none!important;
+  }
+
   .letter-slot.revealed:not(.mistake){
     animation:letter-reveal-reduced .1s ease-out both!important;
     transform:none!important;
@@ -2031,6 +2035,31 @@
   height:26px;
   stroke-width:2.4;
   transition:color .18s ease-out,stroke .18s ease-out;
+}
+
+.practice-app .prompt-text{
+  display:inline-grid;
+  align-items:center;
+  min-width:0;
+}
+
+.practice-app .prompt-text-reserve,
+.practice-app .prompt-text-value{
+  grid-area:1 / 1;
+  white-space:nowrap;
+}
+
+.practice-app .prompt-text-reserve{
+  visibility:hidden;
+}
+
+.practice-app .prompt-text-value{
+  opacity:1;
+  transition:opacity .22s ease-out;
+}
+
+.practice-app .prompt-text.delayed .prompt-text-value{
+  opacity:0;
 }
 
 .practice-app .word-pill:focus-visible{
