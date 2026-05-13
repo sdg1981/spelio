@@ -73,7 +73,7 @@ function LetterSlots({
               const animationIndex = visibleLetterIndex;
               visibleLetterIndex += 1;
               const isMistake = wrongIndex === index;
-              const displayValue = isMistake ? (wrongAttempt ?? slot?.value) : slot?.value;
+              const displayValue = isMistake ? '×' : slot?.value;
               const hasValue = Boolean(displayValue);
 
               return (
