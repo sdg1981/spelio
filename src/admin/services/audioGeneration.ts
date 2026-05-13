@@ -3,6 +3,7 @@ import type { AdminWord, AudioStatus } from '../types';
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
 export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
+export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 
 export type AudioQueueCounts = Record<AudioStatus, number>;
 
@@ -89,7 +90,7 @@ export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {
 export function createWelshSsml(text: string) {
   // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
   const safeText = escapeXml(text.trim());
-  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}">${safeText}</voice></speak>`;
+  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${safeText}</prosody></voice></speak>`;
 }
 
 function escapeXml(value: string) {

@@ -9,6 +9,10 @@ npm install
 npm run dev
 ```
 
+## Audio generation
+
+Azure TTS post-processing uses the bundled `@ffmpeg-installer/ffmpeg` binary in serverless routes. Set `FFMPEG_PATH` only if a deployment environment needs to override that binary path.
+
 ## Included screens
 
 - First-time homepage

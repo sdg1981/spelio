@@ -15,14 +15,40 @@ type ApiResponse = {
 };
 
 declare const Buffer: {
-  from: (value: ArrayBuffer) => Uint8Array;
+  from: (value: ArrayBuffer | Uint8Array) => Uint8Array;
 };
 
-const voice = 'cy-GB-NiaNeural';
-const locale = 'cy-GB';
-const outputFormat = 'audio-16khz-32kbitrate-mono-mp3';
+import { postProcessAzureWavToMp3 } from './audioPostProcessing';
+
+export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
+export const AZURE_SPEECH_LOCALE = 'cy-GB';
+export const AZURE_SPEECH_PROSODY_RATE = '-4%';
+export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-16khz-16bit-mono-pcm';
+
+type AzureFetchResponse = {
+  ok: boolean;
+  status: number;
+  arrayBuffer: () => Promise<ArrayBuffer>;
+};
+
+type AzureFetch = (url: string, options: {
+  method: 'POST';
+  headers: Record<string, string>;
+  body: string;
+}) => Promise<AzureFetchResponse>;
+
+type HandlerDependencies = {
+  env?: Record<string, string | undefined>;
+  fetchImpl?: AzureFetch;
+  postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>;
+  logError?: (message: string, details: Record<string, unknown>) => void;
+};
 
 export default async function handler(request: ApiRequest, response: ApiResponse) {
+  return handleAzureTtsRequest(request, response);
+}
+
+export async function handleAzureTtsRequest(request: ApiRequest, response: ApiResponse, dependencies: HandlerDependencies = {}) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
     return response.status(405).json({ ok: false, error: 'Method not allowed' });
@@ -33,18 +59,20 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (!text) return response.status(400).json({ ok: false, error: 'Welsh text is required.' });
   if (text.length > 500) return response.status(400).json({ ok: false, error: 'Welsh text is too long.' });
 
-  const key = process.env.AZURE_SPEECH_KEY ?? process.env.VITE_AZURE_SPEECH_KEY;
-  const region = process.env.AZURE_SPEECH_REGION ?? process.env.VITE_AZURE_SPEECH_REGION;
+  const env = dependencies.env ?? process.env;
+  const key = env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY;
+  const region = env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION;
   if (!key || !region) {
     return response.status(500).json({ ok: false, error: 'Azure Speech is not configured.' });
   }
 
-  const azureResponse = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const azureResponse = await fetchImpl(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/ssml+xml',
       'Ocp-Apim-Subscription-Key': key,
-      'X-Microsoft-OutputFormat': outputFormat
+      'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
     },
     body: createWelshSsml(text)
   });
@@ -55,14 +83,23 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       .json({ ok: false, error: azureResponse.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${azureResponse.status}).` });
   }
 
-  const audioBuffer = await azureResponse.arrayBuffer();
-  if (audioBuffer.byteLength < 100) {
+  const wavBuffer = await azureResponse.arrayBuffer();
+  if (wavBuffer.byteLength < 100) {
     return response.status(502).json({ ok: false, error: 'Azure returned an unexpectedly small audio payload.' });
+  }
+
+  let mp3Audio: Uint8Array;
+  try {
+    mp3Audio = await (dependencies.postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Audio processing failed.';
+    (dependencies.logError ?? console.error)('Azure audio post-processing failed', { error: message });
+    return response.status(500).json({ ok: false, error: message });
   }
 
   response.setHeader('Content-Type', 'audio/mpeg');
   response.setHeader('Cache-Control', 'no-store');
-  return response.status(200).send(Buffer.from(audioBuffer));
+  return response.status(200).send(Buffer.from(mp3Audio));
 }
 
 function parseBody(body: unknown): { text?: unknown } | null {
@@ -78,9 +115,9 @@ function parseBody(body: unknown): { text?: unknown } | null {
   return null;
 }
 
-function createWelshSsml(text: string) {
+export function createWelshSsml(text: string) {
   // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
-  return `<speak version="1.0" xml:lang="${locale}"><voice xml:lang="${locale}" name="${voice}">${escapeXml(text)}</voice></speak>`;
+  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text)}</prosody></voice></speak>`;
 }
 
 function escapeXml(value: string) {

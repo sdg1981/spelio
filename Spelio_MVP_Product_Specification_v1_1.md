@@ -1569,6 +1569,28 @@ This should:
 
 Do not expose Azure API keys in the browser.
 
+### 16.5.1 Audio generation refinement
+
+Azure Welsh TTS remains the MVP audio provider.
+
+Where practical, audio generation should use a WAV/intermediate output before final MP3 encoding.
+
+Generated audio should pass through a lightweight automated server-side post-processing step before upload/storage:
+
+- gentle loudness normalisation for consistent playback volume
+- very short fade-out, around 20–40ms, to reduce mobile speaker popping/clicking at clip endings
+- trailing silence padding, around 150ms, to prevent abrupt cutoffs and support the calm Spelio experience
+
+SSML prosody rate may be set slightly slower, around -3% to -5%, with -4% as the initial recommended default.
+
+Goal: clearer, calmer, less abrupt audio while preserving natural Welsh pronunciation and avoiding an obviously slowed-down teaching voice.
+
+Do not add EQ, compression, custom mastering, IPA dictionaries, pronunciation override UI, or third-party audio-processing APIs for MVP.
+
+Any pronunciation override system should remain future-facing and only be considered later for individual problematic words.
+
+This change must not alter public playback UI, practice logic, scoring, progress, word-list behaviour, or learner settings.
+
 ## 17. Founder Observation & Anonymous Product Analytics
 
 **UX intent:** Analytics should help the founder understand whether the core practice loop works, without changing the calm, low-friction, privacy-respectful nature of the product.
