@@ -18,7 +18,12 @@ declare const Buffer: {
   from: (value: ArrayBuffer | Uint8Array) => Uint8Array;
 };
 
-import { postProcessAzureWavToMp3 } from './audioPostProcessing';
+import { postProcessAzureWavToMp3 } from './audioPostProcessing.js';
+
+console.info('audioPostProcessing helper loaded successfully', {
+  helper: 'audioPostProcessing',
+  importSpecifier: './audioPostProcessing.js'
+});
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';

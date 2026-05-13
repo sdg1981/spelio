@@ -4,14 +4,14 @@ import {
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
   createWelshSsml,
   handleAzureTtsRequest
-} from '../api/azure-tts';
+} from '../api/azure-tts.js';
 import {
   AUDIO_FADE_OUT_SECONDS,
   AUDIO_TRAILING_SILENCE_SAMPLES,
   AUDIO_TRAILING_SILENCE_SECONDS,
   createAudioPostProcessingFilter,
   createFfmpegPostProcessingArgs
-} from '../api/audioPostProcessing';
+} from '../api/audioPostProcessing.js';
 import { createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
