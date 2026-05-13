@@ -52,101 +52,28 @@ function getPracticeAnswer(word: PracticeWord) {
   return createPracticeAnswer(getAnswer(word));
 }
 
-type ToneType = 'success' | 'error' | 'completion';
-
-const toneConfigs: Record<ToneType, { frequency: number; peakGain: number; attackMs: number; sustainMs: number; releaseMs: number }> = {
-  error: { frequency: 180, peakGain: 0.022, attackMs: 12, sustainMs: 42, releaseMs: 88 },
-  success: { frequency: 520, peakGain: 0.026, attackMs: 10, sustainMs: 50, releaseMs: 80 },
-  completion: { frequency: 660, peakGain: 0.024, attackMs: 12, sustainMs: 68, releaseMs: 96 }
-};
-const TONE_REPLACEMENT_FADE_MS = 36;
-
-let activeTone: {
-  context: AudioContext;
-  oscillator: OscillatorNode;
-  gain: GainNode;
-  closeTimer: number;
-} | null = null;
-let pendingToneTimer: number | null = null;
-
-function stopActiveTone(fadeMs = TONE_REPLACEMENT_FADE_MS) {
-  const tone = activeTone;
-  if (!tone) return false;
-  activeTone = null;
-
-  window.clearTimeout(tone.closeTimer);
-
-  try {
-    const now = tone.context.currentTime;
-    const stopAt = now + fadeMs / 1000;
-
-    tone.gain.gain.cancelScheduledValues(now);
-    tone.gain.gain.setValueAtTime(tone.gain.gain.value, now);
-    tone.gain.gain.linearRampToValueAtTime(0, stopAt);
-    tone.oscillator.stop(stopAt + 0.005);
-    window.setTimeout(() => tone.context.close().catch(() => undefined), fadeMs + 80);
-  } catch {
-    tone.context.close().catch(() => undefined);
-  }
-
-  return true;
-}
-
-function startTone(type: ToneType) {
+function playTone(type: 'success' | 'error' | 'completion') {
   try {
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
 
-    const config = toneConfigs[type];
     const context = new AudioContextClass();
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    const now = context.currentTime;
-    const attackEnd = now + config.attackMs / 1000;
-    const releaseStart = attackEnd + config.sustainMs / 1000;
-    const stopAt = releaseStart + config.releaseMs / 1000;
 
     oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(config.frequency, now);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(config.peakGain, attackEnd);
-    gain.gain.setValueAtTime(config.peakGain, releaseStart);
-    gain.gain.linearRampToValueAtTime(0, stopAt);
+    oscillator.frequency.value = type === 'error' ? 180 : type === 'completion' ? 660 : 520;
+    gain.gain.value = 0.035;
 
     oscillator.connect(gain);
     gain.connect(context.destination);
-    oscillator.start(now);
-    oscillator.stop(stopAt + 0.005);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.14);
 
-    activeTone = {
-      context,
-      oscillator,
-      gain,
-      closeTimer: window.setTimeout(() => {
-        if (activeTone?.context === context) activeTone = null;
-        context.close().catch(() => undefined);
-      }, config.attackMs + config.sustainMs + config.releaseMs + 90)
-    };
+    window.setTimeout(() => context.close().catch(() => undefined), 240);
   } catch {
     // Sound effects are non-critical.
   }
-}
-
-function playTone(type: ToneType) {
-  if (pendingToneTimer) {
-    window.clearTimeout(pendingToneTimer);
-    pendingToneTimer = null;
-  }
-
-  if (stopActiveTone()) {
-    pendingToneTimer = window.setTimeout(() => {
-      pendingToneTimer = null;
-      startTone(type);
-    }, TONE_REPLACEMENT_FADE_MS);
-    return;
-  }
-
-  startTone(type);
 }
 
 export function usePracticeSession({
