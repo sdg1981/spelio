@@ -2743,8 +2743,8 @@
   inset:12px;
   z-index:0;
   border-radius:inherit;
-  background:#fff;
-  box-shadow:0 18px 55px rgba(24,171,84,.2),0 10px 28px rgba(7,21,34,.055);
+  background:var(--score-center,#fbfaf7);
+  box-shadow:0 18px 55px rgba(24,171,84,.22),0 10px 28px rgba(7,21,34,.055);
   pointer-events:none;
 }
 
@@ -2772,7 +2772,7 @@
 .end-score-ring-track,
 .end-score-ring-progress{
   fill:none;
-  stroke-width:8;
+  stroke-width:7;
 }
 
 .end-score-ring-track{
@@ -3090,7 +3090,7 @@
 
   .end-score-ring-track,
   .end-score-ring-progress{
-    stroke-width:7;
+    stroke-width:6.5;
   }
 
   .end-score-ring-text{
@@ -3140,7 +3140,7 @@
 
   .end-score-ring-track,
   .end-score-ring-progress{
-    stroke-width:7;
+    stroke-width:6.5;
   }
 
   .end-score-ring-text{
@@ -3309,6 +3309,7 @@
   --accent-red-glow:rgba(217,0,0,.18);
   --success:#346f54;
   --success-soft:#e4f7eb;
+  --score-center:#fbfaf7;
   --score-track:#eceff1;
   --overlay:rgba(7,21,34,.52);
   --focus-ring:rgba(217,0,0,.18);
@@ -3376,6 +3377,7 @@
   --red-dark:var(--accent-red-hover);
   --success:#75c68f;
   --success-soft:rgba(117,198,143,.14);
+  --score-center:radial-gradient(circle at 50% 45%, var(--accent-red-haze-soft), var(--bg-surface) 64%);
   --score-track:rgba(255,255,255,.14);
   --overlay:rgba(7,6,5,.76);
   --focus-ring:var(--accent-red-focus);
@@ -3405,6 +3407,10 @@
   background:var(--bg-surface);
   color:var(--text-primary);
   border-color:var(--border-subtle);
+}
+
+.public-app .end-score-ring::before{
+  background:var(--score-center);
 }
 
 .utility-bar,
@@ -3994,8 +4000,8 @@
 }
 
 .public-app[data-theme="dark"] .end-score-ring::before{
-  background:radial-gradient(circle at 50% 45%, var(--accent-red-haze-soft), var(--bg-surface) 64%);
-  box-shadow:0 18px 55px rgba(117,198,143,.18),0 16px 40px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04);
+  background:var(--score-center);
+  box-shadow:0 18px 55px rgba(117,198,143,.2),0 16px 40px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 .public-app[data-theme="dark"] .end-score-ring::after{
