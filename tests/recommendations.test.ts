@@ -4,6 +4,7 @@ import { classifySession, createPracticeSession, formatRecapWordCount, getDiffic
 import { getSelectedListLabel, normalizeSingleSelectedListIds, normalizeStorageWordListSelection, selectSingleWordList } from '../src/lib/practice/wordListSelection';
 import {
   addLearningStats,
+  addMixedWelshExposure,
   applyManualWordListSelection,
   applyWordProgressPatch,
   applyPracticeStartListSelection,
@@ -230,6 +231,94 @@ function missingPreferredVariantList(): WordList {
   };
 }
 
+function singleVariantGroupList(id: string, order: number): WordList {
+  return {
+    id,
+    collectionId: 'test',
+    name: id,
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Mixed',
+    stage: 'Test',
+    difficulty: 1,
+    order,
+    nextListId: null,
+    isActive: true,
+    words: [
+      makeTestWord(`${id}_south`, 1, {
+        listId: id,
+        englishPrompt: `${id} shared`,
+        welshAnswer: `${id} south`,
+        dialect: 'South Wales / Standard',
+        variantGroupId: 'shared'
+      }),
+      makeTestWord(`${id}_north`, 2, {
+        listId: id,
+        englishPrompt: `${id} shared`,
+        welshAnswer: `${id} north`,
+        dialect: 'North Wales',
+        variantGroupId: 'shared'
+      }),
+      ...Array.from({ length: 9 }, (_, index) => makeTestWord(`${id}_plain_${index + 1}`, index + 3, {
+        listId: id,
+        englishPrompt: `${id} plain ${index + 1}`,
+        welshAnswer: `${id}plain${index + 1}`
+      }))
+    ]
+  };
+}
+
+function unavoidableBeforeChoicefulList(): WordList {
+  const id = 'test_unavoidable_before_choiceful';
+
+  return {
+    id,
+    collectionId: 'test',
+    name: id,
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Mixed',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    words: [
+      makeTestWord(`${id}_south_only`, 1, {
+        listId: id,
+        englishPrompt: 'south only',
+        welshAnswer: 'south only',
+        dialect: 'South Wales / Standard',
+        variantGroupId: 'south_only'
+      }),
+      makeTestWord(`${id}_choice_south`, 2, {
+        listId: id,
+        englishPrompt: 'choiceful',
+        welshAnswer: 'choice south',
+        dialect: 'South Wales / Standard',
+        variantGroupId: 'choiceful'
+      }),
+      makeTestWord(`${id}_choice_north`, 3, {
+        listId: id,
+        englishPrompt: 'choiceful',
+        welshAnswer: 'choice north',
+        dialect: 'North Wales',
+        variantGroupId: 'choiceful'
+      }),
+      makeTestWord(`${id}_north_ungrouped`, 4, {
+        listId: id,
+        englishPrompt: 'ungrouped north',
+        welshAnswer: 'ungrouped north',
+        dialect: 'North Wales'
+      })
+    ]
+  };
+}
+
 function dialectCompletionList(): WordList {
   const id = 'test_dialect_completion';
 
@@ -396,6 +485,39 @@ function completeSessionWordsCleanly(storage: SpelioStorage, words: PracticeWord
       lastSessionResult: result
     },
     wordLists,
+    result
+  );
+}
+
+function completeMixedNormalSessionCleanly(storage: SpelioStorage, lists: WordList[], words: PracticeWord[], listIds: string[]) {
+  for (const word of words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: words.length,
+    correctWords: words.length,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds,
+    state: 'strong'
+  };
+
+  return updateListCompletion(
+    addMixedWelshExposure(
+      {
+        ...storage,
+        completedNormalSessionCount: (storage.completedNormalSessionCount ?? 0) + 1,
+        lastSessionDate: '2026-05-05T00:00:30.000Z',
+        lastSessionResult: result
+      },
+      words,
+      lists
+    ),
+    lists,
     result
   );
 }
@@ -1700,6 +1822,8 @@ test('older storage without dialectPreference defaults to Mixed Welsh', () => {
   });
 
   assertEqual(storage.settings.dialectPreference, 'mixed', 'Missing dialectPreference should normalize to mixed');
+  assertEqual(storage.mixedWelshExposure?.north, 0, 'Missing Mixed Welsh north exposure should normalize to zero');
+  assertEqual(storage.mixedWelshExposure?.southStandard, 0, 'Missing Mixed Welsh South/Standard exposure should normalize to zero');
 });
 
 test('North Wales preference selects the North Wales variant where available', () => {
@@ -1718,6 +1842,81 @@ test('South Wales / Standard preference selects the South/Standard variant where
   assert(nowVariant, 'Expected first words session to include the now variant group');
   assertEqual(nowVariant.dialect, 'South Wales / Standard', 'South/Standard preference should choose the South/Standard variant');
   assertEqual(nowVariant.welshAnswer, 'nawr', 'South/Standard preference should choose nawr for now');
+});
+
+test('Mixed Welsh does not always choose South/Standard first across fresh single-variant-group lists', () => {
+  const lists = [
+    singleVariantGroupList('test_single_variant_1', 1),
+    singleVariantGroupList('test_single_variant_2', 2),
+    singleVariantGroupList('test_single_variant_3', 3)
+  ];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [lists[0].id],
+    currentPathPosition: lists[0].id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'mixed'
+    }
+  };
+  const chosenDialects: PracticeWord['dialect'][] = [];
+
+  for (const list of lists) {
+    storage = {
+      ...storage,
+      selectedListIds: [list.id],
+      currentPathPosition: list.id
+    };
+    const session = createPracticeSession(lists, storage);
+    const variant = session.words.find(word => word.variantGroupId === 'shared');
+    assert(variant, 'Expected single variant group to be selected');
+    chosenDialects.push(variant.dialect);
+    storage = completeMixedNormalSessionCleanly(storage, lists, session.words, session.listIds);
+  }
+
+  assert(chosenDialects.includes('North Wales'), 'Mixed Welsh progression should include a North Wales first exposure');
+  assert(chosenDialects.includes('South Wales / Standard'), 'Mixed Welsh progression should still include South/Standard exposure');
+});
+
+test('Mixed Welsh balances North and South variants over repeated normal sessions', () => {
+  let storage = wantingStorage('mixed');
+  const lists = wordLists;
+
+  for (let index = 0; index < 2; index += 1) {
+    const session = createPracticeSession(lists, storage);
+    storage = completeMixedNormalSessionCleanly(storage, lists, session.words, session.listIds);
+    storage = {
+      ...storage,
+      selectedListIds: ['stage2_phrases_wanting'],
+      currentPathPosition: 'stage2_phrases_wanting'
+    };
+  }
+
+  assertEqual(storage.mixedWelshExposure?.north, 5, 'Two Mixed Welsh wanting sessions should show five North variants');
+  assertEqual(storage.mixedWelshExposure?.southStandard, 5, 'Two Mixed Welsh wanting sessions should show five South/Standard variants');
+});
+
+test('Mixed Welsh exposure ignores unavoidable and ungrouped dialect items', () => {
+  const list = unavoidableBeforeChoicefulList();
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'mixed'
+    }
+  };
+  const session = createPracticeSession([list], storage);
+  const choiceful = session.words.find(word => word.variantGroupId === 'choiceful');
+
+  assert(choiceful, 'Expected choiceful variant group to be selected');
+  assertEqual(choiceful.dialect, 'South Wales / Standard', 'Single-side South group should not skew same-session choiceful balancing');
+
+  const nextStorage = addMixedWelshExposure(storage, session.words, [list]);
+
+  assertEqual(nextStorage.mixedWelshExposure?.north, 0, 'Ungrouped North item should not be counted as Mixed Welsh choice exposure');
+  assertEqual(nextStorage.mixedWelshExposure?.southStandard, 1, 'Only the choiceful South/Standard variant should be counted');
 });
 
 test('Mixed Welsh balances North and South variants across paired wanting groups', () => {

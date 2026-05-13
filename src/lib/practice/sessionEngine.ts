@@ -1,5 +1,5 @@
 import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
-import type { SessionResult, SessionState, SpelioStorage } from './storage';
+import type { MixedWelshExposure, SessionResult, SessionState, SpelioStorage } from './storage';
 import { countUnseenLearningItems, groupLearningItems, learningItemKey } from './learningItems';
 import { normalizeSingleSelectedListIds } from './wordListSelection';
 
@@ -142,6 +142,44 @@ function isReviewEligibleForPreference(word: PracticeWord, preference: DialectPr
   return isSouthStandardVariant(word);
 }
 
+type MixedWelshSide = 'north' | 'southStandard';
+
+function getMixedExposure(storage?: SpelioStorage): MixedWelshExposure {
+  return {
+    north: Math.max(0, storage?.mixedWelshExposure?.north ?? 0),
+    southStandard: Math.max(0, storage?.mixedWelshExposure?.southStandard ?? 0)
+  };
+}
+
+function getMixedSide(word: PracticeWord): MixedWelshSide | null {
+  if (isNorthVariant(word)) return 'north';
+  if (isSouthStandardVariant(word)) return 'southStandard';
+  return null;
+}
+
+function tieBreakMixedSide(groupIndex: number, storage?: SpelioStorage): MixedWelshSide {
+  return ((storage?.completedNormalSessionCount ?? 0) + groupIndex) % 2 === 0 ? 'north' : 'southStandard';
+}
+
+function chooseMixedSide(group: PracticeWord[], groupIndex: number, exposure: MixedWelshExposure, storage?: SpelioStorage): MixedWelshSide | null {
+  const hasNorth = group.some(isNorthVariant);
+  const hasSouthStandard = group.some(isSouthStandardVariant);
+
+  if (hasNorth && hasSouthStandard) {
+    if (exposure.north < exposure.southStandard) return 'north';
+    if (exposure.southStandard < exposure.north) return 'southStandard';
+    return tieBreakMixedSide(groupIndex, storage);
+  }
+
+  if (hasNorth) return 'north';
+  if (hasSouthStandard) return 'southStandard';
+  return null;
+}
+
+function isChoicefulMixedGroup(group: PracticeWord[]) {
+  return group.some(isNorthVariant) && group.some(isSouthStandardVariant);
+}
+
 function mixedStartOffset(groups: PracticeWord[][], storage?: SpelioStorage) {
   if (!storage) return 0;
 
@@ -149,10 +187,15 @@ function mixedStartOffset(groups: PracticeWord[][], storage?: SpelioStorage) {
   return seenVariantCount % 2;
 }
 
-function chooseMixedVariant(group: PracticeWord[], groupIndex: number, startOffset: number, storage?: SpelioStorage): PracticeWord {
+function chooseLegacyMixedSide(groupIndex: number, startOffset: number): MixedWelshSide {
+  return (groupIndex + startOffset) % 2 === 1 ? 'north' : 'southStandard';
+}
+
+function chooseMixedVariant(group: PracticeWord[], preferredSide: MixedWelshSide | null, storage?: SpelioStorage): PracticeWord {
   const fallback = group[0] as PracticeWord;
-  const preferNorth = (groupIndex + startOffset) % 2 === 1;
-  const preferred = group.filter(word => preferNorth ? isNorthVariant(word) : isSouthStandardVariant(word));
+  const preferred = preferredSide
+    ? group.filter(word => getMixedSide(word) === preferredSide)
+    : [];
   const candidates = preferred.length ? preferred : group;
   const chosen = [...candidates].sort((a, b) => (
     mixedVariantRank(a, storage) - mixedVariantRank(b, storage) ||
@@ -172,7 +215,12 @@ function chooseVariant(group: PracticeWord[], preference: DialectPreference, sto
   return chosen ?? fallback;
 }
 
-export function filterDialectVariants(words: PracticeWord[], preference: DialectPreference, storage?: SpelioStorage) {
+export function filterDialectVariants(
+  words: PracticeWord[],
+  preference: DialectPreference,
+  storage?: SpelioStorage,
+  options: { useMixedExposureBalance?: boolean } = {}
+) {
   const grouped = new Map<string, PracticeWord[]>();
   const ungrouped: PracticeWord[] = [];
 
@@ -187,12 +235,21 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
   }
 
   const groups = Array.from(grouped.values());
-  const startOffset = preference === 'mixed' ? mixedStartOffset(groups, storage) : 0;
-  const chosen = groups.map((group, index) => (
-    preference === 'mixed'
-      ? chooseMixedVariant(group, index, startOffset, storage)
-      : chooseVariant(group, preference, storage)
-  ));
+  const exposure = getMixedExposure(storage);
+  const legacyStartOffset = preference === 'mixed' && !options.useMixedExposureBalance
+    ? mixedStartOffset(groups, storage)
+    : 0;
+  const chosen = groups.map((group, index) => {
+    if (preference !== 'mixed') return chooseVariant(group, preference, storage);
+
+    const preferredSide = options.useMixedExposureBalance
+      ? chooseMixedSide(group, index, exposure, storage)
+      : chooseLegacyMixedSide(index, legacyStartOffset);
+    const word = chooseMixedVariant(group, preferredSide, storage);
+    const chosenSide = getMixedSide(word);
+    if (options.useMixedExposureBalance && chosenSide && isChoicefulMixedGroup(group)) exposure[chosenSide] += 1;
+    return word;
+  });
 
   return [...ungrouped, ...chosen].sort((a, b) => a.order - b.order);
 }
@@ -258,7 +315,12 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
     ? lists.filter(list => list.isActive)
     : lists.filter(list => selectedIds.includes(list.id) && list.isActive);
   const allCandidates = eligibleLists.flatMap(list => list.words);
-  const dialectResolvedCandidates = filterDialectVariants(allCandidates, storage.settings.dialectPreference, storage);
+  const dialectResolvedCandidates = filterDialectVariants(
+    allCandidates,
+    storage.settings.dialectPreference,
+    storage,
+    { useMixedExposureBalance: !reviewDifficult && !recapOnly }
+  );
 
   const pool = reviewDifficult
     ? getReviewCandidates(allCandidates, storage)

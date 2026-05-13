@@ -646,7 +646,11 @@ Dialect is handled at word/item level. The Welsh style setting affects variant s
 
 For ordinary practice and completion, a `variantGroupId` represents one conceptual learning item even when it is stored as multiple raw word rows.
 
-Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh may rotate or balance available North Wales and South Wales / Standard variants over time, avoiding a simple first-in-dataset-order bias while still showing only one variant from each group in a normal session.
+Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh should balance available North Wales and South Wales / Standard variants over time across ordinary learner progression, avoiding persistent first-exposure bias while still showing only one variant from each group in a normal session.
+
+Mixed Welsh balancing may use lightweight persistent exposure memory. It should remain deterministic and testable rather than random. If exposure is balanced, a deterministic fallback is acceptable.
+
+Mixed Welsh exposure memory should only count selections where the system had a genuine dialect choice within the same `variantGroupId`: both a North Wales variant and a South Wales / Standard or Standard variant existed for that conceptual learning item. Single-side grouped items, ungrouped dialect-specific items, `Both` items, review sessions, and unavoidable single-dialect content must not skew long-term Mixed Welsh balancing.
 
 Dialect variants must not inflate list length, session length, or public completion requirements. A list should not appear incomplete merely because the learner has not completed an unselected dialect variant.
 
@@ -889,7 +893,13 @@ Variant selection rules:
 - South Wales / Standard preference should prefer South Wales / Standard or Standard variants, then Both, then the best available single variant.
 - Mixed Welsh should feel naturally mixed within the same session where possible, not separated entirely by session order.
 - Mixed Welsh should avoid always choosing the first dataset-order variant.
-- Mixed Welsh may alternate, rotate, or balance North Wales and South Wales / Standard forms across variant groups and sessions.
+- Mixed Welsh should balance North Wales and South Wales / Standard exposure over time across normal learner progression, not merely within a single session or list.
+- Mixed Welsh should avoid persistent first-exposure bias toward either dialect side, including in lists with sparse variant groups.
+- Mixed Welsh may use lightweight persistent exposure memory/history for this balancing.
+- Mixed Welsh should remain deterministic and testable rather than fully random.
+- If Mixed Welsh exposure is balanced or equal, deterministic fallback behaviour is acceptable.
+- Mixed Welsh exposure memory should only count choiceful `variantGroupId` selections where both a North Wales variant and a South Wales / Standard or Standard variant existed for the same conceptual learning item.
+- Single-side grouped items, ungrouped dialect-specific items, `Both` items, review sessions, and unavoidable single-dialect content should not affect Mixed Welsh balancing memory.
 - Mixed Welsh should still choose only one variant from each `variantGroupId` in a normal session.
 - Mixed Welsh should not force learners to complete every dialect variant.
 - If only one variant exists for a group, use the available variant.
@@ -897,7 +907,7 @@ Variant selection rules:
 - If a preferred variant is missing, use the best available variant rather than shrinking the session.
 - Dialect balancing must not reduce normal session size.
 
-The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation. Dialect variants can be exposed more deliberately later in dedicated dialect-contrast or advanced practice modes, but they must not become a core completion burden.
+The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation. Mixed Welsh balancing should remain a lightweight session-selection aid, not a full dialect-tracking, mastery, or spaced-repetition subsystem. Dialect variants can be exposed more deliberately later in dedicated dialect-contrast or advanced practice modes, but they must not become a core completion burden.
 
 When choosing session words, prioritise:
 

@@ -55,6 +55,11 @@ export interface LearningStats {
   lastPractisedAt: string | null;
 }
 
+export interface MixedWelshExposure {
+  north: number;
+  southStandard: number;
+}
+
 export interface SpelioStorage {
   selectedListIds: string[];
   currentPathPosition: string | null;
@@ -64,6 +69,7 @@ export interface SpelioStorage {
   completedNormalSessionCount?: number;
   recentlyResolvedReviewWordIds?: string[];
   learningStats?: LearningStats;
+  mixedWelshExposure?: MixedWelshExposure;
   wordProgress: Record<string, WordProgress>;
   listProgress: Record<string, ListProgress>;
   settings: SpelioSettings;
@@ -108,6 +114,13 @@ function createDefaultLearningStats(): LearningStats {
   };
 }
 
+function createDefaultMixedWelshExposure(): MixedWelshExposure {
+  return {
+    north: 0,
+    southStandard: 0
+  };
+}
+
 export const defaultStorage: SpelioStorage = {
   selectedListIds: ['foundations_first_words'],
   currentPathPosition: 'foundations_first_words',
@@ -117,6 +130,7 @@ export const defaultStorage: SpelioStorage = {
   completedNormalSessionCount: 0,
   recentlyResolvedReviewWordIds: [],
   learningStats: createDefaultLearningStats(),
+  mixedWelshExposure: createDefaultMixedWelshExposure(),
   wordProgress: {},
   listProgress: {},
   settings: defaultSettings
@@ -127,6 +141,7 @@ export function createDefaultStorage(): SpelioStorage {
     ...defaultStorage,
     selectedListIds: [...defaultStorage.selectedListIds],
     learningStats: createDefaultLearningStats(),
+    mixedWelshExposure: createDefaultMixedWelshExposure(),
     wordProgress: {},
     listProgress: {},
     settings: { ...defaultSettings }
@@ -145,6 +160,44 @@ function normaliseDialectPreference(value: unknown): DialectPreference {
 
 function normaliseTheme(value: unknown): SpelioTheme {
   return value === 'dark' ? 'dark' : 'light';
+}
+
+function normaliseMixedWelshExposure(value: unknown): MixedWelshExposure {
+  const exposure = isObject(value) ? value : {};
+
+  return {
+    north: typeof exposure.north === 'number' ? Math.max(0, exposure.north) : 0,
+    southStandard: typeof exposure.southStandard === 'number' ? Math.max(0, exposure.southStandard) : 0
+  };
+}
+
+function learningItemExposureKey(word: PracticeWord) {
+  const groupId = word.variantGroupId?.trim();
+  return groupId ? `${word.listId}:${groupId}` : null;
+}
+
+function isNorthExposure(word: PracticeWord) {
+  return word.dialect === 'North Wales';
+}
+
+function isSouthStandardExposure(word: PracticeWord) {
+  return word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
+}
+
+function getChoicefulMixedExposureKeys(lists: WordList[]) {
+  const byKey = new Map<string, PracticeWord[]>();
+
+  for (const word of lists.flatMap(list => list.words)) {
+    const key = learningItemExposureKey(word);
+    if (!key) continue;
+    byKey.set(key, [...(byKey.get(key) ?? []), word]);
+  }
+
+  return new Set(
+    Array.from(byKey.entries())
+      .filter(([, group]) => group.some(isNorthExposure) && group.some(isSouthStandardExposure))
+      .map(([key]) => key)
+  );
 }
 
 export function normaliseStorage(value: unknown): SpelioStorage {
@@ -174,6 +227,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       firstPractisedAt: typeof learningStats.firstPractisedAt === 'string' ? learningStats.firstPractisedAt : null,
       lastPractisedAt: typeof learningStats.lastPractisedAt === 'string' ? learningStats.lastPractisedAt : null
     },
+    mixedWelshExposure: normaliseMixedWelshExposure(source.mixedWelshExposure),
     wordProgress: isObject(source.wordProgress) ? source.wordProgress as Record<string, WordProgress> : {},
     listProgress: isObject(source.listProgress) ? source.listProgress as Record<string, ListProgress> : {},
     settings: {
@@ -185,6 +239,28 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       dialectPreference: normaliseDialectPreference(settings.dialectPreference),
       interfaceLanguage: normaliseInterfaceLanguage(settings.interfaceLanguage),
       theme: normaliseTheme(settings.theme)
+    }
+  };
+}
+
+export function addMixedWelshExposure(storage: SpelioStorage, words: PracticeWord[], lists: WordList[]): SpelioStorage {
+  const previous = normaliseMixedWelshExposure(storage.mixedWelshExposure);
+  const choicefulKeys = getChoicefulMixedExposureKeys(lists);
+  let north = previous.north;
+  let southStandard = previous.southStandard;
+
+  for (const word of words) {
+    const key = learningItemExposureKey(word);
+    if (!key || !choicefulKeys.has(key)) continue;
+    if (isNorthExposure(word)) north += 1;
+    if (isSouthStandardExposure(word)) southStandard += 1;
+  }
+
+  return {
+    ...storage,
+    mixedWelshExposure: {
+      north,
+      southStandard
     }
   };
 }
