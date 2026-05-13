@@ -644,7 +644,11 @@ The session engine should resolve dialect variants before rendering the answer s
 
 Dialect is handled at word/item level. The Welsh style setting affects variant selection, not word-list visibility. List-level dialect remains internal/admin metadata only and should not appear as public badges beside word lists.
 
-Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh should include a balanced mix of available North Wales and South Wales / Standard variants within the same session where possible, avoiding a simple first-in-dataset-order bias while still showing only one variant from each group.
+For ordinary practice and completion, a `variantGroupId` represents one conceptual learning item even when it is stored as multiple raw word rows.
+
+Normal sessions choose at most one variant from each `variantGroupId`. North Wales and South Wales / Standard are soft preferences: prefer the matching variant where available, otherwise use a `Both` item where available, otherwise use the best available single variant. Missing preferred variants must not shrink the session. Mixed Welsh may rotate or balance available North Wales and South Wales / Standard variants over time, avoiding a simple first-in-dataset-order bias while still showing only one variant from each group in a normal session.
+
+Dialect variants must not inflate list length, session length, or public completion requirements. A list should not appear incomplete merely because the learner has not completed an unselected dialect variant.
 
 Different-length dialect variants should not be handled as acceptedAlternatives. Use separate word items linked by variantGroupId instead.
 
@@ -829,29 +833,46 @@ Rules:
 
 A collection is an organisational grouping of word lists.
 
-A word list can contain any number of words.
+A Spelio-authored word list can contain a flexible number of dialect-resolved conceptual learning items, generally 10–25 for well-designed MVP content.
+
+A list does not need to contain exactly 10 items and does not need to be a multiple of 10. Content creators should not artificially pad, split, or duplicate lists only to create groups of 10.
+
+A conceptual learning item is the ordinary learner-facing unit for session generation, progress, and completion. A single raw word row with no `variantGroupId` counts as one conceptual learning item. Multiple raw word rows sharing the same `variantGroupId` represent dialect variants of one conceptual learning item for ordinary practice and completion purposes.
 
 A session is a short chunk of practice.
 
 MVP session target:
 
-- 10 words
+- around 10 conceptual learning items
 
-If fewer than 10 available words exist, use all available words.
+If fewer than 10 eligible conceptual learning items exist, use the available number.
 
 ### 10.2 Large word lists
 
-If a list has 25 words, the user should not complete all 25 in one session by default.
+If a list has 25 eligible conceptual learning items, the user should not complete all 25 in one session by default.
 
 Instead:
 
-- Session 1: 10 words
-- Session 2: next 10 words, prioritising unseen words
-- Session 3: remaining words plus difficult words
+- Session 1: around 10 items
+- Session 2: next around 10 items, prioritising unseen items
+- Session 3: remaining unseen items plus sensible reinforcement items if useful
 
 The user should continue the same list until the list is complete.
 
-Do not move the user to the next word list after only completing one 10-word session if there are unseen words remaining in the current list.
+Do not move the user to the next word list after only completing one short session if there are unseen eligible conceptual learning items remaining in the current list.
+
+### 10.2.1 Tail-end completion sessions
+
+When a learner has only a small number of unseen eligible conceptual learning items remaining in a list, the next session should feel like finishing the list, not like an awkward full repeat.
+
+Recommended rule:
+
+- If remaining unseen eligible learning items are enough for a normal session, run a normal session.
+- If only a small tail remains, create a shorter finishing session using the remaining unseen items plus a small number of sensible reinforcement items if useful.
+- Do not pad the session to 10 with excessive repeated words.
+- The learner should feel they are completing the list, not repeating the list unnecessarily.
+
+Do not expose technical language such as "completion mode" to learners. The app should simply present a calm, ordinary practice session.
 
 ### 10.3 Selection priority within a list
 
@@ -861,19 +882,22 @@ If multiple words share the same variantGroupId, they represent dialect variants
 
 Variant selection rules:
 
-- A variantGroupId counts as one learning item and one prompt slot.
+- A variantGroupId counts as one conceptual learning item and one prompt slot.
+- Raw dialect rows must not inflate list length, session length, or completion requirements.
 - Choose at most one variant from a variantGroupId in a normal session.
 - North Wales preference should prefer North Wales variants, then Both, then the best available single variant.
 - South Wales / Standard preference should prefer South Wales / Standard or Standard variants, then Both, then the best available single variant.
 - Mixed Welsh should feel naturally mixed within the same session where possible, not separated entirely by session order.
 - Mixed Welsh should avoid always choosing the first dataset-order variant.
-- Mixed Welsh may alternate or rotate between North Wales and South Wales / Standard forms across variant groups and sessions.
+- Mixed Welsh may alternate, rotate, or balance North Wales and South Wales / Standard forms across variant groups and sessions.
+- Mixed Welsh should still choose only one variant from each `variantGroupId` in a normal session.
+- Mixed Welsh should not force learners to complete every dialect variant.
 - If only one variant exists for a group, use the available variant.
 - Dialect preference is soft, not a hard filter.
 - If a preferred variant is missing, use the best available variant rather than shrinking the session.
 - Dialect balancing must not reduce normal session size.
 
-The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation.
+The goal is to let learners hear and spell real Welsh forms while gradually noticing dialect variation. Dialect variants can be exposed more deliberately later in dedicated dialect-contrast or advanced practice modes, but they must not become a core completion burden.
 
 When choosing session words, prioritise:
 
@@ -924,6 +948,8 @@ Collections must not alter:
 
 No MVP practice/session logic should branch on collection type, ownerType, or ownerId.
 
+For MVP, Spelio Core collections use the guided, adaptive, short-session behaviour described above. Custom, personal, and teacher-created lists are future-facing utility modes unless deliberately added to scope later. They may eventually need more direct practice controls because they serve classroom, homework, spelling-test, and personal-list needs, but that configurability must not complicate the normal Spelio Core learner experience.
+
 Changing word lists mid-session:
 
 - Always ends the current session.
@@ -964,14 +990,20 @@ For MVP, the key operational states are:
 
 List progression and full list completion are separate.
 
-The user may move on once all dialect-eligible learning items in a list have been seen at least once.
+The user may move on once all dialect-eligible conceptual learning items in a list have been seen at least once according to the active Welsh style rules.
+
+List completion must be based on dialect-resolved conceptual learning items, not raw database rows. For items linked by `variantGroupId`, completion of the selected/resolved variant counts for the conceptual learning item.
 
 The list should only receive the stricter modal tick / full completion state when:
 
-- Every dialect-eligible learning item in the list has been seen at least once, and
+- Every dialect-eligible conceptual learning item in the list has been seen at least once according to the active Welsh style rules, and
 - The user completes a session for that list with at least 85% accuracy and no revealed letters.
 
-This prevents a list from being marked fully complete after simply seeing all words once while still struggling. The modal tick must not be shown merely because the user can move on.
+This prevents a list from being marked fully complete after simply seeing all items once while still struggling. The modal tick must not be shown merely because the user can move on.
+
+Switching Welsh style later may allow the learner to encounter a different variant in future practice, but it should not make past list completion feel broken or incomplete.
+
+Do not show public completion requirements based on raw dialect rows.
 
 ### 11.3 Mastery
 
@@ -2109,6 +2141,8 @@ Do not include in MVP:
 - Full spaced repetition system
 - Teacher dashboards
 - Public custom list sharing
+- Custom, personal, or teacher-created list authoring
+- Configurable custom-list practice modes
 - Leaderboards
 - Streaks
 - Badges/coins/gamification
@@ -2224,13 +2258,13 @@ I am building Spelio, a premium mobile-first Welsh spelling practice web app for
 
 Use this after the UI shell exists:
 
-Using the existing Spelio frontend, implement the core practice engine. The app should run 10-word sessions drawn from selected word lists. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using Welsh style, choosing at most one variant per variantGroupId in ordinary sessions. Do not display usageNote or dialectNote during active spelling; optional learner note display should happen only after completion, reveal, or on review surfaces. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
+Using the existing Spelio frontend, implement the core practice engine. The app should run short sessions targeting around 10 dialect-resolved conceptual learning items drawn from selected word lists, using fewer when fewer eligible items are available and continuing larger lists across multiple sessions. It should validate Welsh answers letter-by-letter, accept flexible diacritics by default, accept apostrophe/dash variants, ignore typed spaces silently for multi-word answers, mark wrong letters red and clear them after a short delay, reveal the next letter when requested, mark words as difficult when the user makes an error or uses reveal, replay audio when the word pill is tapped, and show an end screen with correct/incorrect/revealed/time stats. Add keyboard shortcuts: spacebar tap/release to replay audio, spacebar press-and-hold to peek at the answer, and right arrow to reveal the next letter. Keep all behaviour aligned with the MVP specification. Before rendering answer slots, resolve dialect variants using Welsh style, choosing at most one variant per variantGroupId in ordinary sessions. Do not display usageNote or dialectNote during active spelling; optional learner note display should happen only after completion, reveal, or on review surfaces. Implement mobile input using a hidden input that retains focus, and ensure desktop input is handled separately so characters are not processed twice.
 
 ### Prompt 3 — Build local storage progress and recommendation logic
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store the selected word list as a one-item `selectedListIds` array, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible learning item has been seen, while the modal tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. Older multiple selected list IDs should migrate to the first valid active selected list. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store the selected word list as a one-item `selectedListIds` array, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible conceptual learning item has been seen, while the modal tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. Older multiple selected list IDs should migrate to the first valid active selected list. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
@@ -2242,7 +2276,7 @@ Build a simple private admin panel for Spelio. It should be protected by a simpl
 
 Use this as a separate content-generation chat:
 
-Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 words. Include list name, dialect tag where relevant, stage, difficulty, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes only for exceptional internal review needs. Suggested categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Explicitly identify high-risk learner-confusion items such as yes/no, response words, function words, fixed expressions, shortened/full forms, register differences, grammar-dependent meanings, and common traps. Add short usageNote or dialectNote values only where genuinely useful. Do not put regional information in usageNote; use dialectNote for that.
+Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 dialect-resolved conceptual learning items, not necessarily exactly 10 words or raw rows. Include list name, dialect tag where relevant, stage, difficulty, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes only for exceptional internal review needs. Suggested categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Explicitly identify high-risk learner-confusion items such as yes/no, response words, function words, fixed expressions, shortened/full forms, register differences, grammar-dependent meanings, and common traps. Add short usageNote or dialectNote values only where genuinely useful. Do not put regional information in usageNote; use dialectNote for that.
 
 ### Prompt 6 — Create a technical implementation plan
 
@@ -2264,7 +2298,7 @@ The MVP is complete when:
 - A returning user is shown a smart next recommendation.
 - A struggling user is encouraged to review difficult words only when dialect-eligible difficult words currently exist.
 - The practice screen behaves smoothly and clearly.
-- Word lists can contain more than 10 words and are practised over multiple sessions.
+- Word lists can contain more than 10 conceptual learning items and are practised over multiple short sessions.
 - The app tracks local progress.
 - Review difficult words works as current difficulty, shrinks as the user improves, and disappears when resolved.
 - From earlier can optionally revisit previously weak `recapDue` words without blocking progression or looking like a backlog.

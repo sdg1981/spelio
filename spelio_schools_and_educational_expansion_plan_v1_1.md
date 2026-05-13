@@ -300,6 +300,8 @@ Potential future teacher-facing features:
 - difficult-word heat maps
 - spelling-pattern difficulty analysis
 
+Teacher-created lists may eventually need both Spelio-style adaptive practice and full-list or test-style practice for classrooms, homework, and spelling tests. More configurable controls may be useful for teacher utility, but they should stay simple by default and sit behind advanced settings so the learner experience remains calm.
+
 The strongest future teacher value is likely:
 
 > useful repetition and reduced admin burden.

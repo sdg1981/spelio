@@ -336,11 +336,15 @@ Each list should have:
 - clear purpose
 - coherent theme
 - consistent spelling load
-- 10–25 items
+- generally 10–25 conceptual learning items
 - logical progression
 - no random mixing
 
 A list should feel intentionally designed, not like a vocabulary dump.
+
+List size is based on dialect-resolved conceptual learning items, not necessarily raw database rows. A raw word row with no `variantGroupId` counts as one conceptual learning item. Multiple raw word rows sharing the same `variantGroupId` represent dialect variants of one conceptual learning item for ordinary practice and completion.
+
+Spelio-authored lists do not need to contain exactly 10 items and do not need to be multiples of 10. Do not pad, split, or duplicate lists only to create fixed groups of 10.
 
 Good list types:
 
@@ -659,7 +663,9 @@ Spelio teaches Mixed Welsh by default and exposes a quiet Welsh style setting wi
 
 Dialect preference affects word-level variant selection only. It must not affect word-list visibility. List-level dialect is internal/admin metadata only and should not appear as public badges beside word lists.
 
-Where meaningful dialect variants exist, normal sessions choose at most one variant from each `variantGroupId`. Mixed Welsh should rotate or expose variants over time where possible, but should not show both variants from the same group in the same ordinary session. North Wales and South Wales / Standard preferences are soft preferences: if the preferred variant is missing, use a `Both` item where available or the best available single variant rather than shrinking the session.
+Where meaningful dialect variants exist, a `variantGroupId` counts as one conceptual learning item for ordinary practice and completion. Normal sessions choose at most one variant from each `variantGroupId`. Mixed Welsh may rotate or balance variants over time where possible, but should not show both variants from the same group in the same ordinary session and should not require learners to complete every dialect variant. North Wales and South Wales / Standard preferences are soft preferences: if the preferred variant is missing, use a `Both` item where available or the best available single variant rather than shrinking the session.
+
+Dialect variants should not inflate list length, session length, or public completion requirements. A list should not appear incomplete merely because a learner has not completed an unselected dialect variant.
 
 Do not handle different-length dialect forms as acceptedAlternatives.
 
@@ -764,6 +770,7 @@ When creating meaningful dialect variants:
 - Link the entries with the same variantGroupId.
 - Ensure each variant has its own audio matching the exact Welsh answer.
 - Ordinary sessions should not show both variants from the same variantGroupId.
+- Ordinary completion should count the selected/resolved variant as completion of the conceptual learning item.
 
 Example:
 
@@ -1269,13 +1276,16 @@ For each word include:
 - difficulty
 
 Rules:
+- Design Spelio-authored lists around 10–25 conceptual learning items, not fixed groups of 10 raw rows.
+- Do not pad, split, or duplicate lists only to make exact 10-item groups.
 - Avoid early mutation burden.
 - Use mutations only where appropriate for the stage.
 - Do not use acceptedAlternatives for different-length variants.
 - Create separate entries for meaningful dialect variants.
 - Link dialect variants with variantGroupId.
 - Do not use acceptedAlternatives for dialect variants.
-- Mixed Welsh exposure is the default; rotate variants over time where possible, but do not show both variants from the same group in the same ordinary session.
+- Treat each variantGroupId as one conceptual learning item for ordinary practice and completion.
+- Mixed Welsh exposure is the default; rotate variants over time where possible, but do not show both variants from the same group in the same ordinary session or require every dialect variant for completion.
 - When generating or reviewing word lists with AI, explicitly ask the AI to identify high-risk learner-confusion items and add short usageNote or dialectNote values only where they are genuinely useful.
 - Keep usageNote short and rare, except where high-risk learner-confusion triggers make it mandatory.
 - Do not put dialect information in usageNote.

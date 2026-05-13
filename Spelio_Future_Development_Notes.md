@@ -176,6 +176,34 @@ The guiding principle should be:
 
 > Monetisation should follow demonstrated usefulness, not lead the product.
 
+## Future custom and teacher list practice controls
+
+Spelio Core should remain opinionated, guided, calm, and progression-oriented. Core lists should keep using short adaptive sessions that continue where the learner left off, with the app doing the quiet work underneath.
+
+Custom, personal, and teacher-created lists may need more direct control because they serve practical classroom, homework, revision, and spelling-test needs.
+
+Future custom lists should support a simple practice mode choice:
+
+- Adaptive practice: short focused sessions that continue where the learner left off.
+- Full list: practises the whole list in one go, useful for spelling tests, classrooms, homework, or teacher-created lists.
+
+Teacher-created lists may eventually need optional advanced settings, such as:
+
+- Full list vs adaptive practice
+- Strict/flexible spelling
+- English prompt visibility
+- Audio prompt availability
+- Reveal enabled/disabled
+- Audio replay allowed/disabled
+- Randomise order
+- Require audio
+- Assessment/test-style mode
+- Possibly time limits later
+
+These controls should be hidden behind progressive disclosure such as "Advanced settings". They should not clutter the normal learner experience or make Spelio Core feel configurable for its own sake.
+
+The interface should remain simple on the surface and deep underneath. Learners should not be shown unnecessary mechanics.
+
 ## Future accessibility foundations
 
 Spelio should aim to become accessible by default rather than creating a separate “accessibility mode” as the main solution. The normal public app should remain calm, premium, minimal, and adult-focused while quietly improving technical accessibility underneath.
