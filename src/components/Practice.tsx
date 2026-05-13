@@ -776,7 +776,7 @@ export function Practice({
 
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
-          {storage.settings.audioPrompts && <Repeat className="text-[#d90000]" size={23} />}
+          {storage.settings.audioPrompts && <Repeat className="prompt-audio-icon" size={23} />}
           {promptVisible && <span>{prompt}</span>}
         </button>
         {currentWordAudioUnavailable && !storage.settings.englishVisible && (
@@ -1006,8 +1006,8 @@ function Toggle({ active, onClick }: { active: boolean; onClick: () => void }) {
 
 function Radio({ active = false }: { active?: boolean }) {
   return (
-    <span className={`grid h-6 w-6 place-items-center rounded-full border-2 ${active ? 'border-[#d90000]' : 'border-[#cad0d7]'}`}>
-      {active && <span className="h-3 w-3 rounded-full bg-[#d90000]" />}
+    <span className={`settings-radio ${active ? 'active' : ''}`} aria-hidden="true">
+      {active && <span />}
     </span>
   );
 }
@@ -1117,7 +1117,27 @@ export function SettingsModal({
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[#edf0f2] pt-8">
+          <div className="settings-section">
+            <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.appearance')}</h3>
+
+            <div className="mt-7 space-y-7">
+              <button className="flex gap-5 text-left" onClick={() => onChange({ theme: 'light' })}>
+                <Radio active={settings.theme === 'light'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.light')}</b>
+                </span>
+              </button>
+
+              <button className="flex gap-5 text-left" onClick={() => onChange({ theme: 'dark' })}>
+                <Radio active={settings.theme === 'dark'} />
+                <span>
+                  <b className="block text-[18px] md:text-[15px]">{t('settings.dark')}</b>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-section">
             <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.welshSpelling')}</h3>
             <p className="mt-2 field-note">{t('settings.welshSpellingNote')}</p>
 
@@ -1140,7 +1160,7 @@ export function SettingsModal({
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[#edf0f2] pt-8">
+          <div className="settings-section">
             <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.welshStyle')}</h3>
 
             <div className="mt-7 space-y-7">
@@ -1172,7 +1192,7 @@ export function SettingsModal({
             )}
           </div>
 
-          <div className="mt-10 border-t border-[#edf0f2] pt-8 space-y-8">
+          <div className="settings-section space-y-8">
             <div className="flex items-center justify-between gap-8">
               <span>
                 <b className="block text-[18px] md:text-[15px]">{t('settings.audioPrompts')}</b>
@@ -1190,7 +1210,7 @@ export function SettingsModal({
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[#edf0f2] pt-7">
+          <div className="settings-section settings-section-reset">
             <h3 className="text-[16px] md:text-[15px] font-extrabold text-[var(--red)]">{t('settings.resetProgress')}</h3>
             <p className="mt-2 field-note">{t('settings.localProgressNote')}</p>
             <button className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
@@ -1201,7 +1221,7 @@ export function SettingsModal({
         </div>
 
         <div className="settings-modal-footer">
-          <button className="w-full rounded-[8px] border border-[#dfe4e8] bg-white py-5 text-[22px] md:text-[16px]" onClick={onClose}>{t('settings.closeButton')}</button>
+          <button className="settings-close-button" onClick={onClose}>{t('settings.closeButton')}</button>
         </div>
       </section>
 

@@ -51,6 +51,39 @@ The MVP must follow these principles:
 
 The product should feel like a premium SaaS-style tool: calm, restrained, responsive, and well designed.
 
+### 3.0.1 Visual tone clarification: what "calm" means
+
+In Spelio, "calm" is an interaction and cognitive-load principle, not a nature-inspired visual theme.
+
+Calm means:
+
+- low distraction
+- clear hierarchy
+- restrained animation
+- minimal cognitive overload
+- fast understanding
+- low-friction interaction
+- controlled feedback
+- mature, adult-facing presentation
+- visually quiet support for focused spelling practice
+
+Calm does not mean:
+
+- countryside-themed branding
+- nature imagery as a dominant visual language
+- wellness-app aesthetics
+- meditation-app styling
+- rustic, folk, or heritage tourism visuals
+- excessive green palettes
+- soft decorative serenity
+- slow or sleepy interaction design
+
+Spelio should feel like modern premium learning software: focused, precise, tactile, responsive, intelligent, and well crafted.
+
+The visual direction should communicate clarity, confidence, and quality rather than pastoral calmness or decorative Welsh countryside identity.
+
+Avoid using "calm" as a reason to add landscapes, leaves, mountains, organic motifs, wellness-style copy, or overly soft green visual treatments unless they are explicitly requested for a specific future marketing asset.
+
 ### 3.1 No auto-start rule
 
 The app must never automatically start a practice session as a side-effect of another action.
@@ -86,6 +119,18 @@ The MVP contains these core screens and states:
 The public user experience should remain extremely simple. The admin panel is private and functional rather than highly polished.
 
 Public learner screens use a warm neutral app background, currently `#f6f5f2`, while white pills, cards, modals, and button surfaces remain white. This public background must not affect the admin panel.
+
+### 4.x Public theme architecture
+
+The public learner app may support light and dark appearance through a scoped public wrapper such as `.public-app[data-theme="light|dark"]`.
+
+Public theme styling should use semantic CSS tokens / custom properties where practical, for example background, surface, text, border, accent, success, and error tokens. Admin styling must remain separate and must not inherit public learner theme rules.
+
+`data-theme` should be treated as the light/dark appearance axis only. If Spelio later supports age/audience presentation variants such as calm, warm, schools, or dyslexia-support, that should be a separate presentation axis such as `data-presentation`, not mixed into the light/dark setting.
+
+Future presentation variants should adapt emotional tone through tokens, accents, spacing, illustration, and small visual details without changing practice logic, scoring, content selection, session generation, or recommendation behaviour.
+
+Do not add warm, schools, or dyslexia-support presentation modes to MVP. Avoid one-off hardcoded public colour overrides where semantic tokens can be used safely.
 
 The homepage footer should include:
 

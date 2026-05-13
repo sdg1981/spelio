@@ -3,6 +3,7 @@ import type { InterfaceLanguage } from '../../i18n';
 import { normaliseInterfaceLanguage } from '../../i18n';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
+export type SpelioTheme = 'light' | 'dark';
 
 export interface SessionResult {
   totalWords: number;
@@ -23,6 +24,7 @@ export interface SpelioSettings {
   welshSpelling: WelshSpellingMode;
   dialectPreference: DialectPreference;
   interfaceLanguage: InterfaceLanguage;
+  theme: SpelioTheme;
 }
 
 export interface WordProgress {
@@ -89,7 +91,8 @@ export const defaultSettings: SpelioSettings = {
   soundEffects: true,
   welshSpelling: 'flexible',
   dialectPreference: 'mixed',
-  interfaceLanguage: 'en'
+  interfaceLanguage: 'en',
+  theme: 'light'
 };
 
 function createDefaultLearningStats(): LearningStats {
@@ -135,6 +138,10 @@ function normaliseDialectPreference(value: unknown): DialectPreference {
   return defaultSettings.dialectPreference;
 }
 
+function normaliseTheme(value: unknown): SpelioTheme {
+  return value === 'dark' ? 'dark' : 'light';
+}
+
 export function normaliseStorage(value: unknown): SpelioStorage {
   const source = isObject(value) ? value : {};
   const settings = isObject(source.settings) ? source.settings : {};
@@ -168,7 +175,8 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
       welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
       dialectPreference: normaliseDialectPreference(settings.dialectPreference),
-      interfaceLanguage: normaliseInterfaceLanguage(settings.interfaceLanguage)
+      interfaceLanguage: normaliseInterfaceLanguage(settings.interfaceLanguage),
+      theme: normaliseTheme(settings.theme)
     }
   };
 }

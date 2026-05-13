@@ -56,6 +56,79 @@ Possible future systems to keep in mind:
 
 These ideas should remain optional and carefully scoped. They should improve learning value without making the core experience feel busy or instructional by default.
 
+## Welsh Spelling Tips & Foundations
+
+Spelio could eventually add a lightweight educational layer for beginners who want a little more context around Welsh spelling patterns. This should not become a full course mode, grammar course, or classroom-style teaching system.
+
+The core spelling-practice loop should remain primary. Any tips should feel optional, subtle, and useful in the moment rather than tutorial-heavy or instructional by default.
+
+Possible product directions:
+
+- Occasional pre-session or post-session spelling tips
+- An optional "Welsh spelling basics" area for beginners
+- Contextual pattern tips for `ll`, `dd`, `f` vs `ff`, `ch`, `rh`, and `w` / `y` as vowels
+- Simple Welsh alphabet observations, including that some English letters are uncommon or non-native in Welsh
+- Optional audio examples for Welsh digraph sounds
+- A future progressive path for beginner spelling foundations, if demand becomes clear
+
+Implementation guidance:
+
+- Tips should remain visually subtle and consistent with Spelio's calm, minimal, adult-focused design philosophy.
+- Users should be able to dismiss or disable tips.
+- Tips should feel like useful observations, not lessons.
+- Avoid popups on every session, gamification, classroom framing, or tutorial-heavy UX.
+- The feature should support spelling confidence without turning Spelio into a grammar course.
+
+## AI Integration Philosophy
+
+Spelio should treat AI as an enhancement layer around the core spelling and recall engine, not as a replacement for the focused practice experience.
+
+The product’s long-term strength may come from:
+
+- structured recall practice
+- spelling confidence
+- calm repeatable interaction loops
+- lightweight reinforcement
+- carefully designed progression
+- focused review systems
+
+rather than from open-ended conversational tutoring alone.
+
+Future AI usage should prioritise:
+
+- adaptive spelling-pattern support
+- personalised review suggestions
+- learner confusion detection
+- contextual spelling explanations
+- optional post-answer learning support
+- teacher insight systems
+- content-generation assistance
+- voice spelling and hands-free practice modes
+
+Avoid turning the core product into:
+
+- a generic AI chatbot
+- an explanation-heavy tutoring system
+- an unfocused conversational language app
+- a noisy “AI-first” experience
+
+The core practice loop should remain:
+hear → recall → spell → immediate feedback → repeat.
+
+AI should strengthen this loop rather than replace it.
+
+Long-term strategic value may come not only from Welsh content itself, but from the underlying focused spelling-practice engine and interaction model, which could eventually support:
+
+- additional languages
+- GCSE revision
+- dyslexia-support workflows
+- school reinforcement systems
+- professional vocabulary practice
+- English spelling support
+- hands-free spoken spelling practice
+
+Any future AI features should continue supporting Spelio’s existing philosophy of calmness, low friction, learner usefulness, and focused repetition.
+
 ## 3. Future analytics and insight ideas
 
 Possible future insight areas:
@@ -68,6 +141,89 @@ Possible future insight areas:
 
 Analytics should be used to improve learner support, content quality, and product decisions. Any future analytics work should stay privacy-conscious and avoid creating pressure-heavy performance tracking for learners.
 
+## Future monetisation directions
+
+Spelio may eventually explore monetisation once the core practice loop, retention, content quality, and learner usefulness have been validated.
+
+Potential future monetisation directions include:
+
+- Premium content packs
+- GCSE Welsh revision packs
+- Advanced spelling-pattern packs
+- School or teacher-created collections
+- Teacher tools
+- Classroom assignment links
+- School licences
+- Institutional partnerships
+- Synced progress / account-based premium features
+- Course-aligned practice packs
+- Future speaking or hands-free modes, if they prove valuable and cost-effective
+
+These should remain exploratory until real learner behaviour shows what people value enough to pay for.
+
+Monetisation should not distort the core product philosophy.
+
+Avoid:
+
+- Paywall anxiety too early
+- Manipulative engagement systems
+- Excessive dashboarding
+- Artificial scarcity
+- Noisy upsells
+- Feature bloat created mainly to justify pricing
+
+The guiding principle should be:
+
+> Monetisation should follow demonstrated usefulness, not lead the product.
+
+## Future accessibility foundations
+
+Spelio should aim to become accessible by default rather than creating a separate “accessibility mode” as the main solution. The normal public app should remain calm, premium, minimal, and adult-focused while quietly improving technical accessibility underneath.
+
+Accessibility should not mean making the interface visually loud, oversized, childish, or ugly. The current subtle design direction can remain, provided it meets practical accessibility requirements such as readable contrast, visible focus, usable touch targets, scalable text, and clear interaction states.
+
+Dark mode is useful, but it is only one part of accessibility. Future accessibility work should prioritise:
+
+- Semantic HTML for buttons, inputs, dialogs, headings, navigation, and main content regions
+- Proper labels and accessible names for icon-only buttons
+- Logical keyboard navigation and visible focus states
+- Modal focus trapping and Escape-to-close behaviour where appropriate
+- Screen-reader-friendly status messages using appropriate live regions
+- Colour contrast testing across light and dark themes
+- Support for browser zoom, text scaling, and small-screen layouts
+- Respect for `prefers-reduced-motion`
+- Sufficient touch target size while preserving the refined visual design
+- Audio-driven practice that still provides enough visual support and graceful audio-unavailable states
+
+This should be treated as good frontend engineering, not a separate design direction or a step backwards from modern React development.
+
+Future optional preferences may include high contrast or reduced motion controls if testing shows they are genuinely needed. However, the preferred approach is to make the default Spelio experience accessible, resilient, and inclusive without fragmenting the app into separate accessibility versions.
+
+Suggested future testing checklist:
+
+- Keyboard-only navigation through homepage, practice screen, modals, word list selection, and end screen
+- VoiceOver testing on iPhone or macOS
+- TalkBack testing on Android
+- NVDA testing on Windows where possible
+- Lighthouse accessibility checks
+- Axe DevTools checks
+- Manual colour contrast checks for light and dark themes
+- 200% browser zoom testing
+- Mobile font scaling testing
+- Reduced-motion testing
+
+Accessibility improvements should preserve Spelio’s existing product philosophy:
+
+- calm
+- focused
+- low-clutter
+- adult-oriented
+- cognitively clean
+- emotionally safe
+- spelling-first
+
+They should strengthen the core experience rather than add visual noise or feature bloat.
+
 ## 4. Product philosophy reminders
 
 - Avoid feature bloat
@@ -77,4 +233,3 @@ Analytics should be used to improve learner support, content quality, and produc
 - Avoid turning the app into Duolingo
 - Prioritise learner usefulness over engagement tricks
 - Prioritise spelling confidence over grammar complexity
-

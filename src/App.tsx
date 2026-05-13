@@ -322,7 +322,7 @@ export default function App() {
   );
 
   return (
-    <>
+    <div className="public-app" data-theme={storage.settings.theme}>
       <ScreenTransition screen={activeScreen}>
         {screenContent}
       </ScreenTransition>
@@ -337,6 +337,6 @@ export default function App() {
           learningMethodOptions={learningMethodOptions}
         />
       )}
-    </>
+    </div>
   );
 }

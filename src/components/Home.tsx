@@ -64,6 +64,7 @@ export function Home({
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
+  const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
   const showRecapEntry = mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
 
@@ -85,7 +86,7 @@ export function Home({
           <Settings size={15} strokeWidth={2} />
         </button>
       </div>
-      <section className={`page-shell home-shell ${shellStateClass}`}>
+      <section className={`page-shell home-shell ${shellStateClass} ${mobileHeroClass}`}>
         <div className="home-logo">
           <Logo animateCursor />
         </div>
