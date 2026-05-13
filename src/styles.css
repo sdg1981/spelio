@@ -974,15 +974,15 @@
   justify-content:center;
   gap:8px;
   flex-wrap:wrap;
-  color:#8a837b;
+  color:inherit;
   font-size:13px;
   line-height:1.35;
   opacity:.78;
 }
 
 .footer-links > span{
-  color:#c9c1b8;
-  opacity:.72;
+  color:currentColor;
+  opacity:.58;
 }
 
 .footer-link{
@@ -1506,6 +1506,10 @@
   color:#667281;
   font-size:14px;
   line-height:1.3;
+}
+
+.home-footer .footer-line{
+  opacity:.9;
 }
 
 .home-footer .footer-heart{
