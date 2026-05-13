@@ -228,6 +228,47 @@ function missingPreferredVariantList(): WordList {
   };
 }
 
+function dialectCompletionList(): WordList {
+  const id = 'test_dialect_completion';
+
+  return {
+    id,
+    collectionId: 'test',
+    name: 'Dialect completion',
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Mixed',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    words: [
+      ...Array.from({ length: 9 }, (_, index) => makeTestWord(`${id}_plain_${index + 1}`, index + 1, {
+        listId: id,
+        englishPrompt: `plain ${index + 1}`,
+        welshAnswer: `plain${index + 1}`
+      })),
+      makeTestWord(`${id}_south_now`, 10, {
+        listId: id,
+        englishPrompt: 'now',
+        welshAnswer: 'nawr',
+        dialect: 'South Wales / Standard',
+        variantGroupId: 'now'
+      }),
+      makeTestWord(`${id}_north_now`, 10, {
+        listId: id,
+        englishPrompt: 'now',
+        welshAnswer: 'rwan',
+        dialect: 'North Wales',
+        variantGroupId: 'now'
+      })
+    ]
+  };
+}
+
 function recapSelectionList(): WordList {
   return {
     id: 'test_recap_selection',
@@ -953,6 +994,27 @@ test('single selected 20+ word pool excludes cleanly completed words while unsee
   assertEqual(secondSession.words.some(word => firstSessionIds.has(word.id)), false, 'Second large-list session should exclude cleanly completed words while unseen words remain');
 });
 
+test('tail-end sessions stay short when only a few unseen learning items remain', () => {
+  const tailList = makeLargeList('test_tail_single', 1, 12);
+  const lists = [tailList];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [tailList.id],
+    currentPathPosition: tailList.id
+  };
+  const firstSession = createPracticeSession(lists, storage);
+
+  storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
+  const secondSession = createPracticeSession(lists, storage);
+  const unseenWords = secondSession.words.filter(word => storage.wordProgress[word.id]?.seen !== true);
+  const repeatedWords = secondSession.words.filter(word => storage.wordProgress[word.id]?.seen === true);
+
+  assertEqual(firstSession.words.length, 10, 'First tail setup session should use the normal ten-word target');
+  assertEqual(unseenWords.length, 2, 'Tail session should include all remaining unseen items');
+  assertEqual(repeatedWords.length, 2, 'Tail session should add only modest reinforcement');
+  assertEqual(secondSession.words.length, 4, 'Tail session should not pad awkwardly back to ten words');
+});
+
 test('single selected variant pool excludes completed learning items while unseen items remain', () => {
   const largeList = makeLargeVariantList();
   const lists = [largeList];
@@ -975,6 +1037,61 @@ test('single selected variant pool excludes completed learning items while unsee
   assertEqual(firstSession.words.length, 10, 'First variant-list session should use ten words');
   assertEqual(secondSession.words.length, 10, 'Second variant-list session should use ten words');
   assertEqual(repeatedItems.length, 0, 'Second variant-list session should not use sibling variants from completed learning items while unseen items remain');
+});
+
+test('dialect variants count as one conceptual item for sessions and completion', () => {
+  const list = dialectCompletionList();
+  const lists = [list];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'mixed'
+    }
+  };
+  const session = createPracticeSession(lists, storage);
+
+  assertEqual(list.words.length, 11, 'Setup should contain more raw rows than conceptual items');
+  assertEqual(session.words.length, 10, 'Ordinary session size should count conceptual items, not raw dialect rows');
+  assertEqual(session.words.filter(word => word.variantGroupId === 'now').length, 1, 'Session should include only one variant from the group');
+
+  for (const word of list.words.filter(word => word.dialect !== 'North Wales')) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: 10,
+    correctWords: 10,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [list.id],
+    state: 'strong'
+  };
+  storage = updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    lists,
+    result
+  );
+
+  const northStorage: SpelioStorage = {
+    ...storage,
+    settings: {
+      ...storage.settings,
+      dialectPreference: 'north'
+    }
+  };
+
+  assertEqual(storage.listProgress[list.id]?.completed, true, 'Unselected sibling variant should not block list completion');
+  assertEqual(isListProgressionReady(northStorage, list), true, 'Switching dialect later should not undo conceptual progression readiness');
 });
 
 test('older three-list storage resolves to one 20+ word pool while unseen words remain', () => {

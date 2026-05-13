@@ -1,6 +1,7 @@
-import type { PracticeWord, WordList } from '../../data/wordLists';
+import type { WordList } from '../../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
+import { groupLearningItems, isLearningItemSeen } from './learningItems';
 import { hasDifficultWords } from './sessionEngine';
 import { getListDisplayName } from './wordListDisplay';
 import { normalizeSingleSelectedListIds, getSelectedLists } from './wordListSelection';
@@ -16,14 +17,6 @@ function findList(lists: WordList[], id?: string | null) {
   return id ? lists.find(list => list.id === id) : undefined;
 }
 
-function dialectMatchesPreference(word: PracticeWord, storage: SpelioStorage) {
-  const preference = storage.settings.dialectPreference;
-  if (preference === 'mixed') return true;
-  if (word.dialect === 'Both') return true;
-  if (preference === 'north') return word.dialect === 'North Wales';
-  return word.dialect === 'South Wales / Standard' || word.dialect === 'Standard';
-}
-
 function asListRecommendation(list: WordList, t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {
   return { kind: 'list', listId: list.id, title: t ? t('home.continueLearning') : 'Continue learning', subtitle: getListDisplayName(list, interfaceLanguage) };
 }
@@ -32,31 +25,9 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
   return storage.lastSessionResult?.listIds.includes(listId) === true;
 }
 
-function groupLearningItems(words: PracticeWord[]) {
-  const byGroup = new Map<string, PracticeWord[]>();
-  const items: PracticeWord[][] = [];
-
-  for (const word of words) {
-    const groupId = word.variantGroupId?.trim();
-    if (!groupId) {
-      items.push([word]);
-      continue;
-    }
-    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), word]);
-  }
-
-  return [...items, ...Array.from(byGroup.values())];
-}
-
 export function isListProgressionReady(storage: SpelioStorage, list: WordList) {
-  const items = groupLearningItems(list.words.filter(word => dialectMatchesPreference(word, storage)));
-
-  return items.length > 0 && items.every(group => {
-    return group.some(word => {
-      const progress = storage.wordProgress[word.id];
-      return progress?.seen === true;
-    });
-  });
+  const items = groupLearningItems(list.words);
+  return items.length > 0 && items.every(group => isLearningItemSeen(storage, group));
 }
 
 function listHasUnseenLearningItems(storage: SpelioStorage, list: WordList) {
@@ -82,8 +53,8 @@ function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], curre
   if (nextStageFirst) return nextStageFirst;
 
   return [...incompleteLists].sort((left, right) => {
-    const leftSeenCount = left.words.filter(word => storage.wordProgress[word.id]?.seen).length;
-    const rightSeenCount = right.words.filter(word => storage.wordProgress[word.id]?.seen).length;
+    const leftSeenCount = groupLearningItems(left.words).filter(group => isLearningItemSeen(storage, group)).length;
+    const rightSeenCount = groupLearningItems(right.words).filter(group => isLearningItemSeen(storage, group)).length;
     return leftSeenCount - rightSeenCount || left.order - right.order;
   })[0];
 }

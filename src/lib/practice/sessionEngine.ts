@@ -1,5 +1,6 @@
 import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
 import type { SessionResult, SessionState, SpelioStorage } from './storage';
+import { countUnseenLearningItems, groupLearningItems, learningItemKey } from './learningItems';
 import { normalizeSingleSelectedListIds } from './wordListSelection';
 
 export interface SessionWord extends PracticeWord {}
@@ -10,6 +11,8 @@ export interface PracticeSession {
 }
 
 const SESSION_TARGET = 10;
+const COMPLETION_TAIL_THRESHOLD = 5;
+const COMPLETION_REINFORCEMENT_TARGET = 2;
 
 function scoreWord(word: PracticeWord, storage: SpelioStorage) {
   const progress = storage.wordProgress[word.id];
@@ -18,11 +21,6 @@ function scoreWord(word: PracticeWord, storage: SpelioStorage) {
   if (progress.revealedCount > 0) return 2;
   if (!progress.completedCount) return 3;
   return 10 + progress.completedCount;
-}
-
-function learningItemKey(word: PracticeWord) {
-  const groupId = word.variantGroupId?.trim();
-  return groupId ? `${word.listId}:${groupId}` : `${word.listId}:${word.id}`;
 }
 
 function scoreLearningItem(words: PracticeWord[], storage: SpelioStorage) {
@@ -43,26 +41,31 @@ function scoreLearningItem(words: PracticeWord[], storage: SpelioStorage) {
 }
 
 function getLearningItemScores(words: PracticeWord[], storage: SpelioStorage) {
-  const byItem = new Map<string, PracticeWord[]>();
   const scores = new Map<string, number>();
 
-  for (const word of words) {
-    const key = learningItemKey(word);
-    byItem.set(key, [...(byItem.get(key) ?? []), word]);
-  }
-
-  for (const [key, itemWords] of byItem) {
+  for (const itemWords of groupLearningItems(words)) {
+    const key = learningItemKey(itemWords[0] as PracticeWord);
     scores.set(key, scoreLearningItem(itemWords, storage));
   }
 
   return scores;
 }
 
+function getNormalSessionTarget(words: PracticeWord[], storage: SpelioStorage) {
+  const unseenCount = countUnseenLearningItems(storage, words);
+  if (unseenCount > 0 && unseenCount <= COMPLETION_TAIL_THRESHOLD) {
+    return Math.min(SESSION_TARGET, unseenCount + COMPLETION_REINFORCEMENT_TARGET);
+  }
+
+  return SESSION_TARGET;
+}
+
 function selectSessionWords(
   pool: PracticeWord[],
   listIds: string[],
   storage: SpelioStorage,
-  score: (word: PracticeWord) => number = word => scoreWord(word, storage)
+  score: (word: PracticeWord) => number = word => scoreWord(word, storage),
+  target = SESSION_TARGET
 ) {
   const byList = new Map<string, PracticeWord[]>();
 
@@ -83,13 +86,13 @@ function selectSessionWords(
   ];
   const words: PracticeWord[] = [];
 
-  while (words.length < SESSION_TARGET && orderedListIds.some(id => (byList.get(id)?.length ?? 0) > 0)) {
+  while (words.length < target && orderedListIds.some(id => (byList.get(id)?.length ?? 0) > 0)) {
     for (const listId of orderedListIds) {
       const nextWord = byList.get(listId)?.shift();
       if (!nextWord) continue;
 
       words.push(nextWord);
-      if (words.length >= SESSION_TARGET) break;
+      if (words.length >= target) break;
     }
   }
 
@@ -179,7 +182,8 @@ export function filterDialectVariants(words: PracticeWord[], preference: Dialect
       ungrouped.push(word);
       continue;
     }
-    grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
+    const key = learningItemKey(word);
+    grouped.set(key, [...(grouped.get(key) ?? []), word]);
   }
 
   const groups = Array.from(grouped.values());
@@ -203,12 +207,12 @@ function getTrackedCandidates(
 
   for (const word of words) {
     const eligible = isEligibleProgress(word) && isReviewEligibleForPreference(word, storage.settings.dialectPreference);
-    const groupId = word.variantGroupId?.trim();
-    if (!groupId) {
+    if (!word.variantGroupId?.trim()) {
       if (eligible) candidates.push(word);
       continue;
     }
-    if (eligible) grouped.set(groupId, [...(grouped.get(groupId) ?? []), word]);
+    const key = learningItemKey(word);
+    if (eligible) grouped.set(key, [...(grouped.get(key) ?? []), word]);
   }
 
   for (const group of grouped.values()) {
@@ -258,13 +262,15 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
       ? getRecapCandidates(allCandidates, storage)
     : dialectResolvedCandidates;
   const learningItemScores = reviewDifficult || recapOnly ? undefined : getLearningItemScores(allCandidates, storage);
+  const sessionTarget = reviewDifficult || recapOnly ? SESSION_TARGET : getNormalSessionTarget(allCandidates, storage);
   const words = selectSessionWords(
     pool,
     eligibleLists.map(list => list.id),
     storage,
     learningItemScores
       ? word => learningItemScores.get(learningItemKey(word)) ?? scoreWord(word, storage)
-      : undefined
+      : undefined,
+    sessionTarget
   );
 
   return {
@@ -320,15 +326,14 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
   if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
-  const sessionVariantGroupIds = new Set(sessionWords.map(word => word.variantGroupId?.trim()).filter(Boolean));
+  const sessionLearningItemKeys = new Set(sessionWords.map(learningItemKey));
   const recentlyResolvedReviewWordIds = new Set(storage.recentlyResolvedReviewWordIds ?? []);
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
   const candidates = getRecapCandidates(activeWords, storage)
     .filter(word => {
       if (recentlyResolvedReviewWordIds.has(word.id)) return false;
       if (sessionWordIds.has(word.id)) return false;
-      const groupId = word.variantGroupId?.trim();
-      return !groupId || !sessionVariantGroupIds.has(groupId);
+      return !sessionLearningItemKeys.has(learningItemKey(word));
     });
 
   return sortPreSessionRecapCandidates(candidates, storage)[0];

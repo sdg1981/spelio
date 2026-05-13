@@ -1,6 +1,7 @@
-import type { PracticeWord, WordList } from '../../data/wordLists';
+import type { WordList } from '../../data/wordLists';
 import type { Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
+import { learningItemKey } from './learningItems';
 
 export const ACTIVE_IDLE_THRESHOLD_MS = 25_000;
 export const ACTIVE_WORD_CAP_MS = 45_000;
@@ -22,11 +23,6 @@ export function addActiveInteractionTime(timing: ActiveWordTiming, interactedAt:
     lastInteractionAt: interactedAt,
     activeMs
   };
-}
-
-function learningItemKey(word: PracticeWord) {
-  const groupId = word.variantGroupId?.trim();
-  return groupId ? `${word.listId}:${groupId}` : `${word.listId}:${word.id}`;
 }
 
 export function countLearnedSpellings(storage: SpelioStorage, lists: WordList[]) {

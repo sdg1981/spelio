@@ -1,6 +1,7 @@
 import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
 import type { InterfaceLanguage } from '../../i18n';
 import { normaliseInterfaceLanguage } from '../../i18n';
+import { groupLearningItems } from './learningItems';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 export type SpelioTheme = 'light' | 'dark';
@@ -315,22 +316,6 @@ function unique(values: string[]) {
   return Array.from(new Set(values));
 }
 
-function eligibleCompletionItems(list: WordList) {
-  const byGroup = new Map<string, PracticeWord[]>();
-  const items: PracticeWord[][] = [];
-
-  for (const word of list.words) {
-    const groupId = word.variantGroupId?.trim();
-    if (!groupId) {
-      items.push([word]);
-      continue;
-    }
-    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), word]);
-  }
-
-  return [...items, ...Array.from(byGroup.values())];
-}
-
 export function updateListCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
   const now = new Date().toISOString();
   const nextListProgress = { ...storage.listProgress };
@@ -345,7 +330,7 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
       strongSessionCount: 0
     };
 
-    const completionItems = eligibleCompletionItems(list);
+    const completionItems = groupLearningItems(list.words);
     const seenRepresentatives = completionItems
       .filter(group => group.some(word => storage.wordProgress[word.id]?.seen))
       .map(group => group[0]?.id)
