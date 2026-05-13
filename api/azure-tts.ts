@@ -23,12 +23,14 @@ import { postProcessAzureWavToMp3 } from './audioPostProcessing';
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
-export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-16khz-16bit-mono-pcm';
+export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-24khz-16bit-mono-pcm';
+export const AZURE_TTS_USER_AGENT = 'SpelioAudioGeneration';
 
 type AzureFetchResponse = {
   ok: boolean;
   status: number;
   arrayBuffer: () => Promise<ArrayBuffer>;
+  text?: () => Promise<string>;
 };
 
 type AzureFetch = (url: string, options: {
@@ -42,6 +44,7 @@ type HandlerDependencies = {
   fetchImpl?: AzureFetch;
   postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>;
   logError?: (message: string, details: Record<string, unknown>) => void;
+  logInfo?: (message: string, details: Record<string, unknown>) => void;
 };
 
 export default async function handler(request: ApiRequest, response: ApiResponse) {
@@ -66,34 +69,89 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     return response.status(500).json({ ok: false, error: 'Azure Speech is not configured.' });
   }
 
+  const logInfo = dependencies.logInfo ?? console.info;
+  const logError = dependencies.logError ?? console.error;
+  const ssml = createWelshSsml(text);
+  logInfo('Azure TTS SSML constructed', {
+    stage: 'ssml_construction',
+    ssmlLength: ssml.length,
+    textLength: text.length,
+    voice: AZURE_WELSH_VOICE,
+    locale: AZURE_SPEECH_LOCALE,
+    prosodyRate: AZURE_SPEECH_PROSODY_RATE
+  });
+
   const fetchImpl = dependencies.fetchImpl ?? fetch;
+  logInfo('Azure TTS request starting', {
+    stage: 'azure_request',
+    region,
+    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+    contentType: 'application/ssml+xml'
+  });
+
   const azureResponse = await fetchImpl(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/ssml+xml',
       'Ocp-Apim-Subscription-Key': key,
-      'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
+      'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      'User-Agent': AZURE_TTS_USER_AGENT
     },
-    body: createWelshSsml(text)
+    body: ssml
+  });
+
+  logInfo('Azure TTS response received', {
+    stage: 'azure_response',
+    status: azureResponse.status,
+    ok: azureResponse.ok,
+    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
   });
 
   if (!azureResponse.ok) {
+    const azureError = await readAzureErrorBody(azureResponse);
+    logError('Azure TTS synthesis failed', {
+      stage: 'azure_response',
+      status: azureResponse.status,
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      azureError
+    });
     return response
       .status(azureResponse.status)
-      .json({ ok: false, error: azureResponse.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${azureResponse.status}).` });
+      .json({ ok: false, error: azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError) });
   }
 
   const wavBuffer = await azureResponse.arrayBuffer();
+  logInfo('Azure TTS WAV buffer received', {
+    stage: 'wav_received',
+    byteLength: wavBuffer.byteLength,
+    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
+  });
+
   if (wavBuffer.byteLength < 100) {
+    logError('Azure TTS returned a small WAV payload', {
+      stage: 'wav_received',
+      byteLength: wavBuffer.byteLength
+    });
     return response.status(502).json({ ok: false, error: 'Azure returned an unexpectedly small audio payload.' });
   }
 
   let mp3Audio: Uint8Array;
   try {
+    logInfo('Audio post-processing starting', {
+      stage: 'ffmpeg_post_processing',
+      inputBytes: wavBuffer.byteLength
+    });
     mp3Audio = await (dependencies.postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
+    logInfo('Audio post-processing finished', {
+      stage: 'mp3_returned',
+      outputBytes: mp3Audio.byteLength
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Audio processing failed.';
-    (dependencies.logError ?? console.error)('Azure audio post-processing failed', { error: message });
+    logError('Azure audio post-processing failed', {
+      stage: 'ffmpeg_post_processing',
+      error: message
+    });
     return response.status(500).json({ ok: false, error: message });
   }
 
@@ -117,7 +175,22 @@ function parseBody(body: unknown): { text?: unknown } | null {
 
 export function createWelshSsml(text: string) {
   // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
-  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text)}</prosody></voice></speak>`;
+  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text.trim())}</prosody></voice></speak>`;
+}
+
+async function readAzureErrorBody(azureResponse: AzureFetchResponse) {
+  if (!azureResponse.text) return '';
+
+  try {
+    return (await azureResponse.text()).trim().slice(0, 500);
+  } catch {
+    return '';
+  }
+}
+
+function createAzureFailureMessage(status: number, azureError: string) {
+  const suffix = azureError ? `: ${azureError}` : '';
+  return `Azure synthesis failed (${status})${suffix}`;
 }
 
 function escapeXml(value: string) {

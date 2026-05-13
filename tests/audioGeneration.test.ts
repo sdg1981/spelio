@@ -71,6 +71,15 @@ assert(
   'Azure SSML should include escaped text inside the subtle prosody rate wrapper.'
 );
 assert(
+  /^<speak version="1\.0" xml:lang="cy-GB"><voice xml:lang="cy-GB" name="cy-GB-NiaNeural"><prosody rate="-4%">.+<\/prosody><\/voice><\/speak>$/.test(ssml),
+  'Azure SSML should keep prosody inside a valid voice element.'
+);
+const escapedSsml = createWelshSsml(' <tag> "quote" & \'apostrophe\' ');
+assert(
+  escapedSsml.includes('&lt;tag&gt; &quot;quote&quot; &amp; &apos;apostrophe&apos;'),
+  'Azure SSML should XML-escape Welsh text before insertion.'
+);
+assert(
   createAdminWelshSsml('cân').includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">cân</prosody>`),
   'Admin SSML helper should expose the same subtle prosody rate.'
 );
@@ -118,16 +127,51 @@ async function runAsyncAssertions() {
         mp3Bytes[2] = 0x33;
         return mp3Bytes;
       },
-      logError: () => undefined
+      logError: () => undefined,
+      logInfo: () => undefined
     }
   );
 
   assertEqual(response.statusCode, 200, 'Successful audio generation should return HTTP 200.');
   assertEqual(response.headers['Content-Type'], 'audio/mpeg', 'Processed audio response should remain MP3.');
   assertEqual(requestedOutputFormat, AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT, 'Azure should be asked for WAV intermediate audio.');
+  assertEqual(requestedOutputFormat, 'riff-24khz-16bit-mono-pcm', 'Azure should use a supported RIFF/WAV intermediate output format.');
   assert(requestedSsml.includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">gwaith</prosody>`), 'Azure request should include subtle prosody rate SSML.');
   assert(postProcessCalled, 'The route should post-process Azure audio before returning it for upload.');
   assert(response.body instanceof Uint8Array && response.body[0] === 0x49, 'The route should send the processed MP3 bytes.');
+
+  const azureFailedResponse = createResponse();
+  let azureFailurePostProcessCalled = false;
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: 'gwaith' } },
+    azureFailedResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async () => ({
+        ok: false,
+        status: 500,
+        arrayBuffer: async () => makeAudioBuffer(),
+        text: async () => 'Unsupported audio format'
+      }),
+      postProcess: async () => {
+        azureFailurePostProcessCalled = true;
+        return new Uint8Array(128);
+      },
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+
+  assertEqual(azureFailedResponse.statusCode, 500, 'Azure failures should keep the Azure response status.');
+  assert(!azureFailurePostProcessCalled, 'Azure failures should not run FFmpeg post-processing.');
+  assert(
+    isJsonErrorBody(azureFailedResponse.body) &&
+      azureFailedResponse.body.error === 'Azure synthesis failed (500): Unsupported audio format',
+    'Azure failures should surface the Azure stage and response body.'
+  );
 
   const failedResponse = createResponse();
   await handleAzureTtsRequest(
@@ -146,7 +190,8 @@ async function runAsyncAssertions() {
       postProcess: async () => {
         throw new Error('processing exploded');
       },
-      logError: () => undefined
+      logError: () => undefined,
+      logInfo: () => undefined
     }
   );
 
@@ -156,7 +201,7 @@ async function runAsyncAssertions() {
     isJsonErrorBody(failedBody) &&
       failedBody.ok === false &&
       failedBody.error === 'processing exploded',
-    'Processing failures should return a meaningful JSON error.'
+    'FFmpeg processing failures should return a meaningful JSON error distinct from Azure synthesis failures.'
   );
 
   console.log('audio generation tests passed');
