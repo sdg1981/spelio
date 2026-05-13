@@ -234,14 +234,23 @@ export const supabaseAdminRepository: AdminRepository = {
     const previousAudioUrl = word.audioUrl;
 
     try {
-      await this.saveWord({ ...word, audioStatus: 'generating' });
+      await this.saveWord({ ...word, audioStatus: 'generating' }).catch(error => {
+        throw new Error(`Supabase save failed while marking audio as generating: ${readErrorMessage(error)}`);
+      });
       const audio = await synthesizeWelshMp3(word.welshAnswer);
-      const audioUrl = await this.uploadAudioFile(word, audio);
-      const readyWord = await this.saveWord({ ...word, audioUrl, audioStatus: 'ready' });
+      const audioUrl = await this.uploadAudioFile(word, audio).catch(error => {
+        throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
+      });
+      const readyWord = await this.saveWord({ ...word, audioUrl, audioStatus: 'ready' }).catch(error => {
+        throw new Error(`Supabase save failed after audio upload: ${readErrorMessage(error)}`);
+      });
       return { word: readyWord, ok: true };
     } catch (error) {
-      const failedWord = await this.saveWord({ ...word, audioUrl: previousAudioUrl, audioStatus: 'failed' });
-      return { word: failedWord, ok: false, error: error instanceof Error ? error.message : 'Audio generation failed.' };
+      const generationError = error instanceof Error ? error.message : 'Audio generation failed.';
+      const failedWord = await this.saveWord({ ...word, audioUrl: previousAudioUrl, audioStatus: 'failed' }).catch(saveError => {
+        throw new Error(`${generationError}; Supabase save failed while marking audio as failed: ${readErrorMessage(saveError)}`);
+      });
+      return { word: failedWord, ok: false, error: generationError };
     }
   },
 
@@ -519,4 +528,8 @@ function toWordRow(word: AdminWord) {
 
 function slugOrNull(value: string) {
   return value ? value.toLowerCase().replace(/[^a-z0-9]+/g, '-') : null;
+}
+
+function readErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }

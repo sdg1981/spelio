@@ -18,6 +18,14 @@ export interface AudioGenerationResult {
   error?: string;
 }
 
+type AudioRouteErrorPayload = {
+  error?: string;
+  errorStage?: string;
+  audioPipelineVersion?: string;
+  azureStatus?: number;
+  azureErrorBody?: string;
+};
+
 export function createAudioQueueSnapshot<TWord extends AdminWord>(words: TWord[]): AudioQueueSnapshot<TWord> {
   return {
     words,
@@ -52,8 +60,8 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
   });
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error ?? (response.status === 429 ? 'Azure rate limit reached.' : `Azure synthesis failed (${response.status}).`));
+    const payload = await response.json().catch(() => null) as AudioRouteErrorPayload | null;
+    throw new Error(formatAudioRouteError(response.status, payload));
   }
 
   const contentType = response.headers.get('content-type') ?? '';
@@ -77,6 +85,16 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
   }
 
   return new Blob([audioBuffer], { type: 'audio/mpeg' });
+}
+
+function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload | null) {
+  if (!payload) return status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}) before returning diagnostic details.`;
+
+  const message = payload.error ?? (status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}).`);
+  const stage = payload.errorStage ? `stage: ${payload.errorStage}` : '';
+  const version = payload.audioPipelineVersion ? `pipeline: ${payload.audioPipelineVersion}` : '';
+  const details = [stage, version].filter(Boolean).join(', ');
+  return details ? `${message} (${details})` : message;
 }
 
 export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {

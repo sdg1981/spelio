@@ -9,7 +9,7 @@ type ApiRequest = {
 
 type ApiResponse = {
   status: (code: number) => ApiResponse;
-  json: (body: { ok: boolean; error?: string }) => void;
+  json: (body: AudioRouteJsonResponse) => void;
   setHeader: (name: string, value: string | string[]) => void;
   send: (body: unknown) => void;
 };
@@ -25,6 +25,27 @@ export const AZURE_SPEECH_LOCALE = 'cy-GB';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-24khz-16bit-mono-pcm';
 export const AZURE_TTS_USER_AGENT = 'SpelioAudioGeneration';
+export const AUDIO_PIPELINE_VERSION = 'wav-24khz-ffmpeg-v2';
+export const AZURE_TTS_ENDPOINT_PATH = '/cognitiveservices/v1';
+
+type AudioErrorStage =
+  | 'ssml_construction'
+  | 'azure_configuration'
+  | 'azure_request'
+  | 'azure_response'
+  | 'wav_received'
+  | 'ffmpeg_post_processing'
+  | 'mp3_returned'
+  | 'unknown_route_failure';
+
+type AudioRouteJsonResponse = {
+  ok: boolean;
+  error?: string;
+  errorStage?: AudioErrorStage;
+  audioPipelineVersion?: string;
+  azureStatus?: number;
+  azureErrorBody?: string;
+};
 
 type AzureFetchResponse = {
   ok: boolean;
@@ -52,112 +73,165 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 }
 
 export async function handleAzureTtsRequest(request: ApiRequest, response: ApiResponse, dependencies: HandlerDependencies = {}) {
-  if (request.method !== 'POST') {
-    response.setHeader('Allow', 'POST');
-    return response.status(405).json({ ok: false, error: 'Method not allowed' });
-  }
-
-  const body = parseBody(request.body);
-  const text = typeof body?.text === 'string' ? body.text.trim() : '';
-  if (!text) return response.status(400).json({ ok: false, error: 'Welsh text is required.' });
-  if (text.length > 500) return response.status(400).json({ ok: false, error: 'Welsh text is too long.' });
-
-  const env = dependencies.env ?? process.env;
-  const key = env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY;
-  const region = env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION;
-  if (!key || !region) {
-    return response.status(500).json({ ok: false, error: 'Azure Speech is not configured.' });
-  }
-
   const logInfo = dependencies.logInfo ?? console.info;
   const logError = dependencies.logError ?? console.error;
-  const ssml = createWelshSsml(text);
-  logInfo('Azure TTS SSML constructed', {
-    stage: 'ssml_construction',
-    ssmlLength: ssml.length,
-    textLength: text.length,
-    voice: AZURE_WELSH_VOICE,
-    locale: AZURE_SPEECH_LOCALE,
-    prosodyRate: AZURE_SPEECH_PROSODY_RATE
-  });
 
-  const fetchImpl = dependencies.fetchImpl ?? fetch;
-  logInfo('Azure TTS request starting', {
-    stage: 'azure_request',
-    region,
-    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-    contentType: 'application/ssml+xml'
-  });
-
-  const azureResponse = await fetchImpl(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/ssml+xml',
-      'Ocp-Apim-Subscription-Key': key,
-      'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-      'User-Agent': AZURE_TTS_USER_AGENT
-    },
-    body: ssml
-  });
-
-  logInfo('Azure TTS response received', {
-    stage: 'azure_response',
-    status: azureResponse.status,
-    ok: azureResponse.ok,
-    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
-  });
-
-  if (!azureResponse.ok) {
-    const azureError = await readAzureErrorBody(azureResponse);
-    logError('Azure TTS synthesis failed', {
-      stage: 'azure_response',
-      status: azureResponse.status,
-      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-      azureError
-    });
-    return response
-      .status(azureResponse.status)
-      .json({ ok: false, error: azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError) });
-  }
-
-  const wavBuffer = await azureResponse.arrayBuffer();
-  logInfo('Azure TTS WAV buffer received', {
-    stage: 'wav_received',
-    byteLength: wavBuffer.byteLength,
-    outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
-  });
-
-  if (wavBuffer.byteLength < 100) {
-    logError('Azure TTS returned a small WAV payload', {
-      stage: 'wav_received',
-      byteLength: wavBuffer.byteLength
-    });
-    return response.status(502).json({ ok: false, error: 'Azure returned an unexpectedly small audio payload.' });
-  }
-
-  let mp3Audio: Uint8Array;
   try {
-    logInfo('Audio post-processing starting', {
-      stage: 'ffmpeg_post_processing',
-      inputBytes: wavBuffer.byteLength
+    logInfo('Azure TTS route invoked', {
+      stage: 'route_start',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION
     });
-    mp3Audio = await (dependencies.postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
-    logInfo('Audio post-processing finished', {
-      stage: 'mp3_returned',
-      outputBytes: mp3Audio.byteLength
+
+    if (request.method !== 'POST') {
+      response.setHeader('Allow', 'POST');
+      return sendJsonError(response, 405, 'Method not allowed', 'unknown_route_failure');
+    }
+
+    const body = parseBody(request.body);
+    const text = typeof body?.text === 'string' ? body.text.trim() : '';
+    if (!text) return sendJsonError(response, 400, 'Welsh text is required.', 'ssml_construction');
+    if (text.length > 500) return sendJsonError(response, 400, 'Welsh text is too long.', 'ssml_construction');
+
+    const env = dependencies.env ?? process.env;
+    const key = env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY;
+    const region = env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION;
+    logInfo('Azure TTS configuration checked', {
+      stage: 'azure_configuration',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      keyConfigured: Boolean(key),
+      regionConfigured: Boolean(region),
+      voice: AZURE_WELSH_VOICE,
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
     });
+
+    if (!key || !region) {
+      return sendJsonError(response, 500, 'Azure Speech is not configured.', 'azure_configuration');
+    }
+
+    const endpointHost = `${region}.tts.speech.microsoft.com`;
+    const endpointUrl = `https://${endpointHost}${AZURE_TTS_ENDPOINT_PATH}`;
+    const ssml = createWelshSsml(text);
+    logInfo('Azure TTS SSML constructed', {
+      stage: 'ssml_construction',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      ssmlLength: ssml.length,
+      textLength: text.length,
+      voice: AZURE_WELSH_VOICE,
+      locale: AZURE_SPEECH_LOCALE,
+      prosodyRate: AZURE_SPEECH_PROSODY_RATE
+    });
+
+    const fetchImpl = dependencies.fetchImpl ?? fetch;
+    logInfo('Azure TTS request starting', {
+      stage: 'azure_request',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      endpointHost,
+      endpointPath: AZURE_TTS_ENDPOINT_PATH,
+      regionConfigured: true,
+      keyConfigured: true,
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      contentType: 'application/ssml+xml',
+      userAgent: AZURE_TTS_USER_AGENT,
+      voice: AZURE_WELSH_VOICE,
+      ssmlLength: ssml.length
+    });
+
+    const azureResponse = await fetchImpl(endpointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/ssml+xml',
+        'Ocp-Apim-Subscription-Key': key,
+        'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+        'User-Agent': AZURE_TTS_USER_AGENT
+      },
+      body: ssml
+    });
+
+    logInfo('Azure TTS response received', {
+      stage: 'azure_response',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      status: azureResponse.status,
+      ok: azureResponse.ok,
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      voice: AZURE_WELSH_VOICE
+    });
+
+    if (!azureResponse.ok) {
+      const azureError = await readAzureErrorBody(azureResponse);
+      logError('Azure TTS synthesis failed', {
+        stage: 'azure_response',
+        audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+        status: azureResponse.status,
+        outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+        voice: AZURE_WELSH_VOICE,
+        regionConfigured: true,
+        ssmlLength: ssml.length,
+        azureError
+      });
+      return sendJsonError(
+        response,
+        azureResponse.status,
+        azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError),
+        'azure_response',
+        {
+          azureStatus: azureResponse.status,
+          azureErrorBody: azureError
+        }
+      );
+    }
+
+    const wavBuffer = await azureResponse.arrayBuffer();
+    logInfo('Azure TTS WAV buffer received', {
+      stage: 'wav_received',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      byteLength: wavBuffer.byteLength,
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
+    });
+
+    if (wavBuffer.byteLength < 100) {
+      logError('Azure TTS returned a small WAV payload', {
+        stage: 'wav_received',
+        audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+        byteLength: wavBuffer.byteLength
+      });
+      return sendJsonError(response, 502, 'Azure returned an unexpectedly small audio payload.', 'wav_received');
+    }
+
+    let mp3Audio: Uint8Array;
+    try {
+      logInfo('Audio post-processing starting', {
+        stage: 'ffmpeg_post_processing',
+        audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+        inputBytes: wavBuffer.byteLength
+      });
+      mp3Audio = await (dependencies.postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
+      logInfo('Audio post-processing finished', {
+        stage: 'mp3_returned',
+        audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+        outputBytes: mp3Audio.byteLength
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Audio processing failed.';
+      logError('Azure audio post-processing failed', {
+        stage: 'ffmpeg_post_processing',
+        audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+        error: message
+      });
+      return sendJsonError(response, 500, `FFmpeg post-processing failed: ${message}`, 'ffmpeg_post_processing');
+    }
+
+    response.setHeader('Content-Type', 'audio/mpeg');
+    response.setHeader('Cache-Control', 'no-store');
+    return response.status(200).send(Buffer.from(mp3Audio));
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Audio processing failed.';
-    logError('Azure audio post-processing failed', {
-      stage: 'ffmpeg_post_processing',
+    const message = error instanceof Error ? error.message : 'Unknown route failure.';
+    logError('Azure TTS route failed unexpectedly', {
+      stage: 'unknown_route_failure',
+      audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       error: message
     });
-    return response.status(500).json({ ok: false, error: message });
+    return sendJsonError(response, 500, `Unknown audio route failure: ${message}`, 'unknown_route_failure');
   }
-
-  response.setHeader('Content-Type', 'audio/mpeg');
-  response.setHeader('Cache-Control', 'no-store');
-  return response.status(200).send(Buffer.from(mp3Audio));
 }
 
 function parseBody(body: unknown): { text?: unknown } | null {
@@ -191,6 +265,22 @@ async function readAzureErrorBody(azureResponse: AzureFetchResponse) {
 function createAzureFailureMessage(status: number, azureError: string) {
   const suffix = azureError ? `: ${azureError}` : '';
   return `Azure synthesis failed (${status})${suffix}`;
+}
+
+function sendJsonError(
+  response: ApiResponse,
+  status: number,
+  error: string,
+  errorStage: AudioErrorStage,
+  extra: Partial<AudioRouteJsonResponse> = {}
+) {
+  return response.status(status).json({
+    ok: false,
+    error,
+    errorStage,
+    audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+    ...extra
+  });
 }
 
 function escapeXml(value: string) {

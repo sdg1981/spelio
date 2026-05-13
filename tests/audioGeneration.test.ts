@@ -1,4 +1,5 @@
 import {
+  AUDIO_PIPELINE_VERSION,
   AZURE_SPEECH_PROSODY_RATE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
   createWelshSsml,
@@ -13,7 +14,14 @@ import {
 } from '../api/audioPostProcessing';
 import { createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
-type TestResponseBody = Uint8Array | { ok: boolean; error?: string } | null;
+type TestResponseBody = Uint8Array | {
+  ok: boolean;
+  error?: string;
+  errorStage?: string;
+  audioPipelineVersion?: string;
+  azureStatus?: number;
+  azureErrorBody?: string;
+} | null;
 
 type TestResponse = {
   statusCode: number;
@@ -140,6 +148,33 @@ async function runAsyncAssertions() {
   assert(postProcessCalled, 'The route should post-process Azure audio before returning it for upload.');
   assert(response.body instanceof Uint8Array && response.body[0] === 0x49, 'The route should send the processed MP3 bytes.');
 
+  const pipelineLogs: Array<Record<string, unknown>> = [];
+  const versionResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: 'gwaith' } },
+    versionResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async () => ({
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => makeAudioBuffer()
+      }),
+      postProcess: async () => new Uint8Array(128),
+      logError: () => undefined,
+      logInfo: (_message, details) => {
+        pipelineLogs.push(details);
+      }
+    }
+  );
+  assert(
+    pipelineLogs.some(entry => entry.audioPipelineVersion === AUDIO_PIPELINE_VERSION),
+    'The route should log the internal audio pipeline version marker.'
+  );
+
   const azureFailedResponse = createResponse();
   let azureFailurePostProcessCalled = false;
   await handleAzureTtsRequest(
@@ -170,7 +205,15 @@ async function runAsyncAssertions() {
   assert(
     isJsonErrorBody(azureFailedResponse.body) &&
       azureFailedResponse.body.error === 'Azure synthesis failed (500): Unsupported audio format',
-    'Azure failures should surface the Azure stage and response body.'
+    'Azure failures should surface the Azure response body.'
+  );
+  assert(
+    isJsonErrorBody(azureFailedResponse.body) &&
+      azureFailedResponse.body.errorStage === 'azure_response' &&
+      azureFailedResponse.body.audioPipelineVersion === AUDIO_PIPELINE_VERSION &&
+      azureFailedResponse.body.azureStatus === 500 &&
+      azureFailedResponse.body.azureErrorBody === 'Unsupported audio format',
+    'Azure failures should include structured route diagnostics.'
   );
 
   const failedResponse = createResponse();
@@ -200,13 +243,15 @@ async function runAsyncAssertions() {
   assert(
     isJsonErrorBody(failedBody) &&
       failedBody.ok === false &&
-      failedBody.error === 'processing exploded',
+      failedBody.error === 'FFmpeg post-processing failed: processing exploded' &&
+      failedBody.errorStage === 'ffmpeg_post_processing' &&
+      failedBody.audioPipelineVersion === AUDIO_PIPELINE_VERSION,
     'FFmpeg processing failures should return a meaningful JSON error distinct from Azure synthesis failures.'
   );
 
   console.log('audio generation tests passed');
 }
 
-function isJsonErrorBody(body: TestResponseBody): body is { ok: boolean; error?: string } {
+function isJsonErrorBody(body: TestResponseBody): body is Exclude<TestResponseBody, Uint8Array | null> {
   return typeof body === 'object' && body !== null && !(body instanceof Uint8Array);
 }
