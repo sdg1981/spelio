@@ -897,6 +897,7 @@ Rules:
 - Recap should not reduce session quality or cause duplicate variantGroupId entries.
 - If no eligible recap word exists, run the normal session unchanged.
 - Normal sessions may inject up to one recap-due word.
+- Automatic recap injection should avoid immediate duplicate practice after review. If a word is cleanly resolved in the immediately preceding Review difficult words session, that exact wordId should be excluded from automatic recap injection in the next normal session only. It may remain `recapDue` and may become eligible again after one normal session has passed. If another eligible recap-due word exists, the app may inject that word instead. If no eligible recap word remains after this exclusion, the normal session should run unchanged.
 - Recap should prefer words that were previously incorrect or revealed, prioritising current difficult words before resolved recap-due words.
 - If the recap word is completed cleanly, update its current difficulty using the existing review removal rule.
 - Recap eligibility clears after one clean recap completion. `cleanRecapCount` may still be updated as optional/internal future-safe metadata, but it must not delay `recapDue` clearing after a clean recap.
@@ -1064,6 +1065,8 @@ progress.difficult === false
 ```
 
 The word may still remain eligible for quiet automatic recap through `recapDue`, but it no longer needs visible review.
+
+A cleanly resolved review word may still remain `recapDue` for later reinforcement, but it should not be immediately injected as the automatic recap word in the next normal session. Review fixes current difficulty; automatic recap provides later reinforcement.
 
 ### 13.3 Review session selection
 
