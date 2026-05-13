@@ -310,7 +310,10 @@ export function usePracticeSession({
       lastSessionResult: result,
       completedNormalSessionCount: reviewDifficult || includeRecapDue
         ? storageRef.current.completedNormalSessionCount
-        : (storageRef.current.completedNormalSessionCount ?? 0) + 1
+        : (storageRef.current.completedNormalSessionCount ?? 0) + 1,
+      recentlyResolvedReviewWordIds: reviewDifficult || includeRecapDue
+        ? storageRef.current.recentlyResolvedReviewWordIds
+        : []
     };
     nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
     if (!reviewDifficult && !includeRecapDue) {
@@ -361,7 +364,8 @@ export function usePracticeSession({
     persistWordProgress(currentWord, {
       completed: true,
       cleanCompleted: !hadIssueInThisSession,
-      recapCompletedClean: completingRecap && !hadIssueInThisSession
+      recapCompletedClean: completingRecap && !hadIssueInThisSession,
+      reviewResolvedClean: reviewDifficult && !hadIssueInThisSession
     });
 
     if (completingInjectedRecap) {

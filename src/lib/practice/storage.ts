@@ -60,6 +60,7 @@ export interface SpelioStorage {
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
   completedNormalSessionCount?: number;
+  recentlyResolvedReviewWordIds?: string[];
   learningStats?: LearningStats;
   wordProgress: Record<string, WordProgress>;
   listProgress: Record<string, ListProgress>;
@@ -72,6 +73,7 @@ export interface WordProgressPatch {
   completed?: boolean;
   cleanCompleted?: boolean;
   recapCompletedClean?: boolean;
+  reviewResolvedClean?: boolean;
 }
 
 const STORAGE_KEY = 'spelio-storage-v1';
@@ -111,6 +113,7 @@ export const defaultStorage: SpelioStorage = {
   lastSessionDate: null,
   lastSessionResult: null,
   completedNormalSessionCount: 0,
+  recentlyResolvedReviewWordIds: [],
   learningStats: createDefaultLearningStats(),
   wordProgress: {},
   listProgress: {},
@@ -160,6 +163,9 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
     completedNormalSessionCount: typeof source.completedNormalSessionCount === 'number' ? source.completedNormalSessionCount : 0,
+    recentlyResolvedReviewWordIds: Array.isArray(source.recentlyResolvedReviewWordIds)
+      ? source.recentlyResolvedReviewWordIds.filter(id => typeof id === 'string')
+      : [],
     learningStats: {
       totalActiveMs: typeof learningStats.totalActiveMs === 'number' ? Math.max(0, learningStats.totalActiveMs) : 0,
       totalSessionsCompleted: typeof learningStats.totalSessionsCompleted === 'number' ? Math.max(0, learningStats.totalSessionsCompleted) : 0,
@@ -280,10 +286,14 @@ export function applyWordProgressPatch(
       : patch.cleanCompleted && (previous.difficult || previous.recapDue)
         ? true
         : previous.recapDue;
+  const recentlyResolvedReviewWordIds = patch.reviewResolvedClean && patch.cleanCompleted && previous.difficult && !madeDifficult
+    ? unique([...(storage.recentlyResolvedReviewWordIds ?? []), word.id])
+    : storage.recentlyResolvedReviewWordIds;
 
   return {
     ...storage,
     currentPathPosition: storage.currentPathPosition || word.listId,
+    recentlyResolvedReviewWordIds,
     wordProgress: {
       ...storage.wordProgress,
       [word.id]: {

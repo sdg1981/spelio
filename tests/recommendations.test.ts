@@ -546,10 +546,11 @@ test('dedicated review clears difficult after one clean completion but leaves re
   assertEqual(reviewSession.words.length, 1, 'Dedicated review should use the current difficult pool only');
   assertEqual(reviewSession.words[0]?.id, numbers.words[0].id, 'Dedicated review should include the difficult word');
 
-  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, reviewResolvedClean: true }, '2026-05-05T00:01:00.000Z');
 
   assertEqual(storage.wordProgress[numbers.words[0].id]?.difficult, false, 'One clean review completion should clear difficult');
   assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Clean review completion should leave recap due for reinforcement');
+  assertEqual(storage.recentlyResolvedReviewWordIds?.[0], numbers.words[0].id, 'Clean review completion should temporarily exclude the word from automatic recap');
 });
 
 test('From earlier uses recapDue words and starts recap mode', () => {
@@ -1074,6 +1075,74 @@ test('automatic recap injection avoids duplicate variantGroupId entries', () => 
   const injected = selectPreSessionRecapWord(storage, wordLists, [southCoffee]);
 
   assertEqual(injected, undefined, 'Automatic recap should not duplicate a variant group already in the session');
+});
+
+test('automatic recap does not inject the only word just resolved in difficult review', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, numbers.words[0], { completed: true, cleanCompleted: true, reviewResolvedClean: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    completedNormalSessionCount: 2
+  };
+
+  const normalSession = createPracticeSession(wordLists, storage);
+  const injected = selectPreSessionRecapWord(storage, wordLists, normalSession.words);
+
+  assertEqual(storage.wordProgress[numbers.words[0].id]?.recapDue, true, 'Clean review completion may leave the word recap due');
+  assertEqual(injected, undefined, 'Quick recap should not immediately reuse the just-resolved review word');
+});
+
+test('automatic recap skips words just resolved in difficult review and falls back to older recap due words', () => {
+  const list = recapSelectionList();
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    completedNormalSessionCount: 2,
+    recentlyResolvedReviewWordIds: ['resolved_easy_older'],
+    wordProgress: {
+      active_hard_recent: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: true,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-04T10:00:00.000Z'
+      },
+      resolved_hard_recent: {
+        seen: true,
+        completedCount: 2,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-05T10:00:00.000Z'
+      },
+      resolved_easy_older: {
+        seen: true,
+        completedCount: 2,
+        incorrectAttempts: 1,
+        revealedCount: 0,
+        difficult: false,
+        recapDue: true,
+        cleanRecapCount: 0,
+        lastPractisedAt: '2026-05-03T10:00:00.000Z'
+      }
+    }
+  };
+
+  const selected = selectPreSessionRecapWord(storage, [list], []);
+  const selectedAfterNormalSessionClearsExclusion = selectPreSessionRecapWord({ ...storage, recentlyResolvedReviewWordIds: [] }, [list], []);
+
+  assertEqual(selected?.id, 'resolved_hard_recent', 'Quick recap should skip the just-resolved review word and use another eligible recap word');
+  assertEqual(selectedAfterNormalSessionClearsExclusion?.id, 'resolved_easy_older', 'The skipped word may become eligible again after the transient exclusion is cleared');
 });
 
 test('recapDue word completed cleanly in From earlier clears recap due and shrinks count', () => {

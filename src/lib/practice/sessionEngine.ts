@@ -321,9 +321,11 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
   const sessionVariantGroupIds = new Set(sessionWords.map(word => word.variantGroupId?.trim()).filter(Boolean));
+  const recentlyResolvedReviewWordIds = new Set(storage.recentlyResolvedReviewWordIds ?? []);
   const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
   const candidates = getRecapCandidates(activeWords, storage)
     .filter(word => {
+      if (recentlyResolvedReviewWordIds.has(word.id)) return false;
       if (sessionWordIds.has(word.id)) return false;
       const groupId = word.variantGroupId?.trim();
       return !groupId || !sessionVariantGroupIds.has(groupId);
