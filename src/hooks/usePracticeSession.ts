@@ -31,6 +31,15 @@ const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
 const SUCCESS_UNDERLINE_STAGGER_MS = 42;
 const SUCCESS_UNDERLINE_DURATION_MS = 160;
 const SUCCESS_CONFIRMATION_PAUSE_MS = 450;
+const UI_SOUND_VOLUME = 0.45;
+const UI_SOUND_PATHS = {
+  error: '/sounds/error-soft.mp3',
+  success: '/sounds/success-soft.mp3',
+  completion: '/sounds/completion-soft.mp3'
+} as const;
+
+let currentUiSound: HTMLAudioElement | null = null;
+const uiSoundCache: Partial<Record<keyof typeof UI_SOUND_PATHS, HTMLAudioElement>> = {};
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -54,23 +63,35 @@ function getPracticeAnswer(word: PracticeWord) {
 
 function playTone(type: 'success' | 'error' | 'completion') {
   try {
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
+    if (typeof Audio === 'undefined') return;
 
-    const context = new AudioContextClass();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
+    // UI sound effects are file-based to avoid mobile oscillator pop/click issues.
+    const audio = uiSoundCache[type] ?? new Audio(UI_SOUND_PATHS[type]);
+    uiSoundCache[type] = audio;
+    audio.preload = 'auto';
+    audio.volume = UI_SOUND_VOLUME;
 
-    oscillator.type = 'sine';
-    oscillator.frequency.value = type === 'error' ? 180 : type === 'completion' ? 660 : 520;
-    gain.gain.value = 0.035;
+    if (currentUiSound) {
+      currentUiSound.pause();
+      try {
+        currentUiSound.currentTime = 0;
+      } catch {
+        // Seeking can fail before media metadata is ready.
+      }
+    }
 
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.14);
+    currentUiSound = audio;
+    audio.onended = () => {
+      if (currentUiSound === audio) currentUiSound = null;
+    };
 
-    window.setTimeout(() => context.close().catch(() => undefined), 240);
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Playback can still start from the browser's available position.
+    }
+
+    void audio.play().catch(() => undefined);
   } catch {
     // Sound effects are non-critical.
   }
