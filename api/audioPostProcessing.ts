@@ -1,7 +1,8 @@
 declare const process: {
   env: Record<string, string | undefined>;
-  cwd: () => string;
 };
+
+import * as ffmpegStaticModule from 'ffmpeg-static';
 
 type SpawnedProcess = {
   stdout?: { on: (event: 'data', listener: (chunk: unknown) => void) => void };
@@ -22,13 +23,6 @@ type OsModule = {
 type PathModule = {
   join: (...parts: string[]) => string;
 };
-type ModuleModule = {
-  createRequire: (url: string) => (specifier: string) => unknown;
-};
-type FfmpegInstallerPackage = {
-  path?: string;
-  version?: string;
-};
 
 type NodeAudioTools = {
   spawn: Spawn;
@@ -39,6 +33,7 @@ type NodeAudioTools = {
 };
 
 const dynamicImport = new Function('specifier', 'return import(specifier)') as (specifier: string) => Promise<unknown>;
+const bundledFfmpegPath = normalizeFfmpegStaticPath(ffmpegStaticModule);
 
 export const AUDIO_POST_PROCESSING_MIN_BYTES = 100;
 export const AUDIO_FADE_OUT_SECONDS = 0.03;
@@ -109,12 +104,11 @@ export async function postProcessAzureWavToMp3(wavAudio: ArrayBuffer | Uint8Arra
 }
 
 async function loadNodeAudioTools(): Promise<NodeAudioTools> {
-  const [childProcessModule, fsModule, osModule, pathModule, moduleModule] = await Promise.all([
+  const [childProcessModule, fsModule, osModule, pathModule] = await Promise.all([
     dynamicImport('node:child_process'),
     dynamicImport('node:fs/promises'),
     dynamicImport('node:os'),
-    dynamicImport('node:path'),
-    dynamicImport('node:module')
+    dynamicImport('node:path')
   ]);
 
   const fs = fsModule as FileSystemPromises;
@@ -123,14 +117,14 @@ async function loadNodeAudioTools(): Promise<NodeAudioTools> {
     fs,
     os: osModule as OsModule,
     path: pathModule as PathModule,
-    ffmpegPath: await resolveFfmpegPath((moduleModule as ModuleModule).createRequire, fs)
+    ffmpegPath: await resolveFfmpegPath(fs)
   };
 }
 
 export async function resolveFfmpegPath(
-  createRequire: ModuleModule['createRequire'],
   fs: Pick<FileSystemPromises, 'readFile'>,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
+  fallbackFfmpegPath: string | null = bundledFfmpegPath
 ) {
   if (env.FFMPEG_PATH) {
     await assertFileExists(fs, env.FFMPEG_PATH, 'FFMPEG_PATH');
@@ -141,24 +135,22 @@ export async function resolveFfmpegPath(
     return env.FFMPEG_PATH;
   }
 
-  let ffmpegInstaller: FfmpegInstallerPackage;
-  try {
-    const require = createRequire(`${process.cwd()}/package.json`);
-    ffmpegInstaller = require('@ffmpeg-installer/ffmpeg') as FfmpegInstallerPackage;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`FFmpeg package could not be resolved: ${message}`);
-  }
-
-  const ffmpegPath = ffmpegInstaller.path;
-  if (!ffmpegPath) throw new Error('FFmpeg package resolved but did not expose a binary path.');
-  await assertFileExists(fs, ffmpegPath, '@ffmpeg-installer/ffmpeg');
+  if (!fallbackFfmpegPath) throw new Error('Bundled FFmpeg package did not expose a binary path.');
+  await assertFileExists(fs, fallbackFfmpegPath, 'ffmpeg-static');
   console.info('FFmpeg package resolved', {
-    source: '@ffmpeg-installer/ffmpeg',
-    pathExists: true,
-    version: ffmpegInstaller.version ?? 'unknown'
+    source: 'ffmpeg-static',
+    pathExists: true
   });
-  return ffmpegPath;
+  return fallbackFfmpegPath;
+}
+
+function normalizeFfmpegStaticPath(moduleValue: unknown): string | null {
+  if (typeof moduleValue === 'string') return moduleValue;
+  if (moduleValue && typeof moduleValue === 'object' && 'default' in moduleValue) {
+    const defaultValue = (moduleValue as { default?: unknown }).default;
+    return typeof defaultValue === 'string' ? defaultValue : null;
+  }
+  return null;
 }
 
 async function assertFileExists(fs: Pick<FileSystemPromises, 'readFile'>, filePath: string, source: string) {

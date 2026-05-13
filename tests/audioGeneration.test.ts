@@ -107,24 +107,22 @@ void runAsyncAssertions();
 
 async function runAsyncAssertions() {
   const overrideFfmpegPath = await resolveFfmpegPath(
-    () => {
-      throw new Error('package require should not run when FFMPEG_PATH is set');
-    },
     {
       readFile: async () => new Uint8Array([1])
     },
-    { FFMPEG_PATH: '/custom/ffmpeg' }
+    { FFMPEG_PATH: '/custom/ffmpeg' },
+    '/bundled/ffmpeg'
   );
   assertEqual(overrideFfmpegPath, '/custom/ffmpeg', 'FFmpeg resolution should prefer explicit FFMPEG_PATH.');
 
   const packageFfmpegPath = await resolveFfmpegPath(
-    () => () => ({ path: '/bundled/ffmpeg', version: 'test-version' }),
     {
       readFile: async () => new Uint8Array([1])
     },
-    {}
+    {},
+    '/bundled/ffmpeg'
   );
-  assertEqual(packageFfmpegPath, '/bundled/ffmpeg', 'FFmpeg resolution should fall back to bundled package path.');
+  assertEqual(packageFfmpegPath, '/bundled/ffmpeg', 'FFmpeg resolution should fall back to bundled ffmpeg-static path.');
 
   let requestedOutputFormat = '';
   let requestedSsml = '';
