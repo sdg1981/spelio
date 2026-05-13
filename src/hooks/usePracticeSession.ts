@@ -16,7 +16,7 @@ import { isListProgressionReady } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
-import { playAudioUrl } from '../lib/audioPlayback';
+import { getPlayableAudioUrl } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
 
 type LetterState = PracticeLetterState;
@@ -142,6 +142,8 @@ export function usePracticeSession({
     lastInteractionAt: null,
     activeMs: 0
   });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     storageRef.current = storage;
@@ -156,13 +158,97 @@ export function usePracticeSession({
     setLetters(createInitialPracticeLetters(answer));
   }
 
+  const stopCurrentAudio = useCallback((releaseAudio = false) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Some browsers can reject seeking while media metadata is unavailable.
+    }
+
+    if (releaseAudio) {
+      audio.removeAttribute('src');
+      try {
+        audio.load();
+      } catch {
+        // Audio cleanup is best-effort.
+      }
+      audioRef.current = null;
+      audioUrlRef.current = null;
+    }
+  }, []);
+
+  const restartCurrentAudio = useCallback(async ({
+    recordInteraction = true,
+    showUnavailableStatus = true
+  }: {
+    recordInteraction?: boolean;
+    showUnavailableStatus?: boolean;
+  } = {}) => {
+    if (!storageRef.current.settings.audioPrompts) return false;
+    if (recordInteraction) recordPracticeInteraction();
+
+    if (!currentWord?.audioUrl) {
+      if (currentWord) markAudioPlaybackFailed(currentWord.id);
+      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      return false;
+    }
+
+    const playableUrl = getPlayableAudioUrl(currentWord.audioUrl);
+    if (!playableUrl) {
+      markAudioPlaybackFailed(currentWord.id);
+      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      return false;
+    }
+
+    let audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      try {
+        audio.currentTime = 0;
+      } catch {
+        // Restart should still attempt playback even if seeking fails.
+      }
+    }
+
+    if (!audio || audioUrlRef.current !== playableUrl) {
+      stopCurrentAudio(true);
+      audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = playableUrl;
+      audioRef.current = audio;
+      audioUrlRef.current = playableUrl;
+    }
+
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Playback can continue from the browser's available start position.
+    }
+
+    try {
+      await audio.play();
+      return true;
+    } catch {
+      if (audioRef.current === audio && audioUrlRef.current === playableUrl) {
+        markAudioPlaybackFailed(currentWord.id);
+        if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      }
+      return false;
+    }
+  }, [currentWord?.audioUrl, currentWord?.id, stopCurrentAudio, t]);
+
   useEffect(() => {
     return () => {
       if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
       if (wrongTimerRef.current) window.clearTimeout(wrongTimerRef.current);
       if (revealedCompletionTimerRef.current) window.clearTimeout(revealedCompletionTimerRef.current);
+      stopCurrentAudio(true);
     };
-  }, []);
+  }, [stopCurrentAudio]);
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -176,6 +262,7 @@ export function usePracticeSession({
     setIsCompletingRevealedWord(false);
     isCompletingRevealedWordRef.current = false;
     inputLockedRef.current = false;
+    stopCurrentAudio(true);
     if (revealedCompletionTimerRef.current) {
       window.clearTimeout(revealedCompletionTimerRef.current);
       revealedCompletionTimerRef.current = null;
@@ -204,6 +291,7 @@ export function usePracticeSession({
 
   useEffect(() => {
     if (!currentWord) return;
+    stopCurrentAudio(true);
     wordTimingRef.current = {
       wordStartedAt: Date.now(),
       lastInteractionAt: null,
@@ -218,17 +306,17 @@ export function usePracticeSession({
     inputLockedRef.current = false;
 
     if (storage.settings.audioPrompts && !isAudioUnavailableForPrompt(currentWord)) {
-      void playAudioUrl(currentWord.audioUrl).then(played => {
-        if (!played) {
-          setAudioPlaybackFailedWordIds(previous => {
-            const next = new Set(previous);
-            next.add(currentWord.id);
-            return next;
-          });
-        }
-      });
+      void restartCurrentAudio({ recordInteraction: false, showUnavailableStatus: false });
     }
   }, [currentWord?.id]);
+
+  function markAudioPlaybackFailed(wordId: string) {
+    setAudioPlaybackFailedWordIds(previous => {
+      const next = new Set(previous);
+      next.add(wordId);
+      return next;
+    });
+  }
 
   function recordPracticeInteraction() {
     const previous = wordTimingRef.current;
@@ -244,34 +332,7 @@ export function usePracticeSession({
     statusTimerRef.current = window.setTimeout(() => setStatus(null), 1500);
   }
 
-  const playAudio = useCallback(() => {
-    if (!storageRef.current.settings.audioPrompts) return Promise.resolve(false);
-    recordPracticeInteraction();
-
-    if (!currentWord?.audioUrl) {
-      if (currentWord) {
-        setAudioPlaybackFailedWordIds(previous => {
-          const next = new Set(previous);
-          next.add(currentWord.id);
-          return next;
-        });
-      }
-      showStatus(t('practice.audioUnavailable'));
-      return Promise.resolve(false);
-    }
-
-    return playAudioUrl(currentWord.audioUrl).then(played => {
-      if (!played) {
-        setAudioPlaybackFailedWordIds(previous => {
-          const next = new Set(previous);
-          next.add(currentWord.id);
-          return next;
-        });
-        showStatus(t('practice.audioUnavailable'));
-      }
-      return played;
-    });
-  }, [currentWord?.id, t]);
+  const playAudio = restartCurrentAudio;
 
   function persistWordProgress(word: PracticeWord, patch: WordProgressPatch) {
     const currentStorage = storageRef.current;
@@ -344,9 +405,10 @@ export function usePracticeSession({
     storageRef.current = nextStorage;
     setStats(previous => ({ ...previous, endedAt }));
     setIsComplete(true);
+    stopCurrentAudio(true);
     if (storageRef.current.settings.soundEffects) playTone('completion');
     onComplete(result, nextStorage);
-  }, [lists, onComplete, onStorageChange, reviewDifficult, includeRecapDue, session.listIds, session.words.length, stats, storage]);
+  }, [lists, onComplete, onStorageChange, reviewDifficult, includeRecapDue, session.listIds, session.words.length, stats, storage, stopCurrentAudio]);
 
   function completeWord(forceDifficult = false) {
     if (!currentWord) return;
