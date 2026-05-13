@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { ActionRow, PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
@@ -26,9 +27,13 @@ function CircularScore({
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - percentage / 100);
+  const ringStyle = {
+    '--end-score-circumference': circumference,
+    '--end-score-offset': strokeDashoffset
+  } as CSSProperties;
 
   return (
-    <div className="end-score-ring" aria-label={`${correct}/${total} ${correctLabel}`} role="img">
+    <div className="end-score-ring" style={ringStyle} aria-label={`${correct}/${total} ${correctLabel}`} role="img">
       <svg className="end-score-ring-svg" viewBox="0 0 132 132" aria-hidden="true">
         <circle className="end-score-ring-track" cx="66" cy="66" r={radius} />
         <circle
