@@ -13,6 +13,7 @@ import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
+import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
 
@@ -556,8 +557,7 @@ export function Practice({
   }, [finishPeek, restorePracticeInputFocus]);
 
   function applyWordLists(selectedIds: string[]) {
-    const fallback = lists[0] ? [lists[0].id] : [];
-    const ids = selectedIds.length ? selectedIds : fallback;
+    const ids = normalizeSingleSelectedListIds(selectedIds, lists);
     const changed = ids.length !== storage.selectedListIds.length || ids.some((id, index) => id !== storage.selectedListIds[index]);
 
     if (!changed) {
@@ -1250,35 +1250,41 @@ export function SettingsModal({
 const WordListRow = memo(function WordListRow({
   list,
   displayName,
-  checked,
+  selected,
   completed,
   completedLabel,
-  onToggle
+  onSelect
 }: {
   list: WordList;
   displayName: string;
-  checked: boolean;
+  selected: boolean;
   completed: boolean;
   completedLabel: string;
-  onToggle: (listId: string) => void;
+  onSelect: (listId: string) => void;
 }) {
   return (
-    <label className="check-row">
+    <button
+      className={`wordlist-row ${selected ? 'selected' : ''}`}
+      type="button"
+      aria-pressed={selected}
+      onClick={() => onSelect(list.id)}
+    >
       <span className="check-left">
-        <input
-          type="checkbox"
-          className="wordlist-checkbox"
-          checked={checked}
-          onChange={() => onToggle(list.id)}
-        />
         <span className="check-name">{displayName}</span>
       </span>
-      {completed && (
-        <span className="wordlist-completed-indicator" title={completedLabel} aria-label={completedLabel} role="img">
-          <Check size={16} strokeWidth={2.2} aria-hidden="true" />
-        </span>
-      )}
-    </label>
+      <span className="wordlist-row-indicators">
+        {completed && (
+          <span className="wordlist-completed-indicator" title={completedLabel} aria-label={completedLabel} role="img">
+            <Check size={16} strokeWidth={2.2} aria-hidden="true" />
+          </span>
+        )}
+        {selected && (
+          <span className="wordlist-selected-indicator" aria-hidden="true">
+            <Check size={16} strokeWidth={2.2} />
+          </span>
+        )}
+      </span>
+    </button>
   );
 });
 
@@ -1313,8 +1319,8 @@ export function WordListModal({
   t: Translate;
 }) {
   const [query, setQuery] = useState('');
-  const [selectedIds, setSelectedIds] = useState(() => initialSelectedIds);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, lists));
+  const selectedId = selectedIds[0];
   const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -1336,12 +1342,8 @@ export function WordListModal({
   const showCollections = Object.keys(groups).length > 1;
   const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
 
-  const toggleList = useCallback((listId: string) => {
-    setSelectedIds(previous => (
-      previous.includes(listId)
-        ? previous.filter(id => id !== listId)
-        : [...previous, listId]
-    ));
+  const selectList = useCallback((listId: string) => {
+    setSelectedIds(selectSingleWordList(listId));
   }, []);
 
   return (
@@ -1350,13 +1352,11 @@ export function WordListModal({
         <div className="modal-header flex items-start justify-between gap-4">
           <div>
             <h2 className="modal-title">{t('wordLists.title')}</h2>
-            <p className="modal-text mt-3">{t('wordLists.description')}</p>
           </div>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
         <div className="wordlist-body">
-          <div className="selected-box">{t('wordLists.selected')}: {selectedIds.length} {selectedIds.length === 1 ? t('wordLists.list') : t('wordLists.lists')}</div>
           <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
 
           <div className="list-grid">
@@ -1368,10 +1368,10 @@ export function WordListModal({
                     key={list.id}
                     list={list}
                     displayName={getListDisplayName(list, interfaceLanguage)}
-                    checked={selectedSet.has(list.id)}
+                    selected={selectedId === list.id}
                     completed={completedSet.has(list.id)}
                     completedLabel={t('wordLists.completed')}
-                    onToggle={toggleList}
+                    onSelect={selectList}
                   />
                 ))}
               </div>
@@ -1387,10 +1387,10 @@ export function WordListModal({
                         key={list.id}
                         list={list}
                         displayName={getListDisplayName(list, interfaceLanguage)}
-                        checked={selectedSet.has(list.id)}
+                        selected={selectedId === list.id}
                         completed={completedSet.has(list.id)}
                         completedLabel={t('wordLists.completed')}
-                        onToggle={toggleList}
+                        onSelect={selectList}
                       />
                     ))}
                   </div>
@@ -1411,7 +1411,6 @@ export function WordListModal({
 
         <div className="wordlist-footer sticky-done">
           <div className="done-row wordlist-actions">
-            <button className="clear-button" onClick={() => setSelectedIds([])}>{t('wordLists.clearAll')}</button>
             <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
           </div>
         </div>

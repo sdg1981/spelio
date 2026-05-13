@@ -13,6 +13,7 @@ import { getRecommendation } from './lib/practice/recommendations';
 import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
+import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
 type Screen = 'home' | 'practice' | 'end';
@@ -20,8 +21,7 @@ type Screen = 'home' | 'practice' | 'end';
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
 function normalizeSelectedListIds(selectedIds: string[], lists: WordList[]) {
-  const fallback = lists[0] ? [lists[0].id] : [];
-  return selectedIds.length ? selectedIds : fallback;
+  return normalizeSingleSelectedListIds(selectedIds, lists);
 }
 
 function sameListSelection(left: string[], right: string[]) {
@@ -112,6 +112,7 @@ export default function App() {
     loadPublicContent().then(content => {
       if (cancelled) return;
       setPublicWordLists(content.lists);
+      setStorage(previous => normalizeStorageWordListSelection(previous, content.lists));
     });
 
     return () => {

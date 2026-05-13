@@ -1,5 +1,6 @@
 import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
 import type { SessionResult, SessionState, SpelioStorage } from './storage';
+import { normalizeSingleSelectedListIds } from './wordListSelection';
 
 export interface SessionWord extends PracticeWord {}
 
@@ -243,7 +244,7 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
 }
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
-  const selectedIds = storage.selectedListIds.length ? storage.selectedListIds : [lists[0]?.id].filter(Boolean) as string[];
+  const selectedIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
   const recapOnly = includeRecapDue && !reviewDifficult;
   const eligibleLists = reviewDifficult || recapOnly
     ? lists.filter(list => list.isActive)

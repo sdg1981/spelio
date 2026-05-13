@@ -514,14 +514,6 @@ Modal title:
 
 - “Word Lists”
 
-Short explanation:
-
-- “Words will be mixed from all selected lists.”
-
-Selected count:
-
-- Example: “Selected: 3 lists”
-
 Search field:
 
 - “Search word lists…”
@@ -529,10 +521,13 @@ Search field:
 Body:
 
 - Grouped, scrollable list body
+- Full-row clickable/tappable word-list rows
+- A subtle selected state on the currently selected row, such as stronger text weight, soft tint, left accent, or a small checkmark on the right
+- No checkbox styling in the public MVP modal
 
 Footer:
 
-- Sticky footer with action button
+- Sticky footer with action button, such as “Done” or “Use this list”
 
 ### 8.2 Grouping examples
 
@@ -689,19 +684,24 @@ while preserving compatibility with existing current-content fields:
 
 This avoids hardcoding the product permanently to English → Welsh while keeping current dataset and database compatibility.
 
-### 8.4 Multi-list selection
+### 8.4 Single-list selection
 
-Users should be able to select multiple word lists.
+The public MVP word list modal allows one active word list at a time.
 
-Reason:
+Rules:
 
-- It supports mixed practice.
-- It allows users to revise across topics.
-- It creates flexibility without forcing a rigid course path.
+- Tapping a word list selects it.
+- Selecting a second list replaces the first pending selection.
+- The selected list is saved only when Done / Use this list is pressed.
+- Closing with X discards unsaved changes.
+- Pressing Done / Use this list must never auto-start practice.
+- If no valid active list is selected for any reason, fall back safely to the first active list.
 
-Clarity rule:
+Backward compatibility:
 
-- The modal must make it clear that words are mixed from selected lists.
+- Existing `selectedListIds` storage may remain as a one-item array.
+- Store only one selected list ID, for example `["foundations_first_words"]`.
+- Older stored multiple selections should be migrated to the first valid active selected list.
 
 ### 8.5 Modal behaviour
 
@@ -711,9 +711,9 @@ Done behaviour:
 
 - If no changes were made, close the modal and leave the user where they were.
 - If changes were made:
-  - Save the selected lists.
-  - If the user clears all selections, fall back to the first available active list.
-  - Set currentPathPosition to the first selected list.
+  - Save the selected list as a one-item `selectedListIds` array.
+  - If the selected ID is invalid, fall back to the first available active list.
+  - Set currentPathPosition to the selected list.
   - If opened from the homepage, return to the homepage.
   - If opened during practice, end the current session and return to the homepage.
   - If opened from the end screen, return to the homepage.
@@ -1153,12 +1153,12 @@ Review difficult words, From earlier, and automatic recap injection must all res
 
 If all currently difficult words belong only to dialect variants that no longer match the active Welsh style, fall back to normal progression recommendations instead of continuing to suggest irrelevant review.
 
-Multiple selected lists:
+Older multiple selected lists:
 
-- If multiple lists are selected and dialect-relevant difficult words currently exist, recommend Review difficult words.
-- If multiple lists are selected and not all selected-list words have been completed, recommend continuing mixed practice.
-- If multiple lists are selected and all selected-list words have been completed, recommend practising the mixed selection again.
-- The recommendation subtitle should make the mixed selection clear, e.g. “Custom mixed word list”.
+- MVP public practice should treat `selectedListIds` as a single-list selection.
+- If older local storage contains multiple selected IDs, migrate to the first valid active selected list.
+- Normal recommendations should then use the selected/current list and the existing guided progression rules.
+- Review difficult words, From earlier, and recap injection remain independent of this migration and should continue using dialect-eligible word progress.
 
 ## 15. Local storage
 
@@ -1203,6 +1203,8 @@ Older stored settings without `dialectPreference` should default safely to `mixe
 Older stored settings without `interfaceLanguage` should default safely to `en`.
 
 `interfaceLanguage` must remain independent from `dialectPreference`, English prompt visibility, and content language-pair metadata.
+
+`selectedListIds` remains for backward compatibility but should contain only one active word list ID in the public MVP. Older multiple selections should be migrated to the first valid active selected list, falling back to the first active list if none are valid.
 
 If normal completed session count cannot be inferred reliably from lastSessionResult or listProgress, store `completedNormalSessionCount` as the minimal additional field.
 
@@ -2040,18 +2042,18 @@ Show admin warning or user message:
 - Audio failures should not break session.
 - Audio failures should produce only subtle temporary feedback.
 
-### 20.5 Multiple selected lists
+### 20.5 Older multiple selected lists
 
-Words can be mixed from all selected lists.
+Older local storage may contain more than one `selectedListIds` entry from previous multi-list selection behaviour.
 
-However, progression logic should still track progress per source list.
+When older multiple selections are loaded:
 
-When a mixed selection is saved:
+- Keep the first valid active selected list.
+- Store `selectedListIds` as a one-item array.
+- Set `currentPathPosition` to that selected list if the previous path is invalid.
+- Fall back to the first active list if none of the older selected IDs are valid.
 
-- `selectedListIds` stores all selected list IDs in selected order.
-- `currentPathPosition` is set to the first selected list.
-- Recommendation copy should describe the selection as mixed practice.
-- Review difficult words may override mixed practice only when dialect-eligible current difficult words exist.
+Normal sessions should use only the single selected/current list. Progression logic should continue to track progress per source list.
 
 ### 20.6 Review action with no eligible difficult words
 
@@ -2225,7 +2227,7 @@ Using the existing Spelio frontend, implement the core practice engine. The app 
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store selected word lists, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible learning item has been seen, while the modal tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. For multiple selected lists, recommend mixed practice unless dialect-eligible current difficult words exist. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store the selected word list as a one-item `selectedListIds` array, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible learning item has been seen, while the modal tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. Older multiple selected list IDs should migrate to the first valid active selected list. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 

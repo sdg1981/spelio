@@ -18,10 +18,10 @@ export const cy = {
     chooseDifferentList: 'Dewis rhestr wahanol',
     fromEarlier: 'O gynharach',
     revisitWords: 'Ailedrych ar ychydig eiriau',
-    fromMixedSelection: 'O’ch dewis cymysg',
-    mixedSelectionComplete: 'Rydych wedi cwblhau’r dewis cymysg hwn',
-    continueMixedPractice: 'Parhau ag ymarfer cymysg',
-    customMixedWordList: 'Rhestr eiriau gymysg'
+    fromMixedSelection: 'O’ch rhestr ddewisol',
+    mixedSelectionComplete: 'Rydych wedi cwblhau’r rhestr eiriau hon',
+    continueMixedPractice: 'Parhau i ddysgu',
+    customMixedWordList: 'Rhestr eiriau ddewisol'
   },
   practice: {
     backToHome: 'Yn ol i’r hafan',
@@ -90,13 +90,12 @@ export const cy = {
   },
   wordLists: {
     title: 'Rhestrau geiriau',
-    description: 'Bydd geiriau’n cael eu cymysgu o’r holl restrau a ddewiswyd.',
+    description: 'Dewiswch un rhestr eiriau i ymarfer.',
     selected: 'Dewiswyd',
     list: 'rhestr',
     lists: 'rhestr',
     searchPlaceholder: 'Chwilio rhestrau geiriau...',
     completed: 'Wedi cwblhau',
-    clearAll: 'Clirio popeth',
     done: 'Gorffen',
     suggestionPrompt: 'Oes gennych chi syniad am restr eiriau?',
     suggestionLink: 'Anfon awgrym',
@@ -120,10 +119,10 @@ export const cy = {
     nextUp: 'Nesaf',
     keepBuilding: 'Parhewch gyda’ch rhestr eiriau ddewisol',
     pickUpWhereLeftOff: 'Parhau o ble wnaethoch chi stopio',
-    practiseMixAgain: 'Ymarfer y cymysgedd hwn eto',
-    repeatSelectedLists: 'Ailadrodd eich rhestrau dewisol',
+    practiseMixAgain: 'Ymarfer y rhestr hon eto',
+    repeatSelectedLists: 'Ailadrodd eich rhestr ddewisol',
     returnHomepage: 'Dychwelyd i’r hafan',
-    chooseDifferentNext: 'Dewis rhestrau gwahanol ar gyfer eich sesiwn nesaf'
+    chooseDifferentNext: 'Dewis rhestr wahanol ar gyfer eich sesiwn nesaf'
   },
   footer: {
     ariaLabel: 'Wedi’i wneud gyda chariad i Gymru. Hawlfraint 2026 Spelio',

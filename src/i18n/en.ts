@@ -18,10 +18,10 @@ export const en = {
     chooseDifferentList: 'Choose a different list',
     fromEarlier: 'From earlier',
     revisitWords: 'Revisit a few words',
-    fromMixedSelection: 'From your mixed selection',
-    mixedSelectionComplete: 'You’ve completed this mixed selection',
-    continueMixedPractice: 'Continue mixed practice',
-    customMixedWordList: 'Custom mixed word list'
+    fromMixedSelection: 'From your selected list',
+    mixedSelectionComplete: 'You’ve completed this word list',
+    continueMixedPractice: 'Continue learning',
+    customMixedWordList: 'Selected word list'
   },
   practice: {
     backToHome: 'Back to home',
@@ -90,13 +90,12 @@ export const en = {
   },
   wordLists: {
     title: 'Word Lists',
-    description: 'Words will be mixed from all selected lists.',
+    description: 'Choose one word list to practise.',
     selected: 'Selected',
     list: 'list',
     lists: 'lists',
     searchPlaceholder: 'Search word lists...',
     completed: 'Completed',
-    clearAll: 'Clear all',
     done: 'Done',
     suggestionPrompt: 'Got an idea for a word list?',
     suggestionLink: 'Send a suggestion',
@@ -120,10 +119,10 @@ export const en = {
     nextUp: 'Next up',
     keepBuilding: 'Keep building from your selected word list',
     pickUpWhereLeftOff: 'Pick up where you left off',
-    practiseMixAgain: 'Practise this mix again',
-    repeatSelectedLists: 'Repeat your selected lists',
+    practiseMixAgain: 'Practise this list again',
+    repeatSelectedLists: 'Repeat your selected list',
     returnHomepage: 'Return to the homepage',
-    chooseDifferentNext: 'Choose different lists for your next session'
+    chooseDifferentNext: 'Choose a different list for your next session'
   },
   footer: {
     ariaLabel: 'Made with love for Wales. Copyright 2026 Spelio',

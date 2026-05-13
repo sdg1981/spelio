@@ -1,7 +1,7 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
-import { getSelectedListLabel } from '../src/lib/practice/wordListSelection';
+import { getSelectedListLabel, normalizeSingleSelectedListIds, normalizeStorageWordListSelection, selectSingleWordList } from '../src/lib/practice/wordListSelection';
 import {
   addLearningStats,
   applyManualWordListSelection,
@@ -908,22 +908,29 @@ test('single-list progression starts the next recommended list with a fresh norm
   assertEqual(nextSession.words.some(word => word.englishPrompt === 'please'), false, 'Please must not leak into the First Verbs normal pool');
 });
 
-test('starting a later session with the same mixed selection prioritises unseen words', () => {
+test('older multi-list selection uses only the first valid active list in normal sessions', () => {
+  const lists = [
+    makeLargeList('test_legacy_multi_a', 1, 24),
+    makeLargeList('test_legacy_multi_b', 2, 24),
+    makeLargeList('test_legacy_multi_c', 3, 24)
+  ];
   let storage: SpelioStorage = {
     ...createDefaultStorage(),
-    selectedListIds: ['stage2_food', 'stage2_people', 'stage2_work'],
-    currentPathPosition: 'stage2_food'
+    selectedListIds: lists.map(list => list.id),
+    currentPathPosition: lists[0].id
   };
-  const firstSession = createPracticeSession(wordLists, storage);
+  const firstSession = createPracticeSession(lists, storage);
 
   storage = completeSessionWordsCleanly(storage, firstSession.words, firstSession.listIds);
-  const secondSession = createPracticeSession(wordLists, storage);
+  const secondSession = createPracticeSession(lists, storage);
   const firstSessionIds = new Set(firstSession.words.map(word => word.id));
   const repeatedWords = secondSession.words.filter(word => firstSessionIds.has(word.id));
 
-  assertEqual(firstSession.words.length, 10, 'Setup first mixed session should use ten words');
-  assertEqual(secondSession.words.length, 10, 'Second mixed session should use ten words');
-  assertEqual(repeatedWords.length, 0, 'Second mixed session should draw unseen words before repeating session one');
+  assertEqual(firstSession.words.length, 10, 'Setup first session should use ten words');
+  assertEqual(firstSession.words.every(word => word.listId === lists[0].id), true, 'Older multi-list storage should resolve to the first valid selected list');
+  assertEqual(secondSession.words.length, 10, 'Second session should use ten words');
+  assertEqual(secondSession.words.every(word => word.listId === lists[0].id), true, 'Later sessions should remain on the resolved single list');
+  assertEqual(repeatedWords.length, 0, 'Second session should draw unseen words from the single selected list before repeating session one');
 });
 
 test('single selected 20+ word pool excludes cleanly completed words while unseen words remain', () => {
@@ -969,11 +976,11 @@ test('single selected variant pool excludes completed learning items while unsee
   assertEqual(repeatedItems.length, 0, 'Second variant-list session should not use sibling variants from completed learning items while unseen items remain');
 });
 
-test('three selected 20+ word pools exclude cleanly completed words while unseen words remain', () => {
+test('older three-list storage resolves to one 20+ word pool while unseen words remain', () => {
   const lists = [
-    makeLargeList('test_large_multi_a', 1, 12),
-    makeLargeList('test_large_multi_b', 2, 12),
-    makeLargeList('test_large_multi_c', 3, 12)
+    makeLargeList('test_large_multi_a', 1, 24),
+    makeLargeList('test_large_multi_b', 2, 24),
+    makeLargeList('test_large_multi_c', 3, 24)
   ];
   let storage: SpelioStorage = {
     ...createDefaultStorage(),
@@ -986,9 +993,11 @@ test('three selected 20+ word pools exclude cleanly completed words while unseen
   const secondSession = createPracticeSession(lists, storage);
   const firstSessionIds = new Set(firstSession.words.map(word => word.id));
 
-  assertEqual(firstSession.words.length, 10, 'First three-list session should use ten words');
-  assertEqual(secondSession.words.length, 10, 'Second three-list session should use ten words');
-  assertEqual(secondSession.words.some(word => firstSessionIds.has(word.id)), false, 'Second three-list session should exclude cleanly completed words while unseen words remain');
+  assertEqual(firstSession.words.length, 10, 'First session should use ten words');
+  assertEqual(firstSession.words.every(word => word.listId === 'test_large_multi_a'), true, 'Older multi-list storage should use only the first valid active list');
+  assertEqual(secondSession.words.length, 10, 'Second session should use ten unseen words from the single selected list');
+  assertEqual(secondSession.words.every(word => word.listId === 'test_large_multi_a'), true, 'Second session should remain in the first valid active list');
+  assertEqual(secondSession.words.some(word => firstSessionIds.has(word.id)), false, 'Second session should exclude cleanly completed words while unseen words remain');
 });
 
 test('pre-session recap is separate from the next normal session pool', () => {
@@ -1191,6 +1200,47 @@ test('manual list selection invalidates stale next-list recommendation', () => {
   assertEqual(recommendation.listId, wantingListId, 'Manual selection should recommend the selected list, not the previous next list');
 });
 
+test('pending word list selection allows only one selected list', () => {
+  const pending = selectSingleWordList('stage2_weather');
+
+  assertEqual(pending.length, 1, 'Pending selection should contain one list');
+  assertEqual(pending[0], 'stage2_weather', 'Pending selection should contain the selected list');
+});
+
+test('selecting a second pending word list replaces the first', () => {
+  let pending = selectSingleWordList('stage2_weather');
+  pending = selectSingleWordList('stage2_work');
+
+  assertEqual(pending.length, 1, 'Pending selection should still contain one list');
+  assertEqual(pending[0], 'stage2_work', 'Second selection should replace the first');
+});
+
+test('Done saves one selected list without starting practice', () => {
+  const storage = {
+    ...createDefaultStorage(),
+    hasStartedPracticeSession: false
+  };
+  const pending = normalizeSingleSelectedListIds(selectSingleWordList('stage2_work'), wordLists);
+  const saved = applyManualWordListSelection(storage, pending);
+
+  assertEqual(saved.selectedListIds.length, 1, 'Done should save one selected list');
+  assertEqual(saved.selectedListIds[0], 'stage2_work', 'Done should save the pending selected list');
+  assertEqual(saved.currentPathPosition, 'stage2_work', 'Done should move the path position to the selected list');
+  assertEqual(saved.hasStartedPracticeSession, false, 'Done must not mark practice as started');
+  assertEqual(saved.lastSessionResult, null, 'Done should clear stale session-derived state');
+});
+
+test('closing word list modal discards pending changes', () => {
+  const storage = weatherAndWorkStorage();
+  const beforeSelectedListId = storage.selectedListIds[0];
+  const pending = selectSingleWordList('stage2_work');
+  const closedStorage = storage;
+
+  assertEqual(pending[0], 'stage2_work', 'Setup should have a changed pending selection');
+  assertEqual(closedStorage.selectedListIds[0], beforeSelectedListId, 'Closing should leave saved selection unchanged');
+  assertEqual(closedStorage.currentPathPosition, 'stage2_weather', 'Closing should leave path position unchanged');
+});
+
 test('recommendation can advance from word progress before strict list completion is committed', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
@@ -1213,32 +1263,43 @@ test('recommendation can advance from word progress before strict list completio
   assertEqual(getRecommendation(updatedStorage, wordLists).listId, 'foundations_mixed_01', 'Post-commit progress should recommend next list');
 });
 
-test('multi-list selection keeps a mixed homepage label', () => {
+test('old multiple selectedListIds storage is migrated to one valid active list', () => {
   const storage = weatherAndWorkStorage();
-  const recommendation = getRecommendation(storage, wordLists);
+  const migrated = normalizeStorageWordListSelection(storage, wordLists);
+  const recommendation = getRecommendation(migrated, wordLists);
 
-  assertEqual(storage.selectedListIds.length, 2, 'Setup should persist both selected list IDs');
-  assertEqual(storage.selectedListIds.includes('stage2_weather'), true, 'Weather should remain selected');
-  assertEqual(storage.selectedListIds.includes('stage2_work'), true, 'Work should remain selected');
-  assertEqual(recommendation.title, 'Continue mixed practice', 'Primary action should continue the mixed selection');
-  assertEqual(recommendation.subtitle, 'Custom mixed word list', 'Homepage subtitle should not collapse to Weather only');
-  assertEqual(recommendation.listId, undefined, 'Mixed recommendation should not provide a single list ID that can overwrite selection');
-  assertEqual(getSelectedListLabel(storage.selectedListIds, wordLists), 'Custom mixed word list', 'Selection helper should label multi-list practice as mixed');
+  assertEqual(migrated.selectedListIds.length, 1, 'Migration should keep one selected list ID');
+  assertEqual(migrated.selectedListIds[0], 'stage2_weather', 'Migration should keep the first valid active list');
+  assertEqual(migrated.currentPathPosition, 'stage2_weather', 'Migration should preserve a valid current path position');
+  assertEqual(recommendation.title, 'Continue learning', 'Primary action should use normal single-list recommendation copy');
+  assertEqual(recommendation.subtitle, 'Weather — Core', 'Homepage subtitle should name the selected list');
+  assertEqual(recommendation.listId, 'stage2_weather', 'Single-list recommendation should provide the selected list ID');
+  assertEqual(getSelectedListLabel(storage.selectedListIds, wordLists), 'Weather — Core', 'Selection helper should label older multi-list storage by the first valid list');
 });
 
-test('practice session draws Weather and Work words from the combined selection', () => {
+test('old multiple selectedListIds skips invalid entries before migration', () => {
+  const storage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['missing_list', 'stage2_work', 'stage2_weather'],
+    currentPathPosition: 'missing_list'
+  };
+  const migrated = normalizeStorageWordListSelection(storage, wordLists);
+
+  assertEqual(migrated.selectedListIds.length, 1, 'Migration should keep one selected list');
+  assertEqual(migrated.selectedListIds[0], 'stage2_work', 'Migration should keep the first valid active selected list');
+  assertEqual(migrated.currentPathPosition, 'stage2_work', 'Migration should repair an invalid current path position');
+});
+
+test('practice session draws words from one selected list only', () => {
   const session = createPracticeSession(wordLists, weatherAndWorkStorage());
   const listIds = new Set(session.words.map(word => word.listId));
-  const firstTenListIds = session.words.slice(0, 10).map(word => word.listId);
 
   assertEqual(session.words.length, 10, 'Session should use the normal ten-word target');
   assert(listIds.has('stage2_weather'), 'Session should include Weather words');
-  assert(listIds.has('stage2_work'), 'Session should include Work words');
-  assertEqual(firstTenListIds.every(id => id === 'stage2_weather'), false, 'First 10 questions should not be Weather only');
-  assertEqual(firstTenListIds.every(id => id === 'stage2_work'), false, 'First 10 questions should not be Work only');
+  assertEqual(listIds.has('stage2_work'), false, 'Session should not mix in Work words from older multi-list storage');
 });
 
-test('mixed list partially complete recommends continuing mixed practice', () => {
+test('single-list recommendation ignores extra older selected list IDs', () => {
   let storage = weatherAndWorkStorage();
   const weather = wordLists.find(list => list.id === 'stage2_weather');
   assert(weather, 'Expected stage2_weather to exist');
@@ -1248,39 +1309,45 @@ test('mixed list partially complete recommends continuing mixed practice', () =>
   }
 
   const recommendation = getRecommendation(storage, wordLists);
-  assertEqual(recommendation.kind, 'list', 'Partial mixed selection should remain normal practice');
-  assertEqual(recommendation.title, 'Continue mixed practice', 'Partial mixed selection should continue mixed practice');
-  assertEqual(recommendation.subtitle, 'Custom mixed word list', 'Subtitle should reference the mixed selection');
-  assertEqual(recommendation.listId, undefined, 'Partial mixed recommendation should not carry a single list ID');
+  assertEqual(recommendation.kind, 'list', 'Partial selected list should remain normal practice');
+  assertEqual(recommendation.title, 'Continue learning', 'Partial selected list should continue normal learning');
+  assertEqual(recommendation.subtitle, 'Weather — Core', 'Subtitle should reference the selected list');
+  assertEqual(recommendation.listId, 'stage2_weather', 'Recommendation should carry the selected list ID');
 });
 
-test('mixed list fully complete without difficult words recommends choosing another list', () => {
-  const storage = completeWeatherAndWorkCleanly(weatherAndWorkStorage());
+test('completed single selected list follows normal next-list progression', () => {
+  const storage = completeListCleanly(weatherAndWorkStorage(), 'stage2_weather');
   const recommendation = getRecommendation(storage, wordLists);
 
   assertEqual(hasDifficultWords(storage), false, 'Clean completion should leave no difficult words');
-  assertEqual(recommendation.kind, 'choose_list', 'Complete mixed selection should make choosing another list primary');
-  assertEqual(recommendation.title, 'Choose another word list', 'Complete mixed selection should not use vague continue/repeat wording as primary');
-  assertEqual(recommendation.subtitle, 'You’ve completed this mixed selection', 'Subtitle should explain the mixed selection is complete');
-  assertEqual(recommendation.listId, undefined, 'Complete mixed recommendation should not carry a nextListId');
+  assertEqual(recommendation.kind, 'list', 'Complete selected list should continue normal path progression');
+  assertEqual(recommendation.title, 'Continue learning', 'Complete selected list should use normal continue wording');
+  assertEqual(recommendation.subtitle, 'Common Adjectives', 'Subtitle should describe the next list');
+  assertEqual(recommendation.listId, 'stage2_adjectives', 'Complete selected list should carry nextListId');
 });
 
-test('mixed list fully complete with difficult words prioritises review', () => {
-  let storage = completeWeatherAndWorkCleanly(weatherAndWorkStorage());
+test('completed single selected list with difficult words still prioritises review', () => {
+  let storage = completeListCleanly(weatherAndWorkStorage(), 'stage2_weather');
   const weather = wordLists.find(list => list.id === 'stage2_weather');
   assert(weather, 'Expected stage2_weather to exist');
   storage = applyWordProgressPatch(storage, weather.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: storage.lastSessionResult
+      ? { ...storage.lastSessionResult, state: 'struggled' }
+      : null
+  };
 
   const recommendation = getRecommendation(storage, wordLists);
   assertEqual(hasDifficultWords(storage), true, 'Setup should create a difficult word');
-  assertEqual(recommendation.kind, 'review', 'Difficult words should become the mixed primary action');
-  assertEqual(recommendation.title, 'Review difficult words', 'Mixed selection with difficult words should prioritise review');
-  assertEqual(recommendation.listId, undefined, 'Mixed review should not carry a single selected list ID');
+  assertEqual(recommendation.kind, 'review', 'Difficult words should become the primary action');
+  assertEqual(recommendation.title, 'Review difficult words', 'Selected list with difficult words should prioritise review');
+  assertEqual(recommendation.listId, 'stage2_weather', 'Single-list review should carry the selected list ID');
 });
 
-test('mixed selection never follows nextListId after completion', () => {
+test('single-list completion follows nextListId after completion', () => {
   const storage = {
-    ...completeWeatherAndWorkCleanly(weatherAndWorkStorage()),
+    ...completeListCleanly(weatherAndWorkStorage(), 'stage2_weather'),
     lastSessionDate: '2026-05-05T00:00:30.000Z',
     lastSessionResult: {
       totalWords: 10,
@@ -1296,20 +1363,21 @@ test('mixed selection never follows nextListId after completion', () => {
   };
   const recommendation = getRecommendation(storage, wordLists);
 
-  assertEqual(recommendation.listId, undefined, 'Mixed completion should not recommend any nextListId');
-  assertEqual(recommendation.kind, 'choose_list', 'Mixed completion should choose another list rather than progress forward');
-  assertEqual(recommendation.title, 'Choose another word list', 'Mixed completion should not label repeat practice as continue');
+  assertEqual(recommendation.listId, 'stage2_adjectives', 'Single-list completion should recommend nextListId');
+  assertEqual(recommendation.kind, 'list', 'Single-list completion should progress forward');
+  assertEqual(recommendation.title, 'Continue learning', 'Single-list completion should use normal continue wording');
 });
 
-test('practise this mix again action leaves selectedListIds unchanged', () => {
-  const storage = completeWeatherAndWorkCleanly(weatherAndWorkStorage());
+test('starting next recommendation stores one selected list ID', () => {
+  const storage = completeListCleanly(weatherAndWorkStorage(), 'stage2_weather');
   const recommendation = getRecommendation(storage, wordLists);
   const nextStorage = applyPracticeStartListSelection(storage, recommendation.listId);
 
-  assertEqual(recommendation.kind, 'choose_list', 'Complete mixed selection should make choose-list the primary action');
-  assertEqual(recommendation.listId, undefined, 'Repeat-mix action should start without a single list ID');
-  assertEqual(nextStorage.selectedListIds.join('|'), storage.selectedListIds.join('|'), 'Repeat-mix action should preserve mixed selectedListIds');
-  assertEqual(nextStorage.currentPathPosition, storage.currentPathPosition, 'Repeat-mix action should not mutate mixed path position');
+  assertEqual(recommendation.kind, 'list', 'Complete selected list should make the next list primary');
+  assertEqual(recommendation.listId, 'stage2_adjectives', 'Recommendation should carry the next list ID');
+  assertEqual(nextStorage.selectedListIds.length, 1, 'Practice start should store one selected list ID');
+  assertEqual(nextStorage.selectedListIds[0], 'stage2_adjectives', 'Practice start should move to nextListId');
+  assertEqual(nextStorage.currentPathPosition, 'stage2_adjectives', 'Practice start should update path position');
 });
 
 test('older storage without dialectPreference defaults to Mixed Welsh', () => {

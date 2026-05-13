@@ -225,10 +225,12 @@ export function applyPracticeStartListSelection(storage: SpelioStorage, listId?:
 }
 
 export function applyManualWordListSelection(storage: SpelioStorage, selectedListIds: string[]): SpelioStorage {
+  const selectedListId = selectedListIds.find(Boolean);
+
   return {
     ...storage,
-    selectedListIds,
-    currentPathPosition: selectedListIds[0] ?? null,
+    selectedListIds: selectedListId ? [selectedListId] : [],
+    currentPathPosition: selectedListId ?? null,
     lastSessionResult: null
   };
 }
