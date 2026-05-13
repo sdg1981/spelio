@@ -1,6 +1,7 @@
 import type { WordList } from '../../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
+import { isListFullyComplete } from './storage';
 import { groupLearningItems, isLearningItemSeen } from './learningItems';
 import { hasDifficultWords } from './sessionEngine';
 import { getListDisplayName } from './wordListDisplay';
@@ -34,12 +35,35 @@ function listHasUnseenLearningItems(storage: SpelioStorage, list: WordList) {
   return !isListProgressionReady(storage, list);
 }
 
+export function isListFullyCompletedForRecommendation(storage: SpelioStorage, list: WordList) {
+  return isListFullyComplete(storage, list);
+}
+
+export function findNextSequentialRecommendationList(storage: SpelioStorage, lists: WordList[], current: WordList) {
+  const activeLists = lists.filter(list => list.isActive);
+  const visited = new Set([current.id]);
+  let nextListId = current.nextListId;
+
+  while (nextListId) {
+    if (visited.has(nextListId)) return undefined;
+    visited.add(nextListId);
+
+    const next = findList(activeLists, nextListId);
+    if (!next) return undefined;
+    if (!isListFullyCompletedForRecommendation(storage, next)) return next;
+
+    nextListId = next.nextListId;
+  }
+
+  return undefined;
+}
+
 function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], current: WordList) {
   const activeLists = lists.filter(list => list.isActive);
-  const incompleteLists = activeLists.filter(list => listHasUnseenLearningItems(storage, list));
-  const nextList = findList(activeLists, current.nextListId);
+  const sequentialNext = findNextSequentialRecommendationList(storage, activeLists, current);
+  if (sequentialNext) return sequentialNext;
 
-  if (nextList && listHasUnseenLearningItems(storage, nextList)) return nextList;
+  const incompleteLists = activeLists.filter(list => listHasUnseenLearningItems(storage, list));
 
   const currentStageNext = incompleteLists.find(list => {
     return list.stage === current.stage && list.order > current.order;

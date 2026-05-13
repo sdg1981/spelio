@@ -461,6 +461,37 @@ function completeListCleanly(storage: SpelioStorage, listId: string) {
   );
 }
 
+function completeListCleanlyInLists(storage: SpelioStorage, lists: WordList[], listId: string) {
+  const list = lists.find(item => item.id === listId);
+  assert(list, `Expected ${listId} to exist`);
+
+  for (const word of list.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: list.words.length,
+    correctWords: list.words.length,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [listId],
+    state: 'strong'
+  };
+
+  return updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    lists,
+    result
+  );
+}
+
 function completeSessionWordsCleanly(storage: SpelioStorage, words: PracticeWord[], listIds: string[]) {
   for (const word of words) {
     storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
@@ -1022,6 +1053,79 @@ test('primary action does not repeat a completed list when nextListId exists', (
 
   assertEqual(recommendation.listId === 'foundations_numbers', false, 'Completed numbers list should not repeat');
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed list should advance to next valid list');
+});
+
+test('normal progression skips a fully completed ticked next list', () => {
+  let storage = weatherAndWorkStorage();
+  storage = completeListCleanly(storage, 'stage2_adjectives');
+  storage = completeListCleanly(storage, 'stage2_weather');
+
+  const adjectives = wordLists.find(list => list.id === 'stage2_adjectives');
+  assert(adjectives, 'Expected stage2_adjectives to exist');
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListFullyComplete(storage, adjectives), true, 'Setup should make the immediate next list fully complete');
+  assertEqual(recommendation.kind, 'list', 'Normal progression should still recommend a list');
+  assertEqual(recommendation.listId, 'stage2_adverbs', 'Fully completed immediate next list should be skipped for the following list');
+});
+
+test('normal progression does not skip a progression-ready next list without a completion tick', () => {
+  const adjectives = wordLists.find(list => list.id === 'stage2_adjectives');
+  assert(adjectives, 'Expected stage2_adjectives to exist');
+
+  let storage = weatherAndWorkStorage();
+  for (const word of adjectives.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+  storage = completeListCleanly(storage, 'stage2_weather');
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, adjectives), true, 'Setup should make the immediate next list progression-ready');
+  assertEqual(isListFullyComplete(storage, adjectives), false, 'Setup should leave the immediate next list without the modal tick');
+  assertEqual(recommendation.listId, 'stage2_adjectives', 'Progression-ready next list should not be skipped unless it is fully complete');
+});
+
+test('review difficult words still overrides skipped sequential progression', () => {
+  let storage = weatherAndWorkStorage();
+  storage = completeListCleanly(storage, 'stage2_adjectives');
+  storage = completeListCleanly(storage, 'stage2_weather');
+
+  const weather = wordLists.find(list => list.id === 'stage2_weather');
+  assert(weather, 'Expected stage2_weather to exist');
+  storage = applyWordProgressPatch(storage, weather.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: storage.lastSessionResult
+      ? { ...storage.lastSessionResult, state: 'struggled' }
+      : null
+  };
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(hasDifficultWords(storage, wordLists), true, 'Setup should create eligible difficult words');
+  assertEqual(recommendation.kind, 'review', 'Review difficult words should remain the primary recommendation');
+});
+
+test('normal progression falls back when sequential next lists are complete or unavailable', () => {
+  const current: WordList = { ...makeLargeList('test_seq_current', 1, 2), nextListId: 'test_seq_done' };
+  const done: WordList = { ...makeLargeList('test_seq_done', 2, 2), nextListId: 'test_seq_missing' };
+  const fallback: WordList = makeLargeList('test_seq_fallback', 3, 2);
+  const lists = [current, done, fallback];
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  };
+  storage = completeListCleanlyInLists(storage, lists, done.id);
+  storage = completeListCleanlyInLists(storage, lists, current.id);
+
+  const recommendation = getRecommendation(storage, lists);
+
+  assertEqual(isListFullyComplete(storage, done), true, 'Setup should make the sequential next list fully complete');
+  assertEqual(recommendation.kind, 'list', 'Normal progression should fall back to a list recommendation');
+  assertEqual(recommendation.listId, fallback.id, 'Unavailable sequential continuation should use the existing unfinished-list fallback');
 });
 
 test('continue learning advances when all eligible current-list items are seen without granting completion tick', () => {

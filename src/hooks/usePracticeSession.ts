@@ -12,7 +12,7 @@ import {
 } from '../lib/practice/inputFlow';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
-import { isListProgressionReady } from '../lib/practice/recommendations';
+import { findNextSequentialRecommendationList, isListProgressionReady } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
@@ -408,12 +408,12 @@ export function usePracticeSession({
 
     const completedSingleListId = result.listIds.length === 1 ? result.listIds[0] : null;
     const completedList = completedSingleListId ? lists.find(list => list.id === completedSingleListId) : undefined;
-    const nextListId = completedList?.nextListId;
+    const nextList = completedList ? findNextSequentialRecommendationList(nextStorage, lists, completedList) : undefined;
     const shouldAdvancePath =
       !reviewDifficult &&
       !includeRecapDue &&
       completedList !== undefined &&
-      typeof nextListId === 'string' &&
+      nextList !== undefined &&
       isListProgressionReady(nextStorage, completedList) &&
       nextStorage.currentPathPosition === completedList.id &&
       nextStorage.selectedListIds.length === 1 &&
@@ -422,8 +422,8 @@ export function usePracticeSession({
     if (shouldAdvancePath) {
       nextStorage = {
         ...nextStorage,
-        selectedListIds: [nextListId],
-        currentPathPosition: nextListId
+        selectedListIds: [nextList.id],
+        currentPathPosition: nextList.id
       };
     }
 

@@ -1229,6 +1229,10 @@ Recommendation order after a session:
 5. Else if all lists in stage are complete → recommend first list in next stage.
 6. Else recommend weakest incomplete list.
 
+When resolving ordinary Continue learning progression through `nextListId`, the app should not recommend a sequential next list that already meets the stricter full-completion / modal-tick state. It should walk forward through the `nextListId` chain and skip fully completed/ticked lists until it finds the first active list that is not fully completed. This skip rule must use the same full-completion source of truth as the modal tick, not the lighter progression-complete state. Lists that are merely progression-complete but not fully completed/ticked must not be skipped.
+
+This refinement should be invisible to learners and must not introduce any new public completion status, badge, label, or second tick state.
+
 Manual user selection resets the current path position.
 
 If user manually selects a later list, the app should continue from that point onward and should not drag them back to earlier lists unless they choose them or repeatedly struggle.
