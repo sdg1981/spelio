@@ -63,6 +63,7 @@ export function Home({
         : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
+  const selectListIconClassName = isFirst ? undefined : 'change-word-list-icon';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
@@ -123,7 +124,7 @@ export function Home({
           )}
 
           <ActionRow
-            icon={<ListCheck size={30} />}
+            icon={<ListCheck className={selectListIconClassName} size={30} />}
             title={selectListLabel}
             arrowVariant="arrow"
             onClick={onSelectList}

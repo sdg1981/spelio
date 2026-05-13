@@ -3438,6 +3438,10 @@
   color:var(--accent);
 }
 
+.change-word-list-icon{
+  transform:translateX(2px);
+}
+
 .prompt-audio-icon{
   color:var(--accent);
 }

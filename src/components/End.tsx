@@ -102,6 +102,9 @@ export function EndScreen({
     : shouldChooseAnotherList
       ? onChangeLists
       : onContinue;
+  const secondaryActionIcon = shouldChooseAnotherList
+    ? <SlidersHorizontal size={30} />
+    : <ListCheck className="change-word-list-icon" size={30} />;
 
   return (
     <main className="end-bg">
@@ -150,7 +153,7 @@ export function EndScreen({
             />
           )}
           <ActionRow
-            icon={shouldChooseAnotherList ? <SlidersHorizontal size={30} /> : <ListCheck size={30} />}
+            icon={secondaryActionIcon}
             title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
             arrowVariant="arrow"
             onClick={shouldChooseAnotherList ? onHome : onChangeLists}
