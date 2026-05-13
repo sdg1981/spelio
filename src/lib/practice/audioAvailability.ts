@@ -5,8 +5,8 @@ export interface AudioAvailabilityInput {
   audioStatus?: AudioStatus | null;
 }
 
-const RECALL_PAUSE_BASE_DELAY_MS = 2000;
-const RECALL_PAUSE_MAX_DELAY_MS = 2900;
+const RECALL_PAUSE_BASE_DELAY_MS = 2500;
+const RECALL_PAUSE_MAX_DELAY_MS = 3400;
 const RECALL_PAUSE_WORD_DELAY_MS = 150;
 const RECALL_PAUSE_CHARACTER_DELAY_MS = 40;
 const RECALL_PAUSE_CHARACTER_THRESHOLD = 8;

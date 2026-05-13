@@ -146,13 +146,13 @@ assertEqual(
 
 assertEqual(
   getRecallPauseDelayMs({ prompt: 'work', answer: 'gweithio' }),
-  2000,
-  'Short recall pause prompts should use the minimum 2000ms delay.'
+  2500,
+  'Short recall pause prompts should use the minimum 2500ms delay.'
 );
 
 assertEqual(
   getRecallPauseDelayMs({ prompt: 'open window', answer: 'agor drws' }),
-  2150,
+  2650,
   'Longer recall pause phrases should receive a longer adaptive delay.'
 );
 
@@ -161,8 +161,8 @@ assertEqual(
     prompt: 'please open the big window now',
     answer: 'agorwch y ffenestr fawr os gwelwch yn dda'
   }),
-  2900,
-  'Recall pause delay should cap at 2900ms.'
+  3400,
+  'Recall pause delay should cap at 3400ms.'
 );
 
 assertEqual(
