@@ -871,7 +871,7 @@ export function Practice({
         <button className="word-pill" onClick={handleWordPillClick}>
           {storage.settings.audioPrompts && <Repeat className="prompt-audio-icon" size={23} />}
           {promptUsesRecallPauseShell ? (
-            <span className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
+            <span key={currentWord.id} className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
               <span className="prompt-text-reserve" aria-hidden="true">{prompt}</span>
               <span className="prompt-text-value" aria-hidden={!promptVisible}>{prompt}</span>
             </span>

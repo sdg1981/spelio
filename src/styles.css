@@ -2054,12 +2054,14 @@
 }
 
 .practice-app .prompt-text-value{
-  opacity:1;
+  opacity:0;
+  visibility:hidden;
   transition:opacity .22s ease-out;
 }
 
-.practice-app .prompt-text.delayed .prompt-text-value{
-  opacity:0;
+.practice-app .prompt-text.visible .prompt-text-value{
+  opacity:1;
+  visibility:visible;
 }
 
 .practice-app .word-pill:focus-visible{
