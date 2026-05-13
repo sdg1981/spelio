@@ -12,7 +12,7 @@ import {
 } from '../lib/practice/inputFlow';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
-import { findNextSequentialRecommendationList, isListProgressionReady } from '../lib/practice/recommendations';
+import { findNextSequentialRecommendationList, isListProgressionComplete } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
@@ -414,7 +414,7 @@ export function usePracticeSession({
       !includeRecapDue &&
       completedList !== undefined &&
       nextList !== undefined &&
-      isListProgressionReady(nextStorage, completedList) &&
+      isListProgressionComplete(nextStorage, completedList) &&
       nextStorage.currentPathPosition === completedList.id &&
       nextStorage.selectedListIds.length === 1 &&
       nextStorage.selectedListIds[0] === completedList.id;

@@ -1069,6 +1069,51 @@ test('normal progression skips a fully completed ticked next list', () => {
   assertEqual(recommendation.listId, 'stage2_adverbs', 'Fully completed immediate next list should be skipped for the following list');
 });
 
+test('normal progression skips ticked foundations_places after foundations_actions', () => {
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_actions'],
+    currentPathPosition: 'foundations_actions'
+  };
+  storage = completeListCleanly(storage, 'foundations_places');
+  storage = completeListCleanly(storage, 'foundations_actions');
+
+  const places = wordLists.find(list => list.id === 'foundations_places');
+  const time = wordLists.find(list => list.id === 'foundations_time');
+  assert(places, 'Expected foundations_places to exist');
+  assert(time, 'Expected foundations_time to exist');
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, places), true, 'Setup should make foundations_places progression-complete');
+  assertEqual(isListFullyComplete(storage, places), true, 'Setup should make foundations_places fully completed/ticked');
+  assertEqual(isListFullyComplete(storage, time), false, 'Setup should leave foundations_time not fully completed/ticked');
+  assertEqual(recommendation.kind, 'list', 'Normal progression should still recommend a list');
+  assertEqual(recommendation.listId, 'foundations_time', 'Normal progression should skip the ticked foundations_places list');
+});
+
+test('normal progression does not pin to ticked foundations_places when path already advanced there', () => {
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_actions'],
+    currentPathPosition: 'foundations_actions'
+  };
+  storage = completeListCleanly(storage, 'foundations_places');
+  storage = completeListCleanly(storage, 'foundations_actions');
+  storage = {
+    ...storage,
+    selectedListIds: ['foundations_places'],
+    currentPathPosition: 'foundations_places'
+  };
+
+  const places = wordLists.find(list => list.id === 'foundations_places');
+  assert(places, 'Expected foundations_places to exist');
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListFullyComplete(storage, places), true, 'Setup should make the current path list fully completed/ticked');
+  assertEqual(recommendation.listId, 'foundations_time', 'A fully completed current path should continue to the next not-ticked list');
+});
+
 test('normal progression does not skip a progression-ready next list without a completion tick', () => {
   const adjectives = wordLists.find(list => list.id === 'stage2_adjectives');
   assert(adjectives, 'Expected stage2_adjectives to exist');
@@ -1086,6 +1131,47 @@ test('normal progression does not skip a progression-ready next list without a c
   assertEqual(recommendation.listId, 'stage2_adjectives', 'Progression-ready next list should not be skipped unless it is fully complete');
 });
 
+test('normal progression still recommends foundations_places when it is progression-complete but unticked', () => {
+  const places = wordLists.find(list => list.id === 'foundations_places');
+  assert(places, 'Expected foundations_places to exist');
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_actions'],
+    currentPathPosition: 'foundations_actions'
+  };
+  for (const word of places.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+  storage = completeListCleanly(storage, 'foundations_actions');
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, places), true, 'Setup should make foundations_places progression-complete');
+  assertEqual(isListFullyComplete(storage, places), false, 'Setup should leave foundations_places without the modal tick');
+  assertEqual(recommendation.listId, 'foundations_places', 'Progression-complete foundations_places should not be skipped unless it is fully completed/ticked');
+});
+
+test('normal progression does not skip foundations_places when eligible difficult words block its tick', () => {
+  const places = wordLists.find(list => list.id === 'foundations_places');
+  assert(places, 'Expected foundations_places to exist');
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_actions'],
+    currentPathPosition: 'foundations_actions'
+  };
+  storage = completeListCleanly(storage, 'foundations_places');
+  storage = applyWordProgressPatch(storage, places.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = completeListCleanly(storage, 'foundations_actions');
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, places), true, 'Setup should keep foundations_places progression-complete');
+  assertEqual(isListFullyComplete(storage, places), false, 'Eligible difficult words should block the modal tick');
+  assertEqual(recommendation.listId, 'foundations_places', 'A progression-complete list with unresolved eligible difficulty should not be skipped');
+});
+
 test('review difficult words still overrides skipped sequential progression', () => {
   let storage = weatherAndWorkStorage();
   storage = completeListCleanly(storage, 'stage2_adjectives');
@@ -1094,6 +1180,31 @@ test('review difficult words still overrides skipped sequential progression', ()
   const weather = wordLists.find(list => list.id === 'stage2_weather');
   assert(weather, 'Expected stage2_weather to exist');
   storage = applyWordProgressPatch(storage, weather.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  storage = {
+    ...storage,
+    lastSessionResult: storage.lastSessionResult
+      ? { ...storage.lastSessionResult, state: 'struggled' }
+      : null
+  };
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(hasDifficultWords(storage, wordLists), true, 'Setup should create eligible difficult words');
+  assertEqual(recommendation.kind, 'review', 'Review difficult words should remain the primary recommendation');
+});
+
+test('review difficult words still overrides foundations_actions skipped sequential progression', () => {
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundations_actions'],
+    currentPathPosition: 'foundations_actions'
+  };
+  storage = completeListCleanly(storage, 'foundations_places');
+  storage = completeListCleanly(storage, 'foundations_actions');
+
+  const actions = wordLists.find(list => list.id === 'foundations_actions');
+  assert(actions, 'Expected foundations_actions to exist');
+  storage = applyWordProgressPatch(storage, actions.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
   storage = {
     ...storage,
     lastSessionResult: storage.lastSessionResult

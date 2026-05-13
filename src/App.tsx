@@ -82,6 +82,7 @@ export default function App() {
       storage.listProgress,
       storage.settings.dialectPreference,
       storage.selectedListIds,
+      storage.wordProgress,
       t
     ]
   );

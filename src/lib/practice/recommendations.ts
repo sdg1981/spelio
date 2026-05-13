@@ -26,17 +26,25 @@ function wasJustPractised(storage: SpelioStorage, listId: string) {
   return storage.lastSessionResult?.listIds.includes(listId) === true;
 }
 
-export function isListProgressionReady(storage: SpelioStorage, list: WordList) {
+export function isListProgressionComplete(storage: SpelioStorage, list: WordList) {
   const items = groupLearningItems(list.words);
   return items.length > 0 && items.every(group => isLearningItemSeen(storage, group));
 }
 
+export function isListProgressionReady(storage: SpelioStorage, list: WordList) {
+  return isListProgressionComplete(storage, list);
+}
+
 function listHasUnseenLearningItems(storage: SpelioStorage, list: WordList) {
-  return !isListProgressionReady(storage, list);
+  return !isListProgressionComplete(storage, list);
+}
+
+export function isListFullyCompleteForTick(storage: SpelioStorage, list: WordList) {
+  return isListFullyComplete(storage, list);
 }
 
 export function isListFullyCompletedForRecommendation(storage: SpelioStorage, list: WordList) {
-  return isListFullyComplete(storage, list);
+  return isListFullyCompleteForTick(storage, list);
 }
 
 export function findNextSequentialRecommendationList(storage: SpelioStorage, lists: WordList[], current: WordList) {
@@ -50,7 +58,7 @@ export function findNextSequentialRecommendationList(storage: SpelioStorage, lis
 
     const next = findList(activeLists, nextListId);
     if (!next) return undefined;
-    if (!isListFullyCompletedForRecommendation(storage, next)) return next;
+    if (!isListFullyCompleteForTick(storage, next)) return next;
 
     nextListId = next.nextListId;
   }
@@ -87,11 +95,11 @@ export function getNormalContinuationRecommendation(storage: SpelioStorage, list
   const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
   const current = findList(lists, storage.currentPathPosition) ?? findList(lists, selectedListIds[0]);
   if (current) {
-    if (!isListProgressionReady(storage, current)) {
+    if (!isListProgressionComplete(storage, current)) {
       return asListRecommendation(current, t, interfaceLanguage);
     }
 
-    if (!wasJustPractised(storage, current.id)) {
+    if (!storage.lastSessionResult || (!wasJustPractised(storage, current.id) && !isListFullyCompleteForTick(storage, current))) {
       return asListRecommendation(current, t, interfaceLanguage);
     }
 
