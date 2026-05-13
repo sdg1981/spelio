@@ -14,6 +14,7 @@ import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/pra
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
+import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
 
@@ -42,13 +43,15 @@ function LetterSlots({
   word,
   letters,
   wrongIndex,
+  wrongAttempt,
   activeIndex,
   layoutClass = '',
   wordComplete = false
 }: {
   word: string;
-  letters: Array<{ value: string; revealed?: boolean; wrong?: boolean }>;
+  letters: Array<{ value: string; revealed?: boolean }>;
   wrongIndex: number | null;
+  wrongAttempt: string | null;
   activeIndex: number;
   layoutClass?: string;
   wordComplete?: boolean;
@@ -69,8 +72,9 @@ function LetterSlots({
               const slot = letters[index];
               const animationIndex = visibleLetterIndex;
               visibleLetterIndex += 1;
-              const hasValue = Boolean(slot?.value);
-              const isMistake = wrongIndex === index || slot?.wrong;
+              const isMistake = wrongIndex === index;
+              const displayValue = isMistake ? (wrongAttempt ?? slot?.value) : slot?.value;
+              const hasValue = Boolean(displayValue);
 
               return (
                 <span
@@ -78,7 +82,7 @@ function LetterSlots({
                   className={`letter-slot ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed ? 'typed' : ''}`}
                   style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 42}ms` } as CSSProperties : undefined}
                 >
-                  {isMistake ? '×' : slot?.value || '_'}
+                  {displayValue || '_'}
                 </span>
               );
             })}
@@ -206,6 +210,7 @@ export function Practice({
     status,
     statusTone,
     wrongIndex,
+    wrongAttempt,
     activeIndex,
     practiceAnswer,
     isComplete,
@@ -343,8 +348,8 @@ export function Practice({
     setSpellingHint(null);
   }, [clearScheduledSpellingHintAudioReplay]);
 
-  const handlePracticeInput = useCallback((char: string) => {
-    const result = handleInput(char);
+  const handlePracticeInput = useCallback((input: string) => {
+    const result = handleInput(input);
     if (result.type !== 'incorrect' || !currentWord) return;
 
     const hint = getSpellingPatternHint({
@@ -525,7 +530,7 @@ export function Practice({
     return () => window.clearTimeout(timer);
   }, [currentWord?.id, isComplete, modal]);
 
-  const currentWordComplete = currentWord ? findIncompleteLetterIndex(practiceAnswer, letters) < 0 : false;
+  const currentWordComplete = currentWord ? isCommittedAnswerComplete(practiceAnswer, letters, storage.settings.welshSpelling) : false;
 
   useEffect(() => {
     if (currentWordComplete) finishPeek(false);
@@ -809,8 +814,7 @@ export function Practice({
             }
 
             const value = event.target.value;
-            const char = value[value.length - 1];
-            if (char) handlePracticeInput(char);
+            if (value) handlePracticeInput(value);
             event.target.value = '';
           }}
           inputMode="text"
@@ -829,7 +833,7 @@ export function Practice({
           onClick={focusMobileInput}
           className="letter-input-tap-zone"
         >
-          <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
+          <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
           <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
 
@@ -927,10 +931,6 @@ function PracticeTopNav({ onBackHome }: { onBackHome: () => void }) {
       </div>
     </>
   );
-}
-
-function findIncompleteLetterIndex(answer: string, letters: Array<{ value: string }>) {
-  return answer.split('').findIndex((char, index) => char !== ' ' && !letters[index]?.value);
 }
 
 function AnimatedStatusLine({
