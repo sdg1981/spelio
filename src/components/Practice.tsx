@@ -24,6 +24,8 @@ type RecallPauseVisibility = {
   visible: boolean;
 };
 
+const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
+
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
     <div className="progress-top">
@@ -872,8 +874,8 @@ export function Practice({
           {storage.settings.audioPrompts && <Repeat className="prompt-audio-icon" size={23} />}
           {promptUsesRecallPauseShell ? (
             <span key={currentWord.id} className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
-              <span className="prompt-text-reserve" aria-hidden="true">{prompt}</span>
-              <span className="prompt-text-value" aria-hidden={!promptVisible}>{prompt}</span>
+              <span className="prompt-text-reserve" style={HIDDEN_PROMPT_STYLE} aria-hidden="true">{prompt}</span>
+              <span className="prompt-text-value" style={promptVisible ? undefined : HIDDEN_PROMPT_STYLE} aria-hidden={!promptVisible}>{prompt}</span>
             </span>
           ) : (
             promptVisible && <span>{prompt}</span>
