@@ -8,6 +8,8 @@ import {
   applyWordProgressPatch,
   applyPracticeStartListSelection,
   createDefaultStorage,
+  getFullyCompletedListIds,
+  isListFullyComplete,
   normaliseStorage,
   updateListCompletion,
   type SessionResult,
@@ -430,6 +432,7 @@ test('completing foundations_numbers cleanly recommends foundations_mixed_01', (
   const recommendation = getRecommendation(storage, wordLists);
 
   assertEqual(storage.listProgress.foundations_numbers?.completed, true, 'Numbers list should be marked complete');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes('foundations_numbers'), true, 'Clean strong completion should show the modal tick');
   assertEqual(recommendation.title, 'Continue learning', 'Primary action title should stay as continue');
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed numbers list should advance to nextListId');
   assertEqual(recommendation.subtitle, 'Mixed Practice — Foundations', 'Primary action should show the next list name');
@@ -931,6 +934,75 @@ test('continue learning advances when all eligible current-list items are seen w
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Continue learning should move to nextListId when all current items have been seen');
 });
 
+test('progression can move forward before unresolved difficult words earn a modal tick', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: false }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:10.000Z');
+  }
+
+  const base = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 1,
+    revealedWords: 0,
+    incorrectAttempts: 1,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: ['foundations_numbers']
+  };
+  const result: SessionResult = { ...base, state: classifySession(base) };
+  storage = finishNumbersSession(storage, result);
+
+  const primaryRecommendation = getRecommendation(storage, wordLists);
+  const normalRecommendation = getNormalContinuationRecommendation(storage, wordLists);
+
+  assertEqual(primaryRecommendation.kind, 'review', 'A struggled session with a difficult word should still recommend review');
+  assertEqual(normalRecommendation.listId, 'foundations_mixed_01', 'Normal continue should still allow next-list progression');
+  assertEqual(isListProgressionReady(storage, numbers), true, 'Seen-all list should be progression-ready');
+  assertEqual(isListFullyComplete(storage, numbers), false, 'Unresolved difficult words should block the modal tick');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes('foundations_numbers'), false, 'Word list modal should not show the tick yet');
+});
+
+test('resolving the difficult word cleanly allows a previously strong seen-all list to show the modal tick', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: false }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:10.000Z');
+  }
+
+  const base = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 1,
+    revealedWords: 0,
+    incorrectAttempts: 1,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: ['foundations_numbers']
+  };
+  storage = finishNumbersSession(storage, { ...base, state: classifySession(base) });
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: true, reviewResolvedClean: true }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'Clean review completion should remove the word from Review difficult words');
+  assertEqual(isListFullyComplete(storage, numbers), true, 'Seen-all, strong-session list should show the tick once difficulty is resolved');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes('foundations_numbers'), true, 'Word list modal should show the single completed tick');
+});
+
 test('single-list progression starts the next recommended list with a fresh normal pool', () => {
   let storage = firstWordsStorage('mixed');
   const firstSession = createPracticeSession(wordLists, storage);
@@ -1091,7 +1163,56 @@ test('dialect variants count as one conceptual item for sessions and completion'
   };
 
   assertEqual(storage.listProgress[list.id]?.completed, true, 'Unselected sibling variant should not block list completion');
+  assertEqual(getFullyCompletedListIds(storage, lists).includes(list.id), true, 'Completed conceptual variant item should show the modal tick');
   assertEqual(isListProgressionReady(northStorage, list), true, 'Switching dialect later should not undo conceptual progression readiness');
+});
+
+test('ineligible dialect difficult variants do not block the modal tick', () => {
+  const list = dialectCompletionList();
+  const lists = [list];
+  const northNow = list.words.find(word => word.variantGroupId === 'now' && word.dialect === 'North Wales');
+  assert(northNow, 'Expected North Wales now variant');
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'south_standard'
+    }
+  };
+
+  storage = applyWordProgressPatch(storage, northNow, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  for (const word of list.words.filter(word => word.dialect !== 'North Wales')) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:05.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: 10,
+    correctWords: 10,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [list.id],
+    state: 'strong'
+  };
+  storage = updateListCompletion(
+    {
+      ...storage,
+      lastSessionDate: '2026-05-05T00:00:30.000Z',
+      lastSessionResult: result
+    },
+    lists,
+    result
+  );
+
+  assertEqual(storage.wordProgress[northNow.id]?.difficult, true, 'Setup should leave an unresolved North-only difficult variant');
+  assertEqual(hasDifficultWords(storage, lists), false, 'Current South/Standard review logic should ignore the ineligible North variant');
+  assertEqual(isListFullyComplete(storage, list), true, 'Ineligible old variant difficulty should not block full completion');
+  assertEqual(getFullyCompletedListIds(storage, lists).includes(list.id), true, 'Word list modal should still show one completed tick');
 });
 
 test('older three-list storage resolves to one 20+ word pool while unseen words remain', () => {

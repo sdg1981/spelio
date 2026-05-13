@@ -1,7 +1,8 @@
 import type { DialectPreference, PracticeWord, WelshSpellingMode, WordList } from '../../data/wordLists';
 import type { InterfaceLanguage } from '../../i18n';
 import { normaliseInterfaceLanguage } from '../../i18n';
-import { groupLearningItems } from './learningItems';
+import { groupLearningItems, isLearningItemSeen } from './learningItems';
+import { hasEligibleDifficultWordsInList } from './sessionEngine';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 export type SpelioTheme = 'light' | 'dark';
@@ -316,6 +317,26 @@ function unique(values: string[]) {
   return Array.from(new Set(values));
 }
 
+function hasSeenAllCompletionItems(storage: SpelioStorage, list: WordList) {
+  const completionItems = groupLearningItems(list.words);
+  return completionItems.length > 0 && completionItems.every(group => isLearningItemSeen(storage, group));
+}
+
+export function isListFullyComplete(storage: SpelioStorage, list: WordList) {
+  const progress = storage.listProgress[list.id];
+  const hasQualifyingSession = Boolean(progress?.completed || (progress?.strongSessionCount ?? 0) > 0);
+
+  return (
+    hasQualifyingSession &&
+    hasSeenAllCompletionItems(storage, list) &&
+    !hasEligibleDifficultWordsInList(storage, list)
+  );
+}
+
+export function getFullyCompletedListIds(storage: SpelioStorage, lists: WordList[]) {
+  return lists.filter(list => isListFullyComplete(storage, list)).map(list => list.id);
+}
+
 export function updateListCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
   const now = new Date().toISOString();
   const nextListProgress = { ...storage.listProgress };
@@ -340,21 +361,29 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
       ...seenRepresentatives
     ]);
 
-    const allWordsSeen = completionItems.every(group => {
-      const representativeId = group[0]?.id;
-      return Boolean(representativeId && seenWordIds.includes(representativeId)) || group.some(word => storage.wordProgress[word.id]?.seen);
-    });
     const accuracy = result.totalWords ? result.correctWords / result.totalWords : 0;
     const strongSession = accuracy >= 0.85 && result.revealedLetters === 0;
-    const completed = previous.completed || (allWordsSeen && strongSession);
-
-    nextListProgress[listId] = {
+    const progressWithSession = {
       ...previous,
       seenWordIds,
+      strongSessionCount: previous.strongSessionCount + (strongSession ? 1 : 0)
+    };
+    const completed = isListFullyComplete(
+      {
+        ...storage,
+        listProgress: {
+          ...nextListProgress,
+          [listId]: progressWithSession
+        }
+      },
+      list
+    );
+
+    nextListProgress[listId] = {
+      ...progressWithSession,
       completed,
       completedAt: completed && !previous.completed ? now : previous.completedAt,
-      lastPractisedAt: now,
-      strongSessionCount: previous.strongSessionCount + (strongSession ? 1 : 0)
+      lastPractisedAt: now
     };
   }
 

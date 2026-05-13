@@ -8,7 +8,7 @@ import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
-import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
+import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
@@ -92,6 +92,10 @@ export default function App() {
   const endProgressSummary = useMemo(
     () => formatCumulativeProgress(storage, publicWordLists, { prefix: t('progress.totalProgress'), t }),
     [publicWordLists, storage.learningStats, storage.wordProgress, t]
+  );
+  const completedListIds = useMemo(
+    () => getFullyCompletedListIds(storage, publicWordLists),
+    [publicWordLists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
   );
   const feedbackSignalOptions = useMemo(() => getFeedbackSignalOptions(t), [t]);
   const learningMethodOptions = useMemo(() => getFeedbackLearningMethodOptions(t), [t]);
@@ -277,7 +281,7 @@ export default function App() {
         <WordListModal
           lists={publicWordLists}
           initialSelectedIds={storage.selectedListIds}
-          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
+          completedListIds={completedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
           onSuggestWordList={openFeedbackFromWordLists}
@@ -311,7 +315,7 @@ export default function App() {
         <WordListModal
           lists={publicWordLists}
           initialSelectedIds={storage.selectedListIds}
-          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
+          completedListIds={completedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
           onSuggestWordList={openFeedbackFromWordLists}

@@ -8,6 +8,7 @@ import type { PracticeWord, WordList } from '../data/wordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
+import { getFullyCompletedListIds } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
@@ -224,6 +225,10 @@ export function Practice({
     audioPlaybackFailedWordIds,
     playAudio
   } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete, t });
+  const completedListIds = useMemo(
+    () => getFullyCompletedListIds(storage, lists),
+    [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
+  );
 
   const clearPeekTimers = useCallback(() => {
     if (peekTimerRef.current) {
@@ -745,7 +750,7 @@ export function Practice({
           <WordListModal
             lists={lists}
             initialSelectedIds={storage.selectedListIds}
-            completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
+            completedListIds={completedListIds}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
             interfaceLanguage={interfaceLanguage}
@@ -907,7 +912,7 @@ export function Practice({
         <WordListModal
           lists={lists}
           initialSelectedIds={storage.selectedListIds}
-          completedListIds={Object.keys(storage.listProgress).filter(listId => storage.listProgress[listId]?.completed)}
+          completedListIds={completedListIds}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
           interfaceLanguage={interfaceLanguage}

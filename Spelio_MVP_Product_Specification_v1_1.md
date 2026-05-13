@@ -990,20 +990,36 @@ For MVP, the key operational states are:
 
 List progression and full list completion are separate.
 
-The user may move on once all dialect-eligible conceptual learning items in a list have been seen at least once according to the active Welsh style rules.
+Progression-complete means:
 
-List completion must be based on dialect-resolved conceptual learning items, not raw database rows. For items linked by `variantGroupId`, completion of the selected/resolved variant counts for the conceptual learning item.
+- All dialect-eligible conceptual learning items in the list have been seen at least once according to the active Welsh style rules.
+- The learner may naturally continue to the next recommended list.
+- This does not require every difficult word from that list to be resolved first.
+- This is mostly invisible system logic, not a new learner-facing status.
+
+List completion and modal ticks must be based on dialect-resolved conceptual learning items, not raw database rows. For items linked by `variantGroupId`, completion of the selected/resolved variant counts for the conceptual learning item.
 
 The list should only receive the stricter modal tick / full completion state when:
 
 - Every dialect-eligible conceptual learning item in the list has been seen at least once according to the active Welsh style rules, and
-- The user completes a session for that list with at least 85% accuracy and no revealed letters.
+- The user has completed a session for that list with at least 85% accuracy and no revealed letters, and
+- There are no currently unresolved difficult words from that same list using the current Review difficult words logic.
 
 This prevents a list from being marked fully complete after simply seeing all items once while still struggling. The modal tick must not be shown merely because the user can move on.
+
+Unresolved difficult words from unselected or currently ineligible dialect variants must not prevent full completion under the current Welsh style rules.
+
+The tick in the word list modal represents full completion only. Do not add a second tick state, badge, label, or visible "progression-complete" language. The learner can move forward without a tick; the tick appears once the list has been properly settled.
 
 Switching Welsh style later may allow the learner to encounter a different variant in future practice, but it should not make past list completion feel broken or incomplete.
 
 Do not show public completion requirements based on raw dialect rows.
+
+Review difficult words remains a helpful nudge, not a hard gate:
+
+- If the learner struggles and eligible difficult words exist, continue recommending Review difficult words.
+- The learner may continue learning instead if they choose.
+- Review difficult words must disappear once all currently eligible difficult words are resolved cleanly.
 
 ### 11.3 Mastery
 

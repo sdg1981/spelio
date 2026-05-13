@@ -233,6 +233,10 @@ function getDifficultCandidates(words: PracticeWord[], storage: SpelioStorage) {
   return getTrackedCandidates(words, storage, word => storage.wordProgress[word.id]?.difficult === true);
 }
 
+export function hasEligibleDifficultWordsInList(storage: SpelioStorage, list: WordList) {
+  return getDifficultCandidates(list.words, storage).length > 0;
+}
+
 export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage) {
   return getTrackedCandidates(words, storage, word => storage.wordProgress[word.id]?.recapDue === true)
     .sort((a, b) => {
