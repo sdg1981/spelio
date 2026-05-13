@@ -18,6 +18,7 @@ import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, update
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
+import { triggerIncorrectHaptic } from '../lib/haptics';
 
 type LetterState = PracticeLetterState;
 
@@ -558,7 +559,10 @@ export function usePracticeSession({
       });
     }
 
-    if (storage.settings.soundEffects) playTone('error');
+    if (storage.settings.soundEffects) {
+      playTone('error');
+      triggerIncorrectHaptic(storage.settings.soundEffects);
+    }
 
     if (wrongTimerRef.current) window.clearTimeout(wrongTimerRef.current);
     wrongTimerRef.current = window.setTimeout(() => {

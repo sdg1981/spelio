@@ -1832,9 +1832,12 @@ Interface-language rule:
 - Briefly flash the active underline red.
 - Optional small shake animation.
 - Error sound.
+- On supported mobile devices, if Sound effects is on, an incorrect input may trigger a tiny optional haptic vibration, around 8–12ms.
 - Clears after approximately 450–650ms.
 - Do not show ordinary written error status text.
 - Mark word difficult.
+
+The haptic cue is a progressive enhancement only. It must never be required for feedback, must not replace the red “×” / underline feedback or error sound, and must only trigger for incorrect input, not success or completion. If vibration is unsupported, nothing should happen. It must not affect practice logic, scoring, progress, session generation, word-list behaviour, audio prompt playback, or UI layout.
 
 ### Spelling pattern hints
 
