@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
-import { FeedbackModal, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions, InfoModal } from './Footer';
+import { FeedbackModal, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions, InfoModal, shareCurrentPublicPage } from './Footer';
 import { ListCheck, Menu, Play, RotateCcw, Settings } from './Icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SettingsModal } from './Practice';
@@ -171,12 +171,22 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
+  const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const firstItemRef = useRef<HTMLButtonElement | null>(null);
+  const shareStatusTimer = useRef<number | null>(null);
   const feedbackSignalOptions = getFeedbackSignalOptions(t);
   const learningMethodOptions = getFeedbackLearningMethodOptions(t);
+
+  useEffect(() => {
+    return () => {
+      if (shareStatusTimer.current !== null && typeof window !== 'undefined') {
+        window.clearTimeout(shareStatusTimer.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -214,6 +224,24 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
     onHowSpelioWorks();
   }
 
+  function showShareStatus(status: 'shared' | 'copied') {
+    setShareStatus(status);
+
+    if (shareStatusTimer.current !== null) {
+      window.clearTimeout(shareStatusTimer.current);
+    }
+
+    shareStatusTimer.current = window.setTimeout(() => {
+      setShareStatus(null);
+      shareStatusTimer.current = null;
+    }, 1800);
+  }
+
+  function sharePage() {
+    setOpen(false);
+    void shareCurrentPublicPage(t, showShareStatus);
+  }
+
   function openInfoModal(modal: 'privacy' | 'about') {
     setOpen(false);
     setInfoModal(modal);
@@ -242,6 +270,9 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
             </button>
             <button className="homepage-menu-item" type="button" onClick={openFeedback}>
               {t('footer.feedback')}
+            </button>
+            <button className="homepage-menu-item homepage-menu-mobile-only" type="button" onClick={sharePage} aria-label={t('footer.share')}>
+              {t('footer.share')}
             </button>
             <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('privacy')}>
               {t('footer.privacy')}
@@ -279,6 +310,10 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
           <p>{t('footer.aboutBody5')}</p>
         </InfoModal>
       )}
+      <div className={`app-toast ${shareStatus ? 'visible' : ''}`} role="status" aria-live="polite">
+        {shareStatus === 'shared' && t('footer.shared')}
+        {shareStatus === 'copied' && t('footer.copied')}
+      </div>
     </>
   );
 }

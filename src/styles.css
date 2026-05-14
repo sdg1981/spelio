@@ -1046,6 +1046,10 @@
   color:var(--text-primary, #071522);
 }
 
+.homepage-menu-item.homepage-menu-mobile-only{
+  display:none;
+}
+
 .homepage-language-switcher{
   position:fixed;
   top:26px;
@@ -1782,6 +1786,10 @@
   .homepage-menu-item{
     min-height:44px;
     font-size:15px;
+  }
+
+  .homepage-menu-item.homepage-menu-mobile-only{
+    display:block;
   }
 
   .homepage-language-switcher{

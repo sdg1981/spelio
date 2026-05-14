@@ -12,10 +12,40 @@ type FooterProps = {
   t: Translate;
 };
 
+type ShareStatus = 'shared' | 'copied';
+
+export async function shareCurrentPublicPage(t: Translate, showShareStatus: (status: ShareStatus) => void) {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+
+  const shareUrl = window.location.href;
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({
+        title: 'Spelio',
+        text: t('footer.shareText'),
+        url: shareUrl
+      });
+      showShareStatus('shared');
+      return;
+    } catch {
+      return;
+    }
+  }
+
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showShareStatus('copied');
+    } catch {
+      // Sharing should never interrupt the menu or footer.
+    }
+  }
+}
+
 export function Footer({ className = '', variant = 'default', showLinks = false, t }: FooterProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
-  const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
+  const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null);
   const shareStatusTimer = useRef<number | null>(null);
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
@@ -31,7 +61,7 @@ export function Footer({ className = '', variant = 'default', showLinks = false,
     };
   }, []);
 
-  function showShareStatus(status: 'shared' | 'copied') {
+  function showShareStatus(status: ShareStatus) {
     setShareStatus(status);
 
     if (shareStatusTimer.current !== null) {
@@ -45,31 +75,7 @@ export function Footer({ className = '', variant = 'default', showLinks = false,
   }
 
   async function handleShare() {
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
-
-    const shareUrl = window.location.origin;
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({
-          title: 'Spelio',
-          text: t('footer.shareText'),
-          url: shareUrl
-        });
-        showShareStatus('shared');
-        return;
-      } catch {
-        return;
-      }
-    }
-
-    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showShareStatus('copied');
-      } catch {
-        // Sharing should never interrupt the footer.
-      }
-    }
+    await shareCurrentPublicPage(t, showShareStatus);
   }
 
   return (
