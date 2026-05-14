@@ -26,6 +26,7 @@ export function Home({
   onReview,
   onRecapReview,
   onSelectList,
+  onHowSpelioWorks,
   settings,
   onSettingsChange,
   onResetProgress,
@@ -45,6 +46,7 @@ export function Home({
   onReview: () => void;
   onRecapReview: () => void;
   onSelectList: () => void;
+  onHowSpelioWorks: () => void;
   settings: SpelioSettings;
   onSettingsChange: (patch: Partial<SpelioSettings>) => void;
   onResetProgress: () => void;
@@ -80,7 +82,7 @@ export function Home({
 
   return (
     <main className="homepage-bg">
-      <HomepageMenu t={t} />
+      <HomepageMenu t={t} onHowSpelioWorks={onHowSpelioWorks} />
       <div className="homepage-utility">
         <LanguageSwitcher
           interfaceLanguage={interfaceLanguage}
@@ -165,7 +167,7 @@ export function Home({
   );
 }
 
-function HomepageMenu({ t }: { t: Translate }) {
+function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks: () => void }) {
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
@@ -207,6 +209,11 @@ function HomepageMenu({ t }: { t: Translate }) {
     setFeedbackOpen(true);
   }
 
+  function openHowSpelioWorks() {
+    setOpen(false);
+    onHowSpelioWorks();
+  }
+
   function openInfoModal(modal: 'privacy' | 'about') {
     setOpen(false);
     setInfoModal(modal);
@@ -230,7 +237,10 @@ function HomepageMenu({ t }: { t: Translate }) {
 
         {open && (
           <nav className="homepage-menu-popover" id={menuId} aria-label={t('home.menuLabel')}>
-            <button ref={firstItemRef} className="homepage-menu-item" type="button" onClick={openFeedback}>
+            <button ref={firstItemRef} className="homepage-menu-item" type="button" onClick={openHowSpelioWorks}>
+              {t('home.howSpelioWorks')}
+            </button>
+            <button className="homepage-menu-item" type="button" onClick={openFeedback}>
               {t('footer.feedback')}
             </button>
             <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('privacy')}>

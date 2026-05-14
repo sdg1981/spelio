@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
+import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
 import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
@@ -19,7 +20,7 @@ import { createSharedWordListContext, createSharedWordListEffectiveStorage, find
 import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
-type Screen = 'home' | 'practice' | 'end';
+type Screen = 'home' | 'practice' | 'end' | 'how';
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
@@ -97,6 +98,10 @@ function getHomePathForLanguage(language: InterfaceLanguage) {
   return language === 'cy' ? '/cy' : '/';
 }
 
+function getInitialPublicScreen(): Screen {
+  return window.location.pathname === '/how-spelio-works' ? 'how' : 'home';
+}
+
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) {
     return (
@@ -114,7 +119,7 @@ export default function App() {
     };
   });
   const [storage, setStorage] = useState<SpelioStorage>(initialAppState.storage);
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>(() => getInitialPublicScreen());
   const [reviewMode, setReviewMode] = useState(false);
   const [recapMode, setRecapMode] = useState(false);
   const [wordListModalOpen, setWordListModalOpen] = useState(false);
@@ -192,6 +197,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    function handlePopState() {
+      setScreen(getInitialPublicScreen());
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     loadPublicContent().then(content => {
@@ -214,7 +228,11 @@ export default function App() {
   }
 
   function updateInterfaceLanguage(language: InterfaceLanguage) {
-    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+    const shouldPreservePublicPage =
+      typeof window !== 'undefined' &&
+      window.location.pathname === '/how-spelio-works';
+
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin') && !shouldPreservePublicPage) {
       window.history.replaceState(null, '', getHomePathForLanguage(language));
     }
 
@@ -347,6 +365,14 @@ export default function App() {
     setScreen('home');
   }
 
+  function openHowSpelioWorks() {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/how-spelio-works') {
+      window.history.pushState(null, '', '/how-spelio-works');
+    }
+
+    setScreen('how');
+  }
+
   function practiseSharedListAgain() {
     if (!completedSharedContext) return;
     const list = publicWordLists.find(item => item.id === completedSharedContext.listId && item.isActive);
@@ -427,7 +453,14 @@ export default function App() {
       : 'returning';
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
-  const screenContent = activeScreen === 'practice' ? (
+  const screenContent = activeScreen === 'how' ? (
+    <HowSpelioWorks
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'practice' ? (
     <Practice
       lists={publicWordLists}
       storage={storage}
@@ -495,6 +528,7 @@ export default function App() {
         onReview={startReviewPractice}
         onRecapReview={startRecapPractice}
         onSelectList={() => setWordListModalOpen(true)}
+        onHowSpelioWorks={openHowSpelioWorks}
         settings={storage.settings}
         onSettingsChange={updateSettings}
         onResetProgress={resetProgress}

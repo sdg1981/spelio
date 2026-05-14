@@ -23,8 +23,118 @@ export const en = {
     mixedSelectionComplete: 'You’ve completed this word list',
     continueMixedPractice: 'Continue learning',
     customMixedWordList: 'Selected word list',
+    howSpelioWorks: 'How Spelio works',
     openMenu: 'Open menu',
     menuLabel: 'Homepage menu'
+  },
+  how: {
+    backHomeLabel: 'Back to homepage',
+    heroHeading: 'Everything you need to build spelling confidence.',
+    heroSupport: 'Spelio helps adult learners practise Welsh spelling in a calm, focused way that fits into real life.',
+    editorialHeading: 'Simple to use. Thoughtfully designed underneath.',
+    editorialBody: 'Spelio keeps the experience calm and focused, while quietly supporting recall, review, dialect differences, progression, and long-term spelling confidence in the background.',
+    featuresAriaLabel: 'Spelio features',
+    nextStepsAriaLabel: 'Next steps',
+    startPractice: 'Start spelling practice',
+    imageAlt: 'Spelio practice screens shown across laptop and phone',
+    features: {
+      shortFocused: {
+        title: 'Short, focused practice sessions',
+        body: 'Practise Welsh spelling in calm, manageable sessions designed to fit into everyday life.'
+      },
+      hearWelsh: {
+        title: 'Hear Welsh, then spell it',
+        body: 'Listen to real Welsh audio and type the correct spelling letter by letter.'
+      },
+      smartProgression: {
+        title: 'Smart progression',
+        body: 'Spelio recommends what to practise next based on your progress.'
+      },
+      reviewDifficult: {
+        title: 'Review difficult words',
+        body: 'Words you struggled with are collected automatically for focused review sessions.'
+      },
+      gentleRecaps: {
+        title: 'Gentle recaps',
+        body: 'Previously difficult words quietly reappear later to strengthen long-term memory.'
+      },
+      mixedDialect: {
+        title: 'Mixed Welsh dialect support',
+        body: 'Supports North Wales and South Wales / Standard forms with intelligent mixed-dialect practice.'
+      },
+      recallPause: {
+        title: 'Recall pause mode',
+        body: 'Hear the Welsh first, then see the English prompt after a short pause to encourage active recall.'
+      },
+      spellingHints: {
+        title: 'Spelling hints',
+        body: 'Gentle explanations for common Welsh spelling patterns like ll, dd, ff, and ch.'
+      },
+      spellingModes: {
+        title: 'Flexible or strict spelling modes',
+        body: 'Choose whether accents and diacritics are optional or must be typed perfectly.'
+      },
+      revealNextLetter: {
+        title: 'Reveal next letter',
+        body: 'Reveal the next letter if you get stuck, while still tracking the word for review later.'
+      },
+      fullAnswerPeek: {
+        title: 'Full-answer peek',
+        body: 'Press and hold to briefly see the full answer before trying again from memory.'
+      },
+      realWorldPhrases: {
+        title: 'Real-world phrases',
+        body: 'Practice includes useful phrases and connected language, not just isolated vocabulary.'
+      },
+      growingCollections: {
+        title: 'Growing word collections',
+        body: 'Practise across 35+ Welsh word lists and 360+ words and phrases, with new collections planned for different learning paths and goals.'
+      },
+      fromEarlier: {
+        title: 'From earlier',
+        body: 'Optional recap sessions help reinforce previously learned words without feeling like unfinished work.'
+      },
+      promptFreePractice: {
+        title: 'Prompt-free practice',
+        body: 'Turn English prompts on or off, so you can practise with more support or rely more on listening and recall.'
+      },
+      listenOrTranslate: {
+        title: 'Listen or translate',
+        body: 'Use Welsh audio for listening-led practice, or turn it off to see the English prompt first and recall the Welsh before spelling it.'
+      },
+      instantFeedback: {
+        title: 'Instant feedback',
+        body: 'Every letter is checked as you type, helping you build accurate spelling habits naturally and quickly.'
+      },
+      audioReplay: {
+        title: 'Audio replay anytime',
+        body: 'Replay the current word instantly whenever you need to hear it again.'
+      },
+      spellingPatternLists: {
+        title: 'Spelling pattern lists',
+        body: 'Dedicated word lists focus on difficult Welsh spelling patterns and sound combinations.'
+      },
+      calmDesignSounds: {
+        title: 'Calm design & sounds',
+        body: 'Subtle visuals and sound design make practice satisfying without being noisy.'
+      },
+      lightDarkModes: {
+        title: 'Light and dark modes',
+        body: 'Switch between light and dark appearance for a calmer experience in different environments.'
+      },
+      bilingualInterface: {
+        title: 'Welsh and English interface',
+        body: 'Switch the app interface between English and Cymraeg while keeping the same practice flow.'
+      },
+      shareLinksQr: {
+        title: 'Share links and QR codes',
+        body: 'Share word lists with simple links and QR codes, making it easier for tutors and teachers to give learners focused practice.'
+      },
+      practiceTestSharing: {
+        title: 'Practice test sharing',
+        body: 'Create shared practice-test links that hide English prompts and reveal tools for lightweight classroom or homework-style spelling checks.'
+      }
+    }
   },
   practice: {
     backToHome: 'Back to home',

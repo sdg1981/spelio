@@ -23,8 +23,118 @@ export const cy = {
     mixedSelectionComplete: 'Rydych wedi cwblhau’r rhestr eiriau hon',
     continueMixedPractice: 'Parhau i ddysgu',
     customMixedWordList: 'Rhestr eiriau ddewisol',
+    howSpelioWorks: 'Sut mae Spelio’n gweithio',
     openMenu: 'Agor dewislen',
     menuLabel: 'Dewislen yr hafan'
+  },
+  how: {
+    backHomeLabel: 'Yn ôl i’r hafan',
+    heroHeading: 'Popeth sydd ei angen arnoch i feithrin hyder sillafu.',
+    heroSupport: 'Mae Spelio’n helpu dysgwyr Cymraeg i ymarfer sillafu mewn ffordd dawel, glir sy’n ffitio i fywyd go iawn.',
+    editorialHeading: 'Syml i’w ddefnyddio. Wedi’i gynllunio’n ofalus oddi tano.',
+    editorialBody: 'Mae Spelio’n cadw’r profiad yn dawel ac yn ffocysedig, tra’n cefnogi cofio, adolygu, gwahaniaethau tafodieithol, cynnydd, a hyder sillafu hirdymor yn y cefndir.',
+    featuresAriaLabel: 'Nodweddion Spelio',
+    nextStepsAriaLabel: 'Camau nesaf',
+    startPractice: 'Dechrau ymarfer sillafu',
+    imageAlt: 'Sgriniau ymarfer Spelio ar liniadur a ffôn symudol',
+    features: {
+      shortFocused: {
+        title: 'Sesiynau ymarfer byr a ffocysedig',
+        body: 'Ymarferwch sillafu Cymraeg mewn sesiynau tawel, hawdd eu rheoli sy’n ffitio i fywyd bob dydd.'
+      },
+      hearWelsh: {
+        title: 'Clywed Cymraeg, yna ei sillafu',
+        body: 'Gwrandewch ar sain Gymraeg go iawn a theipiwch y sillafiad cywir, lythyren wrth lythyren.'
+      },
+      smartProgression: {
+        title: 'Cynnydd clyfar',
+        body: 'Mae Spelio’n awgrymu beth i’w ymarfer nesaf ar sail eich cynnydd.'
+      },
+      reviewDifficult: {
+        title: 'Adolygu geiriau anodd',
+        body: 'Caiff geiriau roeddech chi’n ei chael hi’n anodd â nhw eu casglu’n awtomatig ar gyfer sesiynau adolygu ffocysedig.'
+      },
+      gentleRecaps: {
+        title: 'Adolygiadau ysgafn',
+        body: 'Mae geiriau oedd yn anodd o’r blaen yn ailymddangos yn dawel i gryfhau cof hirdymor.'
+      },
+      mixedDialect: {
+        title: 'Cymorth i wahanol ffurfiau Cymraeg',
+        body: 'Mae’n cefnogi ffurfiau Gogledd Cymru a De Cymru / Safonol gyda ymarfer cymysg deallus.'
+      },
+      recallPause: {
+        title: 'Saib cofio',
+        body: 'Clywch y Gymraeg yn gyntaf, yna gwelwch y prompt Saesneg ar ôl saib byr i annog cofio gweithredol.'
+      },
+      spellingHints: {
+        title: 'Awgrymiadau sillafu',
+        body: 'Esboniadau ysgafn ar gyfer patrymau sillafu Cymraeg cyffredin fel ll, dd, ff, a ch.'
+      },
+      spellingModes: {
+        title: 'Moddau sillafu hyblyg neu fanwl',
+        body: 'Dewiswch a yw acenion a nodau diacritig yn ddewisol neu a oes rhaid eu teipio’n gywir.'
+      },
+      revealNextLetter: {
+        title: 'Datgelu’r llythyren nesaf',
+        body: 'Datgelwch y llythyren nesaf os ydych chi’n sownd, tra bod y gair yn dal i gael ei olrhain ar gyfer adolygu.'
+      },
+      fullAnswerPeek: {
+        title: 'Cipolwg ar yr ateb cyfan',
+        body: 'Pwyswch a dal i weld yr ateb cyfan am eiliad cyn trio eto o’r cof.'
+      },
+      realWorldPhrases: {
+        title: 'Ymadroddion defnyddiol',
+        body: 'Mae’r ymarfer yn cynnwys ymadroddion defnyddiol ac iaith gysylltiedig, nid geirfa unigol yn unig.'
+      },
+      growingCollections: {
+        title: 'Casgliadau geiriau sy’n tyfu',
+        body: 'Ymarferwch ar draws dros 35 rhestr eiriau Cymraeg a 360+ gair ac ymadrodd, gyda chasgliadau newydd ar y gweill ar gyfer gwahanol lwybrau a nodau dysgu.'
+      },
+      fromEarlier: {
+        title: 'O’r blaen',
+        body: 'Mae sesiynau adolygu dewisol yn helpu i atgyfnerthu geiriau a ddysgwyd o’r blaen heb deimlo fel gwaith heb ei orffen.'
+      },
+      promptFreePractice: {
+        title: 'Ymarfer heb bromptiau',
+        body: 'Trowch bromptiau Saesneg ymlaen neu i ffwrdd, fel y gallwch ymarfer gyda mwy o gymorth neu ddibynnu mwy ar wrando a chofio.'
+      },
+      listenOrTranslate: {
+        title: 'Gwrando neu gyfieithu',
+        body: 'Defnyddiwch sain Gymraeg ar gyfer ymarfer drwy wrando, neu trowch y sain i ffwrdd i weld y Saesneg yn gyntaf a chofio’r Gymraeg cyn ei sillafu.'
+      },
+      instantFeedback: {
+        title: 'Adborth ar unwaith',
+        body: 'Caiff pob llythyren ei gwirio wrth i chi deipio, gan eich helpu i feithrin arferion sillafu cywir yn naturiol ac yn gyflym.'
+      },
+      audioReplay: {
+        title: 'Ailchwarae’r sain unrhyw bryd',
+        body: 'Ailchwaraewch y gair presennol ar unwaith pryd bynnag mae angen i chi ei glywed eto.'
+      },
+      spellingPatternLists: {
+        title: 'Rhestrau patrymau sillafu',
+        body: 'Mae rhestrau geiriau penodol yn canolbwyntio ar batrymau sillafu a chyfuniadau sain Cymraeg anodd.'
+      },
+      calmDesignSounds: {
+        title: 'Dyluniad a synau tawel',
+        body: 'Mae delweddau a synau cynnil yn gwneud ymarfer yn foddhaol heb fod yn swnllyd.'
+      },
+      lightDarkModes: {
+        title: 'Modd golau a modd tywyll',
+        body: 'Newidiwch rhwng golwg golau a thywyll ar gyfer profiad tawelach mewn gwahanol amgylcheddau.'
+      },
+      bilingualInterface: {
+        title: 'Rhyngwyneb Cymraeg a Saesneg',
+        body: 'Newidiwch ryngwyneb yr ap rhwng Saesneg a Chymraeg gan gadw’r un llif ymarfer.'
+      },
+      shareLinksQr: {
+        title: 'Dolenni rhannu a chodau QR',
+        body: 'Rhannwch restrau geiriau gyda dolenni syml a chodau QR, gan ei gwneud yn haws i diwtoriaid ac athrawon roi ymarfer ffocysedig i ddysgwyr.'
+      },
+      practiceTestSharing: {
+        title: 'Rhannu profion ymarfer',
+        body: 'Crëwch ddolenni prawf ymarfer sy’n cuddio promptiau Saesneg ac offer datgelu ar gyfer gwiriadau sillafu ysgafn yn y dosbarth neu fel gwaith cartref.'
+      }
+    }
   },
   practice: {
     backToHome: 'Yn ol i’r hafan',
