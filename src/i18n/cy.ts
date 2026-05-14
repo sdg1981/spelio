@@ -136,6 +136,9 @@ export const cy = {
       }
     }
   },
+  publicPages: {
+    backLabel: 'Mynd yn ôl'
+  },
   practice: {
     backToHome: 'Yn ol i’r hafan',
     selectListToBegin: 'Dewiswch restr eiriau i ddechrau',

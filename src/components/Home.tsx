@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
-import { FeedbackModal, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions, InfoModal, shareCurrentPublicPage } from './Footer';
+import { Footer, shareCurrentPublicPage } from './Footer';
 import { ListCheck, Menu, Play, RotateCcw, Settings } from './Icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SettingsModal } from './Practice';
@@ -27,6 +27,9 @@ export function Home({
   onRecapReview,
   onSelectList,
   onHowSpelioWorks,
+  onFeedback,
+  onPrivacy,
+  onAbout,
   settings,
   onSettingsChange,
   onResetProgress,
@@ -47,6 +50,9 @@ export function Home({
   onRecapReview: () => void;
   onSelectList: () => void;
   onHowSpelioWorks: () => void;
+  onFeedback: () => void;
+  onPrivacy: () => void;
+  onAbout: () => void;
   settings: SpelioSettings;
   onSettingsChange: (patch: Partial<SpelioSettings>) => void;
   onResetProgress: () => void;
@@ -82,7 +88,13 @@ export function Home({
 
   return (
     <main className="homepage-bg">
-      <HomepageMenu t={t} onHowSpelioWorks={onHowSpelioWorks} />
+      <HomepageMenu
+        t={t}
+        onHowSpelioWorks={onHowSpelioWorks}
+        onFeedback={onFeedback}
+        onPrivacy={onPrivacy}
+        onAbout={onAbout}
+      />
       <div className="homepage-utility">
         <LanguageSwitcher
           interfaceLanguage={interfaceLanguage}
@@ -167,18 +179,26 @@ export function Home({
   );
 }
 
-function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks: () => void }) {
+function HomepageMenu({
+  t,
+  onHowSpelioWorks,
+  onFeedback,
+  onPrivacy,
+  onAbout
+}: {
+  t: Translate;
+  onHowSpelioWorks: () => void;
+  onFeedback: () => void;
+  onPrivacy: () => void;
+  onAbout: () => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
   const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const firstItemRef = useRef<HTMLButtonElement | null>(null);
   const shareStatusTimer = useRef<number | null>(null);
-  const feedbackSignalOptions = getFeedbackSignalOptions(t);
-  const learningMethodOptions = getFeedbackLearningMethodOptions(t);
 
   useEffect(() => {
     return () => {
@@ -216,7 +236,7 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
 
   function openFeedback() {
     setOpen(false);
-    setFeedbackOpen(true);
+    onFeedback();
   }
 
   function openHowSpelioWorks() {
@@ -240,11 +260,6 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
   function sharePage() {
     setOpen(false);
     void shareCurrentPublicPage(t, showShareStatus);
-  }
-
-  function openInfoModal(modal: 'privacy' | 'about') {
-    setOpen(false);
-    setInfoModal(modal);
   }
 
   return (
@@ -274,42 +289,22 @@ function HomepageMenu({ t, onHowSpelioWorks }: { t: Translate; onHowSpelioWorks:
             <button className="homepage-menu-item homepage-menu-mobile-only" type="button" onClick={sharePage} aria-label={t('footer.share')}>
               {t('footer.share')}
             </button>
-            <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('privacy')}>
+            <button className="homepage-menu-item" type="button" onClick={() => {
+              setOpen(false);
+              onPrivacy();
+            }}>
               {t('footer.privacy')}
             </button>
-            <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('about')}>
+            <button className="homepage-menu-item" type="button" onClick={() => {
+              setOpen(false);
+              onAbout();
+            }}>
               {t('footer.about')}
             </button>
           </nav>
         )}
       </div>
 
-      {feedbackOpen && (
-        <FeedbackModal
-          onClose={() => setFeedbackOpen(false)}
-          t={t}
-          feedbackSignalOptions={feedbackSignalOptions}
-          learningMethodOptions={learningMethodOptions}
-        />
-      )}
-      {infoModal === 'privacy' && (
-        <InfoModal title={t('footer.privacyTitle')} titleId="homepage-privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
-          <p>{t('footer.privacyBody1')}</p>
-          <p>{t('footer.privacyBody2')}</p>
-          <p>{t('footer.privacyBody3')}</p>
-          <p>{t('footer.privacyBody4')}</p>
-          <p>{t('footer.privacyBody5')}</p>
-        </InfoModal>
-      )}
-      {infoModal === 'about' && (
-        <InfoModal title={t('footer.aboutTitle')} titleId="homepage-about-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
-          <p>{t('footer.aboutBody1')}</p>
-          <p>{t('footer.aboutBody2')}</p>
-          <p>{t('footer.aboutBody3')}</p>
-          <p>{t('footer.aboutBody4')}</p>
-          <p>{t('footer.aboutBody5')}</p>
-        </InfoModal>
-      )}
       <div className={`app-toast ${shareStatus ? 'visible' : ''}`} role="status" aria-live="polite">
         {shareStatus === 'shared' && t('footer.shared')}
         {shareStatus === 'copied' && t('footer.copied')}

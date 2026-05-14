@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import type { FormEvent } from 'react';
 import { Heart } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
 
@@ -43,15 +43,11 @@ export async function shareCurrentPublicPage(t: Translate, showShareStatus: (sta
 }
 
 export function Footer({ className = '', variant = 'default', showLinks = false, t }: FooterProps) {
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
   const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null);
   const shareStatusTimer = useRef<number | null>(null);
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
   const showFooterLinks = showLinks;
-  const feedbackSignalOptions = getFeedbackSignalOptions(t);
-  const learningMethodOptions = getFeedbackLearningMethodOptions(t);
 
   useEffect(() => {
     return () => {
@@ -94,77 +90,21 @@ export function Footer({ className = '', variant = 'default', showLinks = false,
         </span>
         {showFooterLinks && (
           <span className="footer-links" aria-label={t('footer.linksLabel')}>
-            <button className="footer-link" type="button" onClick={() => setFeedbackOpen(true)}>{t('footer.feedback')}</button>
+            <a className="footer-link" href="/feedback">{t('footer.feedback')}</a>
             <span aria-hidden="true">·</span>
             <button className="footer-link footer-share-link" type="button" onClick={handleShare}>{t('footer.share')}</button>
             <span className="footer-share-separator" aria-hidden="true">·</span>
-            <button className="footer-link" type="button" onClick={() => setInfoModal('privacy')}>{t('footer.privacy')}</button>
+            <a className="footer-link" href="/privacy">{t('footer.privacy')}</a>
             <span aria-hidden="true">·</span>
-            <button className="footer-link" type="button" onClick={() => setInfoModal('about')}>{t('footer.about')}</button>
+            <a className="footer-link" href="/about">{t('footer.about')}</a>
           </span>
         )}
       </footer>
-      {showFooterLinks && feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} t={t} feedbackSignalOptions={feedbackSignalOptions} learningMethodOptions={learningMethodOptions} />}
-      {showFooterLinks && infoModal === 'privacy' && (
-        <InfoModal title={t('footer.privacyTitle')} titleId="privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
-          <p>{t('footer.privacyBody1')}</p>
-          <p>{t('footer.privacyBody2')}</p>
-          <p>{t('footer.privacyBody3')}</p>
-          <p>{t('footer.privacyBody4')}</p>
-          <p>{t('footer.privacyBody5')}</p>
-        </InfoModal>
-      )}
-      {showFooterLinks && infoModal === 'about' && (
-        <InfoModal title={t('footer.aboutTitle')} titleId="about-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
-          <p>{t('footer.aboutBody1')}</p>
-          <p>{t('footer.aboutBody2')}</p>
-          <p>{t('footer.aboutBody3')}</p>
-          <p>{t('footer.aboutBody4')}</p>
-          <p>{t('footer.aboutBody5')}</p>
-        </InfoModal>
-      )}
       <div className={`app-toast ${shareStatus ? 'visible' : ''}`} role="status" aria-live="polite">
         {shareStatus === 'shared' && t('footer.shared')}
         {shareStatus === 'copied' && t('footer.copied')}
       </div>
     </>
-  );
-}
-
-export function InfoModal({
-  title,
-  titleId,
-  children,
-  onClose,
-  closeLabel
-}: {
-  title: string;
-  titleId: string;
-  children: ReactNode;
-  onClose: () => void;
-  closeLabel: string;
-}) {
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  return (
-    <div className="overlay" role="presentation">
-      <section className="modal modal-small footer-info-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <div className="footer-info-modal-header">
-          <h2 className="modal-title" id={titleId}>{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={`${closeLabel} ${title}`} type="button">×</button>
-        </div>
-        <div className="footer-info-modal-body modal-text">
-          {children}
-        </div>
-      </section>
-    </div>
   );
 }
 
@@ -218,13 +158,6 @@ export function FeedbackModal({
   learningMethodOptions: string[];
 }) {
   const titleId = useId();
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [feedbackSignals, setFeedbackSignals] = useState<string[]>([]);
-  const [learningMethods, setLearningMethods] = useState<string[]>([]);
-  const [company, setCompany] = useState('');
-  const [state, setState] = useState<FeedbackState>('idle');
-  const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -234,6 +167,44 @@ export function FeedbackModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  return (
+    <div className="overlay" role="presentation">
+      <section className="modal modal-small feedback-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className="feedback-modal-header">
+          <h2 className="modal-title" id={titleId}>{t('footer.feedback')}</h2>
+          <button className="modal-close" onClick={onClose} aria-label={`${t('footer.close')} ${t('footer.feedback')}`} type="button">×</button>
+        </div>
+
+        <FeedbackFormContent
+          t={t}
+          feedbackSignalOptions={feedbackSignalOptions}
+          learningMethodOptions={learningMethodOptions}
+          className="feedback-modal-body"
+        />
+      </section>
+    </div>
+  );
+}
+
+export function FeedbackFormContent({
+  t,
+  feedbackSignalOptions,
+  learningMethodOptions,
+  className = ''
+}: {
+  t: Translate;
+  feedbackSignalOptions: string[];
+  learningMethodOptions: string[];
+  className?: string;
+}) {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [feedbackSignals, setFeedbackSignals] = useState<string[]>([]);
+  const [learningMethods, setLearningMethods] = useState<string[]>([]);
+  const [company, setCompany] = useState('');
+  const [state, setState] = useState<FeedbackState>('idle');
+  const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -284,110 +255,101 @@ export function FeedbackModal({
   }
 
   return (
-    <div className="overlay" role="presentation">
-      <section className="modal modal-small feedback-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <div className="feedback-modal-header">
-          <h2 className="modal-title" id={titleId}>{t('footer.feedback')}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={`${t('footer.close')} ${t('footer.feedback')}`} type="button">×</button>
+    <div className={className}>
+      {state === 'sent' ? (
+        <div className="feedback-success" role="status" aria-live="polite">
+          <p>{t('footer.feedbackSent')}</p>
         </div>
+      ) : (
+        <>
+          <p className="modal-text feedback-intro">
+            {t('footer.feedbackIntro')}
+          </p>
 
-        <div className="feedback-modal-body">
-          {state === 'sent' ? (
-            <div className="feedback-success" role="status" aria-live="polite">
-              <p>{t('footer.feedbackSent')}</p>
+          <form className="feedback-form" onSubmit={handleSubmit} noValidate>
+            <label className="feedback-field">
+              <span>{t('footer.emailAddress')} <span className="feedback-optional">{t('footer.optional')}</span></span>
+              <input
+                className="feedback-input"
+                type="email"
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? 'feedback-email-error' : undefined}
+                autoComplete="email"
+                maxLength={maxFeedbackEmailLength}
+              />
+              {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
+            </label>
+
+            <label className="feedback-field feedback-honeypot" aria-hidden="true">
+              <span>Company</span>
+              <input
+                tabIndex={-1}
+                autoComplete="off"
+                value={company}
+                onChange={event => setCompany(event.target.value)}
+              />
+            </label>
+
+            <label className="feedback-field">
+              <span>{t('footer.message')}</span>
+              <textarea
+                className="feedback-input feedback-message"
+                value={message}
+                onChange={event => setMessage(event.target.value)}
+                aria-invalid={Boolean(errors.message)}
+                aria-describedby={errors.message ? 'feedback-message-error' : undefined}
+                maxLength={maxFeedbackMessageLength}
+                required
+              />
+              {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
+            </label>
+
+            <fieldset className="feedback-check-section">
+              <legend className="feedback-section-label">{t('footer.quickNotes')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
+              <div className="feedback-check-grid">
+                {feedbackSignalOptions.map(option => (
+                  <label className="feedback-check" key={option}>
+                    <input
+                      type="checkbox"
+                      checked={feedbackSignals.includes(option)}
+                      onChange={() => setFeedbackSignals(current => toggleSelection(option, current))}
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="feedback-check-section">
+              <legend className="feedback-section-label">{t('footer.learningWith')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
+              <div className="feedback-chip-grid">
+                {learningMethodOptions.map(option => (
+                  <label className="feedback-chip" key={option}>
+                    <input
+                      type="checkbox"
+                      checked={learningMethods.includes(option)}
+                      onChange={() => setLearningMethods(current => toggleSelection(option, current))}
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="feedback-actions">
+              <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
+                {state === 'sending' && t('footer.sending')}
+                {state === 'error' && t('footer.feedbackError')}
+              </span>
+              <button className="done-button feedback-submit" type="submit" disabled={state === 'sending'}>
+                {t('footer.sendFeedback')}
+              </button>
             </div>
-          ) : (
-            <>
-              <p className="modal-text feedback-intro">
-                {t('footer.feedbackIntro')}
-              </p>
-
-              <form className="feedback-form" onSubmit={handleSubmit} noValidate>
-                <label className="feedback-field">
-                  <span>{t('footer.emailAddress')} <span className="feedback-optional">{t('footer.optional')}</span></span>
-                  <input
-                    className="feedback-input"
-                    type="email"
-                    value={email}
-                    onChange={event => setEmail(event.target.value)}
-                    aria-invalid={Boolean(errors.email)}
-                    aria-describedby={errors.email ? 'feedback-email-error' : undefined}
-                    autoComplete="email"
-                    maxLength={maxFeedbackEmailLength}
-                  />
-                  {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
-                </label>
-
-                <label className="feedback-field feedback-honeypot" aria-hidden="true">
-                  <span>Company</span>
-                  <input
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={company}
-                    onChange={event => setCompany(event.target.value)}
-                  />
-                </label>
-
-                <label className="feedback-field">
-                  <span>{t('footer.message')}</span>
-                  <textarea
-                    className="feedback-input feedback-message"
-                    value={message}
-                    onChange={event => setMessage(event.target.value)}
-                    aria-invalid={Boolean(errors.message)}
-                    aria-describedby={errors.message ? 'feedback-message-error' : undefined}
-                    maxLength={maxFeedbackMessageLength}
-                    required
-                  />
-                  {errors.message && <span className="feedback-error" id="feedback-message-error">{errors.message}</span>}
-                </label>
-
-                <fieldset className="feedback-check-section">
-                  <legend className="feedback-section-label">{t('footer.quickNotes')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
-                  <div className="feedback-check-grid">
-                    {feedbackSignalOptions.map(option => (
-                      <label className="feedback-check" key={option}>
-                        <input
-                          type="checkbox"
-                          checked={feedbackSignals.includes(option)}
-                          onChange={() => setFeedbackSignals(current => toggleSelection(option, current))}
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <fieldset className="feedback-check-section">
-                  <legend className="feedback-section-label">{t('footer.learningWith')} <span className="feedback-optional">{t('footer.optional')}</span></legend>
-                  <div className="feedback-chip-grid">
-                    {learningMethodOptions.map(option => (
-                      <label className="feedback-chip" key={option}>
-                        <input
-                          type="checkbox"
-                          checked={learningMethods.includes(option)}
-                          onChange={() => setLearningMethods(current => toggleSelection(option, current))}
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="feedback-actions">
-                  <span className={`feedback-status feedback-status-${state}`} role="status" aria-live="polite">
-                    {state === 'sending' && t('footer.sending')}
-                    {state === 'error' && t('footer.feedbackError')}
-                  </span>
-                  <button className="done-button feedback-submit" type="submit" disabled={state === 'sending'}>
-                    {t('footer.sendFeedback')}
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
-        </div>
-      </section>
+          </form>
+        </>
+      )}
     </div>
   );
 }

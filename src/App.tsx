@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { HowSpelioWorks } from './components/HowSpelioWorks';
+import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
 import { Practice, WordListModal } from './components/Practice';
 import { EndScreen } from './components/End';
 import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
@@ -20,7 +21,7 @@ import { createSharedWordListContext, createSharedWordListEffectiveStorage, find
 import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
-type Screen = 'home' | 'practice' | 'end' | 'how';
+type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about';
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
@@ -98,8 +99,20 @@ function getHomePathForLanguage(language: InterfaceLanguage) {
   return language === 'cy' ? '/cy' : '/';
 }
 
+function getScreenForPath(pathname: string): Screen {
+  if (pathname === '/how-spelio-works') return 'how';
+  if (pathname === '/feedback') return 'feedback';
+  if (pathname === '/privacy') return 'privacy';
+  if (pathname === '/about') return 'about';
+  return 'home';
+}
+
+function isStandalonePublicPagePath(pathname: string) {
+  return ['/how-spelio-works', '/feedback', '/privacy', '/about'].includes(pathname);
+}
+
 function getInitialPublicScreen(): Screen {
-  return window.location.pathname === '/how-spelio-works' ? 'how' : 'home';
+  return getScreenForPath(window.location.pathname);
 }
 
 export default function App() {
@@ -230,7 +243,7 @@ export default function App() {
   function updateInterfaceLanguage(language: InterfaceLanguage) {
     const shouldPreservePublicPage =
       typeof window !== 'undefined' &&
-      window.location.pathname === '/how-spelio-works';
+      isStandalonePublicPagePath(window.location.pathname);
 
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin') && !shouldPreservePublicPage) {
       window.history.replaceState(null, '', getHomePathForLanguage(language));
@@ -367,10 +380,40 @@ export default function App() {
 
   function openHowSpelioWorks() {
     if (typeof window !== 'undefined' && window.location.pathname !== '/how-spelio-works') {
-      window.history.pushState(null, '', '/how-spelio-works');
+      window.history.pushState({ spelioPublicPage: true }, '', '/how-spelio-works');
     }
 
     setScreen('how');
+  }
+
+  function openPublicPage(nextScreen: Extract<Screen, 'feedback' | 'privacy' | 'about'>, path: string) {
+    if (typeof window !== 'undefined' && window.location.pathname !== path) {
+      window.history.pushState({ spelioPublicPage: true }, '', path);
+    }
+
+    setScreen(nextScreen);
+  }
+
+  function hasUsefulPreviousPublicHistory() {
+    if (typeof window === 'undefined') return false;
+    if (window.history.state?.spelioPublicPage) return true;
+
+    try {
+      if (!document.referrer) return false;
+      const referrer = new URL(document.referrer);
+      return referrer.origin === window.location.origin && referrer.pathname !== window.location.pathname;
+    } catch {
+      return false;
+    }
+  }
+
+  function returnFromStandalonePublicPage() {
+    if (hasUsefulPreviousPublicHistory()) {
+      window.history.back();
+      return;
+    }
+
+    returnToLearning();
   }
 
   function practiseSharedListAgain() {
@@ -460,6 +503,30 @@ export default function App() {
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
     />
+  ) : activeScreen === 'feedback' ? (
+    <FeedbackPage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'privacy' ? (
+    <PrivacyPage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'about' ? (
+    <AboutPage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
   ) : activeScreen === 'practice' ? (
     <Practice
       lists={publicWordLists}
@@ -529,6 +596,9 @@ export default function App() {
         onRecapReview={startRecapPractice}
         onSelectList={() => setWordListModalOpen(true)}
         onHowSpelioWorks={openHowSpelioWorks}
+        onFeedback={() => openPublicPage('feedback', '/feedback')}
+        onPrivacy={() => openPublicPage('privacy', '/privacy')}
+        onAbout={() => openPublicPage('about', '/about')}
         settings={storage.settings}
         onSettingsChange={updateSettings}
         onResetProgress={resetProgress}

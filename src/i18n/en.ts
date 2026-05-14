@@ -136,6 +136,9 @@ export const en = {
       }
     }
   },
+  publicPages: {
+    backLabel: 'Go back'
+  },
   practice: {
     backToHome: 'Back to home',
     selectListToBegin: 'Select a word list to begin',
