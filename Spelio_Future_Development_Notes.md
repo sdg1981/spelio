@@ -244,6 +244,38 @@ These controls should be hidden behind progressive disclosure such as "Advanced 
 
 The interface should remain simple on the surface and deep underneath. Learners should not be shown unnecessary mechanics.
 
+## Future classroom spelling-test identity and pupil progress
+
+Future teacher spelling-test tools may need to track pupil progress over time, especially for classroom tests, homework, revision, and school reporting. This should remain a later, carefully scoped product area and should not change the current public learner flow, MVP practice logic, session generation, scoring, recommendations, or existing learner experience.
+
+The guiding principle should be reliable classroom progress tracking with the least necessary pupil-identifying data.
+
+Spelio should avoid asking pupils to type arbitrary names every time they start a test. Free-text names create unreliable tracking because of typos, nicknames, joke entries, fake names, inconsistent capitalisation, and pupils using slightly different versions of the same name across sessions.
+
+Pupil codes should also be avoided as the main classroom UX. Codes may work in some systems, but they add friction in a live classroom: pupils can lose them, forget them, enter them incorrectly, or require the teacher to shout codes around the room.
+
+Spelio should also avoid collecting dates of birth, birth days, or extra identity-verification details. Those details increase sensitivity and setup friction without meaningfully solving the classroom progress problem.
+
+The preferred future model is teacher-controlled class lists with simple pupil display labels. A teacher creates or imports a class list, using classroom-appropriate labels such as:
+
+- Rhys J
+- Rhys M
+- Megan C
+
+Pupils would open a class or test link, or scan a QR code, then use a minimal "Start typing your name" field. That field should use autocomplete or predictive matching against the teacher-approved class list. It should not show the full class list upfront by default, because that makes casual selection of another pupil's name too easy.
+
+Pupils should only be able to select a name that already exists on the teacher's class list. Duplicate or similar names should be handled through teacher-controlled classroom labels rather than by asking pupils for stronger personal identifiers. If a test link already belongs to a specific class, autocomplete should search only that class.
+
+Class names may appear where useful for teacher management, especially when a teacher manages multiple classes. The pupil-facing flow should remain minimal and should not make the child reason about class metadata unless it is necessary.
+
+The teacher should own and be able to correct the class list. This keeps progress tracking more reliable than arbitrary typed names, simpler than pupil codes, and less intrusive than collecting stronger identifiers.
+
+Privacy and reporting principles:
+
+- Future classroom reporting should prefer data minimisation, short retention where possible, encrypted storage where practical, and teacher or school control over any pupil-identifying labels.
+- Spelio should avoid storing raw typed answers, keystroke logs, or unnecessary long-term pupil histories.
+- Any future school reporting feature should be treated as a later, carefully scoped system requiring proper privacy, retention, access-control, and deletion design.
+
 ## Future accessibility foundations
 
 Spelio should aim to become accessible by default rather than creating a separate “accessibility mode” as the main solution. The normal public app should remain calm, premium, minimal, and adult-focused while quietly improving technical accessibility underneath.
