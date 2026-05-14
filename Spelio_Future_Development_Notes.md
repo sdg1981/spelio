@@ -79,6 +79,46 @@ Implementation guidance:
 - Avoid popups on every session, gamification, classroom framing, or tutorial-heavy UX.
 - The feature should support spelling confidence without turning Spelio into a grammar course.
 
+## Optional Sentence Moments
+
+Spelio may eventually offer rare, optional full-sentence practice moments, but these should not become normal word-list practice or shift the product toward a full Welsh course.
+
+The preferred future model is occasional "Sentence Moments": one short, curated Welsh sentence offered after a learner has completed a meaningful number of lists, a stage, or another natural milestone. These should appear at the end of a normal session as a skippable bonus, for example:
+
+> Want to try a real Welsh sentence using words you've learned?
+
+They should not appear at the beginning of sessions, where they could raise cognitive load before the core spelling loop or make Spelio feel more course-like.
+
+Product principles:
+
+- Full-sentence practice should remain rare, optional, skippable, and low-pressure.
+- Avoid dedicated "sentence word lists" for now.
+- Avoid adding a sentence at the end of every mixed practice list.
+- Sentence Moments should feel rewarding: a way to help learners realise that individual words and phrases are beginning to connect into real Welsh.
+- They may reuse words from recently completed lists, but the content system should not be rigidly redesigned around "every five lists must form a sentence".
+- Neighbouring lists should, where practical, include practical reusable vocabulary that can naturally combine into simple phrases and sentences over time.
+
+Content principles:
+
+- Sentence Moments should be stored as a separate curated content type, not generated automatically.
+- Do not rely on AI-generated live Welsh sentences because grammar, mutations, dialect, and naturalness need editorial control.
+- Sentence Moments should be manually authored and reviewed.
+
+Suggested future data shape:
+
+- `id`
+- `title`
+- `welshSentence`
+- `englishMeaning`
+- `audioUrl` / `audioStatus`
+- `unlocksAfterListId` or `unlocksAfterStage`
+- `usesWordIds` / `usesListIds`
+- `difficulty`
+- `dialect` / Welsh style applicability, if needed
+- `isActive`
+
+This is future-facing only and should not change MVP session generation, list completion, recommendation logic, scoring, difficult words, recap, or the current word-list structure.
+
 ## AI Integration Philosophy
 
 Spelio should treat AI as an enhancement layer around the core spelling and recall engine, not as a replacement for the focused practice experience.
