@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
-import { Footer } from './Footer';
-import { ListCheck, Play, RotateCcw, Settings } from './Icons';
+import { FeedbackModal, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions, InfoModal } from './Footer';
+import { ListCheck, Menu, Play, RotateCcw, Settings } from './Icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SettingsModal } from './Practice';
 import type { InterfaceLanguage, Translate } from '../i18n';
@@ -71,6 +71,7 @@ export function Home({
 
   return (
     <main className="homepage-bg">
+      <HomepageMenu t={t} />
       <div className="homepage-utility">
         <LanguageSwitcher
           interfaceLanguage={interfaceLanguage}
@@ -152,5 +153,113 @@ export function Home({
         />
       )}
     </main>
+  );
+}
+
+function HomepageMenu({ t }: { t: Translate }) {
+  const [open, setOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const firstItemRef = useRef<HTMLButtonElement | null>(null);
+  const feedbackSignalOptions = getFeedbackSignalOptions(t);
+  const learningMethodOptions = getFeedbackLearningMethodOptions(t);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) firstItemRef.current?.focus();
+  }, [open]);
+
+  function openFeedback() {
+    setOpen(false);
+    setFeedbackOpen(true);
+  }
+
+  function openInfoModal(modal: 'privacy' | 'about') {
+    setOpen(false);
+    setInfoModal(modal);
+  }
+
+  return (
+    <>
+      <div className="homepage-menu" ref={rootRef}>
+        <button
+          ref={buttonRef}
+          className="homepage-menu-button"
+          type="button"
+          aria-label={t('home.openMenu')}
+          aria-expanded={open}
+          aria-controls={open ? menuId : undefined}
+          aria-haspopup="true"
+          onClick={() => setOpen(current => !current)}
+        >
+          <Menu size={20} />
+        </button>
+
+        {open && (
+          <nav className="homepage-menu-popover" id={menuId} aria-label={t('home.menuLabel')}>
+            <button ref={firstItemRef} className="homepage-menu-item" type="button" onClick={openFeedback}>
+              {t('footer.feedback')}
+            </button>
+            <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('privacy')}>
+              {t('footer.privacy')}
+            </button>
+            <button className="homepage-menu-item" type="button" onClick={() => openInfoModal('about')}>
+              {t('footer.about')}
+            </button>
+          </nav>
+        )}
+      </div>
+
+      {feedbackOpen && (
+        <FeedbackModal
+          onClose={() => setFeedbackOpen(false)}
+          t={t}
+          feedbackSignalOptions={feedbackSignalOptions}
+          learningMethodOptions={learningMethodOptions}
+        />
+      )}
+      {infoModal === 'privacy' && (
+        <InfoModal title={t('footer.privacyTitle')} titleId="homepage-privacy-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
+          <p>{t('footer.privacyBody1')}</p>
+          <p>{t('footer.privacyBody2')}</p>
+          <p>{t('footer.privacyBody3')}</p>
+          <p>{t('footer.privacyBody4')}</p>
+          <p>{t('footer.privacyBody5')}</p>
+        </InfoModal>
+      )}
+      {infoModal === 'about' && (
+        <InfoModal title={t('footer.aboutTitle')} titleId="homepage-about-title" onClose={() => setInfoModal(null)} closeLabel={t('footer.close')}>
+          <p>{t('footer.aboutBody1')}</p>
+          <p>{t('footer.aboutBody2')}</p>
+          <p>{t('footer.aboutBody3')}</p>
+          <p>{t('footer.aboutBody4')}</p>
+          <p>{t('footer.aboutBody5')}</p>
+        </InfoModal>
+      )}
+    </>
   );
 }

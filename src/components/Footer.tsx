@@ -6,19 +6,20 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 type FooterProps = {
   className?: string;
   variant?: 'default' | 'home';
+  showLinks?: boolean;
   interfaceLanguage: InterfaceLanguage;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 };
 
-export function Footer({ className = '', variant = 'default', t }: FooterProps) {
+export function Footer({ className = '', variant = 'default', showLinks = false, t }: FooterProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModal, setInfoModal] = useState<'privacy' | 'about' | null>(null);
   const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
   const shareStatusTimer = useRef<number | null>(null);
   const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
-  const showFooterLinks = variant === 'home';
+  const showFooterLinks = showLinks;
   const feedbackSignalOptions = getFeedbackSignalOptions(t);
   const learningMethodOptions = getFeedbackLearningMethodOptions(t);
 
@@ -124,7 +125,7 @@ export function Footer({ className = '', variant = 'default', t }: FooterProps) 
   );
 }
 
-function InfoModal({
+export function InfoModal({
   title,
   titleId,
   children,

@@ -909,6 +909,79 @@
   gap:14px;
 }
 
+.homepage-menu{
+  position:fixed;
+  top:22px;
+  left:28px;
+  z-index:12;
+}
+
+.homepage-menu-button{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  padding:0;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--text-muted, #7f7872);
+  opacity:.7;
+  touch-action:manipulation;
+  transition:background .16s ease-out,color .16s ease-out,opacity .16s ease-out,transform .16s ease-out,box-shadow .18s ease-out;
+}
+
+.homepage-menu-button:hover,
+.homepage-menu-button[aria-expanded="true"]{
+  color:var(--text-primary, #3f474c);
+  opacity:.9;
+}
+
+.homepage-menu-button:active{
+  transform:scale(.96);
+}
+
+.homepage-menu-button:focus-visible{
+  outline:0;
+  box-shadow:0 0 0 3px var(--focus-ring, rgba(217,0,0,.18));
+}
+
+.homepage-menu-popover{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  min-width:136px;
+  padding:6px;
+  border:1px solid var(--border-subtle, #dfd9d1);
+  border-radius:10px;
+  background:var(--bg-surface-raised, rgba(255,255,255,.98));
+  box-shadow:0 18px 44px rgba(7,21,34,.08);
+}
+
+.homepage-menu-item{
+  display:block;
+  width:100%;
+  min-height:38px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-secondary, #5f6b78);
+  padding:9px 12px;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:left;
+  white-space:nowrap;
+  transition:background .14s ease-out,color .14s ease-out;
+}
+
+.homepage-menu-item:hover,
+.homepage-menu-item:focus-visible{
+  outline:0;
+  background:var(--bg-surface-soft, #ebe7e1);
+  color:var(--text-primary, #071522);
+}
+
 .homepage-language-switcher{
   position:fixed;
   top:26px;
@@ -1611,6 +1684,40 @@
     top:calc(18px + env(safe-area-inset-top));
     right:22px;
     gap:10px;
+  }
+
+  .homepage-menu{
+    top:calc(13px + env(safe-area-inset-top));
+    left:22px;
+  }
+
+  .homepage-menu-button{
+    width:48px;
+    height:48px;
+    color:var(--text-muted, #7f7872);
+    opacity:.62;
+  }
+
+  .homepage-menu-button:hover,
+  .homepage-menu-button[aria-expanded="true"]{
+    color:var(--text-muted, #7f7872);
+    opacity:.78;
+  }
+
+  .homepage-menu-button svg{
+    width:18px;
+    height:18px;
+    stroke-width:2;
+  }
+
+  .homepage-menu-popover{
+    top:calc(100% + 4px);
+    min-width:148px;
+  }
+
+  .homepage-menu-item{
+    min-height:44px;
+    font-size:15px;
   }
 
   .homepage-language-switcher{

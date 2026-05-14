@@ -21,7 +21,9 @@ export const cy = {
     fromMixedSelection: 'O’ch rhestr ddewisol',
     mixedSelectionComplete: 'Rydych wedi cwblhau’r rhestr eiriau hon',
     continueMixedPractice: 'Parhau i ddysgu',
-    customMixedWordList: 'Rhestr eiriau ddewisol'
+    customMixedWordList: 'Rhestr eiriau ddewisol',
+    openMenu: 'Agor dewislen',
+    menuLabel: 'Dewislen yr hafan'
   },
   practice: {
     backToHome: 'Yn ol i’r hafan',

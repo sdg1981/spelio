@@ -21,7 +21,9 @@ export const en = {
     fromMixedSelection: 'From your selected list',
     mixedSelectionComplete: 'You’ve completed this word list',
     continueMixedPractice: 'Continue learning',
-    customMixedWordList: 'Selected word list'
+    customMixedWordList: 'Selected word list',
+    openMenu: 'Open menu',
+    menuLabel: 'Homepage menu'
   },
   practice: {
     backToHome: 'Back to home',
