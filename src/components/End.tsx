@@ -76,6 +76,9 @@ export function EndScreen({
   onReview,
   onChangeLists,
   onHome,
+  sharedSession,
+  onReturnToLearning,
+  onPractiseSharedListAgain,
   interfaceLanguage,
   onInterfaceLanguageChange,
   t
@@ -88,21 +91,29 @@ export function EndScreen({
   onReview: () => void;
   onChangeLists: () => void;
   onHome: () => void;
+  sharedSession?: { listName: string } | null;
+  onReturnToLearning?: () => void;
+  onPractiseSharedListAgain?: () => void;
   interfaceLanguage: InterfaceLanguage;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
-  const shouldPrioritiseReview = hasDifficultWords && recommendation.kind === 'review';
-  const shouldChooseAnotherList = recommendation.kind === 'choose_list';
+  const isSharedSession = Boolean(sharedSession);
+  const shouldPrioritiseReview = !isSharedSession && hasDifficultWords && recommendation.kind === 'review';
+  const shouldChooseAnotherList = !isSharedSession && recommendation.kind === 'choose_list';
   const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
     ? t('end.keepBuilding')
     : recommendation.subtitle;
-  const primaryTitle = shouldPrioritiseReview
+  const primaryTitle = isSharedSession
+    ? t('end.returnToYourLearning')
+    : shouldPrioritiseReview
     ? t('home.reviewDifficult')
     : shouldChooseAnotherList
       ? t('home.chooseAnotherList')
       : t('home.continueLearning');
-  const handlePrimary = shouldPrioritiseReview
+  const handlePrimary = isSharedSession
+    ? onReturnToLearning ?? onHome
+    : shouldPrioritiseReview
     ? onReview
     : shouldChooseAnotherList
       ? onChangeLists
@@ -130,7 +141,12 @@ export function EndScreen({
         </div>
 
         <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
-          {!shouldPrioritiseReview && (
+          {isSharedSession ? (
+            <>
+              <h2>{t('wordLists.sharedWordList')}</h2>
+              <p>{sharedSession?.listName}</p>
+            </>
+          ) : !shouldPrioritiseReview && (
             <>
               <h2>{t('end.nextUp')}</h2>
               <p>{recommendedListName}</p>
@@ -141,6 +157,14 @@ export function EndScreen({
         <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>
 
         <div className="action-list end-action-list">
+          {isSharedSession && onPractiseSharedListAgain && (
+            <ActionRow
+              icon={<Play size={30} />}
+              title={t('end.practiseThisListAgain')}
+              arrowVariant="arrow"
+              onClick={onPractiseSharedListAgain}
+            />
+          )}
           {shouldPrioritiseReview && (
             <ActionRow
               icon={<Play size={30} />}

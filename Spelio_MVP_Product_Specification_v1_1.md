@@ -108,6 +108,8 @@ This rule is global and applies across homepage, practice screen, end screen, an
 
 Shared list links may preselect or preload a word list. They must not start practice automatically. The learner must explicitly press Start / Continue practice.
 
+Shared list links and Practice test links are temporary detached session contexts. They must not permanently move the learner’s main Continue learning path unless the learner explicitly saves that list through the normal Word Lists modal flow.
+
 ## 4. Core screens
 
 The MVP contains these core screens and states:
@@ -785,6 +787,9 @@ Rules:
 - Clicking the share icon opens a lightweight share surface for that specific list.
 - Clicking the share icon must not accidentally select or deselect the row through event bubbling.
 - Share actions must never start practice.
+- Opening a shared link creates a temporary detached shared-session context. It may present the shared list, but must not permanently overwrite the learner’s main selected word list or `currentPathPosition`.
+- Shared sessions may still update word progress, difficult words, recap eligibility, list completion, and aggregate stats normally.
+- Shared sessions must not re-anchor normal Continue learning to the shared list unless the learner explicitly selects/saves that list through the normal Word Lists modal flow.
 
 The share surface should include:
 
@@ -822,7 +827,8 @@ Rules:
 - Friendly URLs are for public sharing only.
 - Avoid deeply nested collection/stage URLs for MVP.
 - Invalid or inactive slugs should be ignored safely or fall back to existing behaviour.
-- Opening a valid list URL preselects that word list and sets `currentPathPosition` to that list.
+- Opening a valid list URL may preselect/present that word list and temporarily use it as the session path.
+- Opening a valid list URL must not permanently overwrite the learner’s normal `selectedListIds` or `currentPathPosition`.
 - Opening a valid list URL must not start practice automatically.
 - Existing local storage IDs must not be renamed or invalidated by public slugs.
 
@@ -849,7 +855,8 @@ Rules:
 - Practice test hides English prompts/subtitles and hides or disables reveal tools.
 - Audio remains available.
 - Practice test is link/session-scoped and must not permanently overwrite learner settings.
-- Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or storage progression.
+- Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or normal learner progression.
+- Leaving or completing a Practice test link should restore normal behaviour and must not save Practice test as a setting.
 - Do not add timers, lockdown behaviour, reporting, teacher accounts, score submission, anti-cheating systems, configurable assessment builders, or additional checkboxes for MVP.
 
 ## 9. End-of-session screen
@@ -898,6 +905,12 @@ If the user struggled and eligible difficult words currently exist, primary acti
 - Review difficult words
 
 If the user struggled but no eligible difficult words currently exist, do not show Review difficult words. Use the next valid continue-learning recommendation instead.
+
+For a completed shared-link or Practice test session, the primary action should be:
+
+- Return to your learning
+
+This returns the learner to their previous normal homepage/recommendation context. Do not show normal next-list progression from the shared list as the primary action. A low-emphasis secondary action such as “Practise this list again” is acceptable if it fits the existing end-screen pattern.
 
 ### 9.3 Secondary actions
 

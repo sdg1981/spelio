@@ -1,15 +1,18 @@
 import { wordLists, type WordList } from '../src/data/wordLists';
 import {
   applySharedWordListSelection,
+  createSharedWordListContext,
+  createSharedWordListEffectiveStorage,
   findActiveWordListBySlug,
   getSharedWordListSlugFromPath,
   getWordListCanonicalUrl,
   getWordListSlug,
   isPracticeTestShareMode,
+  restoreSharedWordListProgression,
   shouldShowSelectedListShareAction,
   slugifyWordListName
 } from '../src/lib/wordListSharing';
-import { createDefaultStorage } from '../src/lib/practice/storage';
+import { createDefaultStorage, type SessionResult } from '../src/lib/practice/storage';
 import { applyManualWordListSelection } from '../src/lib/practice/storage';
 import { createAdminWordListSlug, validateAdminWordListSlug } from '../src/admin/services/wordListSlug';
 
@@ -100,10 +103,75 @@ assertEqual(
 );
 
 const sharedStorage = applySharedWordListSelection(createDefaultStorage(), firstVerbs);
-assertEqual(sharedStorage.selectedListIds[0], firstVerbs.id, 'Shared links should preselect exactly the shared list.');
-assertEqual(sharedStorage.currentPathPosition, firstVerbs.id, 'Shared links should move the current path position to the shared list.');
-assertEqual(sharedStorage.hasStartedPracticeSession, false, 'Shared links must not mark practice as started.');
-assertEqual(sharedStorage.lastSessionResult, null, 'Shared links should clear stale completion state without starting practice.');
+assertEqual(sharedStorage.selectedListIds[0], firstVerbs.id, 'Temporary shared selection should preselect exactly the shared list.');
+assertEqual(sharedStorage.currentPathPosition, firstVerbs.id, 'Temporary shared selection should present the shared list as current.');
+assertEqual(sharedStorage.hasStartedPracticeSession, false, 'Temporary shared selection must not mark practice as started.');
+assertEqual(sharedStorage.lastSessionResult, null, 'Temporary shared selection should clear stale completion state without starting practice.');
+
+const previousResult: SessionResult = {
+  totalWords: 10,
+  correctWords: 9,
+  incorrectWords: 1,
+  revealedWords: 0,
+  incorrectAttempts: 1,
+  revealedLetters: 0,
+  durationSeconds: 30,
+  listIds: ['foundations_numbers'],
+  state: 'struggled'
+};
+const mainStorage = {
+  ...createDefaultStorage(),
+  selectedListIds: ['foundations_numbers'],
+  currentPathPosition: 'foundations_numbers',
+  lastSessionDate: '2026-05-01T10:00:00.000Z',
+  lastSessionResult: previousResult
+};
+const sharedContext = createSharedWordListContext(mainStorage, firstVerbs, 'first-verbs-core-actions', 'practice-test');
+const visibleSharedStorage = createSharedWordListEffectiveStorage(mainStorage, sharedContext);
+assertEqual(visibleSharedStorage.selectedListIds[0], firstVerbs.id, 'Shared context should present the linked list temporarily.');
+assertEqual(visibleSharedStorage.currentPathPosition, firstVerbs.id, 'Shared context should give session creation the linked list.');
+assertEqual(visibleSharedStorage.lastSessionResult, null, 'Shared context should not let prior completion state advance away from the linked list.');
+assertEqual(sharedContext.mode, 'practice-test', 'Practice test state should live on the transient shared context.');
+
+const sharedResult: SessionResult = {
+  totalWords: 10,
+  correctWords: 10,
+  incorrectWords: 0,
+  revealedWords: 0,
+  incorrectAttempts: 0,
+  revealedLetters: 0,
+  durationSeconds: 25,
+  listIds: [firstVerbs.id],
+  state: 'strong'
+};
+const sharedWordId = firstVerbs.words[0]?.id;
+assert(sharedWordId, 'Expected First Verbs to contain at least one word.');
+const restoredSharedStorage = restoreSharedWordListProgression(
+  {
+    ...visibleSharedStorage,
+    selectedListIds: [firstVerbs.id],
+    currentPathPosition: firstVerbs.id,
+    lastSessionDate: '2026-05-02T10:00:00.000Z',
+    lastSessionResult: sharedResult,
+    wordProgress: {
+      ...visibleSharedStorage.wordProgress,
+      [sharedWordId]: {
+        seen: true,
+        completedCount: 1,
+        incorrectAttempts: 0,
+        revealedCount: 0,
+        difficult: false,
+        lastPractisedAt: '2026-05-02T10:00:00.000Z'
+      }
+    }
+  },
+  sharedContext
+);
+assertEqual(restoredSharedStorage.selectedListIds[0], 'foundations_numbers', 'Shared completion should restore the previous selected list.');
+assertEqual(restoredSharedStorage.currentPathPosition, 'foundations_numbers', 'Shared completion should restore the previous path position.');
+assertEqual(restoredSharedStorage.lastSessionDate, mainStorage.lastSessionDate, 'Shared completion should not become the main Continue learning anchor.');
+assertEqual(restoredSharedStorage.lastSessionResult, previousResult, 'Shared completion should restore the previous main session result.');
+assert(restoredSharedStorage.wordProgress[sharedWordId]?.seen, 'Shared sessions should still keep word progress updates.');
 
 const manualStorage = applyManualWordListSelection(createDefaultStorage(), [firstVerbs.id]);
 assertEqual(manualStorage.selectedListIds[0], firstVerbs.id, 'Existing manual Done selection should still select the chosen list.');

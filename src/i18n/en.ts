@@ -113,6 +113,7 @@ export const en = {
     scanToOpenList: 'Scan to open this list in Spelio',
     practiceTest: 'Practice test',
     practiceTestHelper: 'Hides English prompts and reveal tools.',
+    sharedWordList: 'Shared word list',
     close: 'Close',
     back: 'Back',
     shareNativeText: 'Open this word list in Spelio.',
@@ -139,6 +140,8 @@ export const en = {
     keepBuilding: 'Keep building from your selected word list',
     pickUpWhereLeftOff: 'Pick up where you left off',
     practiseMixAgain: 'Practise this list again',
+    practiseThisListAgain: 'Practise this list again',
+    returnToYourLearning: 'Return to your learning',
     repeatSelectedLists: 'Repeat your selected list',
     returnHomepage: 'Return to the homepage',
     chooseDifferentNext: 'Choose a different list for your next session'

@@ -1,8 +1,20 @@
 import type { WordList } from '../data/wordLists';
-import type { SpelioStorage } from './practice/storage';
+import type { SessionResult, SpelioStorage } from './practice/storage';
 
 export const WORD_LIST_ROUTE_PREFIX = '/list/';
 export const PRACTICE_TEST_MODE = 'practice-test';
+
+export type SharedWordListMode = 'normal-share' | 'practice-test';
+
+export type SharedWordListContext = {
+  listId: string;
+  slug: string;
+  mode: SharedWordListMode;
+  previousSelectedListIds: string[];
+  previousCurrentPathPosition: string | null;
+  previousLastSessionDate: string | null;
+  previousLastSessionResult: SessionResult | null;
+};
 
 export function slugifyWordListName(value: string) {
   const slug = value
@@ -72,6 +84,48 @@ export function applySharedWordListSelection(storage: SpelioStorage, list: WordL
     selectedListIds: [list.id],
     currentPathPosition: list.id,
     lastSessionResult: null
+  };
+}
+
+export function createSharedWordListContext(
+  storage: SpelioStorage,
+  list: WordList,
+  slug = getWordListSlug(list),
+  mode: SharedWordListMode = 'normal-share'
+): SharedWordListContext {
+  return {
+    listId: list.id,
+    slug,
+    mode,
+    previousSelectedListIds: [...storage.selectedListIds],
+    previousCurrentPathPosition: storage.currentPathPosition,
+    previousLastSessionDate: storage.lastSessionDate,
+    previousLastSessionResult: storage.lastSessionResult
+  };
+}
+
+export function createSharedWordListEffectiveStorage(
+  storage: SpelioStorage,
+  context: Pick<SharedWordListContext, 'listId'>
+): SpelioStorage {
+  return {
+    ...storage,
+    selectedListIds: [context.listId],
+    currentPathPosition: context.listId,
+    lastSessionResult: null
+  };
+}
+
+export function restoreSharedWordListProgression(
+  storage: SpelioStorage,
+  context: SharedWordListContext
+): SpelioStorage {
+  return {
+    ...storage,
+    selectedListIds: [...context.previousSelectedListIds],
+    currentPathPosition: context.previousCurrentPathPosition,
+    lastSessionDate: context.previousLastSessionDate,
+    lastSessionResult: context.previousLastSessionResult
   };
 }
 

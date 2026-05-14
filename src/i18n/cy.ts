@@ -113,6 +113,7 @@ export const cy = {
     scanToOpenList: 'Sganiwch i agor y rhestr hon yn Spelio',
     practiceTest: 'Prawf ymarfer',
     practiceTestHelper: 'Yn cuddio awgrymiadau Saesneg ac offer datgelu.',
+    sharedWordList: 'Rhestr eiriau wedi’i rhannu',
     close: 'Cau',
     back: 'Yn ol',
     shareNativeText: 'Agor y rhestr eiriau hon yn Spelio.',
@@ -139,6 +140,8 @@ export const cy = {
     keepBuilding: 'Parhewch gyda’ch rhestr eiriau ddewisol',
     pickUpWhereLeftOff: 'Parhau o ble wnaethoch chi stopio',
     practiseMixAgain: 'Ymarfer y rhestr hon eto',
+    practiseThisListAgain: 'Ymarfer y rhestr hon eto',
+    returnToYourLearning: 'Dychwelyd at eich dysgu',
     repeatSelectedLists: 'Ailadrodd eich rhestr ddewisol',
     returnHomepage: 'Dychwelyd i’r hafan',
     chooseDifferentNext: 'Dewis rhestr wahanol ar gyfer eich sesiwn nesaf'

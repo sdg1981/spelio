@@ -10,11 +10,13 @@ import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
+import type { Recommendation } from './lib/practice/recommendations';
 import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
-import { applySharedWordListSelection, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode } from './lib/wordListSharing';
+import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
+import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
 type Screen = 'home' | 'practice' | 'end';
@@ -45,10 +47,21 @@ function applyInterfaceLanguageRoute(storage: SpelioStorage): SpelioStorage {
   };
 }
 
-function applyInitialPublicWordListRoute(storage: SpelioStorage): SpelioStorage {
+function createSharedContextFromRoute(storage: SpelioStorage, lists: WordList[]) {
   const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
-  const sharedList = findActiveWordListBySlug(wordLists, sharedSlug);
-  return sharedList ? applySharedWordListSelection(storage, sharedList) : storage;
+  const sharedList = findActiveWordListBySlug(lists, sharedSlug);
+  if (!sharedList || !sharedSlug) return null;
+
+  return createSharedWordListContext(
+    storage,
+    sharedList,
+    sharedSlug,
+    isPracticeTestShareMode(window.location.search) ? 'practice-test' : 'normal-share'
+  );
+}
+
+function getHomePathForLanguage(language: InterfaceLanguage) {
+  return language === 'cy' ? '/cy' : '/';
 }
 
 export default function App() {
@@ -60,7 +73,14 @@ export default function App() {
     );
   }
 
-  const [storage, setStorage] = useState<SpelioStorage>(() => applyInitialPublicWordListRoute(applyInterfaceLanguageRoute(loadSpelioStorage())));
+  const [initialAppState] = useState(() => {
+    const initialStorage = applyInterfaceLanguageRoute(loadSpelioStorage());
+    return {
+      storage: initialStorage,
+      sharedContext: createSharedContextFromRoute(initialStorage, wordLists)
+    };
+  });
+  const [storage, setStorage] = useState<SpelioStorage>(initialAppState.storage);
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
   const [recapMode, setRecapMode] = useState(false);
@@ -72,24 +92,38 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
-  const [practiceTestListId, setPracticeTestListId] = useState<string | null>(() => {
-    const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
-    const sharedList = findActiveWordListBySlug(wordLists, sharedSlug);
-    return sharedList && isPracticeTestShareMode(window.location.search) ? sharedList.id : null;
-  });
+  const [sharedContext, setSharedContext] = useState<SharedWordListContext | null>(initialAppState.sharedContext);
+  const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
+  const [completedSharedContext, setCompletedSharedContext] = useState<SharedWordListContext | null>(null);
   const [practiceTestMode, setPracticeTestMode] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
+  const sharedList = useMemo(
+    () => sharedContext ? publicWordLists.find(list => list.id === sharedContext.listId && list.isActive) ?? null : null,
+    [publicWordLists, sharedContext]
+  );
+  const visibleStorage = useMemo(
+    () => sharedContext && sharedList ? createSharedWordListEffectiveStorage(storage, sharedContext) : storage,
+    [sharedContext, sharedList, storage]
+  );
   const difficultWords = useMemo(() => hasDifficultWords(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const difficultWordCount = useMemo(() => getDifficultWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const recapWordCount = useMemo(() => getRecapWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
-  const recommendation = useMemo(
-    () => getRecommendation(storage, publicWordLists, t, interfaceLanguage),
+  const recommendation = useMemo<Recommendation>(
+    () => sharedList
+      ? {
+          kind: 'list',
+          listId: sharedList.id,
+          title: t('home.continueLearning'),
+          subtitle: getListDisplayName(sharedList, interfaceLanguage)
+        }
+      : getRecommendation(storage, publicWordLists, t, interfaceLanguage),
     [
       difficultWords,
       interfaceLanguage,
       publicWordLists,
+      sharedList,
       storage.currentPathPosition,
       storage.lastSessionResult,
       storage.listProgress,
@@ -129,15 +163,11 @@ export default function App() {
 
     loadPublicContent().then(content => {
       if (cancelled) return;
-      const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
-      const sharedList = findActiveWordListBySlug(content.lists, sharedSlug);
-      const sharedPracticeTestListId = sharedList && isPracticeTestShareMode(window.location.search) ? sharedList.id : null;
       setPublicWordLists(content.lists);
-      setPracticeTestListId(sharedPracticeTestListId);
-      if (sharedList) setLastResult(null);
       setStorage(previous => {
         const normalized = normalizeStorageWordListSelection(previous, content.lists);
-        return sharedList ? applySharedWordListSelection(normalized, sharedList) : normalized;
+        setSharedContext(createSharedContextFromRoute(normalized, content.lists));
+        return normalized;
       });
     });
 
@@ -147,14 +177,17 @@ export default function App() {
   }, []);
 
   function updateStorage(next: SpelioStorage) {
-    setStorage(next);
+    setStorage(activeSharedContext ? restoreSharedWordListProgression(next, activeSharedContext) : next);
   }
 
   function updateInterfaceLanguage(language: InterfaceLanguage) {
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
-      window.history.replaceState(null, '', language === 'cy' ? '/cy' : '/');
+      window.history.replaceState(null, '', getHomePathForLanguage(language));
     }
 
+    setSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveSharedContext(null);
     setStorage(previous => ({
       ...previous,
       settings: {
@@ -180,17 +213,50 @@ export default function App() {
     });
   }
 
-  function beginPractice(start: PracticeStart) {
+  function createSharedListPracticeStart(context: SharedWordListContext, list: WordList): PracticeStart {
+    const sharedPracticeStorage = {
+      ...createSharedWordListEffectiveStorage(storage, context),
+      hasStartedPracticeSession: true
+    };
+
+    return {
+      mode: 'normal',
+      review: false,
+      recap: false,
+      storage: sharedPracticeStorage,
+      recommendation: {
+        kind: 'list',
+        listId: list.id,
+        title: t('home.continueLearning'),
+        subtitle: getListDisplayName(list, interfaceLanguage)
+      }
+    };
+  }
+
+  function beginPractice(start: PracticeStart, detachedContext: SharedWordListContext | null = sharedContext) {
     if (start.review && !difficultWords) {
       setReviewMode(false);
       setScreen('home');
       return;
     }
 
+    const isDetachedSharedStart =
+      Boolean(detachedContext) &&
+      start.mode === 'normal' &&
+      start.storage.selectedListIds.length === 1 &&
+      start.storage.selectedListIds[0] === detachedContext?.listId;
+
     setShowFirstSessionKeyboardHint(!start.review && !start.recap && (storage.completedNormalSessionCount ?? 0) >= 5);
-    setStorage(start.storage);
+    if (isDetachedSharedStart && detachedContext) {
+      setActiveSharedContext(detachedContext);
+      setPracticeTestMode(detachedContext.mode === 'practice-test');
+    } else {
+      setActiveSharedContext(null);
+      setCompletedSharedContext(null);
+      setPracticeTestMode(false);
+      setStorage(start.storage);
+    }
     setPracticeStartStorage(start.storage);
-    setPracticeTestMode(start.mode === 'normal' && Boolean(practiceTestListId) && start.storage.selectedListIds[0] === practiceTestListId);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(start.review);
     setRecapMode(start.recap);
@@ -198,6 +264,11 @@ export default function App() {
   }
 
   function startPrimaryRecommendationPractice() {
+    if (sharedContext && sharedList) {
+      beginPractice(createSharedListPracticeStart(sharedContext, sharedList), sharedContext);
+      return;
+    }
+
     beginPractice(createPrimaryRecommendationPracticeStart(storage, publicWordLists, t, interfaceLanguage));
   }
 
@@ -215,8 +286,39 @@ export default function App() {
 
   function handleComplete(result: SessionResult, nextStorage: SpelioStorage) {
     setLastResult(result);
-    setStorage(nextStorage);
+    if (activeSharedContext) {
+      setStorage(restoreSharedWordListProgression(nextStorage, activeSharedContext));
+      setCompletedSharedContext(activeSharedContext);
+      setActiveSharedContext(null);
+      setSharedContext(null);
+      setPracticeTestMode(false);
+    } else {
+      setStorage(nextStorage);
+      setCompletedSharedContext(null);
+    }
     setScreen('end');
+  }
+
+  function returnToLearning() {
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+      window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
+    }
+
+    setSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveSharedContext(null);
+    setPracticeStartStorage(null);
+    setPracticeTestMode(false);
+    setReviewMode(false);
+    setRecapMode(false);
+    setScreen('home');
+  }
+
+  function practiseSharedListAgain() {
+    if (!completedSharedContext) return;
+    const list = publicWordLists.find(item => item.id === completedSharedContext.listId && item.isActive);
+    if (!list) return;
+    beginPractice(createSharedListPracticeStart(completedSharedContext, list), completedSharedContext);
   }
 
   function saveSelectedWordLists(selectedIds: string[]) {
@@ -224,14 +326,22 @@ export default function App() {
     const changed = !sameListSelection(ids, storage.selectedListIds);
 
     if (!changed) {
+      setSharedContext(null);
+      setCompletedSharedContext(null);
+      setActiveSharedContext(null);
+      setPracticeTestMode(false);
       setWordListModalOpen(false);
       return;
     }
 
     setStorage(previous => applyManualWordListSelection(previous, ids));
+    setSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveSharedContext(null);
     setReviewMode(false);
     setRecapMode(false);
     setPracticeTestMode(false);
+    setPracticeStartStorage(null);
     setWordListModalOpen(false);
     setScreen('home');
   }
@@ -246,9 +356,13 @@ export default function App() {
     const freshStorage = applyInterfaceLanguageRoute(createDefaultStorage());
 
     setStorage(freshStorage);
+    setSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveSharedContext(null);
     setReviewMode(false);
     setRecapMode(false);
     setPracticeTestMode(false);
+    setPracticeStartStorage(null);
     setWordListModalOpen(false);
     setLastResult(null);
     setShowFirstSessionKeyboardHint(false);
@@ -262,7 +376,18 @@ export default function App() {
     }, 1800);
   }
 
-  const homeMode = !storage.lastSessionDate
+  const completedSharedList = completedSharedContext
+    ? publicWordLists.find(list => list.id === completedSharedContext.listId)
+    : null;
+  const completedSharedListName = completedSharedList
+    ? getListDisplayName(completedSharedList, interfaceLanguage)
+    : completedSharedContext
+      ? t('wordLists.sharedWordList')
+      : null;
+
+  const homeMode = sharedList
+    ? 'returning'
+    : !storage.lastSessionDate
     ? 'first'
     : storage.lastSessionResult?.state === 'struggled' && difficultWords
       ? 'struggled'
@@ -281,7 +406,7 @@ export default function App() {
       practiceTestMode={practiceTestMode}
       onStorageChange={updateStorage}
       onComplete={handleComplete}
-      onBackHome={() => setScreen('home')}
+      onBackHome={activeSharedContext ? returnToLearning : () => setScreen('home')}
       onWordListsDone={saveSelectedWordLists}
       onResetProgress={resetProgress}
       interfaceLanguage={interfaceLanguage}
@@ -298,7 +423,10 @@ export default function App() {
         onContinue={startNormalContinuationPractice}
         onReview={startReviewPractice}
         onChangeLists={() => setWordListModalOpen(true)}
-        onHome={() => setScreen('home')}
+        onHome={completedSharedContext ? returnToLearning : () => setScreen('home')}
+        sharedSession={completedSharedListName ? { listName: completedSharedListName } : null}
+        onReturnToLearning={returnToLearning}
+        onPractiseSharedListAgain={completedSharedContext ? practiseSharedListAgain : undefined}
         interfaceLanguage={interfaceLanguage}
         onInterfaceLanguageChange={updateInterfaceLanguage}
         t={t}
@@ -306,7 +434,7 @@ export default function App() {
       {wordListModalOpen && (
         <WordListModal
           lists={publicWordLists}
-          initialSelectedIds={storage.selectedListIds}
+          initialSelectedIds={visibleStorage.selectedListIds}
           completedListIds={completedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
@@ -340,7 +468,7 @@ export default function App() {
       {wordListModalOpen && (
         <WordListModal
           lists={publicWordLists}
-          initialSelectedIds={storage.selectedListIds}
+          initialSelectedIds={visibleStorage.selectedListIds}
           completedListIds={completedListIds}
           onClose={() => setWordListModalOpen(false)}
           onDone={saveSelectedWordLists}
