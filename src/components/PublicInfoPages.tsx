@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { FeedbackFormContent, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './Footer';
+import { FeedbackFormContent, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import type { InterfaceLanguage, Translate } from '../i18n';
@@ -45,6 +45,14 @@ function PublicPageShell({
       <section className="public-info-content" aria-labelledby={titleId}>
         {children}
       </section>
+
+      <Footer
+        className="home-footer public-info-footer"
+        variant="home"
+        interfaceLanguage={interfaceLanguage}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
     </main>
   );
 }

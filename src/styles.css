@@ -2132,8 +2132,13 @@
 
 .public-info-content{
   width:min(100%,520px);
-  margin:clamp(82px,16vh,150px) auto 0;
+  margin:64px auto 0;
   text-align:left;
+}
+
+.public-info-footer{
+  margin-top:auto;
+  padding-top:clamp(64px,10vh,104px);
 }
 
 .public-info-title{
@@ -2368,9 +2373,18 @@
     width:122px;
   }
 
+  .how-page-logo{
+    margin-top:18px;
+  }
+
   .public-info-content{
     width:100%;
-    margin-top:clamp(74px,13vh,104px);
+    margin-top:56px;
+  }
+
+  .public-info-footer{
+    margin-top:auto;
+    padding-top:64px;
   }
 
   .public-info-title{
