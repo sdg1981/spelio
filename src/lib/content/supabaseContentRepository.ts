@@ -69,6 +69,9 @@ type WordRow = {
   difficulty: number | null;
 };
 
+const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active';
+const WORD_LIST_SELECT_WITHOUT_SLUG = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active';
+
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
 const validOwnerTypes: Exclude<WordListCollectionOwnerType, null>[] = ['spelio', 'school', 'teacher', 'user'];
 const validDialects: Dialect[] = ['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other'];
@@ -111,6 +114,10 @@ function asDifficulty(value: number | null): WordList['difficulty'] {
 
 function asAcceptedAlternatives(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
+}
+
+function isMissingSlugColumnError(error: { code?: string; message?: string } | null) {
+  return error?.code === '42703' && /\bslug\b/.test(error.message ?? '');
 }
 
 function mapCollection(row: CollectionRow): WordListCollection {
@@ -193,7 +200,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
 export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const client = requireSupabase();
 
-  const [collectionsResult, listsResult, wordsResult] = await Promise.all([
+  const [collectionsResult, initialListsResult, wordsResult] = await Promise.all([
     client
       .from('word_list_collections')
       .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
@@ -201,7 +208,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .order('order_index', { ascending: true }),
     client
       .from('word_lists')
-      .select('id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active')
+      .select(WORD_LIST_SELECT_WITH_SLUG)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
     client
@@ -211,12 +218,25 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
   ]);
 
   if (collectionsResult.error) throw collectionsResult.error;
-  if (listsResult.error) throw listsResult.error;
   if (wordsResult.error) throw wordsResult.error;
+
+  let listsData: unknown[] | null = initialListsResult.data;
+  if (initialListsResult.error) {
+    if (!isMissingSlugColumnError(initialListsResult.error)) throw initialListsResult.error;
+
+    const retryListsResult = await client
+      .from('word_lists')
+      .select(WORD_LIST_SELECT_WITHOUT_SLUG)
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+
+    if (retryListsResult.error) throw retryListsResult.error;
+    listsData = retryListsResult.data;
+  }
 
   const collections = (collectionsResult.data ?? []).map(row => mapCollection(row as CollectionRow));
   const collectionById = new Map(collections.map(collection => [collection.id, collection]));
-  const activeLists = (listsResult.data ?? []) as WordListRow[];
+  const activeLists = (listsData ?? []) as WordListRow[];
   const activeListIds = new Set(activeLists.map(list => list.id));
   const wordsByListId = new Map<string, WordRow[]>();
 

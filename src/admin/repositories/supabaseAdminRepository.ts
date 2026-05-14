@@ -78,6 +78,11 @@ function requireSupabase() {
   return supabase;
 }
 
+function assertDestructiveContentImportAllowed() {
+  if (import.meta.env.VITE_ALLOW_ADMIN_CONTENT_IMPORT === 'true') return;
+  throw new Error('Content import is disabled. Set VITE_ALLOW_ADMIN_CONTENT_IMPORT=true only for an intentional, reviewed import.');
+}
+
 export const supabaseAdminRepository: AdminRepository = {
   authMode: 'emailPassword',
 
@@ -284,6 +289,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
+    assertDestructiveContentImportAllowed();
     const client = requireSupabase();
     const [collectionsResult, listsResult, wordsResult] = await Promise.all([
       client.from('word_list_collections').select('id'),
@@ -301,6 +307,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async importContent(payload: unknown): Promise<ImportContentResult> {
+    assertDestructiveContentImportAllowed();
     const client = requireSupabase();
     // TODO: Move production imports behind a protected server/API route with transaction-like behaviour.
     const preview = await this.previewImport(payload) as ImportPreview;
