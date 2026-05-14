@@ -1498,6 +1498,14 @@
   color:#071522;
 }
 
+.homepage-lower-settings{
+  width:100%;
+  max-width:560px;
+  display:flex;
+  justify-content:center;
+  margin-top:0;
+}
+
 .home-action-list .action-row-single .action-row-copy,
 .end-action-list .action-row-single .action-row-copy{
   display:flex;
@@ -1982,7 +1990,8 @@
   transform:scale(.98);
 }
 
-.practice-app .settings-cog{
+.practice-app .settings-cog,
+.homepage-lower-settings .settings-cog{
   position:relative;
   right:auto;
   top:auto;
@@ -1997,14 +2006,16 @@
   transition:background .16s ease-out,color .16s ease-out,opacity .16s ease-out,transform .16s ease-out,box-shadow .18s ease-out;
 }
 
-.practice-app .settings-cog svg{
+.practice-app .settings-cog svg,
+.homepage-lower-settings .settings-cog svg{
   width:25px;
   height:25px;
   stroke-width:2.4;
   transition:stroke .16s ease-out;
 }
 
-.practice-app .settings-cog:focus-visible{
+.practice-app .settings-cog:focus-visible,
+.homepage-lower-settings .settings-cog:focus-visible{
   outline:0;
   box-shadow:0 0 0 3px rgba(217,0,0,.18);
 }
@@ -2310,7 +2321,8 @@
     transform:translateY(-1px) scale(1.02);
   }
 
-  .practice-app .settings-cog:hover{
+  .practice-app .settings-cog:hover,
+  .homepage-lower-settings .settings-cog:hover{
     color:#061724;
     background:rgba(7,21,34,.045);
     opacity:.86;
@@ -2333,7 +2345,8 @@
   }
 }
 
-.practice-app .settings-cog:active{
+.practice-app .settings-cog:active,
+.homepage-lower-settings .settings-cog:active{
   transform:scale(.96);
   background:rgba(7,21,34,.045);
 }
@@ -2398,13 +2411,15 @@
     line-height:.82;
   }
 
-  .practice-app .settings-cog{
+  .practice-app .settings-cog,
+  .homepage-lower-settings .settings-cog{
     width:42px;
     height:42px;
     margin-top:26px;
   }
 
-  .practice-app .settings-cog svg{
+  .practice-app .settings-cog svg,
+  .homepage-lower-settings .settings-cog svg{
     width:23px;
     height:23px;
     stroke-width:2.35;
@@ -3470,6 +3485,7 @@
 .practice-home-back,
 .practice-home-logo button,
 .practice-app .settings-cog,
+.homepage-lower-settings .settings-cog,
 .practice-app .word-pill,
 .practice-app .letter-slot,
 .homepage-language-switcher button.active,
@@ -3682,6 +3698,7 @@
 .wordlist-suggestion-link:focus-visible,
 .homepage-settings-button:focus-visible,
 .practice-app .settings-cog:focus-visible,
+.homepage-lower-settings .settings-cog:focus-visible,
 .practice-home-back:focus-visible,
 .practice-home-logo button:focus-visible,
 .end-logo button:focus-visible{

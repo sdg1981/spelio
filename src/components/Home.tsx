@@ -78,14 +78,6 @@ export function Home({
           t={t}
           variant="homepageTop"
         />
-        <button
-          className="homepage-settings-button"
-          type="button"
-          aria-label={t('settings.open')}
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Settings size={15} strokeWidth={2} />
-        </button>
       </div>
       <section className={`page-shell home-shell ${shellStateClass} ${mobileHeroClass}`}>
         <div className="home-logo">
@@ -139,6 +131,12 @@ export function Home({
               onClick={onRecapReview}
             />
           )}
+        </div>
+
+        <div className="homepage-lower-settings">
+          <button className="settings-cog" type="button" aria-label={t('settings.open')} onClick={() => setSettingsOpen(true)}>
+            <Settings size={22} />
+          </button>
         </div>
 
         <Footer className="home-footer" variant="home" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
