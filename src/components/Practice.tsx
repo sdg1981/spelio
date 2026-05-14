@@ -245,7 +245,7 @@ export function Practice({
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, sessionKey, onStorageChange, onComplete, t });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, sessionKey, onStorageChange, onComplete, t });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]

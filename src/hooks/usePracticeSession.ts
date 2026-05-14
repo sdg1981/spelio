@@ -17,7 +17,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
-import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
+import { isAudioUnavailableForPrompt, shouldAllowAudioPlayback } from '../lib/practice/audioAvailability';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
 type LetterState = PracticeLetterState;
@@ -104,6 +104,7 @@ export function usePracticeSession({
   sessionStorage = storage,
   reviewDifficult = false,
   includeRecapDue = false,
+  forceAudioAvailable = false,
   sessionKey = 0,
   onStorageChange,
   onComplete,
@@ -114,6 +115,7 @@ export function usePracticeSession({
   sessionStorage?: SpelioStorage;
   reviewDifficult?: boolean;
   includeRecapDue?: boolean;
+  forceAudioAvailable?: boolean;
   sessionKey?: number;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
@@ -210,7 +212,7 @@ export function usePracticeSession({
     recordInteraction?: boolean;
     showUnavailableStatus?: boolean;
   } = {}) => {
-    if (!storageRef.current.settings.audioPrompts) return false;
+    if (!shouldAllowAudioPlayback(storageRef.current.settings.audioPrompts, forceAudioAvailable)) return false;
     if (recordInteraction) recordPracticeInteraction();
 
     if (!currentWord?.audioUrl) {
@@ -261,7 +263,7 @@ export function usePracticeSession({
       }
       return false;
     }
-  }, [currentWord?.audioUrl, currentWord?.id, stopCurrentAudio, t]);
+  }, [currentWord?.audioUrl, currentWord?.id, forceAudioAvailable, stopCurrentAudio, t]);
 
   useEffect(() => {
     return () => {

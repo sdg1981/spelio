@@ -14,6 +14,7 @@ import {
 } from '../src/lib/wordListSharing';
 import { createDefaultStorage, type SessionResult } from '../src/lib/practice/storage';
 import { applyManualWordListSelection } from '../src/lib/practice/storage';
+import { createPracticeSession } from '../src/lib/practice/sessionEngine';
 import { createAdminWordListSlug, validateAdminWordListSlug } from '../src/admin/services/wordListSlug';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -172,6 +173,23 @@ assertEqual(restoredSharedStorage.currentPathPosition, 'foundations_numbers', 'S
 assertEqual(restoredSharedStorage.lastSessionDate, mainStorage.lastSessionDate, 'Shared completion should not become the main Continue learning anchor.');
 assertEqual(restoredSharedStorage.lastSessionResult, previousResult, 'Shared completion should restore the previous main session result.');
 assert(restoredSharedStorage.wordProgress[sharedWordId]?.seen, 'Shared sessions should still keep word progress updates.');
+
+const audioList: WordList = {
+  ...firstVerbs,
+  id: 'test-shared-audio-list',
+  slug: 'test-shared-audio-list',
+  words: firstVerbs.words.slice(0, 2).map((word, index) => ({
+    ...word,
+    id: `test-shared-audio-word-${index + 1}`,
+    listId: 'test-shared-audio-list',
+    audioUrl: `https://example.com/audio/test-${index + 1}.mp3`,
+    audioStatus: 'ready'
+  }))
+};
+const audioContext = createSharedWordListContext(mainStorage, audioList, 'test-shared-audio-list', 'normal-share');
+const audioSession = createPracticeSession([audioList], createSharedWordListEffectiveStorage(mainStorage, audioContext));
+assertEqual(audioSession.words[0]?.audioUrl, 'https://example.com/audio/test-1.mp3', 'Shared sessions should preserve word audioUrl metadata.');
+assertEqual(audioSession.words[0]?.audioStatus, 'ready', 'Shared sessions should preserve word audioStatus metadata.');
 
 const manualStorage = applyManualWordListSelection(createDefaultStorage(), [firstVerbs.id]);
 assertEqual(manualStorage.selectedListIds[0], firstVerbs.id, 'Existing manual Done selection should still select the chosen list.');

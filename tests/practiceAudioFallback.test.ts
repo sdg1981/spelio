@@ -1,4 +1,4 @@
-import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../src/lib/practice/audioAvailability';
+import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldAllowAudioPlayback, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../src/lib/practice/audioAvailability';
 import type { PracticeWord } from '../src/data/wordLists';
 import { createDefaultStorage, normaliseStorage } from '../src/lib/practice/storage';
 
@@ -67,6 +67,24 @@ assertEqual(
   promptVisible(false, makeWord()),
   false,
   'English off + audio available should keep the prompt hidden.'
+);
+
+assertEqual(
+  shouldAllowAudioPlayback(true, false),
+  true,
+  'Normal sessions should allow playback when audio prompts are on.'
+);
+
+assertEqual(
+  shouldAllowAudioPlayback(false, false),
+  false,
+  'Normal sessions should still respect the audio prompts setting.'
+);
+
+assertEqual(
+  shouldAllowAudioPlayback(false, true),
+  true,
+  'Practice test sessions should keep manual audio playback available even when prompts are off.'
 );
 
 assertEqual(
