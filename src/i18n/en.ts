@@ -142,6 +142,7 @@ export const en = {
     pickUpWhereLeftOff: 'Pick up where you left off',
     practiseMixAgain: 'Practise this list again',
     practiseThisListAgain: 'Practise this list again',
+    keepLearning: 'Keep learning',
     returnToYourLearning: 'Return to your learning',
     repeatSelectedLists: 'Repeat your selected list',
     returnHomepage: 'Return to the homepage',

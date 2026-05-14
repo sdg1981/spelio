@@ -91,7 +91,7 @@ export function EndScreen({
   onReview: () => void;
   onChangeLists: () => void;
   onHome: () => void;
-  sharedSession?: { listName: string } | null;
+  sharedSession?: { listName: string; hasPriorLearningHistory: boolean } | null;
   onReturnToLearning?: () => void;
   onPractiseSharedListAgain?: () => void;
   interfaceLanguage: InterfaceLanguage;
@@ -105,7 +105,7 @@ export function EndScreen({
     ? t('end.keepBuilding')
     : recommendation.subtitle;
   const primaryTitle = isSharedSession
-    ? t('end.returnToYourLearning')
+    ? sharedSession?.hasPriorLearningHistory ? t('end.returnToYourLearning') : t('end.keepLearning')
     : shouldPrioritiseReview
     ? t('home.reviewDifficult')
     : shouldChooseAnotherList

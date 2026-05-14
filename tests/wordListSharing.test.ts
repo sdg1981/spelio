@@ -133,6 +133,10 @@ assertEqual(visibleSharedStorage.selectedListIds[0], firstVerbs.id, 'Shared cont
 assertEqual(visibleSharedStorage.currentPathPosition, firstVerbs.id, 'Shared context should give session creation the linked list.');
 assertEqual(visibleSharedStorage.lastSessionResult, null, 'Shared context should not let prior completion state advance away from the linked list.');
 assertEqual(sharedContext.mode, 'practice-test', 'Practice test state should live on the transient shared context.');
+assertEqual(sharedContext.previousHadMeaningfulLearningHistory, false, 'Shared context should default to no prior learning history.');
+
+const returningLearnerSharedContext = createSharedWordListContext(mainStorage, firstVerbs, 'first-verbs-core-actions', 'normal-share', true);
+assertEqual(returningLearnerSharedContext.previousHadMeaningfulLearningHistory, true, 'Shared context should preserve the prior learning history signal.');
 
 const sharedResult: SessionResult = {
   totalWords: 10,

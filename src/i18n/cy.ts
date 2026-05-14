@@ -142,6 +142,7 @@ export const cy = {
     pickUpWhereLeftOff: 'Parhau o ble wnaethoch chi stopio',
     practiseMixAgain: 'Ymarfer y rhestr hon eto',
     practiseThisListAgain: 'Ymarfer y rhestr hon eto',
+    keepLearning: 'Dal ati i ddysgu',
     returnToYourLearning: 'Dychwelyd at eich dysgu',
     repeatSelectedLists: 'Ailadrodd eich rhestr ddewisol',
     returnHomepage: 'Dychwelyd i’r hafan',

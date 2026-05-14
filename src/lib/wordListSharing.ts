@@ -14,6 +14,7 @@ export type SharedWordListContext = {
   previousCurrentPathPosition: string | null;
   previousLastSessionDate: string | null;
   previousLastSessionResult: SessionResult | null;
+  previousHadMeaningfulLearningHistory: boolean;
 };
 
 export function slugifyWordListName(value: string) {
@@ -91,7 +92,8 @@ export function createSharedWordListContext(
   storage: SpelioStorage,
   list: WordList,
   slug = getWordListSlug(list),
-  mode: SharedWordListMode = 'normal-share'
+  mode: SharedWordListMode = 'normal-share',
+  previousHadMeaningfulLearningHistory = false
 ): SharedWordListContext {
   return {
     listId: list.id,
@@ -100,7 +102,8 @@ export function createSharedWordListContext(
     previousSelectedListIds: [...storage.selectedListIds],
     previousCurrentPathPosition: storage.currentPathPosition,
     previousLastSessionDate: storage.lastSessionDate,
-    previousLastSessionResult: storage.lastSessionResult
+    previousLastSessionResult: storage.lastSessionResult,
+    previousHadMeaningfulLearningHistory
   };
 }
 

@@ -790,6 +790,11 @@ Rules:
 - Opening a shared link creates a temporary detached shared-session context. It may present the shared list, but must not permanently overwrite the learner’s main selected word list or `currentPathPosition`.
 - Shared sessions may still update word progress, difficult words, recap eligibility, list completion, and aggregate stats normally.
 - Shared sessions must not re-anchor normal Continue learning to the shared list unless the learner explicitly selects/saves that list through the normal Word Lists modal flow.
+- On homepage entry from a normal shared list URL, use:
+  - Heading: “Shared word list”
+  - Subheading: the word-list name
+  - Primary CTA: “Start spelling practice”
+- Do not use “Continue learning” for shared-link entry states.
 
 The share surface should include:
 
@@ -851,9 +856,13 @@ Rules:
 
 - The QR code, Copy link action, and native Share action all use the currently toggled URL.
 - Visiting `/list/{slug}?mode=practice-test` preselects the list but does not auto-start practice.
+- On homepage entry from `/list/{slug}?mode=practice-test`, use:
+  - Heading: “Practice test”
+  - Subheading: the word-list name
+  - Primary CTA: “Start practice test”
 - Once the learner explicitly starts practice from that link, Practice test applies for that shared-link session.
 - Practice test hides English prompts/subtitles and hides or disables reveal tools.
-- Audio remains available.
+- Audio remains available. Practice test must not disable manual audio replay, even though it hides English prompts and reveal tools.
 - Practice test is link/session-scoped and must not permanently overwrite learner settings.
 - Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or normal learner progression.
 - Leaving or completing a Practice test link should restore normal behaviour and must not save Practice test as a setting.
@@ -1534,6 +1543,19 @@ In Supabase/database persistence, the `word_lists` table should include:
 - `target_language` default `"cy"`
 
 Do not rename existing `english_prompt` or `welsh_answer` database fields in MVP.
+
+Slug support and content loading must preserve live/admin-edited content:
+
+- Slug backfills should update only slug fields.
+- Public content loading should prefer live Supabase content when available.
+- If a slug column is temporarily unavailable in an environment, the app may derive fallback slugs from list names, but it must not fall back to stale bundled JSON solely because slug metadata is missing.
+- Bundled/static JSON is a read-only fallback, not the production source of truth once Supabase content is available.
+
+Content import safety:
+
+- Full JSON/content imports must not run automatically during app startup, build, deploy, or slug migration.
+- Production imports should fail unless an explicit reviewed import flag or equivalent confirmation is present.
+- Imports must preserve existing IDs and should avoid overwriting admin-edited list membership, ordering, active states, notes, `audioUrl`, and `audioStatus` unless the import is deliberately intended to change those fields.
 
 ### 16.3.1 Collection fields
 

@@ -47,6 +47,38 @@ function applyInterfaceLanguageRoute(storage: SpelioStorage): SpelioStorage {
   };
 }
 
+function hasMeaningfulLearningHistory(storage: SpelioStorage) {
+  const defaults = createDefaultStorage();
+  const hasWordProgress = Object.values(storage.wordProgress).some(progress => (
+    progress.seen ||
+    progress.completedCount > 0 ||
+    progress.incorrectAttempts > 0 ||
+    progress.revealedCount > 0 ||
+    progress.difficult ||
+    progress.recapDue === true ||
+    Boolean(progress.lastPractisedAt)
+  ));
+  const hasListProgress = Object.values(storage.listProgress).some(progress => (
+    progress.seenWordIds.length > 0 ||
+    progress.completed ||
+    progress.strongSessionCount > 0 ||
+    Boolean(progress.completedAt) ||
+    Boolean(progress.lastPractisedAt)
+  ));
+  const hasSavedPathAwayFromDefault =
+    !sameListSelection(storage.selectedListIds, defaults.selectedListIds) ||
+    storage.currentPathPosition !== defaults.currentPathPosition;
+
+  return (
+    (storage.completedNormalSessionCount ?? 0) > 0 ||
+    storage.hasStartedPracticeSession ||
+    Boolean(storage.lastSessionDate) ||
+    hasWordProgress ||
+    hasListProgress ||
+    hasSavedPathAwayFromDefault
+  );
+}
+
 function createSharedContextFromRoute(storage: SpelioStorage, lists: WordList[]) {
   const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
   const sharedList = findActiveWordListBySlug(lists, sharedSlug);
@@ -56,7 +88,8 @@ function createSharedContextFromRoute(storage: SpelioStorage, lists: WordList[])
     storage,
     sharedList,
     sharedSlug,
-    isPracticeTestShareMode(window.location.search) ? 'practice-test' : 'normal-share'
+    isPracticeTestShareMode(window.location.search) ? 'practice-test' : 'normal-share',
+    hasMeaningfulLearningHistory(storage)
   );
 }
 
@@ -424,7 +457,10 @@ export default function App() {
         onReview={startReviewPractice}
         onChangeLists={() => setWordListModalOpen(true)}
         onHome={completedSharedContext ? returnToLearning : () => setScreen('home')}
-        sharedSession={completedSharedListName ? { listName: completedSharedListName } : null}
+        sharedSession={completedSharedListName && completedSharedContext ? {
+          listName: completedSharedListName,
+          hasPriorLearningHistory: completedSharedContext.previousHadMeaningfulLearningHistory
+        } : null}
         onReturnToLearning={returnToLearning}
         onPractiseSharedListAgain={completedSharedContext ? practiseSharedListAgain : undefined}
         interfaceLanguage={interfaceLanguage}
