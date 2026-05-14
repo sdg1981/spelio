@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Copy, Share2, ShieldCheck, SquareArrowLeft, SquareArrowRight, SquareArrowUp, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
@@ -1615,19 +1616,33 @@ function LargeWordListQrOverlay({
   onClose: () => void;
   t: Translate;
 }) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
     }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [onClose]);
 
-  return (
+  useEffect(() => {
+    const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      if (previousActiveElement?.isConnected) previousActiveElement.focus({ preventScroll: true });
+    };
+  }, []);
+
+  const overlay = (
     <div className="wordlist-large-qr-overlay" role="dialog" aria-modal="true" aria-label={t('wordLists.scanToOpenList')}>
       <div className="wordlist-large-qr-card">
-        <button className="wordlist-large-qr-close" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
+        <button ref={closeButtonRef} className="wordlist-large-qr-close" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
           <X size={24} strokeWidth={2.1} aria-hidden="true" />
           <span>{t('wordLists.close')}</span>
         </button>
@@ -1640,6 +1655,9 @@ function LargeWordListQrOverlay({
       </div>
     </div>
   );
+
+  const portalTarget = document.querySelector('.public-app') ?? document.body;
+  return createPortal(overlay, portalTarget);
 }
 
 export function WordListModal({
