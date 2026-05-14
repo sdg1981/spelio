@@ -9,6 +9,7 @@ export const en = {
     focusTricky: 'Focus on tricky words',
     continueLearning: 'Continue learning',
     startPractice: 'Start spelling practice',
+    startPracticeTest: 'Start practice test',
     reviewDifficult: 'Review difficult words',
     chooseAnotherList: 'Choose another word list',
     selectWordList: 'Select word list',

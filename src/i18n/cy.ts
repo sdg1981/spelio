@@ -9,6 +9,7 @@ export const cy = {
     focusTricky: 'Canolbwyntiwch ar eiriau anodd',
     continueLearning: 'Parhau i ddysgu',
     startPractice: 'Dechrau ymarfer sillafu',
+    startPracticeTest: 'Dechrau prawf ymarfer',
     reviewDifficult: 'Adolygu geiriau anodd',
     chooseAnotherList: 'Dewis rhestr eiriau arall',
     selectWordList: 'Dewis rhestr eiriau',

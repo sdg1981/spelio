@@ -11,10 +11,12 @@ import type { SpelioSettings } from '../lib/practice/storage';
 import { formatRecapWordCount } from '../lib/practice/sessionEngine';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
+type SharedEntryMode = 'normal-share' | 'practice-test';
 
 export function Home({
   mode,
   recommendation,
+  sharedEntryMode,
   progressSummary,
   hasDifficultWords,
   difficultWordCount,
@@ -33,6 +35,7 @@ export function Home({
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
+  sharedEntryMode?: SharedEntryMode | null;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
   difficultWordCount: number;
@@ -51,10 +54,16 @@ export function Home({
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isFirst = mode === 'first';
-  const shouldPrioritiseReview = hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
+  const isSharedEntry = Boolean(sharedEntryMode);
+  const isPracticeTestEntry = sharedEntryMode === 'practice-test';
+  const shouldPrioritiseReview = !isSharedEntry && hasDifficultWords && (mode === 'struggled' || recommendation.kind === 'review');
   const shouldChooseAnotherList = !shouldPrioritiseReview && recommendation.kind === 'choose_list';
-  const homeHeading = shouldPrioritiseReview ? t('home.focusTricky') : t('home.continueLearning');
-  const primaryLabel = isFirst
+  const homeHeading = isSharedEntry
+    ? isPracticeTestEntry ? t('wordLists.practiceTest') : t('wordLists.sharedWordList')
+    : shouldPrioritiseReview ? t('home.focusTricky') : t('home.continueLearning');
+  const primaryLabel = isSharedEntry
+    ? isPracticeTestEntry ? t('home.startPracticeTest') : t('home.startPractice')
+    : isFirst
     ? t('home.startPractice')
     : shouldPrioritiseReview
       ? t('home.reviewDifficult')

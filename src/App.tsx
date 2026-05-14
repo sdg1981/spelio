@@ -449,6 +449,7 @@ export default function App() {
       <Home
         mode={homeMode}
         recommendation={recommendation}
+        sharedEntryMode={sharedContext?.mode ?? null}
         progressSummary={homeProgressSummary}
         hasDifficultWords={difficultWords}
         difficultWordCount={difficultWordCount}
