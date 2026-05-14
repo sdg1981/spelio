@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { SquareArrowLeft, SquareArrowRight, SquareArrowUp } from 'lucide-react';
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
+import { Copy, Share2, ShieldCheck, SquareArrowLeft, SquareArrowRight, SquareArrowUp, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
@@ -16,12 +17,19 @@ import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevea
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
+import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
+const COPY_STATUS_VISIBLE_MS = 1600;
 
 type RecallPauseVisibility = {
   wordId: string | null;
   visible: boolean;
+};
+
+type ShareDataNavigator = Navigator & {
+  share?: (data: ShareData) => Promise<void>;
+  canShare?: (data: ShareData) => boolean;
 };
 
 const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
@@ -141,6 +149,7 @@ export function Practice({
   includeRecapDue = false,
   sessionKey = 0,
   showKeyboardHint = false,
+  practiceTestMode = false,
   onStorageChange,
   onComplete,
   onBackHome,
@@ -158,6 +167,7 @@ export function Practice({
   includeRecapDue?: boolean;
   sessionKey?: number;
   showKeyboardHint?: boolean;
+  practiceTestMode?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
@@ -482,6 +492,7 @@ export function Practice({
       if (isControlTarget(event.target)) return;
 
       if (event.code === 'ArrowLeft') {
+        if (practiceTestMode) return;
         event.preventDefault();
         activateEnglishPromptPeek();
         return;
@@ -496,6 +507,7 @@ export function Practice({
       }
 
       if (event.code === 'ArrowRight') {
+        if (practiceTestMode) return;
         const result = handleRevealShortcutKeyDown({
           code: event.code,
           repeat: event.repeat,
@@ -546,7 +558,7 @@ export function Practice({
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onWindowBlur);
     };
-  }, [activateEnglishPromptPeek, beginPeekHold, clearScheduledSpellingHintAudioReplay, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, restorePracticeInputFocus, revealNext]);
+  }, [activateEnglishPromptPeek, beginPeekHold, clearScheduledSpellingHintAudioReplay, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, practiceTestMode, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
     if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
@@ -647,6 +659,8 @@ export function Practice({
   }
 
   function handleRevealLetter(event?: MouseEvent<HTMLButtonElement>) {
+    if (practiceTestMode) return;
+
     if (revealHandledByPointerRef.current) {
       revealHandledByPointerRef.current = false;
       return;
@@ -665,6 +679,8 @@ export function Practice({
   }
 
   function handleRevealPointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (practiceTestMode) return;
+
     if (shouldUseMobileKeyboard()) {
       event.preventDefault();
       focusMobileInput();
@@ -674,6 +690,8 @@ export function Practice({
   }
 
   function handleRevealPointerUp(event: PointerEvent<HTMLButtonElement>) {
+    if (practiceTestMode) return;
+
     const didPeek = peekActivatedRef.current;
     endPeekHold();
     revealHandledByPointerRef.current = true;
@@ -696,6 +714,8 @@ export function Practice({
   }
 
   function toggleEnglishPrompt() {
+    if (practiceTestMode) return;
+
     if (!storage.settings.audioPrompts && storage.settings.englishVisible) {
       showLocalStatus(t('practice.promptNeededWhenAudioOff'));
       return;
@@ -791,7 +811,7 @@ export function Practice({
       return;
     }
 
-    if (!storage.settings.audioPrompts) {
+    if (!storage.settings.audioPrompts && !practiceTestMode) {
       restoreFocusAfterClick();
       return;
     }
@@ -837,14 +857,15 @@ export function Practice({
   const displayStatusSecondary = status ? null : localStatusSecondary;
   const displayTone = status ? statusTone : 'neutral';
   const dialectLabel = getDialectLabel(currentWord, t);
-  const spellingHintText = spellingHint ? t(spellingHint.translationKey) : null;
+  const spellingHintText = !practiceTestMode && spellingHint ? t(spellingHint.translationKey) : null;
   const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+  const effectiveEnglishVisible = practiceTestMode ? false : storage.settings.englishVisible;
   const shouldDelayCurrentEnglishPrompt = shouldDelayEnglishPrompt(
-    storage.settings,
+    practiceTestMode ? { ...storage.settings, englishVisible: false, recallPause: false } : storage.settings,
     currentWord,
     audioPlaybackFailedWordIds.has(currentWord.id)
   );
-  const basePromptVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable);
+  const basePromptVisible = practiceTestMode ? false : shouldShowEnglishPrompt(effectiveEnglishVisible, currentWordAudioUnavailable);
   const recallPausePromptReleased =
     !shouldDelayCurrentEnglishPrompt ||
     (recallPauseVisibility.wordId === currentWord.id && recallPauseVisibility.visible);
@@ -857,12 +878,13 @@ export function Practice({
   const promptVisible = promptDisplay.visible;
   const promptDelayed = promptDisplay.reserved;
   const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
-  const wordInsights = interfaceLanguage === 'en'
+  const wordPillAudioIconVisible = storage.settings.audioPrompts || practiceTestMode;
+  const wordInsights = !practiceTestMode && interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
       .filter((note): note is string => Boolean(note))
     : [];
-  const learnerNoteVisible = Boolean(spellingHintText || dialectLabel || wordInsights.length);
+  const learnerNoteVisible = !practiceTestMode && Boolean(spellingHintText || dialectLabel || wordInsights.length);
 
   return (
     <main className="app-bg practice-app relative overflow-hidden">
@@ -871,7 +893,7 @@ export function Practice({
 
       <section className="page-shell practice-shell">
         <button className="word-pill" onClick={handleWordPillClick}>
-          {storage.settings.audioPrompts && <Repeat className="prompt-audio-icon" size={23} />}
+          {wordPillAudioIconVisible && <Repeat className="prompt-audio-icon" size={23} />}
           {promptUsesRecallPauseShell ? (
             <span key={currentWord.id} className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
               <span className="prompt-text-reserve" style={HIDDEN_PROMPT_STYLE} aria-hidden="true">{prompt}</span>
@@ -881,7 +903,7 @@ export function Practice({
             promptVisible && <span>{prompt}</span>
           )}
         </button>
-        {currentWordAudioUnavailable && !storage.settings.englishVisible && (
+        {currentWordAudioUnavailable && !effectiveEnglishVisible && !practiceTestMode && (
           <div className="audio-fallback-label">{t('practice.audioFallbackPromptShown')}</div>
         )}
         <div
@@ -941,25 +963,31 @@ export function Practice({
               <SquareArrowUp size={14} strokeWidth={1.8} aria-hidden="true" />
               <span>{t('practice.shortcutReplayAudio')}</span>
             </span>
-            <span aria-hidden="true">·</span>
-            <span className="keyboard-shortcut-item">
-              <SquareArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
-              <span>{t('practice.shortcutRevealNextLetter')}</span>
-            </span>
+            {!practiceTestMode && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="keyboard-shortcut-item">
+                  <SquareArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />
+                  <span>{t('practice.shortcutRevealNextLetter')}</span>
+                </span>
+              </>
+            )}
           </div>
         )}
 
-        <div className="utility-bar">
-          <button
-            onClick={handleEnglishToggle}
-            onPointerDown={handleEnglishPointerDown}
-            onPointerUp={handleEnglishPointerUp}
-            aria-label={t('practice.togglePrompt')}
-            aria-pressed={storage.settings.englishVisible}
-          >
-            <MessageSquareQuote size={22} />
-            <span className="english-toggle-label">{t('practice.promptToggle')}</span>
-          </button>
+        <div className={`utility-bar ${practiceTestMode ? 'practice-test-utility-bar' : ''}`.trim()}>
+          {!practiceTestMode && (
+            <button
+              onClick={handleEnglishToggle}
+              onPointerDown={handleEnglishPointerDown}
+              onPointerUp={handleEnglishPointerUp}
+              aria-label={t('practice.togglePrompt')}
+              aria-pressed={storage.settings.englishVisible}
+            >
+              <MessageSquareQuote size={22} />
+              <span className="english-toggle-label">{t('practice.promptToggle')}</span>
+            </button>
+          )}
 
           <button
             onClick={handleAudioToggle}
@@ -972,19 +1000,21 @@ export function Practice({
             <span>{t('practice.audio')}</span>
           </button>
 
-          <button
-            className="reveal-button"
-            aria-label={t('practice.revealNext')}
-            onPointerDown={handleRevealPointerDown}
-            onPointerUp={handleRevealPointerUp}
-            onPointerCancel={endPeekHold}
-            onPointerLeave={endPeekHold}
-            onContextMenu={(event) => event.preventDefault()}
-            onClick={handleRevealLetter}
-          >
-            <Eye size={23} />
-            <span>{t('practice.reveal')}</span>
-          </button>
+          {!practiceTestMode && (
+            <button
+              className="reveal-button"
+              aria-label={t('practice.revealNext')}
+              onPointerDown={handleRevealPointerDown}
+              onPointerUp={handleRevealPointerUp}
+              onPointerCancel={endPeekHold}
+              onPointerLeave={endPeekHold}
+              onContextMenu={(event) => event.preventDefault()}
+              onClick={handleRevealLetter}
+            >
+              <Eye size={23} />
+              <span>{t('practice.reveal')}</span>
+            </button>
+          )}
         </div>
 
         <SettingsLauncher
@@ -1358,21 +1388,34 @@ const WordListRow = memo(function WordListRow({
   selected,
   completed,
   completedLabel,
-  onSelect
+  shareLabel,
+  onSelect,
+  onShare
 }: {
   list: WordList;
   displayName: string;
   selected: boolean;
   completed: boolean;
   completedLabel: string;
+  shareLabel: string;
   onSelect: (listId: string) => void;
+  onShare: (list: WordList) => void;
 }) {
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onSelect(list.id);
+  }
+
   return (
-    <button
+    <div
       className={`wordlist-row ${selected ? 'selected' : ''}`}
-      type="button"
+      role="button"
+      tabIndex={0}
       aria-pressed={selected}
       onClick={() => onSelect(list.id)}
+      onKeyDown={handleKeyDown}
     >
       <span className="check-left">
         <span className="check-name">{displayName}</span>
@@ -1388,8 +1431,21 @@ const WordListRow = memo(function WordListRow({
             <Check size={16} strokeWidth={2.2} />
           </span>
         )}
+        {shouldShowSelectedListShareAction(list.id, selected ? list.id : undefined) && (
+          <button
+            className="wordlist-share-button"
+            type="button"
+            aria-label={shareLabel}
+            onClick={event => {
+              event.stopPropagation();
+              onShare(list);
+            }}
+          >
+            <Share2 size={17} strokeWidth={1.9} aria-hidden="true" />
+          </button>
+        )}
       </span>
-    </button>
+    </div>
   );
 });
 
@@ -1402,6 +1458,188 @@ function getWordListStageLabel(stage: string, t: Translate) {
   if (stage === 'Review') return t('wordLists.stageReview');
   if (stage === 'Confidence') return t('wordLists.stageConfidence');
   return stage;
+}
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+function WordListShareView({
+  list,
+  displayName,
+  onBack,
+  onClose,
+  t
+}: {
+  list: WordList;
+  displayName: string;
+  onBack: () => void;
+  onClose: () => void;
+  t: Translate;
+}) {
+  const [practiceTestLink, setPracticeTestLink] = useState(false);
+  const shareUrl = useMemo(() => getWordListCanonicalUrl(list, undefined, { practiceTest: practiceTestLink }), [list, practiceTestLink]);
+  const [copied, setCopied] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [largeQrOpen, setLargeQrOpen] = useState(false);
+  const copyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const shareNavigator = navigator as ShareDataNavigator;
+    if (typeof shareNavigator.share !== 'function') return;
+    const shareData = { title: displayName, text: t('wordLists.shareNativeText'), url: shareUrl };
+    setCanNativeShare(typeof shareNavigator.canShare === 'function' ? shareNavigator.canShare(shareData) : true);
+  }, [displayName, shareUrl, t]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  async function copyShareUrl() {
+    await copyTextToClipboard(shareUrl);
+    setCopied(true);
+    if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = window.setTimeout(() => {
+      setCopied(false);
+      copyTimerRef.current = null;
+    }, COPY_STATUS_VISIBLE_MS);
+  }
+
+  async function shareNative() {
+    const shareNavigator = navigator as ShareDataNavigator;
+    if (typeof shareNavigator.share !== 'function') return;
+    await shareNavigator.share({ title: displayName, text: t('wordLists.shareNativeText'), url: shareUrl });
+  }
+
+  return (
+    <>
+      <div className="wordlist-share-header">
+        <button className="wordlist-share-nav-button" type="button" onClick={onBack} aria-label={t('wordLists.back')}>
+          <ArrowLeft size={22} strokeWidth={2.2} aria-hidden="true" />
+        </button>
+        <button className="wordlist-share-nav-button" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
+          <X size={24} strokeWidth={2} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="wordlist-share-body">
+        <div className="wordlist-share-intro">
+          <h2 className="modal-title">{t('wordLists.shareThisWordList')}</h2>
+          <p>{displayName}</p>
+        </div>
+
+        <div className="wordlist-share-layout">
+          <section className="wordlist-share-qr-section" aria-labelledby="wordlist-share-qr-title">
+            <h3 id="wordlist-share-qr-title" className="group-title">{t('wordLists.qrCode')}</h3>
+            <button className="wordlist-share-qr-card" type="button" onClick={() => setLargeQrOpen(true)}>
+              <QRCodeSVG value={shareUrl} size={208} marginSize={2} className="wordlist-share-qr" />
+              <span>{t('wordLists.scanToOpenList')}</span>
+            </button>
+          </section>
+
+          <section className="wordlist-share-link-section" aria-labelledby="wordlist-share-link-title">
+            <h3 id="wordlist-share-link-title" className="group-title">{t('wordLists.shareLink')}</h3>
+            <div className="wordlist-share-link-box">
+              <a href={shareUrl} target="_blank" rel="noreferrer">{shareUrl}</a>
+              <button className="wordlist-copy-button" type="button" onClick={copyShareUrl}>
+                <Copy size={18} strokeWidth={2} aria-hidden="true" />
+                {copied ? t('wordLists.linkCopied') : t('wordLists.copyLink')}
+              </button>
+            </div>
+            {canNativeShare && (
+              <button className="wordlist-native-share-button" type="button" onClick={shareNative}>
+                <Share2 size={18} strokeWidth={2} aria-hidden="true" />
+                {t('wordLists.share')}
+              </button>
+            )}
+            <label className="wordlist-practice-test-option">
+              <input
+                type="checkbox"
+                checked={practiceTestLink}
+                onChange={event => setPracticeTestLink(event.target.checked)}
+              />
+              <span>
+                <b>{t('wordLists.practiceTest')}</b>
+                <small>{t('wordLists.practiceTestHelper')}</small>
+              </span>
+            </label>
+          </section>
+        </div>
+
+        <div className="wordlist-share-privacy-panel">
+          <span className="wordlist-share-privacy-icon" aria-hidden="true">
+            <ShieldCheck size={27} strokeWidth={1.9} />
+          </span>
+          <div>
+            <h3>{t('wordLists.safeAndPrivate')}</h3>
+            <p>{t('wordLists.sharePrivacyBody')}</p>
+          </div>
+        </div>
+      </div>
+
+      {largeQrOpen && (
+        <LargeWordListQrOverlay
+          listName={displayName}
+          shareUrl={shareUrl}
+          onClose={() => setLargeQrOpen(false)}
+          t={t}
+        />
+      )}
+    </>
+  );
+}
+
+function LargeWordListQrOverlay({
+  listName,
+  shareUrl,
+  onClose,
+  t
+}: {
+  listName: string;
+  shareUrl: string;
+  onClose: () => void;
+  t: Translate;
+}) {
+  useEffect(() => {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="wordlist-large-qr-overlay" role="dialog" aria-modal="true" aria-label={t('wordLists.scanToOpenList')}>
+      <div className="wordlist-large-qr-card">
+        <button className="wordlist-large-qr-close" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
+          <X size={24} strokeWidth={2.1} aria-hidden="true" />
+          <span>{t('wordLists.close')}</span>
+        </button>
+        <div className="wordlist-large-qr-heading">
+          <p>{t('wordLists.scanToOpenList')}</p>
+          <h2>{listName}</h2>
+        </div>
+        <QRCodeSVG value={shareUrl} size={520} marginSize={3} className="wordlist-large-qr" />
+        <a href={shareUrl} target="_blank" rel="noreferrer" className="wordlist-large-qr-url">{shareUrl}</a>
+      </div>
+    </div>
+  );
 }
 
 export function WordListModal({
@@ -1425,6 +1663,7 @@ export function WordListModal({
 }) {
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, lists));
+  const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
   const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
   const filteredLists = useMemo(() => {
@@ -1451,74 +1690,98 @@ export function WordListModal({
     setSelectedIds(selectSingleWordList(listId));
   }, []);
 
+  const closeShareView = useCallback(() => setShareList(null), []);
+
   return (
     <Overlay className="wordlist-overlay">
-      <section className="modal modal-wide modal-accent wordlist-modal">
-        <div className="modal-header flex items-start justify-between gap-4">
-          <div>
-            <h2 className="modal-title">{t('wordLists.title')}</h2>
-          </div>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-
-        <div className="wordlist-body">
-          <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
-
-          <div className="list-grid">
-            {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
-              <div key={group}>
-                <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
-                {groupLists.map(list => (
-                  <WordListRow
-                    key={list.id}
-                    list={list}
-                    displayName={getListDisplayName(list, interfaceLanguage)}
-                    selected={selectedId === list.id}
-                    completed={completedSet.has(list.id)}
-                    completedLabel={t('wordLists.completed')}
-                    onSelect={selectList}
-                  />
-                ))}
+      <section className={`modal modal-wide modal-accent wordlist-modal ${shareList ? 'wordlist-share-mode' : ''}`}>
+        {shareList ? (
+          <WordListShareView
+            list={shareList}
+            displayName={getListDisplayName(shareList, interfaceLanguage)}
+            onBack={closeShareView}
+            onClose={onClose}
+            t={t}
+          />
+        ) : (
+          <>
+            <div className="modal-header flex items-start justify-between gap-4">
+              <div>
+                <h2 className="modal-title">{t('wordLists.title')}</h2>
               </div>
-            ))}
-            {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
-              <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
-                <h3 className="collection-title">{collectionName}</h3>
-                {Object.entries(stageGroups).map(([group, groupLists]) => (
-                  <div key={`${collectionName}-${group}`} className="stage-group">
-                    <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
-                    {groupLists.map(list => (
-                      <WordListRow
-                        key={list.id}
-                        list={list}
-                        displayName={getListDisplayName(list, interfaceLanguage)}
-                        selected={selectedId === list.id}
-                        completed={completedSet.has(list.id)}
-                        completedLabel={t('wordLists.completed')}
-                        onSelect={selectList}
-                      />
+              <button className="modal-close" onClick={onClose} aria-label={t('wordLists.close')}>×</button>
+            </div>
+
+            <div className="wordlist-body">
+              <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
+
+              <div className="list-grid">
+                {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
+                  <div key={group}>
+                    <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
+                    {groupLists.map(list => {
+                      const displayName = getListDisplayName(list, interfaceLanguage);
+                      return (
+                        <WordListRow
+                          key={list.id}
+                          list={list}
+                          displayName={displayName}
+                          selected={selectedId === list.id}
+                          completed={completedSet.has(list.id)}
+                          completedLabel={t('wordLists.completed')}
+                          shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
+                          onSelect={selectList}
+                          onShare={setShareList}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+                {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
+                  <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
+                    <h3 className="collection-title">{collectionName}</h3>
+                    {Object.entries(stageGroups).map(([group, groupLists]) => (
+                      <div key={`${collectionName}-${group}`} className="stage-group">
+                        <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
+                        {groupLists.map(list => {
+                          const displayName = getListDisplayName(list, interfaceLanguage);
+                          return (
+                            <WordListRow
+                              key={list.id}
+                              list={list}
+                              displayName={displayName}
+                              selected={selectedId === list.id}
+                              completed={completedSet.has(list.id)}
+                              completedLabel={t('wordLists.completed')}
+                              shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
+                              onSelect={selectList}
+                              onShare={setShareList}
+                            />
+                          );
+                        })}
+                      </div>
                     ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
 
-          {onSuggestWordList && (
-            <p className="wordlist-suggestion">
-              <span>{t('wordLists.suggestionPrompt')}</span>
-              <button className="wordlist-suggestion-link" type="button" onClick={onSuggestWordList}>
-                {t('wordLists.suggestionLink')}
-              </button>
-            </p>
-          )}
-        </div>
+              {onSuggestWordList && (
+                <p className="wordlist-suggestion">
+                  <span>{t('wordLists.suggestionPrompt')}</span>
+                  <button className="wordlist-suggestion-link" type="button" onClick={onSuggestWordList}>
+                    {t('wordLists.suggestionLink')}
+                  </button>
+                </p>
+              )}
+            </div>
 
-        <div className="wordlist-footer sticky-done">
-          <div className="done-row wordlist-actions">
-            <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
-          </div>
-        </div>
+            <div className="wordlist-footer sticky-done">
+              <div className="done-row wordlist-actions">
+                <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
+              </div>
+            </div>
+          </>
+        )}
       </section>
     </Overlay>
   );

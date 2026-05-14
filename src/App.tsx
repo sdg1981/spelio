@@ -14,6 +14,7 @@ import { createNormalContinuationPracticeStart, createPrimaryRecommendationPract
 import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
+import { applySharedWordListSelection, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode } from './lib/wordListSharing';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
 type Screen = 'home' | 'practice' | 'end';
@@ -44,6 +45,12 @@ function applyInterfaceLanguageRoute(storage: SpelioStorage): SpelioStorage {
   };
 }
 
+function applyInitialPublicWordListRoute(storage: SpelioStorage): SpelioStorage {
+  const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
+  const sharedList = findActiveWordListBySlug(wordLists, sharedSlug);
+  return sharedList ? applySharedWordListSelection(storage, sharedList) : storage;
+}
+
 export default function App() {
   if (window.location.pathname.startsWith('/admin')) {
     return (
@@ -53,7 +60,7 @@ export default function App() {
     );
   }
 
-  const [storage, setStorage] = useState<SpelioStorage>(() => applyInterfaceLanguageRoute(loadSpelioStorage()));
+  const [storage, setStorage] = useState<SpelioStorage>(() => applyInitialPublicWordListRoute(applyInterfaceLanguageRoute(loadSpelioStorage())));
   const [screen, setScreen] = useState<Screen>('home');
   const [reviewMode, setReviewMode] = useState(false);
   const [recapMode, setRecapMode] = useState(false);
@@ -65,6 +72,12 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
+  const [practiceTestListId, setPracticeTestListId] = useState<string | null>(() => {
+    const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
+    const sharedList = findActiveWordListBySlug(wordLists, sharedSlug);
+    return sharedList && isPracticeTestShareMode(window.location.search) ? sharedList.id : null;
+  });
+  const [practiceTestMode, setPracticeTestMode] = useState(false);
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
@@ -116,8 +129,16 @@ export default function App() {
 
     loadPublicContent().then(content => {
       if (cancelled) return;
+      const sharedSlug = getSharedWordListSlugFromPath(window.location.pathname);
+      const sharedList = findActiveWordListBySlug(content.lists, sharedSlug);
+      const sharedPracticeTestListId = sharedList && isPracticeTestShareMode(window.location.search) ? sharedList.id : null;
       setPublicWordLists(content.lists);
-      setStorage(previous => normalizeStorageWordListSelection(previous, content.lists));
+      setPracticeTestListId(sharedPracticeTestListId);
+      if (sharedList) setLastResult(null);
+      setStorage(previous => {
+        const normalized = normalizeStorageWordListSelection(previous, content.lists);
+        return sharedList ? applySharedWordListSelection(normalized, sharedList) : normalized;
+      });
     });
 
     return () => {
@@ -169,6 +190,7 @@ export default function App() {
     setShowFirstSessionKeyboardHint(!start.review && !start.recap && (storage.completedNormalSessionCount ?? 0) >= 5);
     setStorage(start.storage);
     setPracticeStartStorage(start.storage);
+    setPracticeTestMode(start.mode === 'normal' && Boolean(practiceTestListId) && start.storage.selectedListIds[0] === practiceTestListId);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(start.review);
     setRecapMode(start.recap);
@@ -209,6 +231,7 @@ export default function App() {
     setStorage(previous => applyManualWordListSelection(previous, ids));
     setReviewMode(false);
     setRecapMode(false);
+    setPracticeTestMode(false);
     setWordListModalOpen(false);
     setScreen('home');
   }
@@ -225,6 +248,7 @@ export default function App() {
     setStorage(freshStorage);
     setReviewMode(false);
     setRecapMode(false);
+    setPracticeTestMode(false);
     setWordListModalOpen(false);
     setLastResult(null);
     setShowFirstSessionKeyboardHint(false);
@@ -254,6 +278,7 @@ export default function App() {
       includeRecapDue={recapMode}
       sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
+      practiceTestMode={practiceTestMode}
       onStorageChange={updateStorage}
       onComplete={handleComplete}
       onBackHome={() => setScreen('home')}

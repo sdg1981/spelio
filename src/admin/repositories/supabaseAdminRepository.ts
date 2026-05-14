@@ -8,6 +8,7 @@ import { createAudioQueueSnapshot, createAudioStoragePath, normalizeLegacyAudioS
 
 type WordListRow = {
   id: string;
+  slug?: string | null;
   collection_id?: string | null;
   name: string;
   name_cy?: string | null;
@@ -419,6 +420,7 @@ function mapWordListRow(row: WordListRow): AdminWordList {
   const words = [...(row.words ?? [])].sort((a, b) => a.order_index - b.order_index).map(mapWordRow);
   return {
     id: row.id,
+    slug: row.slug ?? slugOrNull(row.name) ?? row.id,
     collectionId: row.collection_id ?? DEFAULT_COLLECTION_ID,
     collectionName: row.word_list_collections?.name ?? 'Spelio Core Welsh',
     name: row.name,
@@ -469,6 +471,7 @@ function mapWordRow(row: WordRow): AdminWord {
 function toWordListRow(list: AdminWordList) {
   return {
     id: list.id,
+    slug: list.slug,
     collection_id: list.collectionId || DEFAULT_COLLECTION_ID,
     name: list.name,
     name_cy: list.nameCy || null,

@@ -101,6 +101,9 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
 
     if (!listId) return;
     if (!stringValue(list.name)) errors.push(`List ${listLabel} is missing name.`);
+    if (stringValue(list.slug) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stringValue(list.slug))) {
+      errors.push(`List ${listLabel} has invalid slug "${stringValue(list.slug)}".`);
+    }
     if (list.difficulty !== undefined && !validDifficulty(list.difficulty)) errors.push(`List ${listLabel} has invalid difficulty.`);
     if (list.order !== undefined && !validOrder(list.order)) errors.push(`List ${listLabel} has invalid order.`);
     if (list.isActive !== undefined && typeof list.isActive !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
@@ -127,6 +130,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     const pairKeys = new Set<string>();
     const normalizedList: AdminWordList = {
       id: listId,
+      slug: stringValue(list.slug) || slug(stringValue(list.name) || listId),
       collectionId,
       collectionName: collectionName(collectionInputs.get(collectionId), collectionId),
       name: stringValue(list.name),

@@ -48,6 +48,7 @@ The MVP must follow these principles:
 - No custom user accounts at launch
 - No complex AI recommendation system at launch
 - No native app build at launch
+- Lightweight word-list sharing is included, but accounts, dashboards, teacher systems, reporting, and advanced assessment controls remain excluded
 
 The product should feel like a premium SaaS-style tool: calm, restrained, responsive, and well designed.
 
@@ -100,8 +101,12 @@ Examples of actions that must not automatically start practice:
 - Closing a modal
 - Returning from the end screen
 - Saving settings
+- Opening a shared `/list/{slug}` URL
+- Opening a shared `/list/{slug}?mode=practice-test` URL
 
 This rule is global and applies across homepage, practice screen, end screen, and modals.
+
+Shared list links may preselect or preload a word list. They must not start practice automatically. The learner must explicitly press Start / Continue practice.
 
 ## 4. Core screens
 
@@ -767,6 +772,86 @@ Close (X) behaviour:
 
 Changing word lists is a navigation/setup action, not a session-start action.
 
+### 8.6 Shareable word-list links
+
+The public word list modal supports lightweight sharing for individual word lists.
+
+Rules:
+
+- Sharing is available only for the currently selected word list.
+- The share icon appears only on the selected row.
+- Do not show share icons on every row.
+- Do not add a global share button at the top of the modal.
+- Clicking the share icon opens a lightweight share surface for that specific list.
+- Clicking the share icon must not accidentally select or deselect the row through event bubbling.
+- Share actions must never start practice.
+
+The share surface should include:
+
+- Word-list name
+- QR code
+- Human-readable share URL
+- Copy link action
+- Native Share action where supported by the browser/device
+- A small reassurance message explaining that the link opens Spelio and does not require an account
+
+Do not include a custom grid of WhatsApp, X, Facebook, Reddit, email, or other social buttons. Use the native share sheet where available.
+
+The QR code should be clickable/tappable and open a larger QR view suitable for classroom display or a smartboard. This is only a display convenience. It must not affect selection, practice state, scoring, or session generation.
+
+### 8.7 Canonical friendly list URLs
+
+Public word-list sharing uses friendly canonical URLs.
+
+Preferred format:
+
+```text
+/list/{word-list-slug}
+```
+
+Example:
+
+```text
+/list/first-verbs-core-actions
+```
+
+Rules:
+
+- Slugs are human-readable, lowercase, hyphenated, and stable.
+- Public sharing uses slugs; internal IDs remain unchanged and remain available internally.
+- Friendly URLs are for public sharing only.
+- Avoid deeply nested collection/stage URLs for MVP.
+- Invalid or inactive slugs should be ignored safely or fall back to existing behaviour.
+- Opening a valid list URL preselects that word list and sets `currentPathPosition` to that list.
+- Opening a valid list URL must not start practice automatically.
+- Existing local storage IDs must not be renamed or invalidated by public slugs.
+
+### 8.8 Practice test share option
+
+Practice test is a lightweight shared-link option, not a full assessment system.
+
+The share modal may include one optional checkbox/toggle:
+
+- Label: “Practice test”
+- Helper text: “Hides English prompts and reveal tools.”
+
+When enabled, the shared URL becomes:
+
+```text
+/list/{slug}?mode=practice-test
+```
+
+Rules:
+
+- The QR code, Copy link action, and native Share action all use the currently toggled URL.
+- Visiting `/list/{slug}?mode=practice-test` preselects the list but does not auto-start practice.
+- Once the learner explicitly starts practice from that link, Practice test applies for that shared-link session.
+- Practice test hides English prompts/subtitles and hides or disables reveal tools.
+- Audio remains available.
+- Practice test is link/session-scoped and must not permanently overwrite learner settings.
+- Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or storage progression.
+- Do not add timers, lockdown behaviour, reporting, teacher accounts, score submission, anti-cheating systems, configurable assessment builders, or additional checkboxes for MVP.
+
 ## 9. End-of-session screen
 
 **UX intent:** This screen should feel rewarding but restrained. Avoid gamification. Emphasise clarity, closure, and the next useful step.
@@ -1387,6 +1472,7 @@ Each word list belongs to a collection through `collectionId`.
 Each word list should include:
 
 - id
+- slug
 - collectionId
 - name
 - description
@@ -1406,6 +1492,18 @@ List-level dialect is a summary/display field only. The actual practice filterin
 
 Existing word-list fields remain unchanged. Do not remove or rename current English/Welsh MVP content fields.
 
+`slug` is the stable public URL identifier for shareable word-list links. It is separate from `id`.
+
+Admin slug requirements:
+
+- Slug editing should be shown in a low-emphasis metadata or advanced area.
+- Slugs should use lowercase letters, numbers, and hyphens only.
+- No spaces.
+- No leading or trailing hyphens.
+- Slugs should be unique across active word lists where practical.
+- Admin may show and copy the canonical public URL, for example `/list/first-verbs-core-actions`.
+- Slug support must not rename existing IDs, break imports, or invalidate local storage.
+
 For current Welsh MVP content, word lists should default to:
 
 ```json
@@ -1417,6 +1515,7 @@ For current Welsh MVP content, word lists should default to:
 
 In Supabase/database persistence, the `word_lists` table should include:
 
+- `slug` for public canonical URLs
 - `collection_id` referencing the collection entity/table
 - `source_language` default `"en"`
 - `target_language` default `"cy"`
@@ -2229,6 +2328,12 @@ Do not include in MVP:
 - AI recommendation engine
 - Full spaced repetition system
 - Teacher dashboards
+- Teacher accounts
+- Classroom management
+- Learner reporting
+- Formal assessment mode
+- Configurable assessment builders
+- Advanced share controls
 - Public custom list sharing
 - Custom, personal, or teacher-created list authoring
 - Configurable custom-list practice modes
@@ -2255,6 +2360,8 @@ Do not include in MVP:
 
 Lightweight recap of recently weak words is included; full spaced repetition scheduling is excluded.
 
+Lightweight share links and Practice test links are included. They do not make the MVP a teacher platform, reporting system, or formal assessment system.
+
 ## 23. Build priorities
 
 ### Phase 1 — Frontend UI
@@ -2267,6 +2374,7 @@ Build:
 - Practice screen
 - Settings modal
 - Word list modal
+- Selected word-list share surface with QR, copy link, native Share where supported, and the lightweight Practice test share option
 - End screen
 
 Use static mock data first.
@@ -2309,6 +2417,7 @@ Build:
 - Login/password gate
 - Lightweight Collections metadata layer
 - Word list CRUD
+- Word-list slug and canonical public URL metadata
 - Word CRUD
 - Azure Voice generation
 - Audio preview

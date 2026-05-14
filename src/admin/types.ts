@@ -46,6 +46,7 @@ export interface AdminWord {
 
 export interface AdminWordList {
   id: string;
+  slug: string;
   collectionId: string;
   collectionName: string;
   name: string;

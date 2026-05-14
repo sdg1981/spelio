@@ -68,6 +68,7 @@ export interface PracticeWord {
 
 export interface WordList {
   id: string;
+  slug?: string;
   collectionId: string;
   collection?: WordListCollection;
   name: string;
@@ -109,6 +110,7 @@ type DatasetWord = {
 
 type DatasetList = {
   id: string;
+  slug?: string;
   collectionId?: string;
   name: string;
   nameCy?: string;
@@ -146,6 +148,7 @@ export const wordLists: WordList[] = rawLists
   .sort((a, b) => a.order - b.order)
   .map(list => ({
     id: list.id,
+    slug: list.slug,
     collectionId: list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID,
     collection: collectionMap.get(list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID) ?? defaultWordListCollection,
     name: list.name,

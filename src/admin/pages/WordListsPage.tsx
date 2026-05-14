@@ -6,6 +6,7 @@ import { AdminButton, AdminCard, AdminInput } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
 import { getAudioHealth } from '../repositories';
+import { createAdminWordListSlug } from '../services/wordListSlug';
 import type { AdminStructureOption, AdminWordList, AdminWordListCollection } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 
@@ -44,6 +45,7 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
     const now = new Date().toISOString();
     const list: AdminWordList = {
       id,
+      slug: createAdminWordListSlug(name, wordLists),
       collectionId: collection?.id ?? DEFAULT_COLLECTION_ID,
       collectionName: collection?.name ?? 'Spelio Core Welsh',
       name,

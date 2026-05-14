@@ -33,6 +33,7 @@ type CollectionRow = {
 
 type WordListRow = {
   id: string;
+  slug: string | null;
   collection_id: string | null;
   name: string | null;
   name_cy: string | null;
@@ -165,6 +166,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
 
   return {
     id: row.id,
+    slug: row.slug ?? undefined,
     collectionId: row.collection_id ?? DEFAULT_WORD_LIST_COLLECTION_ID,
     collection,
     name: row.name ?? row.id,
@@ -199,7 +201,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .order('order_index', { ascending: true }),
     client
       .from('word_lists')
-      .select('id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active')
+      .select('id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active')
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
     client

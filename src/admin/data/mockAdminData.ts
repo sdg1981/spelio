@@ -22,6 +22,7 @@ type RawWord = {
 
 type RawList = {
   id: string;
+  slug?: string;
   collectionId?: string;
   name: string;
   nameCy?: string;
@@ -70,6 +71,7 @@ const collectionNameById = new Map(adminWordListCollections.map(collection => [c
 export const adminWordLists: AdminWordList[] = rawLists
   .map(list => ({
     id: list.id,
+    slug: list.slug ?? slug(list.name),
     collectionId: list.collectionId ?? DEFAULT_COLLECTION_ID,
     collectionName: collectionNameById.get(list.collectionId ?? DEFAULT_COLLECTION_ID) ?? 'Spelio Core Welsh',
     name: list.name,

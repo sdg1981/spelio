@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink, Trash2 } from 'lucide-react';
+import { ChevronRight, Copy, ExternalLink, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminTimestamp } from '../components/AdminTimestamp';
@@ -8,8 +8,10 @@ import { UnsavedChangesBar } from '../components/UnsavedChangesBar';
 import { WordEditorPanel } from '../components/WordEditorPanel';
 import { WordRowsTable } from '../components/WordRowsTable';
 import type { AdminRepository } from '../repositories';
+import { validateAdminWordListSlug } from '../services/wordListSlug';
 import type { AdminWord, AdminWordList, AdminWordListCollection } from '../types';
 import type { AdminStructureOption } from '../types';
+import { getWordListCanonicalUrl } from '../../lib/wordListSharing';
 
 export function WordListEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [source, setSource] = useState<AdminWordList | null>(null);
@@ -30,6 +32,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [errorMessage, setErrorMessage] = useState('');
   const selectedWord = useMemo(() => list?.words.find(word => word.id === selectedWordId) ?? list?.words[0], [list?.words, selectedWordId]);
   const selectedIndex = list?.words.findIndex(word => word.id === selectedWord?.id) ?? 0;
+  const publicUrl = useMemo(() => list ? getWordListCanonicalUrl(list) : '', [list]);
+  const slugError = useMemo(() => list ? validateAdminWordListSlug(list.slug, wordLists, list.id) : '', [list, wordLists]);
 
   useEffect(() => {
     setLoading(true);
@@ -66,6 +70,10 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
 
   async function saveChanges() {
     if (!list) return;
+    if (slugError) {
+      setErrorMessage(slugError);
+      return;
+    }
     try {
       setSaving(true);
       setErrorMessage('');
@@ -245,6 +253,18 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     }
   }
 
+  async function copyPublicLink() {
+    if (!publicUrl) return;
+    await navigator.clipboard.writeText(publicUrl);
+    setStatusMessage('Public link copied.');
+    setErrorMessage('');
+  }
+
+  function openPublicLink() {
+    if (!publicUrl) return;
+    window.open(publicUrl, '_blank', 'noopener,noreferrer');
+  }
+
   if (loading || !list || !source) {
     return <AdminPageHeader title="Edit Word List" description="Loading word list content..." />;
   }
@@ -268,7 +288,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
         description="Update the details and manage the words in this list."
         actions={
           <>
-            <AdminButton>View list <ExternalLink size={16} /></AdminButton>
+            <AdminButton onClick={openPublicLink}>View list <ExternalLink size={16} /></AdminButton>
             <AdminButton variant="danger" onClick={deleteList}><Trash2 size={16} /> Delete list</AdminButton>
             <AdminButton variant="primary" onClick={saveChanges} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</AdminButton>
           </>
@@ -305,6 +325,29 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               <Field label="Difficulty"><AdminSelect value={list.difficulty} onChange={event => updateList({ difficulty: Number(event.target.value) as AdminWordList['difficulty'] })}><option value={1}>1 - Beginner</option><option value={2}>2 - Easy</option><option value={3}>3 - Developing</option><option value={4}>4 - Challenging</option><option value={5}>5 - Advanced</option></AdminSelect></Field>
               <Field label="Order"><AdminInput type="number" value={list.order} onChange={event => updateList({ order: Number(event.target.value) })} /></Field>
               <Field label="Next list"><AdminSelect value={list.nextListId ?? ''} onChange={event => updateList({ nextListId: event.target.value || null })}><option value="">None</option>{wordLists.map(next => <option key={next.id} value={next.id}>{next.name}</option>)}</AdminSelect></Field>
+            </div>
+            <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
+                <Field
+                  label="Public URL slug"
+                  helper={slugError || 'Lowercase letters, numbers, and hyphens only.'}
+                >
+                  <AdminInput
+                    value={list.slug}
+                    aria-invalid={Boolean(slugError)}
+                    onChange={event => updateList({ slug: event.target.value })}
+                  />
+                </Field>
+                <div className="grid gap-2">
+                  <span className="text-xs font-bold text-slate-700">Canonical public URL</span>
+                  <a className="truncate rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-600" href={publicUrl} target="_blank" rel="noreferrer">
+                    {publicUrl}
+                  </a>
+                </div>
+                <AdminButton onClick={copyPublicLink} disabled={Boolean(slugError)}>
+                  <Copy size={16} /> Copy public link
+                </AdminButton>
+              </div>
             </div>
             <p className="mt-5 text-sm text-slate-500">
               Created <AdminTimestamp value={list.createdAt} /> · Updated <AdminTimestamp value={list.updatedAt} />
