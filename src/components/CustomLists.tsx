@@ -96,6 +96,9 @@ export function CustomListCreatePage({
   const [submitError, setSubmitError] = useState('');
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+  const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const welshInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const englishInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const visibleRows = getVisibleCustomListRowCount(rows);
 
   useEffect(() => {
@@ -115,15 +118,36 @@ export function CustomListCreatePage({
     setSubmitError('');
   }
 
+  function showErrors(nextErrors: CustomListValidationError[]) {
+    setErrors(nextErrors);
+    focusFirstProblemRow(nextErrors);
+  }
+
+  function focusFirstProblemRow(nextErrors: CustomListValidationError[]) {
+    window.requestAnimationFrame(() => {
+      const firstRowError = nextErrors
+        .filter(error => typeof error.row === 'number')
+        .sort((left, right) => (left.row ?? 0) - (right.row ?? 0))[0];
+      const rowIndex = firstRowError?.row ?? 0;
+      const rowElement = rowRefs.current[rowIndex];
+      rowElement?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const targetInput = firstRowError?.field === 'english'
+        ? englishInputRefs.current[rowIndex]
+        : welshInputRefs.current[rowIndex];
+      targetInput?.focus({ preventScroll: true });
+    });
+  }
+
   async function submit() {
     if (saving) return;
     const validation = validateCustomListRows(rows);
     if (validation.errors.length) {
-      setErrors(validation.errors);
+      showErrors(validation.errors);
       setSubmitError('');
       return;
     }
 
+    const submittedRowIndexes = getSubmittedRowIndexes(rows);
     setSaving(true);
     setSubmitError('');
     logCustomListEvent('custom_list_create_started');
@@ -140,7 +164,14 @@ export function CustomListCreatePage({
       const payload = await result.json().catch(() => null) as { publicId?: string; error?: string; errors?: CustomListValidationError[] } | null;
 
       if (!result.ok || !payload?.publicId) {
-        if (payload?.errors) setErrors(payload.errors);
+        const serverErrors = mapServerErrorsToVisibleRows(payload?.errors ?? [], submittedRowIndexes);
+        const moderationErrors = payload?.error === 'moderation_rejected'
+          ? serverErrors.length
+            ? serverErrors
+            : submittedRowIndexes.map(row => ({ row, code: 'moderationRejected' as const }))
+          : serverErrors;
+        if (moderationErrors.length) showErrors(moderationErrors);
+        else setErrors([]);
         setSubmitError(getCreateErrorMessage(payload?.error, t));
         logCustomListEvent('custom_list_create_failed');
         return;
@@ -151,7 +182,8 @@ export function CustomListCreatePage({
       resetPublicPageScrollToTop();
       window.dispatchEvent(new PopStateEvent('popstate'));
     } catch {
-      setSubmitError(t('customLists.audioError'));
+      setErrors([]);
+      setSubmitError(t('customLists.moderationUnavailable'));
       logCustomListEvent('custom_list_create_failed');
     } finally {
       setSaving(false);
@@ -182,45 +214,78 @@ export function CustomListCreatePage({
             <b>{t('customLists.welshSpelling')}</b>
             <b>{t('customLists.englishMeaning')}</b>
           </div>
-          {rows.slice(0, visibleRows).map((row, index) => (
-            <div className="custom-list-row" key={index}>
+          {rows.slice(0, visibleRows).map((row, index) => {
+            const welshError = findFieldError(errors, index, 'welsh');
+            const englishError = findFieldError(errors, index, 'english');
+            const rowError = findRowLevelError(errors, index);
+            const hasRowProblem = Boolean(welshError || englishError || rowError);
+            const rowErrorId = rowError ? `custom-row-error-${index}` : undefined;
+            const welshDescribedBy = [
+              welshError ? `custom-welsh-error-${index}` : '',
+              rowErrorId ?? ''
+            ].filter(Boolean).join(' ') || undefined;
+            const englishDescribedBy = [
+              englishError ? `custom-english-error-${index}` : '',
+              rowErrorId ?? ''
+            ].filter(Boolean).join(' ') || undefined;
+
+            return (
+            <div
+              ref={element => {
+                rowRefs.current[index] = element;
+              }}
+              className={`custom-list-row ${hasRowProblem ? 'custom-list-row-has-error' : ''}`.trim()}
+              key={index}
+            >
               <span className="custom-list-row-number" aria-hidden="true">{index + 1}</span>
               <div className="custom-list-field">
                 <label htmlFor={`custom-welsh-${index}`}>{t('customLists.welshSpelling')}</label>
                 <input
+                  ref={element => {
+                    welshInputRefs.current[index] = element;
+                  }}
                   id={`custom-welsh-${index}`}
                   value={row.welsh}
                   maxLength={CUSTOM_LIST_WELSH_MAX_LENGTH + 1}
                   placeholder={t('customLists.welshPlaceholder')}
-                  aria-invalid={Boolean(findRowError(errors, index, 'welsh'))}
-                  aria-describedby={findRowError(errors, index, 'welsh') ? `custom-welsh-error-${index}` : undefined}
+                  aria-invalid={Boolean(welshError || rowError)}
+                  aria-describedby={welshDescribedBy}
                   onChange={event => updateRow(index, 'welsh', event.target.value)}
                 />
-                {findRowError(errors, index, 'welsh') && (
+                {welshError && (
                   <small id={`custom-welsh-error-${index}`} className="custom-list-error">
-                    {formatValidationError(findRowError(errors, index, 'welsh'), t)}
+                    {formatValidationError(welshError, t)}
                   </small>
                 )}
               </div>
               <div className="custom-list-field">
                 <label htmlFor={`custom-english-${index}`}>{t('customLists.englishMeaning')}</label>
                 <input
+                  ref={element => {
+                    englishInputRefs.current[index] = element;
+                  }}
                   id={`custom-english-${index}`}
                   value={row.english}
                   maxLength={CUSTOM_LIST_ENGLISH_MAX_LENGTH + 1}
                   placeholder={t('customLists.englishPlaceholder')}
-                  aria-invalid={Boolean(findRowError(errors, index, 'english'))}
-                  aria-describedby={findRowError(errors, index, 'english') ? `custom-english-error-${index}` : undefined}
+                  aria-invalid={Boolean(englishError || rowError)}
+                  aria-describedby={englishDescribedBy}
                   onChange={event => updateRow(index, 'english', event.target.value)}
                 />
-                {findRowError(errors, index, 'english') && (
+                {englishError && (
                   <small id={`custom-english-error-${index}`} className="custom-list-error">
-                    {formatValidationError(findRowError(errors, index, 'english'), t)}
+                    {formatValidationError(englishError, t)}
                   </small>
                 )}
               </div>
+              {rowError && (
+                <small id={rowErrorId} className="custom-list-error custom-list-row-error">
+                  {formatValidationError(rowError, t)}
+                </small>
+              )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         <div className="custom-list-create-footer">
@@ -467,8 +532,30 @@ function CustomListMessage({ title, body }: { title: string; body: string }) {
   );
 }
 
-function findRowError(errors: CustomListValidationError[], row: number, field: keyof CustomListEntryInput) {
+function findFieldError(errors: CustomListValidationError[], row: number, field: keyof CustomListEntryInput) {
   return errors.find(error => error.row === row && error.field === field);
+}
+
+function findRowLevelError(errors: CustomListValidationError[], row: number) {
+  return errors.find(error => error.row === row && !error.field);
+}
+
+function getSubmittedRowIndexes(rows: CustomListEntryInput[]) {
+  return rows
+    .slice(0, CUSTOM_LIST_MAX_ROWS)
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.welsh.trim())
+    .map(({ index }) => index);
+}
+
+function mapServerErrorsToVisibleRows(errors: CustomListValidationError[], submittedRowIndexes: number[]) {
+  return errors.map(error => {
+    if (typeof error.row !== 'number') return error;
+    return {
+      ...error,
+      row: submittedRowIndexes[error.row] ?? error.row
+    };
+  });
 }
 
 function formatValidationError(error: CustomListValidationError | undefined, t: Translate) {
@@ -477,13 +564,16 @@ function formatValidationError(error: CustomListValidationError | undefined, t: 
   if (error.code === 'welshTooLong') return t('customLists.errorWelshTooLong');
   if (error.code === 'englishTooLong') return t('customLists.errorEnglishTooLong');
   if (error.code === 'repeatedSpam') return t('customLists.errorRepeated');
+  if (error.code === 'moderationRejected') return t('customLists.errorModerationRow');
   return t('customLists.errorNoEntries');
 }
 
 function getCreateErrorMessage(error: string | undefined, t: Translate) {
   if (error === 'rate_limited') return t('customLists.rateLimitError');
-  if (error === 'moderation_rejected' || error === 'moderation_failed') return t('customLists.moderationError');
+  if (error === 'moderation_rejected') return t('customLists.moderationError');
+  if (error === 'moderation_failed' || error === 'server_error') return t('customLists.moderationUnavailable');
   if (error === 'validation_failed') return '';
+  if (error === 'audio_failed') return t('customLists.audioError');
   return t('customLists.audioError');
 }
 

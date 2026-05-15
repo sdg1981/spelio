@@ -4978,11 +4978,27 @@
   box-shadow:0 0 0 3px rgba(217,0,0,.08);
 }
 
+.custom-list-row-has-error{
+  border-radius:10px;
+  background:rgba(217,0,0,.025);
+  padding:8px 10px;
+  margin:-8px -10px;
+}
+
+.custom-list-row-has-error .custom-list-row-number{
+  color:#b40000;
+}
+
 .custom-list-error,
 .custom-list-submit-error{
   color:#b40000;
   font-size:14px;
   line-height:1.35;
+}
+
+.custom-list-row-error{
+  grid-column:2 / -1;
+  margin-top:-10px;
 }
 
 .custom-list-create-footer{

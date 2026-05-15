@@ -31,6 +31,7 @@ type ModerationStatus = 'pass' | 'rejected' | 'failed';
 type ModerationResult = {
   status: ModerationStatus;
   provider: string;
+  flaggedEntryIndexes?: number[];
 };
 
 const CREATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -62,7 +63,14 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const moderation = await moderateCustomListEntries(validation.entries, process.env);
     if (moderation.status === 'rejected') {
-      return response.status(422).json({ ok: false, error: 'moderation_rejected' });
+      return response.status(422).json({
+        ok: false,
+        error: 'moderation_rejected',
+        errors: moderation.flaggedEntryIndexes?.map(index => ({
+          row: index,
+          code: 'moderationRejected'
+        })) ?? []
+      });
     }
     if (moderation.status === 'failed') {
       return response.status(503).json({ ok: false, error: 'moderation_failed' });
@@ -147,14 +155,13 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
 export async function moderateCustomListEntries(entries: CustomListEntryInput[], env: Record<string, string | undefined> = process.env): Promise<ModerationResult> {
   const provider = (env.CUSTOM_LIST_MODERATION_PROVIDER ?? '').trim().toLowerCase();
-  const text = entries.flatMap(entry => [entry.welsh, entry.english]).filter(Boolean).join('\n');
 
   if (provider === 'azure' || (!provider && env.AZURE_CONTENT_SAFETY_ENDPOINT && env.AZURE_CONTENT_SAFETY_KEY)) {
-    return moderateWithAzureContentSafety(text, env);
+    return moderateWithAzureContentSafety(entries, env);
   }
 
   if (provider === 'openai' || (!provider && env.OPENAI_API_KEY)) {
-    return moderateWithOpenAI(text, env);
+    return moderateWithOpenAI(entries, env);
   }
 
   if (env.CUSTOM_LIST_MODERATION_MOCK_SAFE === 'true' && env.NODE_ENV !== 'production' && env.VERCEL_ENV !== 'production') {
@@ -164,34 +171,44 @@ export async function moderateCustomListEntries(entries: CustomListEntryInput[],
   return { status: 'failed', provider: 'none' };
 }
 
-async function moderateWithAzureContentSafety(text: string, env: Record<string, string | undefined>): Promise<ModerationResult> {
+async function moderateWithAzureContentSafety(entries: CustomListEntryInput[], env: Record<string, string | undefined>): Promise<ModerationResult> {
   const endpoint = env.AZURE_CONTENT_SAFETY_ENDPOINT?.replace(/\/+$/, '');
   const key = env.AZURE_CONTENT_SAFETY_KEY;
   if (!endpoint || !key) return { status: 'failed', provider: 'azure-content-safety' };
 
   try {
-    const result = await fetch(`${endpoint}/contentsafety/text:analyze?api-version=2023-10-01`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': key
-      },
-      body: JSON.stringify({
-        text,
-        categories: ['Hate', 'SelfHarm', 'Sexual', 'Violence'],
-        outputType: 'FourSeverityLevels'
-      })
-    });
-    if (!result.ok) return { status: 'failed', provider: 'azure-content-safety' };
-    const payload = await result.json().catch(() => null) as { categoriesAnalysis?: Array<{ severity?: number }> } | null;
-    const flagged = payload?.categoriesAnalysis?.some(category => (category.severity ?? 0) >= 2) === true;
-    return { status: flagged ? 'rejected' : 'pass', provider: 'azure-content-safety' };
+    const flaggedEntryIndexes: number[] = [];
+    for (const [index, entry] of entries.entries()) {
+      const result = await fetch(`${endpoint}/contentsafety/text:analyze?api-version=2023-10-01`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Ocp-Apim-Subscription-Key': key
+        },
+        body: JSON.stringify({
+          text: formatEntryForModeration(entry),
+          categories: ['Hate', 'SelfHarm', 'Sexual', 'Violence'],
+          outputType: 'FourSeverityLevels'
+        })
+      });
+      if (!result.ok) return { status: 'failed', provider: 'azure-content-safety' };
+      const payload = await result.json().catch(() => null) as { categoriesAnalysis?: Array<{ severity?: number }> } | null;
+      if (payload?.categoriesAnalysis?.some(category => (category.severity ?? 0) >= 2) === true) {
+        flaggedEntryIndexes.push(index);
+      }
+    }
+
+    return {
+      status: flaggedEntryIndexes.length ? 'rejected' : 'pass',
+      provider: 'azure-content-safety',
+      flaggedEntryIndexes
+    };
   } catch {
     return { status: 'failed', provider: 'azure-content-safety' };
   }
 }
 
-async function moderateWithOpenAI(text: string, env: Record<string, string | undefined>): Promise<ModerationResult> {
+async function moderateWithOpenAI(entries: CustomListEntryInput[], env: Record<string, string | undefined>): Promise<ModerationResult> {
   const key = env.OPENAI_API_KEY;
   if (!key) return { status: 'failed', provider: 'openai' };
 
@@ -204,16 +221,26 @@ async function moderateWithOpenAI(text: string, env: Record<string, string | und
       },
       body: JSON.stringify({
         model: env.OPENAI_MODERATION_MODEL ?? 'omni-moderation-latest',
-        input: text
+        input: entries.map(formatEntryForModeration)
       })
     });
     if (!result.ok) return { status: 'failed', provider: 'openai' };
     const payload = await result.json().catch(() => null) as { results?: Array<{ flagged?: boolean }> } | null;
-    const flagged = payload?.results?.some(item => item.flagged) === true;
-    return { status: flagged ? 'rejected' : 'pass', provider: 'openai' };
+    const flaggedEntryIndexes = payload?.results
+      ?.map((item, index) => item.flagged ? index : -1)
+      .filter(index => index >= 0) ?? [];
+    return {
+      status: flaggedEntryIndexes.length ? 'rejected' : 'pass',
+      provider: 'openai',
+      flaggedEntryIndexes
+    };
   } catch {
     return { status: 'failed', provider: 'openai' };
   }
+}
+
+function formatEntryForModeration(entry: CustomListEntryInput) {
+  return [entry.welsh, entry.english].filter(Boolean).join('\n');
 }
 
 function createSupabaseServerClient(env: Record<string, string | undefined>) {

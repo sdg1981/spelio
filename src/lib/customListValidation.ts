@@ -14,7 +14,8 @@ export type CustomListValidationErrorCode =
   | 'welshTooLong'
   | 'englishTooLong'
   | 'noEntries'
-  | 'repeatedSpam';
+  | 'repeatedSpam'
+  | 'moderationRejected';
 
 export type CustomListValidationError = {
   row?: number;
