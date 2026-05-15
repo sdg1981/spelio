@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, ChevronRight, FileText, X } from 'lucide-react';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
@@ -86,16 +86,24 @@ export function WordListsPage({
 
         {recentCustomLists.length > 0 && (
           <section className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
-            <div>
-              <h2 id="word-lists-recent-custom-title">{t('customLists.recentHeading')}</h2>
-              <p>{t('customLists.recentSupport')}</p>
+            <div className="word-lists-recent-custom-heading">
+              <FileText size={30} strokeWidth={1.8} aria-hidden="true" />
+              <div>
+                <h2 id="word-lists-recent-custom-title">{t('customLists.recentHeading')}</h2>
+                <p>{t('customLists.recentSupport')}</p>
+              </div>
             </div>
             <div className="word-lists-recent-custom-links">
               {recentCustomLists.map(reference => (
                 <div className="word-lists-recent-custom-item" key={reference.publicId}>
-                  <button type="button" onClick={() => openRecentCustomList(reference)}>
+                  <button
+                    className="word-lists-recent-custom-open"
+                    type="button"
+                    onClick={() => openRecentCustomList(reference)}
+                    aria-label={`${t('customLists.recentOpenShare')} - ${reference.title}`}
+                  >
                     <span>{reference.title}</span>
-                    <small>{t('customLists.recentOpenShare')}</small>
+                    <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
                   </button>
                   <button
                     className="word-lists-recent-custom-remove"

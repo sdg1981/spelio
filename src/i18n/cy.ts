@@ -291,7 +291,7 @@ export const cy = {
     loadErrorBody: 'Ceisiwch agor y ddolen eto.',
     recentHeading: 'Eich rhestrau personol diweddar',
     recentSupport: 'Wedi’u cadw ar y ddyfais hon yn unig.',
-    recentOpenShare: 'Agor →',
+    recentOpenShare: 'Agor',
     recentRemoveFromDevice: 'Tynnu o’r ddyfais hon',
     spellingSingular: 'sillafiad',
     spellingPlural: 'sillafiadau'
