@@ -104,12 +104,6 @@ export function CustomListCreatePage({
   useEffect(() => {
     if (!saving) return;
     setStatus(t('customLists.statusChecking'));
-    const generating = window.setTimeout(() => setStatus(t('customLists.statusGenerating')), 900);
-    const preparing = window.setTimeout(() => setStatus(t('customLists.statusPreparing')), 2600);
-    return () => {
-      window.clearTimeout(generating);
-      window.clearTimeout(preparing);
-    };
   }, [saving, t]);
 
   function updateRow(index: number, field: keyof CustomListEntryInput, value: string) {
