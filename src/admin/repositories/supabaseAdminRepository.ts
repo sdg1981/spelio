@@ -6,6 +6,16 @@ import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { createAudioQueueSnapshot, createAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3 } from '../services/audioGeneration';
 
+type CustomWordListRow = {
+  id: string;
+  public_id: string;
+  created_at: string;
+  expires_at: string;
+  status: string;
+  moderation_status: string;
+  custom_words?: Array<{ audio_status: string | null }>;
+};
+
 type WordListRow = {
   id: string;
   slug?: string | null;
@@ -288,6 +298,24 @@ export const supabaseAdminRepository: AdminRepository = {
     return data.publicUrl;
   },
 
+  async listCustomWordLists() {
+    const client = requireSupabase();
+    const { data, error } = await client
+      .from('custom_word_lists')
+      .select('id,public_id,created_at,expires_at,status,moderation_status,custom_words(audio_status)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data ?? []).map(mapCustomWordListRow);
+  },
+
+  async cleanupExpiredCustomWordLists() {
+    const client = requireSupabase();
+    const { data, error } = await client.rpc('cleanup_expired_custom_word_lists');
+    if (error) throw error;
+    return typeof data === 'number' ? data : 0;
+  },
+
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
     assertDestructiveContentImportAllowed();
     const client = requireSupabase();
@@ -512,6 +540,22 @@ function toCollectionRow(collection: AdminWordListCollection) {
     owner_id: collection.ownerId || null,
     order_index: collection.order,
     is_active: collection.isActive
+  };
+}
+
+function mapCustomWordListRow(row: CustomWordListRow) {
+  const words = row.custom_words ?? [];
+  return {
+    id: row.id,
+    publicId: row.public_id,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+    status: row.status,
+    moderationStatus: row.moderation_status,
+    wordCount: words.length,
+    audioReady: words.filter(word => word.audio_status === 'ready').length,
+    audioFailed: words.filter(word => word.audio_status === 'failed').length,
+    shareUrl: `/custom-list/${row.public_id}/share`
   };
 }
 

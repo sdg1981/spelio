@@ -13,5 +13,5 @@ export function getAdminRepository(): AdminRepository {
     : mockAdminRepository;
 }
 
-export type { AdminRepository, AdminWordWithListName } from './adminRepository';
+export type { AdminCustomWordListSummary, AdminRepository, AdminWordWithListName } from './adminRepository';
 export { getAudioHealth } from './adminRepository';

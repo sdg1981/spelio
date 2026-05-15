@@ -1483,12 +1483,14 @@ function WordListShareView({
   displayName,
   onBack,
   onClose,
+  showClose = true,
   t
 }: {
   list: WordList;
   displayName: string;
   onBack: () => void;
   onClose: () => void;
+  showClose?: boolean;
   t: Translate;
 }) {
   const [practiceTestLink, setPracticeTestLink] = useState(false);
@@ -1533,9 +1535,11 @@ function WordListShareView({
         <button className="wordlist-share-nav-button" type="button" onClick={onBack} aria-label={t('wordLists.back')}>
           <ArrowLeft size={22} strokeWidth={2.2} aria-hidden="true" />
         </button>
-        <button className="wordlist-share-nav-button" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
-          <X size={24} strokeWidth={2} aria-hidden="true" />
-        </button>
+        {showClose && (
+          <button className="wordlist-share-nav-button" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
+            <X size={24} strokeWidth={2} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div className="wordlist-share-body">
@@ -1605,6 +1609,182 @@ function WordListShareView({
   );
 }
 
+export function WordListSelectorPanel({
+  lists,
+  initialSelectedIds,
+  completedListIds = [],
+  onClose,
+  onDone,
+  onCreateCustomList,
+  onSuggestWordList,
+  interfaceLanguage,
+  t,
+  variant = 'modal'
+}: {
+  lists: WordList[];
+  initialSelectedIds: string[];
+  completedListIds?: string[];
+  onClose: () => void;
+  onDone: (selectedIds: string[]) => void;
+  onCreateCustomList?: () => void;
+  onSuggestWordList?: () => void;
+  interfaceLanguage: InterfaceLanguage;
+  t: Translate;
+  variant?: 'modal' | 'page';
+}) {
+  const [query, setQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, lists));
+  const [shareList, setShareList] = useState<WordList | null>(null);
+  const selectedId = selectedIds[0];
+  const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
+  const filteredLists = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return lists;
+    return lists.filter(list => {
+      const displayName = getListDisplayName(list, interfaceLanguage);
+      const displayDescription = getListDisplayDescription(list, interfaceLanguage);
+      return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
+    });
+  }, [interfaceLanguage, lists, query]);
+  const groups = useMemo(() => {
+    return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
+      const collectionName = list.collection?.name ?? 'Spelio Core Welsh';
+      const collection = (acc[collectionName] ??= {});
+      (collection[list.stage] ??= []).push(list);
+      return acc;
+    }, {});
+  }, [filteredLists]);
+  const showCollections = Object.keys(groups).length > 1;
+  const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
+
+  const selectList = useCallback((listId: string) => {
+    setSelectedIds(selectSingleWordList(listId));
+  }, []);
+
+  const closeShareView = useCallback(() => setShareList(null), []);
+  const listGridId = variant === 'page' ? 'word-list-page-list-grid' : 'word-list-modal-list-grid';
+  const searchId = variant === 'page' ? 'word-list-page-search' : 'word-list-modal-search';
+  const [pageActionPortalTarget, setPageActionPortalTarget] = useState<Element | null>(null);
+
+  useEffect(() => {
+    if (variant !== 'page') return;
+    setPageActionPortalTarget(document.querySelector('.public-app') ?? document.body);
+  }, [variant]);
+
+  if (shareList) {
+    return (
+      <WordListShareView
+        list={shareList}
+        displayName={getListDisplayName(shareList, interfaceLanguage)}
+        onBack={closeShareView}
+        onClose={onClose}
+        showClose={variant === 'modal'}
+        t={t}
+      />
+    );
+  }
+
+  const actionBar = (
+    <div className={`wordlist-footer sticky-done ${variant === 'page' ? 'wordlist-page-actions' : ''}`.trim()}>
+      <div className="done-row wordlist-actions">
+        {onCreateCustomList && (
+          <button className="wordlist-custom-list-link" type="button" onClick={onCreateCustomList}>
+            {t('customLists.createCta')}
+          </button>
+        )}
+        <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {variant === 'modal' && (
+        <div className="modal-header flex items-start justify-between gap-4">
+          <div>
+            <h2 className="modal-title">{t('wordLists.title')}</h2>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label={t('wordLists.close')}>×</button>
+        </div>
+      )}
+
+      <div className={`wordlist-body ${variant === 'page' ? 'wordlist-page-body' : ''}`.trim()}>
+        <label className="wordlist-search-label" htmlFor={searchId}>{t('wordLists.searchLabel')}</label>
+        <input
+          id={searchId}
+          className="search-input"
+          placeholder={t('wordLists.searchPlaceholder')}
+          value={query}
+          onChange={event => setQuery(event.target.value)}
+        />
+
+        <div id={listGridId} className="list-grid">
+          {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
+            <div key={group}>
+              <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
+              {groupLists.map(list => {
+                const displayName = getListDisplayName(list, interfaceLanguage);
+                return (
+                  <WordListRow
+                    key={list.id}
+                    list={list}
+                    displayName={displayName}
+                    selected={selectedId === list.id}
+                    completed={completedSet.has(list.id)}
+                    completedLabel={t('wordLists.completed')}
+                    shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
+                    onSelect={selectList}
+                    onShare={setShareList}
+                  />
+                );
+              })}
+            </div>
+          ))}
+          {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
+            <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
+              <h3 className="collection-title">{collectionName}</h3>
+              {Object.entries(stageGroups).map(([group, groupLists]) => (
+                <div key={`${collectionName}-${group}`} className="stage-group">
+                  <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
+                  {groupLists.map(list => {
+                    const displayName = getListDisplayName(list, interfaceLanguage);
+                    return (
+                      <WordListRow
+                        key={list.id}
+                        list={list}
+                        displayName={displayName}
+                        selected={selectedId === list.id}
+                        completed={completedSet.has(list.id)}
+                        completedLabel={t('wordLists.completed')}
+                        shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
+                        onSelect={selectList}
+                        onShare={setShareList}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {onSuggestWordList && variant === 'modal' && (
+          <p className="wordlist-suggestion">
+            <span>{t('wordLists.suggestionPrompt')}</span>
+            <button className="wordlist-suggestion-link" type="button" onClick={onSuggestWordList}>
+              {t('wordLists.suggestionLink')}
+            </button>
+          </p>
+        )}
+      </div>
+
+      {variant === 'page'
+        ? pageActionPortalTarget ? createPortal(actionBar, pageActionPortalTarget) : null
+        : actionBar}
+    </>
+  );
+}
+
 function LargeWordListQrOverlay({
   listName,
   shareUrl,
@@ -1666,6 +1846,7 @@ export function WordListModal({
   completedListIds = [],
   onClose,
   onDone,
+  onCreateCustomList,
   onSuggestWordList,
   interfaceLanguage,
   t
@@ -1675,131 +1856,26 @@ export function WordListModal({
   completedListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
+  onCreateCustomList?: () => void;
   onSuggestWordList?: () => void;
   interfaceLanguage: InterfaceLanguage;
   t: Translate;
 }) {
-  const [query, setQuery] = useState('');
-  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, lists));
-  const [shareList, setShareList] = useState<WordList | null>(null);
-  const selectedId = selectedIds[0];
-  const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
-  const filteredLists = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return lists;
-    return lists.filter(list => {
-      const displayName = getListDisplayName(list, interfaceLanguage);
-      const displayDescription = getListDisplayDescription(list, interfaceLanguage);
-      return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
-    });
-  }, [interfaceLanguage, lists, query]);
-  const groups = useMemo(() => {
-    return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
-      const collectionName = list.collection?.name ?? 'Spelio Core Welsh';
-      const collection = (acc[collectionName] ??= {});
-      (collection[list.stage] ??= []).push(list);
-      return acc;
-    }, {});
-  }, [filteredLists]);
-  const showCollections = Object.keys(groups).length > 1;
-  const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
-
-  const selectList = useCallback((listId: string) => {
-    setSelectedIds(selectSingleWordList(listId));
-  }, []);
-
-  const closeShareView = useCallback(() => setShareList(null), []);
-
   return (
     <Overlay className="wordlist-overlay">
-      <section className={`modal modal-wide modal-accent wordlist-modal ${shareList ? 'wordlist-share-mode' : ''}`}>
-        {shareList ? (
-          <WordListShareView
-            list={shareList}
-            displayName={getListDisplayName(shareList, interfaceLanguage)}
-            onBack={closeShareView}
-            onClose={onClose}
-            t={t}
-          />
-        ) : (
-          <>
-            <div className="modal-header flex items-start justify-between gap-4">
-              <div>
-                <h2 className="modal-title">{t('wordLists.title')}</h2>
-              </div>
-              <button className="modal-close" onClick={onClose} aria-label={t('wordLists.close')}>×</button>
-            </div>
-
-            <div className="wordlist-body">
-              <input className="search-input" placeholder={t('wordLists.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)} />
-
-              <div className="list-grid">
-                {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
-                  <div key={group}>
-                    <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
-                    {groupLists.map(list => {
-                      const displayName = getListDisplayName(list, interfaceLanguage);
-                      return (
-                        <WordListRow
-                          key={list.id}
-                          list={list}
-                          displayName={displayName}
-                          selected={selectedId === list.id}
-                          completed={completedSet.has(list.id)}
-                          completedLabel={t('wordLists.completed')}
-                          shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
-                          onSelect={selectList}
-                          onShare={setShareList}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-                {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
-                  <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
-                    <h3 className="collection-title">{collectionName}</h3>
-                    {Object.entries(stageGroups).map(([group, groupLists]) => (
-                      <div key={`${collectionName}-${group}`} className="stage-group">
-                        <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
-                        {groupLists.map(list => {
-                          const displayName = getListDisplayName(list, interfaceLanguage);
-                          return (
-                            <WordListRow
-                              key={list.id}
-                              list={list}
-                              displayName={displayName}
-                              selected={selectedId === list.id}
-                              completed={completedSet.has(list.id)}
-                              completedLabel={t('wordLists.completed')}
-                              shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
-                              onSelect={selectList}
-                              onShare={setShareList}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              {onSuggestWordList && (
-                <p className="wordlist-suggestion">
-                  <span>{t('wordLists.suggestionPrompt')}</span>
-                  <button className="wordlist-suggestion-link" type="button" onClick={onSuggestWordList}>
-                    {t('wordLists.suggestionLink')}
-                  </button>
-                </p>
-              )}
-            </div>
-
-            <div className="wordlist-footer sticky-done">
-              <div className="done-row wordlist-actions">
-                <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
-              </div>
-            </div>
-          </>
-        )}
+      <section className="modal modal-wide modal-accent wordlist-modal">
+        <WordListSelectorPanel
+          lists={lists}
+          initialSelectedIds={initialSelectedIds}
+          completedListIds={completedListIds}
+          onClose={onClose}
+          onDone={onDone}
+          onCreateCustomList={onCreateCustomList}
+          onSuggestWordList={onSuggestWordList}
+          interfaceLanguage={interfaceLanguage}
+          t={t}
+          variant="modal"
+        />
       </section>
     </Overlay>
   );

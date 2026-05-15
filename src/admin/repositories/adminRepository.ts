@@ -6,6 +6,19 @@ export interface AdminWordWithListName extends AdminWord {
   listName: string;
 }
 
+export interface AdminCustomWordListSummary {
+  id: string;
+  publicId: string;
+  createdAt: string;
+  expiresAt: string;
+  status: string;
+  moderationStatus: string;
+  wordCount: number;
+  audioReady: number;
+  audioFailed: number;
+  shareUrl: string;
+}
+
 export interface AdminRepository {
   authMode: 'password' | 'emailPassword';
   authenticateAdmin(credentials: { email?: string; password: string }): Promise<void>;
@@ -31,6 +44,8 @@ export interface AdminRepository {
   generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
   retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
   uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;
+  listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
+  cleanupExpiredCustomWordLists(): Promise<number>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;
   importContent(payload: unknown): Promise<ImportContentResult>;
   validateImport(payload: unknown): Promise<ImportValidationResult>;

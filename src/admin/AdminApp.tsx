@@ -2,6 +2,7 @@ import { AdminLayout } from './components/AdminLayout';
 import { useAdminPath } from './utils/router';
 import { AudioQueuePage } from './pages/AudioQueuePage';
 import { CollectionsPage } from './pages/CollectionsPage';
+import { CustomListsPage } from './pages/CustomListsPage';
 import { FocusCategoriesPage, DialectsPage, StagesPage } from './pages/StructurePages';
 import { ImportPage } from './pages/ImportPage';
 import { LoginPage } from './pages/LoginPage';
@@ -29,6 +30,7 @@ export function AdminApp() {
 function AdminRoute({ path, navigate, repository }: { path: string; navigate: (path: string) => void; repository: AdminRepository }) {
   if (path === '/admin') return <OverviewPage navigate={navigate} repository={repository} />;
   if (path === '/admin/word-lists') return <WordListsPage navigate={navigate} repository={repository} />;
+  if (path === '/admin/custom-lists') return <CustomListsPage repository={repository} />;
   if (path === '/admin/collections') return <CollectionsPage repository={repository} />;
   if (path.startsWith('/admin/word-lists/')) return <WordListEditPage id={decodeURIComponent(path.replace('/admin/word-lists/', ''))} navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/words/')) return <WordEditPage id={decodeURIComponent(path.replace('/admin/words/', ''))} navigate={navigate} repository={repository} />;

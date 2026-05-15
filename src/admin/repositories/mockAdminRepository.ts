@@ -175,6 +175,27 @@ export const mockAdminRepository: AdminRepository = {
     return createMockAudioUrl(word);
   },
 
+  async listCustomWordLists() {
+    return [
+      {
+        id: 'mock-custom-list-1',
+        publicId: 'cl_mockpreview1234567890',
+        createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'ready',
+        moderationStatus: 'pass',
+        wordCount: 3,
+        audioReady: 3,
+        audioFailed: 0,
+        shareUrl: '/custom-list/cl_mockpreview1234567890/share'
+      }
+    ];
+  },
+
+  async cleanupExpiredCustomWordLists() {
+    return 0;
+  },
+
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
     const preview = validateImportPayload(payload, {
       existingCollectionIds: collections.map(collection => collection.id),

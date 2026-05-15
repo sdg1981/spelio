@@ -98,8 +98,9 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     if (text.length > 500) return sendJsonError(response, 400, 'Welsh text is too long.', 'ssml_construction');
 
     const env = dependencies.env ?? process.env;
-    const key = env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY;
-    const region = env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION;
+    const config = getAzureSpeechConfig(env);
+    const key = config.key;
+    const region = config.region;
     logInfo('Azure TTS configuration checked', {
       stage: 'azure_configuration',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
@@ -113,8 +114,6 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       return sendJsonError(response, 500, 'Azure Speech is not configured.', 'azure_configuration');
     }
 
-    const endpointHost = `${region}.tts.speech.microsoft.com`;
-    const endpointUrl = `https://${endpointHost}${AZURE_TTS_ENDPOINT_PATH}`;
     const ssml = createWelshSsml(text);
     logInfo('Azure TTS SSML constructed', {
       stage: 'ssml_construction',
@@ -127,6 +126,8 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     });
 
     const fetchImpl = dependencies.fetchImpl ?? fetch;
+    const endpointHost = `${region}.tts.speech.microsoft.com`;
+    const endpointUrl = `https://${endpointHost}${AZURE_TTS_ENDPOINT_PATH}`;
     logInfo('Azure TTS request starting', {
       stage: 'azure_request',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
@@ -141,16 +142,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       ssmlLength: ssml.length
     });
 
-    const azureResponse = await fetchImpl(endpointUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ssml+xml',
-        'Ocp-Apim-Subscription-Key': key,
-        'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-        'User-Agent': AZURE_TTS_USER_AGENT
-      },
-      body: ssml
-    });
+    const azureResponse = await requestAzureWelshAudio(text, { key, region, fetchImpl });
 
     logInfo('Azure TTS response received', {
       stage: 'azure_response',
@@ -209,7 +201,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
         inputBytes: wavBuffer.byteLength
       });
-      mp3Audio = await (dependencies.postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
+      mp3Audio = await processAzureWelshAudio(wavBuffer, dependencies.postProcess);
       logInfo('Audio post-processing finished', {
         stage: 'mp3_returned',
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
@@ -237,6 +229,64 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     });
     return sendJsonError(response, 500, `Unknown audio route failure: ${message}`, 'unknown_route_failure');
   }
+}
+
+export function getAzureSpeechConfig(env: Record<string, string | undefined>) {
+  return {
+    key: env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY,
+    region: env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION
+  };
+}
+
+export async function synthesizeAzureWelshMp3Bytes(
+  text: string,
+  dependencies: Pick<HandlerDependencies, 'env' | 'fetchImpl' | 'postProcess'> = {}
+) {
+  const env = dependencies.env ?? process.env;
+  const { key, region } = getAzureSpeechConfig(env);
+  if (!key || !region) {
+    throw new Error('Azure Speech is not configured.');
+  }
+
+  const azureResponse = await requestAzureWelshAudio(text, {
+    key,
+    region,
+    fetchImpl: dependencies.fetchImpl ?? fetch
+  });
+
+  if (!azureResponse.ok) {
+    const azureError = await readAzureErrorBody(azureResponse);
+    throw new Error(azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError));
+  }
+
+  const wavBuffer = await azureResponse.arrayBuffer();
+  if (wavBuffer.byteLength < 100) {
+    throw new Error('Azure returned an unexpectedly small audio payload.');
+  }
+
+  return processAzureWelshAudio(wavBuffer, dependencies.postProcess);
+}
+
+function requestAzureWelshAudio(text: string, options: {
+  key: string;
+  region: string;
+  fetchImpl: AzureFetch;
+}) {
+  const endpointUrl = `https://${options.region}.tts.speech.microsoft.com${AZURE_TTS_ENDPOINT_PATH}`;
+  return options.fetchImpl(endpointUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/ssml+xml',
+      'Ocp-Apim-Subscription-Key': options.key,
+      'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      'User-Agent': AZURE_TTS_USER_AGENT
+    },
+    body: createWelshSsml(text)
+  });
+}
+
+function processAzureWelshAudio(wavBuffer: ArrayBuffer, postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>) {
+  return (postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
 }
 
 function parseBody(body: unknown): { text?: unknown } | null {

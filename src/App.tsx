@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
+import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from './components/CustomLists';
 import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
-import { Practice, WordListModal } from './components/Practice';
+import { Practice } from './components/Practice';
+import { WordListsPage } from './components/WordListsPage';
 import { EndScreen } from './components/End';
 import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
 import { ScreenTransition } from './components/ScreenTransition';
@@ -18,10 +20,12 @@ import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './l
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
+import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib/customListRoutes';
 import { getListDisplayName } from './lib/practice/wordListDisplay';
+import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 
-type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about';
+type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry';
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
@@ -104,11 +108,16 @@ function getScreenForPath(pathname: string): Screen {
   if (pathname === '/feedback') return 'feedback';
   if (pathname === '/privacy') return 'privacy';
   if (pathname === '/about') return 'about';
+  if (pathname === '/word-lists') return 'word-lists';
+  if (pathname === '/custom-list/new') return 'custom-new';
+  if (getCustomSharePublicIdFromPath(pathname)) return 'custom-share';
+  if (getCustomPublicIdFromPath(pathname)) return 'custom-entry';
   return 'home';
 }
 
 function isStandalonePublicPagePath(pathname: string) {
-  return ['/how-spelio-works', '/feedback', '/privacy', '/about'].includes(pathname);
+  return ['/how-spelio-works', '/feedback', '/privacy', '/about', '/word-lists', '/custom-list/new'].includes(pathname) ||
+    Boolean(getCustomSharePublicIdFromPath(pathname) || getCustomPublicIdFromPath(pathname));
 }
 
 function getInitialPublicScreen(): Screen {
@@ -135,7 +144,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(() => getInitialPublicScreen());
   const [reviewMode, setReviewMode] = useState(false);
   const [recapMode, setRecapMode] = useState(false);
-  const [wordListModalOpen, setWordListModalOpen] = useState(false);
+  const [wordListReturnScreen, setWordListReturnScreen] = useState<Screen | null>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
@@ -143,6 +152,7 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
+  const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
   const [sharedContext, setSharedContext] = useState<SharedWordListContext | null>(initialAppState.sharedContext);
   const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
   const [completedSharedContext, setCompletedSharedContext] = useState<SharedWordListContext | null>(null);
@@ -150,6 +160,12 @@ export default function App() {
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
+  const practiceLists = useMemo(
+    () => activeCustomList ? [...publicWordLists, activeCustomList] : publicWordLists,
+    [activeCustomList, publicWordLists]
+  );
+  const customSharePublicId = getCustomSharePublicIdFromPath(window.location.pathname);
+  const customEntryPublicId = getCustomPublicIdFromPath(window.location.pathname);
   const sharedList = useMemo(
     () => sharedContext ? publicWordLists.find(list => list.id === sharedContext.listId && list.isActive) ?? null : null,
     [publicWordLists, sharedContext]
@@ -211,6 +227,7 @@ export default function App() {
 
   useEffect(() => {
     function handlePopState() {
+      setWordListReturnScreen(null);
       setScreen(getInitialPublicScreen());
     }
 
@@ -252,6 +269,8 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCustomList(null);
+    setWordListReturnScreen(null);
     setStorage(previous => ({
       ...previous,
       settings: {
@@ -317,6 +336,7 @@ export default function App() {
     } else {
       setActiveSharedContext(null);
       setCompletedSharedContext(null);
+      setActiveCustomList(null);
       setPracticeTestMode(false);
       setStorage(start.storage);
     }
@@ -348,6 +368,18 @@ export default function App() {
     beginPractice(createRecapPracticeStart(storage));
   }
 
+  function startCustomListPractice(list: WordList, publicId: string, isPracticeTest: boolean) {
+    const context = createSharedWordListContext(
+      storage,
+      list,
+      publicId,
+      isPracticeTest ? 'practice-test' : 'normal-share',
+      hasMeaningfulLearningHistory(storage)
+    );
+    setActiveCustomList(list);
+    beginPractice(createSharedListPracticeStart(context, list), context);
+  }
+
   function handleComplete(result: SessionResult, nextStorage: SpelioStorage) {
     setLastResult(result);
     if (activeSharedContext) {
@@ -366,12 +398,15 @@ export default function App() {
   function returnToLearning() {
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
       window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
+      resetPublicPageScrollToTop();
     }
 
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCustomList(null);
     setPracticeStartStorage(null);
+    setWordListReturnScreen(null);
     setPracticeTestMode(false);
     setReviewMode(false);
     setRecapMode(false);
@@ -381,6 +416,7 @@ export default function App() {
   function openHowSpelioWorks() {
     if (typeof window !== 'undefined' && window.location.pathname !== '/how-spelio-works') {
       window.history.pushState({ spelioPublicPage: true }, '', '/how-spelio-works');
+      resetPublicPageScrollToTop();
     }
 
     setScreen('how');
@@ -389,6 +425,7 @@ export default function App() {
   function openPublicPage(nextScreen: Extract<Screen, 'feedback' | 'privacy' | 'about'>, path: string) {
     if (typeof window !== 'undefined' && window.location.pathname !== path) {
       window.history.pushState({ spelioPublicPage: true }, '', path);
+      resetPublicPageScrollToTop();
     }
 
     setScreen(nextScreen);
@@ -416,9 +453,30 @@ export default function App() {
     returnToLearning();
   }
 
+  function openWordListsPage(returnScreen: Screen) {
+    setWordListReturnScreen(returnScreen);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/word-lists') {
+      window.history.pushState({ spelioPublicPage: true, wordListsReturnScreen: returnScreen }, '', '/word-lists');
+      resetPublicPageScrollToTop();
+    }
+    setScreen('word-lists');
+  }
+
+  function returnFromWordListsPage() {
+    const targetScreen = wordListReturnScreen === 'end' && lastResult ? 'end' : 'home';
+    setWordListReturnScreen(null);
+
+    if (typeof window !== 'undefined' && window.location.pathname === '/word-lists') {
+      window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
+      resetPublicPageScrollToTop();
+    }
+
+    setScreen(targetScreen);
+  }
+
   function practiseSharedListAgain() {
     if (!completedSharedContext) return;
-    const list = publicWordLists.find(item => item.id === completedSharedContext.listId && item.isActive);
+    const list = practiceLists.find(item => item.id === completedSharedContext.listId && item.isActive);
     if (!list) return;
     beginPractice(createSharedListPracticeStart(completedSharedContext, list), completedSharedContext);
   }
@@ -426,13 +484,15 @@ export default function App() {
   function saveSelectedWordLists(selectedIds: string[]) {
     const ids = normalizeSelectedListIds(selectedIds, publicWordLists);
     const changed = !sameListSelection(ids, storage.selectedListIds);
+    const isWordListsPage = screen === 'word-lists';
 
     if (!changed) {
       setSharedContext(null);
       setCompletedSharedContext(null);
       setActiveSharedContext(null);
+      setActiveCustomList(null);
       setPracticeTestMode(false);
-      setWordListModalOpen(false);
+      if (isWordListsPage) returnFromWordListsPage();
       return;
     }
 
@@ -440,17 +500,24 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCustomList(null);
     setReviewMode(false);
     setRecapMode(false);
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
-    setWordListModalOpen(false);
+    setWordListReturnScreen(null);
+    if (isWordListsPage && typeof window !== 'undefined') {
+      window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
+      resetPublicPageScrollToTop();
+    }
     setScreen('home');
   }
 
-  function openFeedbackFromWordLists() {
-    setWordListModalOpen(false);
-    setFeedbackModalOpen(true);
+  function openCustomListCreate() {
+    setWordListReturnScreen(null);
+    window.history.pushState({ spelioPublicPage: true }, '', '/custom-list/new');
+    resetPublicPageScrollToTop();
+    setScreen('custom-new');
   }
 
   function resetProgress() {
@@ -461,11 +528,12 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCustomList(null);
     setReviewMode(false);
     setRecapMode(false);
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
-    setWordListModalOpen(false);
+    setWordListReturnScreen(null);
     setLastResult(null);
     setShowFirstSessionKeyboardHint(false);
     setScreen('home');
@@ -479,7 +547,7 @@ export default function App() {
   }
 
   const completedSharedList = completedSharedContext
-    ? publicWordLists.find(list => list.id === completedSharedContext.listId)
+    ? practiceLists.find(list => list.id === completedSharedContext.listId)
     : null;
   const completedSharedListName = completedSharedList
     ? getListDisplayName(completedSharedList, interfaceLanguage)
@@ -529,7 +597,7 @@ export default function App() {
     />
   ) : activeScreen === 'practice' ? (
     <Practice
-      lists={publicWordLists}
+      lists={practiceLists}
       storage={storage}
       sessionStorage={practiceStartStorage ?? storage}
       reviewDifficult={reviewMode}
@@ -547,78 +615,91 @@ export default function App() {
       t={t}
     />
   ) : activeScreen === 'end' && lastResult ? (
-    <>
-      <EndScreen
-        result={lastResult}
-        recommendation={recommendation}
-        progressSummary={endProgressSummary}
-        hasDifficultWords={difficultWords}
-        onContinue={startNormalContinuationPractice}
-        onReview={startReviewPractice}
-        onChangeLists={() => setWordListModalOpen(true)}
-        onHome={completedSharedContext ? returnToLearning : () => setScreen('home')}
-        sharedSession={completedSharedListName && completedSharedContext ? {
-          listName: completedSharedListName,
-          hasPriorLearningHistory: completedSharedContext.previousHadMeaningfulLearningHistory
-        } : null}
-        onReturnToLearning={returnToLearning}
-        onPractiseSharedListAgain={completedSharedContext ? practiseSharedListAgain : undefined}
-        interfaceLanguage={interfaceLanguage}
-        onInterfaceLanguageChange={updateInterfaceLanguage}
-        t={t}
-      />
-      {wordListModalOpen && (
-        <WordListModal
-          lists={publicWordLists}
-          initialSelectedIds={visibleStorage.selectedListIds}
-          completedListIds={completedListIds}
-          onClose={() => setWordListModalOpen(false)}
-          onDone={saveSelectedWordLists}
-          onSuggestWordList={openFeedbackFromWordLists}
-          interfaceLanguage={interfaceLanguage}
-          t={t}
-        />
-      )}
-    </>
+    <EndScreen
+      result={lastResult}
+      recommendation={recommendation}
+      progressSummary={endProgressSummary}
+      hasDifficultWords={difficultWords}
+      onContinue={startNormalContinuationPractice}
+      onReview={startReviewPractice}
+      onChangeLists={() => openWordListsPage('end')}
+      onHome={completedSharedContext ? returnToLearning : () => setScreen('home')}
+      sharedSession={completedSharedListName && completedSharedContext ? {
+        listName: completedSharedListName,
+        hasPriorLearningHistory: completedSharedContext.previousHadMeaningfulLearningHistory
+      } : null}
+      onReturnToLearning={returnToLearning}
+      onPractiseSharedListAgain={completedSharedContext ? practiseSharedListAgain : undefined}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'word-lists' ? (
+    <WordListsPage
+      lists={publicWordLists}
+      initialSelectedIds={visibleStorage.selectedListIds}
+      completedListIds={completedListIds}
+      onBack={returnFromWordListsPage}
+      onHome={returnToLearning}
+      onDone={saveSelectedWordLists}
+      onCreateCustomList={openCustomListCreate}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'custom-new' ? (
+    <CustomListCreatePage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'custom-share' && customSharePublicId ? (
+    <CustomListSharePage
+      publicId={customSharePublicId}
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'custom-entry' && customEntryPublicId ? (
+    <CustomListEntryPage
+      publicId={customEntryPublicId}
+      practiceTestMode={isPracticeTestShareMode(window.location.search)}
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      onStartPractice={startCustomListPractice}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
   ) : (
-    <>
-      <Home
-        mode={homeMode}
-        recommendation={recommendation}
-        sharedEntryMode={sharedContext?.mode ?? null}
-        progressSummary={homeProgressSummary}
-        hasDifficultWords={difficultWords}
-        difficultWordCount={difficultWordCount}
-        recapWordCount={recapWordCount}
-        onStart={startPrimaryRecommendationPractice}
-        onContinue={startNormalContinuationPractice}
-        onReview={startReviewPractice}
-        onRecapReview={startRecapPractice}
-        onSelectList={() => setWordListModalOpen(true)}
-        onHowSpelioWorks={openHowSpelioWorks}
-        onFeedback={() => openPublicPage('feedback', '/feedback')}
-        onPrivacy={() => openPublicPage('privacy', '/privacy')}
-        onAbout={() => openPublicPage('about', '/about')}
-        settings={storage.settings}
-        onSettingsChange={updateSettings}
-        onResetProgress={resetProgress}
-        interfaceLanguage={interfaceLanguage}
-        onInterfaceLanguageChange={updateInterfaceLanguage}
-        t={t}
-      />
-      {wordListModalOpen && (
-        <WordListModal
-          lists={publicWordLists}
-          initialSelectedIds={visibleStorage.selectedListIds}
-          completedListIds={completedListIds}
-          onClose={() => setWordListModalOpen(false)}
-          onDone={saveSelectedWordLists}
-          onSuggestWordList={openFeedbackFromWordLists}
-          interfaceLanguage={interfaceLanguage}
-          t={t}
-        />
-      )}
-    </>
+    <Home
+      mode={homeMode}
+      recommendation={recommendation}
+      sharedEntryMode={sharedContext?.mode ?? null}
+      progressSummary={homeProgressSummary}
+      hasDifficultWords={difficultWords}
+      difficultWordCount={difficultWordCount}
+      recapWordCount={recapWordCount}
+      onStart={startPrimaryRecommendationPractice}
+      onContinue={startNormalContinuationPractice}
+      onReview={startReviewPractice}
+      onRecapReview={startRecapPractice}
+      onSelectList={() => openWordListsPage('home')}
+      onHowSpelioWorks={openHowSpelioWorks}
+      onFeedback={() => openPublicPage('feedback', '/feedback')}
+      onPrivacy={() => openPublicPage('privacy', '/privacy')}
+      onAbout={() => openPublicPage('about', '/about')}
+      settings={storage.settings}
+      onSettingsChange={updateSettings}
+      onResetProgress={resetProgress}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
   );
 
   return (

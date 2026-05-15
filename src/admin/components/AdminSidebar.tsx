@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Files, FolderTree, Headphones, Import, Layers3, LogOut, Menu, Settings, SlidersHorizontal, X } from 'lucide-react';
+import { BarChart3, BookOpen, Files, FlaskConical, FolderTree, Headphones, Import, Layers3, LogOut, Menu, Settings, SlidersHorizontal, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
@@ -11,6 +11,7 @@ const navGroups = [
       { label: 'Overview', path: '/admin', icon: BarChart3 },
       { label: 'Collections', path: '/admin/collections', icon: FolderTree },
       { label: 'Word Lists', path: '/admin/word-lists', icon: Files },
+      { label: 'Custom Lists', path: '/admin/custom-lists', icon: FlaskConical, badge: 'Preview' },
       { label: 'Words', path: '/admin/words', icon: BookOpen },
       { label: 'Audio Queue', path: '/admin/audio', icon: Headphones },
       { label: 'Import', path: '/admin/import', icon: Import, badge: 'New' }
