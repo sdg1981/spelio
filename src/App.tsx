@@ -444,7 +444,22 @@ export default function App() {
     }
   }
 
+  function getStandaloneReturnPathFromState() {
+    if (typeof window === 'undefined') return null;
+    const returnTo = window.history.state?.spelioReturnTo;
+    return returnTo === '/word-lists' ? returnTo : null;
+  }
+
   function returnFromStandalonePublicPage() {
+    const returnPath = getStandaloneReturnPathFromState();
+    if (returnPath === '/word-lists') {
+      setWordListReturnScreen('home');
+      window.history.replaceState({ spelioPublicPage: true, wordListsReturnScreen: 'home' }, '', '/word-lists');
+      resetPublicPageScrollToTop();
+      setScreen('word-lists');
+      return;
+    }
+
     if (hasUsefulPreviousPublicHistory()) {
       window.history.back();
       return;

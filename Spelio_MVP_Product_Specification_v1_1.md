@@ -97,18 +97,20 @@ Only explicit user actions should trigger a practice session:
 Examples of actions that must not automatically start practice:
 
 - Changing word lists
-- Pressing Done in the word list modal
+- Pressing Done on the Word Lists page
 - Closing a modal
 - Returning from the end screen
 - Saving settings
 - Opening a shared `/list/{slug}` URL
 - Opening a shared `/list/{slug}?mode=practice-test` URL
+- Opening a custom `/custom/{publicId}` URL
+- Opening a custom `/custom/{publicId}?mode=practice-test` URL
 
 This rule is global and applies across homepage, practice screen, end screen, and modals.
 
 Shared list links may preselect or preload a word list. They must not start practice automatically. The learner must explicitly press Start / Continue practice.
 
-Shared list links and Practice test links are temporary detached session contexts. They must not permanently move the learner’s main Continue learning path unless the learner explicitly saves that list through the normal Word Lists modal flow.
+Shared list links, custom list links, and Practice test links are temporary detached session contexts. They must not permanently move the learner’s main Continue learning path unless the learner explicitly saves a core list through the normal Word Lists page flow.
 
 ## 4. Core screens
 
@@ -119,7 +121,8 @@ The MVP contains these core screens and states:
 - Returning-user struggled homepage
 - Practice screen
 - Settings modal
-- Word list modal
+- Word Lists page
+- Custom word-list create/share/entry pages
 - End-of-session screen
 - Admin panel
 
@@ -167,7 +170,8 @@ This applies to public learner interface copy only:
 - homepage
 - practice screen
 - settings modal
-- word list modal
+- Word Lists page
+- custom word-list public pages
 - end screen
 - footer
 - status messages, buttons, and headings
@@ -237,7 +241,7 @@ Content:
 Behaviour:
 
 - Clicking the play button or primary CTA starts practice using the default selected word list.
-- “Select word list” opens the word list modal.
+- “Select word list” opens the standalone Word Lists page.
 - No account prompt.
 - No dashboard.
 - A small settings cog may appear in the top-right utility cluster beside the language switcher.
@@ -270,7 +274,7 @@ Behaviour:
 - From earlier is an optional user-initiated recap of resolved or previously weak words that have been fixed enough to leave visible difficult review but are still worth reinforcing. It starts a recap session from eligible `recapDue` words, not from the current Review difficult words pool.
 - From earlier should feel low-pressure and must not be framed as a backlog or blocker.
 - If showing a From earlier count: hide it at 0, show exact counts for 1–5, and show “5+” above that. Never show large counts, percentages, progress bars, or “remaining” language.
-- Select word list opens the word list modal.
+- Select word list opens the standalone Word Lists page.
 - Returning-user homepage may show one subtle cumulative progress line below the primary CTA and above secondary actions, for example “142 spellings learned · 38 minutes practised”. Hide it when there is no meaningful progress.
 - Progress wording must stay calm and minimal. Do not show charts, percentages, XP, badges, streaks, levels, goals, or dashboard-style stats.
 
@@ -301,7 +305,7 @@ Behaviour:
 - Review difficult words and From earlier are different pools and actions: Review difficult words fixes current unresolved difficulty; From earlier revisits previously weak words through `recapDue`.
 - Review difficult words must never fall back to ordinary words when empty.
 - The user can still continue learning or choose another word list.
-- Select word list opens the word list modal and must not auto-start a practice session after Done is pressed.
+- Select word list opens the standalone Word Lists page and must not auto-start a practice session after Done is pressed.
 
 ## 6. Practice screen design
 
@@ -495,7 +499,8 @@ Fields:
   - On/off
 - Reset progress
   - Requires confirmation
-  - Clears progress, settings, and history on the current device
+  - Clears progress, settings, history, and locally stored recent custom-list references on the current device
+  - Reset copy should explain that local custom-list references are removed from this device, but already-created shared custom lists are not deleted from the server
   - Returns the user to the homepage
   - Shows a short confirmation toast
 
@@ -538,17 +543,19 @@ Strict:
 - Apostrophe and dash variants are still accepted as equivalent.
 - Comparison is case-insensitive.
 
-## 8. Word list modal
+## 8. Word Lists page
 
-**UX intent:** The modal is a lightweight configuration layer. It should never feel like a separate workflow. Selection is simple, reversible, and never forces action.
+**UX intent:** The Word Lists page is a lightweight configuration layer. It should never feel like a separate workflow. Selection is simple, reversible, and never forces action.
 
-**Critical rule:** Modal actions must never trigger unintended session starts. This separation is essential to prevent navigation-related bugs.
+**Critical rule:** Word Lists actions must never trigger unintended session starts. This separation is essential to prevent navigation-related bugs.
 
-The word list modal should be scalable.
+The Word Lists selector is a standalone public page at `/word-lists`, not a modal overlay. It should use the public content-page shell and warm neutral background.
+
+The Word Lists page should be scalable.
 
 ### 8.1 Structure
 
-Modal title:
+Page title:
 
 - “Word Lists”
 
@@ -560,12 +567,19 @@ Body:
 
 - Grouped, scrollable list body
 - Full-row clickable/tappable word-list rows
-- A subtle selected state on the currently selected row, such as stronger text weight, soft tint, left accent, or a small checkmark on the right
-- No checkbox styling in the public MVP modal
+- A clear but calm selected state on the currently selected row, such as stronger text weight, warm soft tint, left accent, or a small checkmark on the right
+- No checkbox styling in the public MVP Word Lists page
 
 Footer:
 
-- Sticky footer with action button, such as “Done” or “Use this list”
+- Floating/fixed bottom action bar with the primary “Done” action
+- A secondary “Create custom list” action that opens `/custom-list/new`
+
+Navigation:
+
+- The top-left back arrow discards unsaved pending selection changes, matching the old close/cancel behaviour.
+- Done commits selection changes.
+- Pressing Done must never auto-start practice.
 
 ### 8.2 Grouping examples
 
@@ -619,7 +633,7 @@ Collections are an organisational/content-grouping layer intended to support fut
 
 Collections do not change practice behaviour in MVP.
 
-The public word-list modal should be collection-aware.
+The public Word Lists page should be collection-aware.
 
 Recommended hierarchy when multiple collections exist:
 
@@ -639,7 +653,7 @@ Spelio Core Welsh
 
 If only one collection exists, the UI may still appear similar to the current grouped MVP layout. The architecture should still be ready for multiple collections later.
 
-This must remain lightweight and calm. Do not turn the word-list modal into a dashboard, course browser, permissions view, or reporting surface.
+This must remain lightweight and calm. Do not turn the Word Lists page into a dashboard, course browser, permissions view, or reporting surface.
 
 ### 8.3 Dialect handling
 
@@ -732,14 +746,14 @@ This avoids hardcoding the product permanently to English → Welsh while keepin
 
 ### 8.4 Single-list selection
 
-The public MVP word list modal allows one active word list at a time.
+The public MVP Word Lists page allows one active word list at a time.
 
 Rules:
 
 - Tapping a word list selects it.
 - Selecting a second list replaces the first pending selection.
 - The selected list is saved only when Done / Use this list is pressed.
-- Closing with X discards unsaved changes.
+- Leaving via the page back arrow discards unsaved changes.
 - Pressing Done / Use this list must never auto-start practice.
 - If no valid active list is selected for any reason, fall back safely to the first active list.
 
@@ -749,13 +763,13 @@ Backward compatibility:
 - Store only one selected list ID, for example `["foundations_first_words"]`.
 - Older stored multiple selections should be migrated to the first valid active selected list.
 
-### 8.5 Modal behaviour
+### 8.5 Page behaviour
 
-The word list modal must separate selection from session start.
+The Word Lists page must separate selection from session start.
 
 Done behaviour:
 
-- If no changes were made, close the modal and leave the user where they were.
+- If no changes were made, return to the previous appropriate screen.
 - If changes were made:
   - Save the selected list as a one-item `selectedListIds` array.
   - If the selected ID is invalid, fall back to the first available active list.
@@ -765,38 +779,38 @@ Done behaviour:
   - If opened from the end screen, return to the homepage.
 - Pressing Done must never automatically start a practice session.
 
-Close (X) behaviour:
+Back arrow behaviour:
 
 - Discard any unsaved changes.
 - Restore the previous selection.
-- Close the modal.
+- Return to the previous appropriate screen.
 - Do not start or restart a practice session.
 
 Changing word lists is a navigation/setup action, not a session-start action.
 
 ### 8.6 Shareable word-list links
 
-The public word list modal supports lightweight sharing for individual word lists.
+The public Word Lists page supports lightweight sharing for individual word lists.
 
 Rules:
 
 - Sharing is available only for the currently selected word list.
 - The share icon appears only on the selected row.
 - Do not show share icons on every row.
-- Do not add a global share button at the top of the modal.
+- Do not add a global share button at the top of the page.
 - Clicking the share icon opens a lightweight share surface for that specific list.
 - Clicking the share icon must not accidentally select or deselect the row through event bubbling.
 - Share actions must never start practice.
 - Opening a shared link creates a temporary detached shared-session context. It may present the shared list, but must not permanently overwrite the learner’s main selected word list or `currentPathPosition`.
 - Shared sessions may still update word progress, difficult words, recap eligibility, list completion, and aggregate stats normally.
-- Shared sessions must not re-anchor normal Continue learning to the shared list unless the learner explicitly selects/saves that list through the normal Word Lists modal flow.
+- Shared sessions must not re-anchor normal Continue learning to the shared list unless the learner explicitly selects/saves that list through the normal Word Lists page flow.
 - On homepage entry from a normal shared list URL, use:
   - Heading: “Shared word list”
   - Subheading: the word-list name
   - Primary CTA: “Start spelling practice”
 - Do not use “Continue learning” for shared-link entry states.
 
-The share surface should include:
+The share surface/page should include:
 
 - Word-list name
 - QR code
@@ -841,7 +855,7 @@ Rules:
 
 Practice test is a lightweight shared-link option, not a full assessment system.
 
-The share modal may include one optional checkbox/toggle:
+The share page may include one optional checkbox/toggle:
 
 - Label: “Practice test”
 - Helper text: “Hides English prompts and reveal tools.”
@@ -867,6 +881,78 @@ Rules:
 - Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or normal learner progression.
 - Leaving or completing a Practice test link should restore normal behaviour and must not save Practice test as a setting.
 - Do not add timers, lockdown behaviour, reporting, teacher accounts, score submission, anti-cheating systems, configurable assessment builders, or additional checkboxes for MVP.
+
+### 8.9 Temporary custom word lists
+
+Temporary custom word lists are included as lightweight MVP support for teacher/learner testing. They are not a full teacher dashboard, saved library, ownership system, or classroom management feature.
+
+Entry and creation:
+
+- Users can create a temporary custom spelling list from the Word Lists page using the secondary “Create custom list” action.
+- The creation flow is a standalone public page at `/custom-list/new`, not a modal.
+- Users can add up to 10 Welsh spellings.
+- Welsh spelling is required.
+- English meaning/prompt is optional.
+- List title is optional.
+- If no title is provided, the fallback title is “Custom spelling list”.
+- The stored/fallback title should be used on the share page, public entry screen, practice/end contextual labels where shown, and recent custom lists.
+- Rows appear progressively so the form stays lightweight and does not show all 10 rows immediately.
+- The create page should use the same public content-page shell style as other public Spelio content pages.
+- “Create custom list” remains secondary to the main Done action on the Word Lists page.
+
+Validation, safety, and audio:
+
+- Custom list entries are validated locally before saving.
+- Custom list entries are checked server-side before audio generation.
+- Safety checking is for abuse/moderation only. Spelio does not claim to verify Welsh correctness.
+- Moderation/checking uses configurable provider support, including OpenAI moderation and/or Azure AI Content Safety depending on environment.
+- If moderation/checking fails, or content cannot be processed, the list is not published.
+- Basic per-browser/IP throttling should protect custom-list creation and audio generation where practical.
+- Custom lists preserve Spelio’s core hear → recall → spell loop.
+- Azure Welsh audio is generated for each custom Welsh spelling before a custom list can be published.
+- A custom list must not be published if audio generation fails.
+- Audio generation failures should show calm user-facing error copy.
+
+Temporary storage and routes:
+
+- Custom lists use non-guessable public IDs.
+- Custom list URLs are not title-based and must not include user-generated words or titles.
+- Public custom-list routes are:
+  - `/custom/{publicId}`
+  - `/custom/{publicId}?mode=practice-test`
+  - `/custom-list/{publicId}/share`
+- Custom lists are available for 14 days.
+- Expired custom lists should not open practice and should show calm expired-state copy.
+- No account, login, teacher dashboard, class tracking, pupil names, or reporting is included in the MVP custom-list flow.
+
+Custom share page:
+
+- After successful creation, users are taken to a standalone share page.
+- The share page includes QR code, copy link, native share where supported, Practice this list CTA, and Practice test toggle.
+- The QR code can be enlarged/full-screen for classroom or smartboard use.
+- Practice-test mode updates the custom shared URL, QR code, copy link, and native share URL.
+- Custom practice-test mode hides English prompts and reveal tools while keeping audio available.
+- The custom share page uses the same public-page shell style as other Spelio content pages.
+
+Custom entry and practice:
+
+- Clicking “Practice this list” should navigate to the public custom-list entry state, not auto-start practice.
+- Custom-list sessions are detached from normal Spelio Core progression.
+- They must not overwrite `selectedListIds`, `currentPathPosition`, or the normal Continue learning path.
+- Completing a custom list should not redirect the learner’s normal progression path.
+- Quick Recap is disabled for custom-list, shared-list, and practice-test sessions.
+- Normal Spelio Core recap/progression remains unchanged.
+
+Recent custom lists:
+
+- The Word Lists page can show “Your recent custom lists”.
+- Recent custom lists are stored locally on the device only.
+- Only the latest 3 recent custom lists are shown.
+- Recent custom lists open their share page at `/custom-list/{publicId}/share`.
+- Users can remove a recent custom list reference from the device.
+- Removing a recent custom list locally does not delete the server-side custom list or invalidate shared links.
+- Custom lists are not added into the main curated Spelio Core catalogue.
+- The recent custom lists card should feel integrated with the Word Lists card system while remaining secondary to Spelio Core.
 
 ## 9. End-of-session screen
 
@@ -915,7 +1001,7 @@ If the user struggled and eligible difficult words currently exist, primary acti
 
 If the user struggled but no eligible difficult words currently exist, do not show Review difficult words. Use the next valid continue-learning recommendation instead.
 
-For a completed shared-link or Practice test session, the primary action should be:
+For a completed shared-link, custom-list, or Practice test session, the primary action should be:
 
 - Return to your learning
 
@@ -1094,9 +1180,18 @@ Collections must not alter:
 - recommendation logic
 - local progress logic
 
-No MVP practice/session logic should branch on collection type, ownerType, or ownerId.
+No MVP Spelio Core practice/session logic should branch on collection type, ownerType, or ownerId.
 
-For MVP, Spelio Core collections use the guided, adaptive, short-session behaviour described above. Custom, personal, and teacher-created lists are future-facing utility modes unless deliberately added to scope later. They may eventually need more direct practice controls because they serve classroom, homework, spelling-test, and personal-list needs, but that configurability must not complicate the normal Spelio Core learner experience.
+For MVP, Spelio Core collections use the guided, adaptive, short-session behaviour described above. Temporary custom word lists are a detached utility mode and must not complicate the normal Spelio Core learner experience. Broader personal, teacher-created, classroom, homework, saved-library, and dashboard systems remain future-facing.
+
+Detached shared/custom sessions:
+
+- Use the words provided by the shared/custom context.
+- Must not overwrite `selectedListIds`.
+- Must not overwrite `currentPathPosition`.
+- Must not hijack the normal Continue learning recommendation path.
+- Must not receive Quick Recap before the session.
+- May update aggregate stats if the existing architecture does this naturally, but must not redirect ordinary progression.
 
 Changing word lists mid-session:
 
@@ -1145,19 +1240,19 @@ Progression-complete means:
 - This does not require every difficult word from that list to be resolved first.
 - This is mostly invisible system logic, not a new learner-facing status.
 
-List completion and modal ticks must be based on dialect-resolved conceptual learning items, not raw database rows. For items linked by `variantGroupId`, completion of the selected/resolved variant counts for the conceptual learning item.
+List completion and Word Lists ticks must be based on dialect-resolved conceptual learning items, not raw database rows. For items linked by `variantGroupId`, completion of the selected/resolved variant counts for the conceptual learning item.
 
-The list should only receive the stricter modal tick / full completion state when:
+The list should only receive the stricter Word Lists tick / full completion state when:
 
 - Every dialect-eligible conceptual learning item in the list has been seen at least once according to the active Welsh style rules, and
 - The user has completed a session for that list with at least 85% accuracy and no revealed letters, and
 - There are no currently unresolved difficult words from that same list using the current Review difficult words logic.
 
-This prevents a list from being marked fully complete after simply seeing all items once while still struggling. The modal tick must not be shown merely because the user can move on.
+This prevents a list from being marked fully complete after simply seeing all items once while still struggling. The Word Lists tick must not be shown merely because the user can move on.
 
 Unresolved difficult words from unselected or currently ineligible dialect variants must not prevent full completion under the current Welsh style rules.
 
-The tick in the word list modal represents full completion only. Do not add a second tick state, badge, label, or visible "progression-complete" language. The learner can move forward without a tick; the tick appears once the list has been properly settled.
+The tick in the Word Lists page represents full completion only. Do not add a second tick state, badge, label, or visible "progression-complete" language. The learner can move forward without a tick; the tick appears once the list has been properly settled.
 
 Switching Welsh style later may allow the learner to encounter a different variant in future practice, but it should not make past list completion feel broken or incomplete.
 
@@ -1336,7 +1431,7 @@ Recommendation order after a session:
 5. Else if all lists in stage are complete → recommend first list in next stage.
 6. Else recommend weakest incomplete list.
 
-When resolving ordinary Continue learning progression through `nextListId`, the app should not recommend a sequential next list that already meets the stricter full-completion / modal-tick state. It should walk forward through the `nextListId` chain and skip fully completed/ticked lists until it finds the first active list that is not fully completed. This skip rule must use the same full-completion source of truth as the modal tick, not the lighter progression-complete state. Lists that are merely progression-complete but not fully completed/ticked must not be skipped.
+When resolving ordinary Continue learning progression through `nextListId`, the app should not recommend a sequential next list that already meets the stricter full-completion / Word Lists tick state. It should walk forward through the `nextListId` chain and skip fully completed/ticked lists until it finds the first active list that is not fully completed. This skip rule must use the same full-completion source of truth as the Word Lists tick, not the lighter progression-complete state. Lists that are merely progression-complete but not fully completed/ticked must not be skipped.
 
 This refinement should be invisible to learners and must not introduce any new public completion status, badge, label, or second tick state.
 
@@ -1643,6 +1738,42 @@ Existing Welsh MVP word lists belong to this default collection.
 
 The Collections layer exists to reduce future refactor risk for curriculum integrations, course pathways, school deployments, teacher lists, personal lists, and future language-pair expansions. Those systems are intentionally postponed beyond MVP.
 
+### 16.3.2 Temporary custom word-list data
+
+Temporary custom word lists use a separate lightweight data model from Spelio Core word lists.
+
+Custom list fields should include:
+
+- id
+- publicId / non-guessable public token
+- title, defaulting to “Custom spelling list”
+- sourceLanguage, default `"en"`
+- targetLanguage, default `"cy"`
+- status: processing / ready / failed / rejected
+- expiresAt, default now + 14 days
+- moderation status/summary: pass / rejected / failed
+- createdAt
+- updatedAt
+
+Custom word fields should include:
+
+- id
+- customListId
+- welshAnswer
+- englishPrompt, nullable
+- audioUrl
+- audioStatus: ready / failed
+- order
+- createdAt
+
+Rules:
+
+- Do not put user-generated title, Welsh spellings, or English meanings in the URL.
+- Do not require accounts or collect names/emails for custom lists.
+- Do not store typed learner answers for custom-list practice.
+- Expired custom lists should no longer open practice.
+- Cleanup for expired custom lists and generated audio may be handled by a scheduled job or founder/admin action.
+
 ### 16.4 Word fields
 
 Each word should include:
@@ -1751,6 +1882,14 @@ This should:
 
 Do not expose Azure API keys in the browser.
 
+Temporary custom word lists also use server-side Azure Welsh TTS before publication:
+
+- Generate audio for every custom Welsh spelling.
+- Reuse the secure server-side audio generation path where practical.
+- Apply the same post-processing rules as ordinary Spelio audio where practical.
+- Do not publish a custom list if any audio file fails to generate, process, upload, or save.
+- If custom-list creation fails after partial audio upload, clean up temporary/orphaned audio where practical without masking the original failure.
+
 ### 16.5.1 Audio generation refinement
 
 Azure Welsh TTS remains the MVP audio provider.
@@ -1831,6 +1970,11 @@ Recommended MVP events:
 - `difficult_word_marked`
 - `difficult_word_resolved`
 - `audio_unavailable`
+- `custom_list_create_started`
+- `custom_list_create_succeeded`
+- `custom_list_create_failed`
+- `custom_list_shared`
+- `custom_list_practice_started`
 - `frontend_error`
 
 Events should include only the minimum useful context, such as anonymous session ID, list ID, word ID where needed for aggregate difficulty analysis, review mode, duration, accuracy bucket or aggregate result, reveal count, replay count, and error type.
@@ -1859,8 +2003,10 @@ The dashboard should show aggregate-only views such as:
 - Missing audio count
 - Audio playback failures
 - Frontend/API errors
+- Lightweight custom-list visibility, if implemented, including public ID, timestamps, expiry, status, word/audio summary, share URL, and moderation pass/rejected/failed status
 
 This dashboard is for founder observation and product learning only. It should not become a learner-facing dashboard in the MVP.
+Custom-list visibility should not become full editing, teacher libraries, class management, pupil tracking, or reporting.
 
 ### 17.4 Admin analytics exclusion
 
@@ -1893,6 +2039,8 @@ Respect browser Do Not Track or a future analytics opt-out setting where practic
 ### 17.6 Privacy and legal note
 
 The MVP should clearly disclose use of local storage for progress/settings.
+
+Privacy/reset copy should also disclose that recent custom-list references are stored locally on the device and can be cleared by resetting local progress/settings. Resetting removes local references from the device but does not delete already-created shared custom lists from the server.
 
 Any anonymous analytics should be described plainly in a privacy or cookies page.
 
@@ -2273,7 +2421,7 @@ Show:
 
 - Select a word list to begin
 
-Primary action opens word list modal.
+Primary action opens the Word Lists page.
 
 Do not start practice until the user explicitly starts a session after selecting a list.
 
@@ -2337,6 +2485,14 @@ Recommended MVP stack:
 
 Do not start with a separate Node server unless required.
 
+Server-side configuration notes:
+
+- Supabase public read environment variables remain used for public app data where appropriate.
+- Server-side custom list creation needs Supabase server credentials.
+- Azure Speech credentials are required for custom audio generation.
+- Moderation provider configuration is required in production for custom list creation.
+- Secrets must remain server-side and must not use `VITE_` public client variables.
+
 The app should be built mobile-first and PWA-friendly.
 
 Do not add database-backed or admin-editable UI translations for MVP.
@@ -2369,9 +2525,13 @@ Do not include in MVP:
 - Formal assessment mode
 - Configurable assessment builders
 - Advanced share controls
-- Public custom list sharing
-- Custom, personal, or teacher-created list authoring
+- Full custom-list management dashboard
+- Saved custom-list library across devices
+- Editing existing custom lists
+- Permanent custom-list ownership
+- Teacher-created list libraries
 - Configurable custom-list practice modes
+- Welsh correctness verification guarantee
 - Leaderboards
 - Streaks
 - Badges/coins/gamification
@@ -2397,6 +2557,8 @@ Lightweight recap of recently weak words is included; full spaced repetition sch
 
 Lightweight share links and Practice test links are included. They do not make the MVP a teacher platform, reporting system, or formal assessment system.
 
+Temporary custom word-list creation and sharing are included only as lightweight, expiring, detached practice support. This does not add accounts, teacher dashboards, class/student management, saved libraries, reporting, permanent ownership, editing, or Welsh correctness verification.
+
 ## 23. Build priorities
 
 ### Phase 1 — Frontend UI
@@ -2408,8 +2570,9 @@ Build:
 - Struggled homepage
 - Practice screen
 - Settings modal
-- Word list modal
+- Standalone Word Lists page
 - Selected word-list share surface with QR, copy link, native Share where supported, and the lightweight Practice test share option
+- Temporary custom-list create, share, and entry pages
 - End screen
 
 Use static mock data first.
@@ -2459,6 +2622,7 @@ Build:
 - Word-level dialect fields
 - usageNote and dialectNote management
 - Admin advanced note fields for usageNote, dialectNote, and internal-only notes
+- Lightweight founder visibility for temporary custom lists if implemented
 
 ### Phase 5 — Content
 
@@ -2485,7 +2649,7 @@ No file should be integrated without passing TypeScript checks.
 
 Use this in a new chat:
 
-I am building Spelio, a premium mobile-first Welsh spelling practice web app for adults. I have final design screenshots in the project files for the homepage states, practice screen, settings modal, word list modal, and end screen. Please inspect those screenshots and build the frontend UI in React + TypeScript + Tailwind using static mock data first. Do not add extra features. Match the visual style closely: clean warm-neutral public background, minimal red accent, premium SaaS feel, calm adult tone, strong whitespace, subtle interactions. Build the following screens/states: first-time homepage, returning homepage, struggled homepage, practice screen, settings modal, word list modal, and end screen. Use reusable components and mobile-first responsive layout. Do not implement backend yet. Include the word list modal behaviour from the specification: Done saves selection but never auto-starts practice, and changing lists during practice ends the current session and returns to homepage.
+I am building Spelio, a premium mobile-first Welsh spelling practice web app for adults. I have final design screenshots in the project files for the homepage states, practice screen, settings modal, Word Lists page, and end screen. Please inspect those screenshots and build the frontend UI in React + TypeScript + Tailwind using static mock data first. Do not add extra features. Match the visual style closely: clean warm-neutral public background, minimal red accent, premium SaaS feel, calm adult tone, strong whitespace, subtle interactions. Build the following screens/states: first-time homepage, returning homepage, struggled homepage, practice screen, settings modal, Word Lists page, and end screen. Use reusable components and mobile-first responsive layout. Do not implement backend yet. Include the Word Lists page behaviour from the specification: Done saves selection but never auto-starts practice, and changing lists during practice ends the current session and returns to homepage.
 
 ### Prompt 2 — Build the practice engine
 
@@ -2497,7 +2661,7 @@ Using the existing Spelio frontend, implement the core practice engine. The app 
 
 Use this after the practice engine works:
 
-Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store the selected word list as a one-item `selectedListIds` array, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible conceptual learning item has been seen, while the modal tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. Older multiple selected list IDs should migrate to the first valid active selected list. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys and returns the user to the homepage.
+Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store the selected word list as a one-item `selectedListIds` array, settings including `dialectPreference`, word progress, list progress, last session result, current path position, and only if needed a minimal `completedNormalSessionCount`. Implement list progression separately from full list completion: the user may move on once every dialect-eligible conceptual learning item has been seen, while the Word Lists tick/full completion remains stricter and requires at least 85% accuracy and no revealed letters in a completed session. Implement recommendation logic: if the user struggled and dialect-eligible difficult words currently exist, recommend review difficult words; if current list is incomplete for progression, continue it; otherwise recommend nextListId, then unfinished list in current stage, then first list in next stage, then weakest incomplete list. Starting from the third normal practice session, inject up to one eligible recap-due word into normal sessions, without duplicate variantGroupId entries and without applying this to Review difficult words sessions. Recap-due words come from previous incorrect/revealed words, may remain eligible after visible review is resolved, and clear after one clean recap completion; `cleanRecapCount` may remain optional/internal future-safe metadata but must not require two completions. Older multiple selected list IDs should migrate to the first valid active selected list. Update homepage states based on first-time, returning, and struggled user logic, including a low-priority “From earlier →” link with a hidden/exact/capped count for eligible resolved `recapDue` words. Welsh style should affect word-level variant selection only, never word-list visibility, and older storage without `dialectPreference` should default to `mixed`. Review difficult words must use progress.difficult === true only, remove words from review after clean completion, shrink dynamically, disappear when no current difficult words remain, and never fall back to a standard session when empty. Continue learning should bypass visible review and From earlier unless automatic recap injection applies normally. Include reset progress behaviour that clears current and legacy local storage keys, recent custom-list references, and returns the user to the homepage.
 
 ### Prompt 4 — Build admin panel and Azure Voice integration
 
@@ -2515,7 +2679,7 @@ Help me create original Welsh word lists for Spelio. Do not copy any commercial 
 
 Use this before or during build:
 
-Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, From earlier recap logic, lightweight recap injection, capped From earlier count on the homepage, learner note handling for usageNote and dialectNote, mobile hidden input strategy, desktop keyboard strategy, word list modal behaviour, admin panel structure including advanced note fields, Azure Voice API route design, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
+Based on the Spelio MVP specification v1.1 Gold, create a detailed technical implementation plan for React + TypeScript + Tailwind + Vite + Vercel. Include folder structure, component structure, data models, local storage schema, state management approach, practice engine functions, recommendation functions, review difficult words logic, From earlier recap logic, lightweight recap injection, capped From earlier count on the homepage, learner note handling for usageNote and dialectNote, mobile hidden input strategy, desktop keyboard strategy, Word Lists page behaviour, admin panel structure including advanced note fields, Azure Voice API route design, custom-list server-side moderation/audio flow, and deployment steps. Keep it lean and suitable for a solo founder building an MVP.
 
 ### Prompt 7 — Implement lightweight anonymous analytics and founder observation dashboard
 
@@ -2537,6 +2701,9 @@ The MVP is complete when:
 - From earlier can optionally revisit previously weak `recapDue` words without blocking progression or looking like a backlog.
 - Quiet recap injection can reinforce `recapDue` words inside normal sessions without keeping the learner in a visible difficult-words state.
 - Changing word lists never auto-starts practice and never mutates an active session.
+- The Word Lists selector is a standalone public page with clear commit/discard behaviour.
+- Temporary custom word lists can be created, moderated, given generated Azure Welsh audio, shared by non-guessable link/QR, practised in detached sessions, and allowed to expire without becoming a teacher dashboard or saved library.
+- Recent custom-list references can be remembered locally on-device and cleared through reset.
 - Mobile input works reliably and does not conflict with desktop key handling.
 - The admin panel can create and manage word lists.
 - Azure Voice audio can be generated for words.

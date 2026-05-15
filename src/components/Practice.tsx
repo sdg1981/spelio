@@ -1614,6 +1614,7 @@ export function WordListSelectorPanel({
   onDone,
   onCreateCustomList,
   onSuggestWordList,
+  onPageShareBackChange,
   afterListGridContent,
   interfaceLanguage,
   t,
@@ -1626,6 +1627,7 @@ export function WordListSelectorPanel({
   onDone: (selectedIds: string[]) => void;
   onCreateCustomList?: () => void;
   onSuggestWordList?: () => void;
+  onPageShareBackChange?: (handler: (() => void) | null) => void;
   afterListGridContent?: ReactNode;
   interfaceLanguage: InterfaceLanguage;
   t: Translate;
@@ -1668,6 +1670,18 @@ export function WordListSelectorPanel({
     if (variant !== 'page') return;
     setPageActionPortalTarget(document.querySelector('.public-app') ?? document.body);
   }, [variant]);
+
+  useEffect(() => {
+    if (variant !== 'page' || !onPageShareBackChange) return;
+
+    if (!shareList) {
+      onPageShareBackChange(null);
+      return;
+    }
+
+    onPageShareBackChange(() => setShareList(null));
+    return () => onPageShareBackChange(null);
+  }, [onPageShareBackChange, shareList, variant]);
 
   if (shareList) {
     return (

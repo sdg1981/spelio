@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, FileText, X } from 'lucide-react';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -33,13 +33,14 @@ export function WordListsPage({
   t: Translate;
 }) {
   const [recentCustomLists, setRecentCustomLists] = useState<RecentCustomListReference[]>([]);
+  const [shareBackHandler, setShareBackHandler] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     setRecentCustomLists(loadRecentCustomLists());
   }, []);
 
   function openRecentCustomList(reference: RecentCustomListReference) {
-    window.history.pushState({ spelioPublicPage: true }, '', reference.shareUrl);
+    window.history.pushState({ spelioPublicPage: true, spelioReturnTo: '/word-lists' }, '', reference.shareUrl);
     resetPublicPageScrollToTop();
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
@@ -48,6 +49,19 @@ export function WordListsPage({
     removeRecentCustomList(publicId);
     setRecentCustomLists(loadRecentCustomLists());
   }
+
+  const handleBack = useCallback(() => {
+    if (shareBackHandler) {
+      shareBackHandler();
+      return;
+    }
+
+    onBack();
+  }, [onBack, shareBackHandler]);
+
+  const handlePageShareBackChange = useCallback((handler: (() => void) | null) => {
+    setShareBackHandler(handler ? () => handler : null);
+  }, []);
 
   const recentCustomListsCard = recentCustomLists.length > 0 ? (
     <div className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
@@ -86,7 +100,7 @@ export function WordListsPage({
 
   return (
     <main className="how-page public-info-page word-lists-page">
-      <button className="how-back-button word-lists-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
+      <button className="how-back-button word-lists-back" type="button" onClick={handleBack} aria-label={t('publicPages.backLabel')}>
         <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
       </button>
       <div className="homepage-utility word-lists-language">
@@ -114,6 +128,7 @@ export function WordListsPage({
           onClose={onBack}
           onDone={onDone}
           onCreateCustomList={onCreateCustomList}
+          onPageShareBackChange={handlePageShareBackChange}
           afterListGridContent={recentCustomListsCard}
           interfaceLanguage={interfaceLanguage}
           t={t}
