@@ -5719,44 +5719,37 @@
 }
 
 .word-lists-recent-custom{
-  width:min(100%,960px);
-  margin:12px auto 0;
-  border:1px solid rgba(7,21,34,.075);
-  border-radius:12px;
-  background:rgba(255,255,255,.5);
-  box-shadow:0 10px 24px rgba(7,21,34,.028), inset 0 1px 0 rgba(255,255,255,.68);
-  padding:21px 30px 19px;
   display:grid;
-  gap:17px;
+  gap:18px;
 }
 
 .word-lists-recent-custom-heading{
   display:flex;
   align-items:center;
-  gap:18px;
+  gap:14px;
   color:var(--text-secondary, #5f6b78);
 }
 
 .word-lists-recent-custom-heading svg{
   flex:0 0 auto;
   color:#5f6872;
-  width:26px;
-  height:26px;
+  width:24px;
+  height:24px;
 }
 
 .word-lists-recent-custom h2{
   margin:0;
   color:var(--text-primary, #071522);
-  font-size:clamp(22px,2.4vw,28px);
-  font-weight:850;
+  font-size:20px;
+  font-weight:900;
   letter-spacing:0;
   line-height:1.15;
 }
 
 .word-lists-recent-custom p{
-  margin:6px 0 0;
+  margin:5px 0 0;
   color:var(--text-secondary, #5f6b78);
-  font-size:clamp(15px,1.5vw,17px);
+  font-size:14px;
   line-height:1.4;
 }
 
@@ -5769,7 +5762,7 @@
   display:flex;
   align-items:center;
   gap:6px;
-  border-top:1px solid rgba(7,21,34,.055);
+  border-top:1px solid var(--border-subtle, #edf0f2);
 }
 
 .word-lists-recent-custom-open{
@@ -5777,11 +5770,11 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
+  gap:12px;
   border:0;
   background:transparent;
   color:var(--text-primary, #071522);
-  padding:18px 6px 18px 0;
+  padding:15px 4px 15px 0;
   text-align:left;
 }
 
@@ -5810,8 +5803,8 @@
   flex:0 0 auto;
   display:grid;
   place-items:center;
-  width:34px;
-  height:34px;
+  width:32px;
+  height:32px;
   border:0;
   border-radius:999px;
   background:transparent;
@@ -5833,8 +5826,8 @@
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-size:clamp(17px,1.8vw,20px);
-  font-weight:800;
+  font-size:16px;
+  font-weight:850;
 }
 
 .word-lists-page .wordlist-body{
@@ -5918,7 +5911,7 @@
 }
 
 .word-lists-footer.public-info-footer{
-  margin:38px 0 0;
+  margin:48px 0 0;
   padding-top:0;
   padding-bottom:0;
 }
@@ -6009,21 +6002,18 @@
   }
 
   .word-lists-recent-custom{
-    margin-top:10px;
-    padding:16px 16px 14px;
-    border-radius:11px;
     gap:12px;
   }
 
   .word-lists-recent-custom-heading{
-    gap:12px;
+    gap:10px;
     align-items:flex-start;
   }
 
   .word-lists-recent-custom-heading svg{
     width:22px;
     height:22px;
-    margin-top:4px;
+    margin-top:2px;
   }
 
   .word-lists-recent-custom-item{
@@ -6036,8 +6026,8 @@
   }
 
   .word-lists-recent-custom-remove{
-    width:36px;
-    height:36px;
+    width:34px;
+    height:34px;
   }
 
   .word-lists-page .list-grid > div + div{

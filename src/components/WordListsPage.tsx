@@ -49,6 +49,41 @@ export function WordListsPage({
     setRecentCustomLists(loadRecentCustomLists());
   }
 
+  const recentCustomListsCard = recentCustomLists.length > 0 ? (
+    <div className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
+      <div className="word-lists-recent-custom-heading">
+        <FileText size={26} strokeWidth={1.8} aria-hidden="true" />
+        <div>
+          <h2 id="word-lists-recent-custom-title">{t('customLists.recentHeading')}</h2>
+          <p>{t('customLists.recentSupport')}</p>
+        </div>
+      </div>
+      <div className="word-lists-recent-custom-links">
+        {recentCustomLists.map(reference => (
+          <div className="word-lists-recent-custom-item" key={reference.publicId}>
+            <button
+              className="word-lists-recent-custom-open"
+              type="button"
+              onClick={() => openRecentCustomList(reference)}
+              aria-label={`${t('customLists.recentOpenShare')} - ${reference.title}`}
+            >
+              <span>{reference.title}</span>
+              <ChevronRight size={21} strokeWidth={2} aria-hidden="true" />
+            </button>
+            <button
+              className="word-lists-recent-custom-remove"
+              type="button"
+              onClick={() => removeRecentReference(reference.publicId)}
+              aria-label={`${t('customLists.recentRemoveFromDevice')} - ${reference.title}`}
+            >
+              <X size={14} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   return (
     <main className="how-page public-info-page word-lists-page">
       <button className="how-back-button word-lists-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
@@ -79,45 +114,11 @@ export function WordListsPage({
           onClose={onBack}
           onDone={onDone}
           onCreateCustomList={onCreateCustomList}
+          afterListGridContent={recentCustomListsCard}
           interfaceLanguage={interfaceLanguage}
           t={t}
           variant="page"
         />
-
-        {recentCustomLists.length > 0 && (
-          <section className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
-            <div className="word-lists-recent-custom-heading">
-              <FileText size={30} strokeWidth={1.8} aria-hidden="true" />
-              <div>
-                <h2 id="word-lists-recent-custom-title">{t('customLists.recentHeading')}</h2>
-                <p>{t('customLists.recentSupport')}</p>
-              </div>
-            </div>
-            <div className="word-lists-recent-custom-links">
-              {recentCustomLists.map(reference => (
-                <div className="word-lists-recent-custom-item" key={reference.publicId}>
-                  <button
-                    className="word-lists-recent-custom-open"
-                    type="button"
-                    onClick={() => openRecentCustomList(reference)}
-                    aria-label={`${t('customLists.recentOpenShare')} - ${reference.title}`}
-                  >
-                    <span>{reference.title}</span>
-                    <ChevronRight size={22} strokeWidth={2} aria-hidden="true" />
-                  </button>
-                  <button
-                    className="word-lists-recent-custom-remove"
-                    type="button"
-                    onClick={() => removeRecentReference(reference.publicId)}
-                    aria-label={`${t('customLists.recentRemoveFromDevice')} - ${reference.title}`}
-                  >
-                    <X size={14} strokeWidth={2.2} aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
       </section>
 
       <Footer

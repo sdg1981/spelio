@@ -1614,6 +1614,7 @@ export function WordListSelectorPanel({
   onDone,
   onCreateCustomList,
   onSuggestWordList,
+  afterListGridContent,
   interfaceLanguage,
   t,
   variant = 'modal'
@@ -1625,6 +1626,7 @@ export function WordListSelectorPanel({
   onDone: (selectedIds: string[]) => void;
   onCreateCustomList?: () => void;
   onSuggestWordList?: () => void;
+  afterListGridContent?: ReactNode;
   interfaceLanguage: InterfaceLanguage;
   t: Translate;
   variant?: 'modal' | 'page';
@@ -1761,6 +1763,7 @@ export function WordListSelectorPanel({
               ))}
             </div>
           ))}
+          {afterListGridContent}
         </div>
 
         {onSuggestWordList && variant === 'modal' && (
