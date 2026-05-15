@@ -6,7 +6,7 @@ import { Logo } from './Logo';
 import { WordListSelectorPanel } from './Practice';
 import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
-import { loadRecentCustomLists, type RecentCustomListReference } from '../lib/customLists';
+import { loadRecentCustomLists, removeRecentCustomList, type RecentCustomListReference } from '../lib/customListRecent';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 
 export function WordListsPage({
@@ -44,6 +44,11 @@ export function WordListsPage({
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
+  function removeRecentReference(publicId: string) {
+    removeRecentCustomList(publicId);
+    setRecentCustomLists(loadRecentCustomLists());
+  }
+
   return (
     <main className="how-page public-info-page word-lists-page">
       <button className="how-back-button word-lists-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
@@ -75,10 +80,20 @@ export function WordListsPage({
             </div>
             <div className="word-lists-recent-custom-links">
               {recentCustomLists.map(reference => (
-                <button key={reference.publicId} type="button" onClick={() => openRecentCustomList(reference)}>
-                  <span>{reference.title}</span>
-                  <small>{t('customLists.recentOpenShare')}</small>
-                </button>
+                <div className="word-lists-recent-custom-item" key={reference.publicId}>
+                  <button type="button" onClick={() => openRecentCustomList(reference)}>
+                    <span>{reference.title}</span>
+                    <small>{t('customLists.recentOpenShare')}</small>
+                  </button>
+                  <button
+                    className="word-lists-recent-custom-remove"
+                    type="button"
+                    onClick={() => removeRecentReference(reference.publicId)}
+                    aria-label={`${t('customLists.recentRemove')} - ${reference.title}`}
+                  >
+                    {t('customLists.recentRemove')}
+                  </button>
+                </div>
               ))}
             </div>
           </section>

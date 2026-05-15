@@ -86,6 +86,7 @@ export interface WordProgressPatch {
 }
 
 const STORAGE_KEY = 'spelio-storage-v1';
+const RECENT_CUSTOM_LISTS_STORAGE_KEY = 'spelio-recent-custom-lists';
 const LEGACY_STORAGE_KEYS = [
   'selectedListIds',
   'currentPathPosition',
@@ -327,6 +328,7 @@ export function clearSpelioStorageData() {
 
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(RECENT_CUSTOM_LISTS_STORAGE_KEY);
     for (const key of LEGACY_STORAGE_KEYS) {
       window.localStorage.removeItem(key);
     }

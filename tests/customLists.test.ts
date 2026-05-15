@@ -8,6 +8,12 @@ import {
   validateCustomListRows,
   type CustomListEntryInput
 } from '../src/lib/customListValidation';
+import {
+  loadRecentCustomLists,
+  removeRecentCustomList,
+  saveRecentCustomList,
+  type RecentCustomListReference
+} from '../src/lib/customListRecent';
 import { getCustomListCanonicalUrl, getCustomListPath, getCustomPublicIdFromPath } from '../src/lib/customListRoutes';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, isPracticeTestShareMode, restoreSharedWordListProgression } from '../src/lib/wordListSharing';
 import { createDefaultStorage } from '../src/lib/practice/storage';
@@ -69,11 +75,57 @@ function createCustomList(): WordList {
   };
 }
 
+function createMemoryStorage() {
+  const values = new Map<string, string>();
+  return {
+    getItem(key: string) {
+      return values.get(key) ?? null;
+    },
+    setItem(key: string, value: string) {
+      values.set(key, value);
+    }
+  };
+}
+
+function recentReference(publicId: string, title: string, expiresAt = '2099-01-01T00:00:00.000Z'): RecentCustomListReference {
+  return {
+    publicId,
+    title,
+    createdAt: '2026-05-15T00:00:00.000Z',
+    expiresAt,
+    shareUrl: `/custom-list/${publicId}/share`
+  };
+}
+
 {
   assertEqual(normaliseCustomListTitle('  Lesson 3 spellings  '), 'Lesson 3 spellings', 'Custom list titles should be trimmed.');
   assertEqual(normaliseCustomListTitle('   '), CUSTOM_LIST_TITLE, 'Blank custom list titles should use the fallback title.');
   assert(validateCustomListTitle('Food words'), 'Short custom list titles should be accepted.');
   assert(!validateCustomListTitle('x'.repeat(CUSTOM_LIST_TITLE_MAX_LENGTH + 1)), 'Overlong custom list titles should be rejected.');
+}
+
+{
+  const storage = createMemoryStorage();
+  saveRecentCustomList(recentReference('cl_one', 'One'), storage);
+  saveRecentCustomList(recentReference('cl_two', 'Two'), storage);
+  saveRecentCustomList(recentReference('cl_three', 'Three'), storage);
+  saveRecentCustomList(recentReference('cl_four', 'Four'), storage);
+  assertDeepEqual(
+    loadRecentCustomLists(storage).map(item => item.publicId),
+    ['cl_four', 'cl_three', 'cl_two'],
+    'Recent custom lists should keep only the latest three local references.'
+  );
+  removeRecentCustomList('cl_three', storage);
+  assertDeepEqual(
+    loadRecentCustomLists(storage).map(item => item.publicId),
+    ['cl_four', 'cl_two'],
+    'Removing a recent custom list should only remove the local reference.'
+  );
+  saveRecentCustomList(recentReference('cl_expired', 'Expired', '2000-01-01T00:00:00.000Z'), storage);
+  assert(
+    !loadRecentCustomLists(storage).some(item => item.publicId === 'cl_expired'),
+    'Expired recent custom lists should be hidden locally.'
+  );
 }
 
 {

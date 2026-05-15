@@ -151,6 +151,7 @@ export function Practice({
   sessionKey = 0,
   showKeyboardHint = false,
   practiceTestMode = false,
+  disableQuickRecap = false,
   onStorageChange,
   onComplete,
   onBackHome,
@@ -169,6 +170,7 @@ export function Practice({
   sessionKey?: number;
   showKeyboardHint?: boolean;
   practiceTestMode?: boolean;
+  disableQuickRecap?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
@@ -245,7 +247,7 @@ export function Practice({
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, sessionKey, onStorageChange, onComplete, t });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, disableQuickRecap, sessionKey, onStorageChange, onComplete, t });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -1481,14 +1483,12 @@ async function copyTextToClipboard(text: string) {
 function WordListShareView({
   list,
   displayName,
-  onBack,
   onClose,
   showClose = true,
   t
 }: {
   list: WordList;
   displayName: string;
-  onBack: () => void;
   onClose: () => void;
   showClose?: boolean;
   t: Translate;
@@ -1531,16 +1531,13 @@ function WordListShareView({
 
   return (
     <>
-      <div className="wordlist-share-header">
-        <button className="wordlist-share-nav-button" type="button" onClick={onBack} aria-label={t('wordLists.back')}>
-          <ArrowLeft size={22} strokeWidth={2.2} aria-hidden="true" />
-        </button>
-        {showClose && (
+      {showClose && (
+        <div className="wordlist-share-header">
           <button className="wordlist-share-nav-button" type="button" onClick={onClose} aria-label={t('wordLists.close')}>
             <X size={24} strokeWidth={2} aria-hidden="true" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="wordlist-share-body">
         <div className="wordlist-share-intro">
@@ -1661,7 +1658,6 @@ export function WordListSelectorPanel({
     setSelectedIds(selectSingleWordList(listId));
   }, []);
 
-  const closeShareView = useCallback(() => setShareList(null), []);
   const listGridId = variant === 'page' ? 'word-list-page-list-grid' : 'word-list-modal-list-grid';
   const searchId = variant === 'page' ? 'word-list-page-search' : 'word-list-modal-search';
   const [pageActionPortalTarget, setPageActionPortalTarget] = useState<Element | null>(null);
@@ -1676,7 +1672,6 @@ export function WordListSelectorPanel({
       <WordListShareView
         list={shareList}
         displayName={getListDisplayName(shareList, interfaceLanguage)}
-        onBack={closeShareView}
         onClose={onClose}
         showClose={variant === 'modal'}
         t={t}
@@ -1785,7 +1780,7 @@ export function WordListSelectorPanel({
   );
 }
 
-function LargeWordListQrOverlay({
+export function LargeWordListQrOverlay({
   listName,
   shareUrl,
   onClose,

@@ -605,6 +605,7 @@ export default function App() {
       sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
       practiceTestMode={practiceTestMode}
+      disableQuickRecap={Boolean(activeSharedContext) || practiceTestMode}
       onStorageChange={updateStorage}
       onComplete={handleComplete}
       onBackHome={activeSharedContext ? returnToLearning : () => setScreen('home')}

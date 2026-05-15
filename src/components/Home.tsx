@@ -84,7 +84,7 @@ export function Home({
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
-  const showRecapEntry = mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
+  const showRecapEntry = !isSharedEntry && mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
 
   return (
     <main className="homepage-bg">

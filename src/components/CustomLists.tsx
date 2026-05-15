@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ArrowRight, Copy, FlaskConical, LockKeyhole, Share2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Copy, LockKeyhole, Share2, ShieldCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft } from './Icons';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
+import { LargeWordListQrOverlay } from './Practice';
 import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import {
@@ -20,12 +21,12 @@ import {
   getVisibleCustomListRowCount,
   loadCustomWordList,
   normaliseCustomListTitle,
-  saveRecentCustomList,
   validateCustomListTitle,
   validateCustomListRows,
   type CustomListEntryInput,
   type CustomListValidationError
 } from '../lib/customLists';
+import { saveRecentCustomList } from '../lib/customListRecent';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { isPracticeTestShareMode } from '../lib/wordListSharing';
 
@@ -233,10 +234,6 @@ export function CustomListCreatePage({
     >
       <section className="custom-list-create" aria-labelledby="custom-list-create-title">
         <div className="custom-list-intro">
-          <span className="custom-list-preview-badge">
-            <FlaskConical size={14} aria-hidden="true" />
-            {t('customLists.preview')}
-          </span>
           <h1 id="custom-list-create-title">{t('customLists.createHeading')}</h1>
           <p>{t('customLists.createSupport')}</p>
         </div>
@@ -378,6 +375,7 @@ export function CustomListSharePage({
   const [listTitle, setListTitle] = useState(CUSTOM_LIST_TITLE);
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [largeQrOpen, setLargeQrOpen] = useState(false);
   const copyTimerRef = useRef<number | null>(null);
   const shareUrl = useMemo(() => getCustomListCanonicalUrl(publicId, undefined, { practiceTest: practiceTestLink }), [practiceTestLink, publicId]);
 
@@ -439,10 +437,6 @@ export function CustomListSharePage({
     >
       <section className="custom-list-share" aria-labelledby="custom-list-share-title">
         <div className="custom-list-share-intro">
-          <span className="custom-list-preview-badge">
-            <FlaskConical size={14} aria-hidden="true" />
-            {t('customLists.preview')}
-          </span>
           <h1 id="custom-list-share-title">{t('customLists.shareHeading')}</h1>
           <h2>{listTitle}</h2>
           <p>{t('customLists.shareSupport')}</p>
@@ -451,10 +445,10 @@ export function CustomListSharePage({
         <div className="custom-list-share-layout">
           <section aria-labelledby="custom-list-qr-title">
             <h3 id="custom-list-qr-title" className="group-title">{t('wordLists.qrCode')}</h3>
-            <div className="custom-list-qr-card">
-              <QRCodeSVG value={shareUrl} size={238} marginSize={2} className="custom-list-qr" />
+            <button className="custom-list-qr-card" type="button" onClick={() => setLargeQrOpen(true)} aria-label={t('wordLists.scanToOpenList')}>
+              <QRCodeSVG value={shareUrl} size={218} marginSize={2} className="custom-list-qr" />
               <span>{t('wordLists.scanToOpenList')}</span>
-            </div>
+            </button>
           </section>
           <section aria-labelledby="custom-list-share-link-title" className="custom-list-share-actions">
             <h3 id="custom-list-share-link-title" className="group-title">{t('wordLists.shareLink')}</h3>
@@ -499,6 +493,14 @@ export function CustomListSharePage({
             <p>{t('customLists.privacyBody')}</p>
           </div>
         </div>
+        {largeQrOpen && (
+          <LargeWordListQrOverlay
+            listName={listTitle}
+            shareUrl={shareUrl}
+            onClose={() => setLargeQrOpen(false)}
+            t={t}
+          />
+        )}
       </section>
     </CustomListPublicShell>
   );
@@ -563,15 +565,12 @@ export function CustomListEntryPage({
       t={t}
     >
       <section className="custom-list-entry" aria-labelledby="custom-list-entry-title">
-        <span className="custom-list-preview-badge">
-          <FlaskConical size={14} aria-hidden="true" />
-          {t('customLists.preview')}
-        </span>
         {state === 'loading' && <p className="custom-list-status" role="status">{t('customLists.loading')}</p>}
         {state === 'ready' && list && (
           <>
             <h1 id="custom-list-entry-title">{heading}</h1>
             <p>{list.name || CUSTOM_LIST_TITLE}</p>
+            <small className="custom-list-entry-meta">{formatSpellingCount(list.words.length, t)}</small>
             <button className="custom-list-primary" type="button" onClick={startPractice}>{cta}</button>
           </>
         )}
@@ -635,6 +634,10 @@ function getCreateErrorMessage(error: string | undefined, t: Translate) {
   if (error === 'validation_failed') return '';
   if (error === 'audio_failed') return t('customLists.audioError');
   return t('customLists.audioError');
+}
+
+function formatSpellingCount(count: number, t: Translate) {
+  return `${count} ${count === 1 ? t('customLists.spellingSingular') : t('customLists.spellingPlural')}`;
 }
 
 async function copyTextToClipboard(text: string) {

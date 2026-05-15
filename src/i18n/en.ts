@@ -200,9 +200,9 @@ export const en = {
     soundEffects: 'Sound effects',
     soundEffectsNote: 'Play sounds for correct and incorrect answers.',
     resetProgress: 'Reset progress',
-    localProgressNote: 'Progress is saved locally on this device.',
+    localProgressNote: 'Progress and recent custom-list references are saved locally on this device.',
     resetProgressTitle: 'Reset progress?',
-    resetProgressBody: 'This will clear all your progress, settings, and history on this device.',
+    resetProgressBody: 'This will clear your progress, settings, history, and recent custom-list references on this device. Shared custom lists themselves are not deleted.',
     cancel: 'Cancel',
     reset: 'Reset'
   },
@@ -243,7 +243,6 @@ export const en = {
     stageConfidence: 'Confidence'
   },
   customLists: {
-    preview: 'Preview',
     title: 'Custom spelling list',
     createCta: 'Create custom list',
     createHeading: 'Create a custom spelling list',
@@ -255,7 +254,7 @@ export const en = {
     englishMeaning: 'English meaning (optional)',
     welshPlaceholder: 'Add Welsh spelling...',
     englishPlaceholder: 'Add English meaning (optional)...',
-    expiryNote: 'Lists expire after 14 days.',
+    expiryNote: 'Available for 14 days',
     saveList: 'Save list',
     saving: 'Saving...',
     saveSupport: 'You’ll get a QR code and share link',
@@ -292,7 +291,10 @@ export const en = {
     loadErrorBody: 'Please try opening the link again.',
     recentHeading: 'Your recent custom lists',
     recentSupport: 'Saved on this device only.',
-    recentOpenShare: 'Open share page'
+    recentOpenShare: 'Open',
+    recentRemove: 'Remove',
+    spellingSingular: 'spelling',
+    spellingPlural: 'spellings'
   },
   end: {
     trickyEncouragement: 'That was a tricky one - let’s practise those words again.',

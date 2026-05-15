@@ -200,9 +200,9 @@ export const cy = {
     soundEffects: 'Effeithiau sain',
     soundEffectsNote: 'Chwarae sain ar gyfer atebion cywir ac anghywir.',
     resetProgress: 'Ailosod cynnydd',
-    localProgressNote: 'Mae cynnydd yn cael ei gadw’n lleol ar y ddyfais hon.',
+    localProgressNote: 'Mae cynnydd a chyfeiriadau at restrau personol diweddar yn cael eu cadw’n lleol ar y ddyfais hon.',
     resetProgressTitle: 'Ailosod cynnydd?',
-    resetProgressBody: 'Bydd hyn yn clirio eich cynnydd, gosodiadau a hanes ar y ddyfais hon.',
+    resetProgressBody: 'Bydd hyn yn clirio eich cynnydd, gosodiadau, hanes a chyfeiriadau at restrau personol diweddar ar y ddyfais hon. Ni fydd y rhestrau personol a rannwyd yn cael eu dileu.',
     cancel: 'Canslo',
     reset: 'Ailosod'
   },
@@ -243,7 +243,6 @@ export const cy = {
     stageConfidence: 'Hyder'
   },
   customLists: {
-    preview: 'Rhagolwg',
     title: 'Rhestr sillafu bersonol',
     createCta: 'Creu rhestr bersonol',
     createHeading: 'Creu rhestr sillafu bersonol',
@@ -255,7 +254,7 @@ export const cy = {
     englishMeaning: 'Ystyr Saesneg (dewisol)',
     welshPlaceholder: 'Ychwanegu sillafiad Cymraeg...',
     englishPlaceholder: 'Ychwanegu ystyr Saesneg (dewisol)...',
-    expiryNote: 'Mae rhestrau’n dod i ben ar ôl 14 diwrnod.',
+    expiryNote: 'Ar gael am 14 diwrnod',
     saveList: 'Cadw’r rhestr',
     saving: 'Yn cadw...',
     saveSupport: 'Byddwch yn cael cod QR a dolen rannu',
@@ -292,7 +291,10 @@ export const cy = {
     loadErrorBody: 'Ceisiwch agor y ddolen eto.',
     recentHeading: 'Eich rhestrau personol diweddar',
     recentSupport: 'Wedi’u cadw ar y ddyfais hon yn unig.',
-    recentOpenShare: 'Agor y dudalen rannu'
+    recentOpenShare: 'Agor',
+    recentRemove: 'Tynnu',
+    spellingSingular: 'sillafiad',
+    spellingPlural: 'sillafiadau'
   },
   end: {
     trickyEncouragement: 'Roedd honna’n anodd - gadewch i ni ymarfer y geiriau hynny eto.',
