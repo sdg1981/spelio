@@ -12,6 +12,7 @@ import {
   Languages,
   Lightbulb,
   LibraryBig,
+  ListPlus,
   MessageCircle,
   MessageSquareQuote,
   QrCode,
@@ -67,6 +68,11 @@ const features: Feature[] = [
     titleKey: 'how.features.mixedDialect.title',
     bodyKey: 'how.features.mixedDialect.body',
     icon: Globe2
+  },
+  {
+    titleKey: 'how.features.customListSharing.title',
+    bodyKey: 'how.features.customListSharing.body',
+    icon: ListPlus
   },
   {
     titleKey: 'how.features.recallPause.title',

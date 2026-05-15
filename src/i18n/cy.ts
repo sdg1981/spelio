@@ -62,6 +62,10 @@ export const cy = {
         title: 'Cymorth i wahanol ffurfiau Cymraeg',
         body: 'Mae’n cefnogi ffurfiau Gogledd Cymru a De Cymru / Safonol gyda ymarfer cymysg deallus.'
       },
+      customListSharing: {
+        title: 'Creu a rhannu rhestrau personol',
+        body: 'Creu rhestr sillafu fer, cynhyrchu sain Cymraeg, a’i rhannu drwy ddolen neu god QR. Defnyddiol i athrawon, tiwtoriaid, neu unrhyw un sydd eisiau ymarfer penodol.'
+      },
       recallPause: {
         title: 'Saib cofio',
         body: 'Clywch y Gymraeg yn gyntaf, yna gwelwch y prompt Saesneg ar ôl saib byr i annog cofio gweithredol.'

@@ -62,6 +62,10 @@ export const en = {
         title: 'Mixed Welsh dialect support',
         body: 'Supports North Wales and South Wales / Standard forms with intelligent mixed-dialect practice.'
       },
+      customListSharing: {
+        title: 'Create and share custom lists',
+        body: 'Make a short spelling list, generate Welsh audio, and share it by link or QR code. Useful for teachers, tutors, or anyone who wants focused practice.'
+      },
       recallPause: {
         title: 'Recall pause mode',
         body: 'Hear the Welsh first, then see the English prompt after a short pause to encourage active recall.'
