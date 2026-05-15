@@ -5719,42 +5719,44 @@
 }
 
 .word-lists-recent-custom{
-  width:min(100%,980px);
-  margin:18px auto 0;
+  width:min(100%,960px);
+  margin:12px auto 0;
   border:1px solid rgba(7,21,34,.075);
-  border-radius:14px;
-  background:rgba(255,255,255,.54);
-  box-shadow:0 12px 30px rgba(7,21,34,.032), inset 0 1px 0 rgba(255,255,255,.7);
-  padding:24px 34px 22px;
+  border-radius:12px;
+  background:rgba(255,255,255,.5);
+  box-shadow:0 10px 24px rgba(7,21,34,.028), inset 0 1px 0 rgba(255,255,255,.68);
+  padding:21px 30px 19px;
   display:grid;
-  gap:20px;
+  gap:17px;
 }
 
 .word-lists-recent-custom-heading{
   display:flex;
   align-items:center;
-  gap:22px;
+  gap:18px;
   color:var(--text-secondary, #5f6b78);
 }
 
 .word-lists-recent-custom-heading svg{
   flex:0 0 auto;
   color:#5f6872;
+  width:26px;
+  height:26px;
 }
 
 .word-lists-recent-custom h2{
   margin:0;
   color:var(--text-primary, #071522);
-  font-size:clamp(24px,2.8vw,31px);
+  font-size:clamp(22px,2.4vw,28px);
   font-weight:850;
   letter-spacing:0;
   line-height:1.15;
 }
 
 .word-lists-recent-custom p{
-  margin:8px 0 0;
+  margin:6px 0 0;
   color:var(--text-secondary, #5f6b78);
-  font-size:clamp(16px,1.7vw,19px);
+  font-size:clamp(15px,1.5vw,17px);
   line-height:1.4;
 }
 
@@ -5766,8 +5768,8 @@
 .word-lists-recent-custom-item{
   display:flex;
   align-items:center;
-  gap:10px;
-  border-top:1px solid rgba(7,21,34,.07);
+  gap:6px;
+  border-top:1px solid rgba(7,21,34,.055);
 }
 
 .word-lists-recent-custom-open{
@@ -5775,11 +5777,11 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:18px;
+  gap:14px;
   border:0;
   background:transparent;
   color:var(--text-primary, #071522);
-  padding:23px 4px 23px 0;
+  padding:18px 6px 18px 0;
   text-align:left;
 }
 
@@ -5808,8 +5810,8 @@
   flex:0 0 auto;
   display:grid;
   place-items:center;
-  width:36px;
-  height:36px;
+  width:34px;
+  height:34px;
   border:0;
   border-radius:999px;
   background:transparent;
@@ -5831,7 +5833,7 @@
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-size:clamp(18px,2vw,22px);
+  font-size:clamp(17px,1.8vw,20px);
   font-weight:800;
 }
 
@@ -5916,7 +5918,7 @@
 }
 
 .word-lists-footer.public-info-footer{
-  margin:48px 0 0;
+  margin:38px 0 0;
   padding-top:0;
   padding-bottom:0;
 }
@@ -6007,21 +6009,21 @@
   }
 
   .word-lists-recent-custom{
-    margin-top:12px;
-    padding:18px 18px 16px;
-    border-radius:12px;
-    gap:14px;
+    margin-top:10px;
+    padding:16px 16px 14px;
+    border-radius:11px;
+    gap:12px;
   }
 
   .word-lists-recent-custom-heading{
-    gap:14px;
+    gap:12px;
     align-items:flex-start;
   }
 
   .word-lists-recent-custom-heading svg{
-    width:24px;
-    height:24px;
-    margin-top:3px;
+    width:22px;
+    height:22px;
+    margin-top:4px;
   }
 
   .word-lists-recent-custom-item{
@@ -6029,13 +6031,13 @@
   }
 
   .word-lists-recent-custom-open{
-    padding:15px 2px 15px 0;
-    gap:10px;
+    padding:13px 2px 13px 0;
+    gap:8px;
   }
 
   .word-lists-recent-custom-remove{
-    width:38px;
-    height:38px;
+    width:36px;
+    height:36px;
   }
 
   .word-lists-page .list-grid > div + div{
