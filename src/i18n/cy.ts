@@ -243,11 +243,14 @@ export const cy = {
     stageConfidence: 'Hyder'
   },
   customLists: {
-    experimental: 'Arbrofol',
+    preview: 'Rhagolwg',
     title: 'Rhestr sillafu bersonol',
     createCta: 'Creu rhestr bersonol',
     createHeading: 'Creu rhestr sillafu bersonol',
     createSupport: 'Ychwanegwch hyd at 10 gair Cymraeg. Byddwn yn cynhyrchu sain fel y gallwch rannu rhestr ymarfer ag eraill.',
+    listTitle: 'Teitl y rhestr',
+    optional: 'Dewisol',
+    listTitlePlaceholder: 'Geiriau sillafu gwers 3',
     welshSpelling: 'Sillafiad Cymraeg',
     englishMeaning: 'Ystyr Saesneg (dewisol)',
     welshPlaceholder: 'Ychwanegu sillafiad Cymraeg...',
@@ -266,6 +269,7 @@ export const cy = {
     errorWelshRequired: 'Ychwanegwch sillafiad Cymraeg.',
     errorWelshTooLong: 'Mae’r sillafiad hwn yn rhy hir.',
     errorEnglishTooLong: 'Mae’r ystyr hwn yn rhy hir.',
+    errorTitleTooLong: 'Mae’r teitl hwn yn rhy hir.',
     errorNoEntries: 'Ychwanegwch o leiaf un sillafiad Cymraeg.',
     errorRepeated: 'Peidiwch ag ailadrodd yr un cofnod sawl gwaith.',
     errorModerationRow: 'Gwiriwch y cofnod hwn.',
@@ -285,7 +289,10 @@ export const cy = {
     notFoundTitle: 'Ni chanfuwyd y rhestr',
     notFoundBody: 'Nid yw’r rhestr sillafu bersonol hon ar gael.',
     loadErrorTitle: 'Nid oedd modd llwytho’r rhestr',
-    loadErrorBody: 'Ceisiwch agor y ddolen eto.'
+    loadErrorBody: 'Ceisiwch agor y ddolen eto.',
+    recentHeading: 'Eich rhestrau personol diweddar',
+    recentSupport: 'Wedi’u cadw ar y ddyfais hon yn unig.',
+    recentOpenShare: 'Agor y dudalen rannu'
   },
   end: {
     trickyEncouragement: 'Roedd honna’n anodd - gadewch i ni ymarfer y geiriau hynny eto.',

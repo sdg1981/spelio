@@ -1,6 +1,10 @@
 import {
   CUSTOM_LIST_MAX_ROWS,
+  CUSTOM_LIST_TITLE,
+  CUSTOM_LIST_TITLE_MAX_LENGTH,
   getVisibleCustomListRowCount,
+  normaliseCustomListTitle,
+  validateCustomListTitle,
   validateCustomListRows,
   type CustomListEntryInput
 } from '../src/lib/customListValidation';
@@ -63,6 +67,13 @@ function createCustomList(): WordList {
       }
     ]
   };
+}
+
+{
+  assertEqual(normaliseCustomListTitle('  Lesson 3 spellings  '), 'Lesson 3 spellings', 'Custom list titles should be trimmed.');
+  assertEqual(normaliseCustomListTitle('   '), CUSTOM_LIST_TITLE, 'Blank custom list titles should use the fallback title.');
+  assert(validateCustomListTitle('Food words'), 'Short custom list titles should be accepted.');
+  assert(!validateCustomListTitle('x'.repeat(CUSTOM_LIST_TITLE_MAX_LENGTH + 1)), 'Overlong custom list titles should be rejected.');
 }
 
 {

@@ -12,12 +12,16 @@ import {
   CUSTOM_LIST_ENGLISH_MAX_LENGTH,
   CUSTOM_LIST_MAX_ROWS,
   CUSTOM_LIST_TITLE,
+  CUSTOM_LIST_TITLE_MAX_LENGTH,
   CUSTOM_LIST_WELSH_MAX_LENGTH,
   createEmptyCustomListRows,
   getCustomListCanonicalUrl,
   getCustomListPath,
   getVisibleCustomListRowCount,
   loadCustomWordList,
+  normaliseCustomListTitle,
+  saveRecentCustomList,
+  validateCustomListTitle,
   validateCustomListRows,
   type CustomListEntryInput,
   type CustomListValidationError
@@ -91,6 +95,8 @@ export function CustomListCreatePage({
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  const [title, setTitle] = useState('');
+  const [titleError, setTitleError] = useState('');
   const [rows, setRows] = useState(() => createEmptyCustomListRows(CUSTOM_LIST_MAX_ROWS));
   const [errors, setErrors] = useState<CustomListValidationError[]>([]);
   const [submitError, setSubmitError] = useState('');
@@ -109,6 +115,12 @@ export function CustomListCreatePage({
   function updateRow(index: number, field: keyof CustomListEntryInput, value: string) {
     setRows(previous => previous.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row));
     setErrors([]);
+    setSubmitError('');
+  }
+
+  function updateTitle(value: string) {
+    setTitle(value);
+    setTitleError('');
     setSubmitError('');
   }
 
@@ -134,6 +146,16 @@ export function CustomListCreatePage({
 
   async function submit() {
     if (saving) return;
+    if (!validateCustomListTitle(title)) {
+      setTitleError(t('customLists.errorTitleTooLong'));
+      setSubmitError('');
+      window.requestAnimationFrame(() => {
+        const titleInput = document.getElementById('custom-list-title');
+        titleInput?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        if (titleInput instanceof HTMLInputElement) titleInput.focus({ preventScroll: true });
+      });
+      return;
+    }
     const validation = validateCustomListRows(rows);
     if (validation.errors.length) {
       showErrors(validation.errors);
@@ -153,11 +175,20 @@ export function CustomListCreatePage({
           'Content-Type': 'application/json',
           'X-Spelio-Client-Id': getBrowserClientId()
         },
-        body: JSON.stringify({ entries: validation.entries })
+        body: JSON.stringify({ title, entries: validation.entries })
       });
-      const payload = await result.json().catch(() => null) as { publicId?: string; error?: string; errors?: CustomListValidationError[] } | null;
+      const payload = await result.json().catch(() => null) as {
+        publicId?: string;
+        title?: string;
+        expiresAt?: string;
+        shareUrl?: string;
+        error?: string;
+        errors?: CustomListValidationError[];
+        titleError?: string;
+      } | null;
 
       if (!result.ok || !payload?.publicId) {
+        if (payload?.titleError === 'titleTooLong') setTitleError(t('customLists.errorTitleTooLong'));
         const serverErrors = mapServerErrorsToVisibleRows(payload?.errors ?? [], submittedRowIndexes);
         const moderationErrors = payload?.error === 'moderation_rejected'
           ? serverErrors.length
@@ -172,6 +203,14 @@ export function CustomListCreatePage({
       }
 
       logCustomListEvent('custom_list_create_succeeded');
+      const resolvedTitle = normaliseCustomListTitle(payload.title ?? title);
+      saveRecentCustomList({
+        publicId: payload.publicId,
+        title: resolvedTitle,
+        createdAt: new Date().toISOString(),
+        expiresAt: payload.expiresAt ?? '',
+        shareUrl: payload.shareUrl ?? `/custom-list/${payload.publicId}/share`
+      });
       window.history.pushState({ spelioPublicPage: true }, '', `/custom-list/${payload.publicId}/share`);
       resetPublicPageScrollToTop();
       window.dispatchEvent(new PopStateEvent('popstate'));
@@ -196,13 +235,28 @@ export function CustomListCreatePage({
         <div className="custom-list-intro">
           <span className="custom-list-preview-badge">
             <FlaskConical size={14} aria-hidden="true" />
-            {t('customLists.experimental')}
+            {t('customLists.preview')}
           </span>
           <h1 id="custom-list-create-title">{t('customLists.createHeading')}</h1>
           <p>{t('customLists.createSupport')}</p>
         </div>
 
         <div className="custom-list-form" aria-label={t('customLists.createHeading')}>
+          <div className="custom-list-title-field">
+            <label htmlFor="custom-list-title">{t('customLists.listTitle')}</label>
+            <input
+              id="custom-list-title"
+              value={title}
+              maxLength={CUSTOM_LIST_TITLE_MAX_LENGTH + 1}
+              placeholder={t('customLists.listTitlePlaceholder')}
+              aria-invalid={Boolean(titleError)}
+              aria-describedby={titleError ? 'custom-list-title-error' : 'custom-list-title-optional'}
+              onChange={event => updateTitle(event.target.value)}
+            />
+            <small id={titleError ? 'custom-list-title-error' : 'custom-list-title-optional'} className={titleError ? 'custom-list-error' : ''}>
+              {titleError || t('customLists.optional')}
+            </small>
+          </div>
           <div className="custom-list-column-headings" aria-hidden="true">
             <span />
             <b>{t('customLists.welshSpelling')}</b>
@@ -321,6 +375,7 @@ export function CustomListSharePage({
   t: Translate;
 }) {
   const [practiceTestLink, setPracticeTestLink] = useState(isPracticeTestShareMode(window.location.search));
+  const [listTitle, setListTitle] = useState(CUSTOM_LIST_TITLE);
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
   const copyTimerRef = useRef<number | null>(null);
@@ -329,9 +384,20 @@ export function CustomListSharePage({
   useEffect(() => {
     const shareNavigator = navigator as ShareDataNavigator;
     if (typeof shareNavigator.share !== 'function') return;
-    const shareData = { title: CUSTOM_LIST_TITLE, text: t('customLists.shareNativeText'), url: shareUrl };
+    const shareData = { title: listTitle, text: t('customLists.shareNativeText'), url: shareUrl };
     setCanNativeShare(typeof shareNavigator.canShare === 'function' ? shareNavigator.canShare(shareData) : true);
-  }, [shareUrl, t]);
+  }, [listTitle, shareUrl, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadCustomWordList(publicId).then(result => {
+      if (cancelled || result.state !== 'ready') return;
+      setListTitle(result.list.name || CUSTOM_LIST_TITLE);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicId]);
 
   useEffect(() => {
     return () => {
@@ -353,7 +419,7 @@ export function CustomListSharePage({
   async function nativeShare() {
     const shareNavigator = navigator as ShareDataNavigator;
     if (typeof shareNavigator.share !== 'function') return;
-    await shareNavigator.share({ title: CUSTOM_LIST_TITLE, text: t('customLists.shareNativeText'), url: shareUrl });
+    await shareNavigator.share({ title: listTitle, text: t('customLists.shareNativeText'), url: shareUrl });
     logCustomListEvent('custom_list_shared');
   }
 
@@ -375,10 +441,10 @@ export function CustomListSharePage({
         <div className="custom-list-share-intro">
           <span className="custom-list-preview-badge">
             <FlaskConical size={14} aria-hidden="true" />
-            {t('customLists.experimental')}
+            {t('customLists.preview')}
           </span>
           <h1 id="custom-list-share-title">{t('customLists.shareHeading')}</h1>
-          <h2>{t('customLists.title')}</h2>
+          <h2>{listTitle}</h2>
           <p>{t('customLists.shareSupport')}</p>
         </div>
 
@@ -499,13 +565,13 @@ export function CustomListEntryPage({
       <section className="custom-list-entry" aria-labelledby="custom-list-entry-title">
         <span className="custom-list-preview-badge">
           <FlaskConical size={14} aria-hidden="true" />
-          {t('customLists.experimental')}
+          {t('customLists.preview')}
         </span>
         {state === 'loading' && <p className="custom-list-status" role="status">{t('customLists.loading')}</p>}
-        {state === 'ready' && (
+        {state === 'ready' && list && (
           <>
             <h1 id="custom-list-entry-title">{heading}</h1>
-            <p>{practiceTestMode ? t('customLists.title') : CUSTOM_LIST_TITLE}</p>
+            <p>{list.name || CUSTOM_LIST_TITLE}</p>
             <button className="custom-list-primary" type="button" onClick={startPractice}>{cta}</button>
           </>
         )}

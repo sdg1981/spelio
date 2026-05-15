@@ -1,4 +1,5 @@
 export const CUSTOM_LIST_TITLE = 'Custom spelling list';
+export const CUSTOM_LIST_TITLE_MAX_LENGTH = 80;
 export const CUSTOM_LIST_MAX_ROWS = 10;
 export const CUSTOM_LIST_INITIAL_ROWS = 4;
 export const CUSTOM_LIST_WELSH_MAX_LENGTH = 80;
@@ -27,6 +28,16 @@ export type CustomListValidationResult = {
   entries: CustomListEntryInput[];
   errors: CustomListValidationError[];
 };
+
+export function normaliseCustomListTitle(title: string | undefined | null) {
+  const trimmed = typeof title === 'string' ? title.trim() : '';
+  return trimmed || CUSTOM_LIST_TITLE;
+}
+
+export function validateCustomListTitle(title: string | undefined | null) {
+  const trimmed = typeof title === 'string' ? title.trim() : '';
+  return trimmed.length <= CUSTOM_LIST_TITLE_MAX_LENGTH;
+}
 
 export function createEmptyCustomListRows(count = CUSTOM_LIST_INITIAL_ROWS): CustomListEntryInput[] {
   return Array.from({ length: count }, () => ({ welsh: '', english: '' }));

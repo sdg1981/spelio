@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -5,6 +6,8 @@ import { Logo } from './Logo';
 import { WordListSelectorPanel } from './Practice';
 import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
+import { loadRecentCustomLists, type RecentCustomListReference } from '../lib/customLists';
+import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 
 export function WordListsPage({
   lists,
@@ -29,6 +32,18 @@ export function WordListsPage({
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  const [recentCustomLists, setRecentCustomLists] = useState<RecentCustomListReference[]>([]);
+
+  useEffect(() => {
+    setRecentCustomLists(loadRecentCustomLists());
+  }, []);
+
+  function openRecentCustomList(reference: RecentCustomListReference) {
+    window.history.pushState({ spelioPublicPage: true }, '', reference.shareUrl);
+    resetPublicPageScrollToTop();
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
   return (
     <main className="how-page public-info-page word-lists-page">
       <button className="how-back-button word-lists-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
@@ -51,6 +66,23 @@ export function WordListsPage({
         <div className="how-hero-copy word-lists-heading">
           <h1 id="word-lists-page-title">{t('wordLists.title')}</h1>
         </div>
+
+        {recentCustomLists.length > 0 && (
+          <section className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
+            <div>
+              <h2 id="word-lists-recent-custom-title">{t('customLists.recentHeading')}</h2>
+              <p>{t('customLists.recentSupport')}</p>
+            </div>
+            <div className="word-lists-recent-custom-links">
+              {recentCustomLists.map(reference => (
+                <button key={reference.publicId} type="button" onClick={() => openRecentCustomList(reference)}>
+                  <span>{reference.title}</span>
+                  <small>{t('customLists.recentOpenShare')}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <WordListSelectorPanel
           lists={lists}

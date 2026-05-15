@@ -243,11 +243,14 @@ export const en = {
     stageConfidence: 'Confidence'
   },
   customLists: {
-    experimental: 'Experimental',
+    preview: 'Preview',
     title: 'Custom spelling list',
     createCta: 'Create custom list',
     createHeading: 'Create a custom spelling list',
     createSupport: 'Add up to 10 Welsh words. We’ll generate audio so you can share a practice list with others.',
+    listTitle: 'List title',
+    optional: 'Optional',
+    listTitlePlaceholder: 'Lesson 3 spellings',
     welshSpelling: 'Welsh spelling',
     englishMeaning: 'English meaning (optional)',
     welshPlaceholder: 'Add Welsh spelling...',
@@ -266,6 +269,7 @@ export const en = {
     errorWelshRequired: 'Add a Welsh spelling.',
     errorWelshTooLong: 'This spelling is too long.',
     errorEnglishTooLong: 'This meaning is too long.',
+    errorTitleTooLong: 'This title is too long.',
     errorNoEntries: 'Add at least one Welsh spelling.',
     errorRepeated: 'Please avoid repeating the same entry many times.',
     errorModerationRow: 'Please review this entry.',
@@ -285,7 +289,10 @@ export const en = {
     notFoundTitle: 'List not found',
     notFoundBody: 'This custom spelling list is not available.',
     loadErrorTitle: 'List could not be loaded',
-    loadErrorBody: 'Please try opening the link again.'
+    loadErrorBody: 'Please try opening the link again.',
+    recentHeading: 'Your recent custom lists',
+    recentSupport: 'Saved on this device only.',
+    recentOpenShare: 'Open share page'
   },
   end: {
     trickyEncouragement: 'That was a tricky one - let’s practise those words again.',

@@ -19,9 +19,10 @@ import { createClient } from '@supabase/supabase-js';
 import {
   CUSTOM_LIST_ENGLISH_MAX_LENGTH,
   CUSTOM_LIST_MAX_ROWS,
-  CUSTOM_LIST_TITLE,
   CUSTOM_LIST_WELSH_MAX_LENGTH,
+  normaliseCustomListTitle,
   type CustomListEntryInput,
+  validateCustomListTitle,
   validateCustomListRows
 } from '../src/lib/customListValidation.js';
 import { getCustomListModerationDiagnostics, getDeploymentDiagnosticFields } from './custom-list-config.js';
@@ -76,6 +77,11 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const body = parseBody(request.body);
     const entriesInput = Array.isArray(body?.entries) ? body.entries : [];
     const rows = entriesInput.slice(0, CUSTOM_LIST_MAX_ROWS).map(normaliseIncomingEntry);
+    const titleInput = typeof body?.title === 'string' ? body.title : '';
+    if (!validateCustomListTitle(titleInput)) {
+      return response.status(400).json({ ok: false, error: 'validation_failed', titleError: 'titleTooLong' });
+    }
+    const listTitle = normaliseCustomListTitle(titleInput);
     const validation = validateCustomListRows(rows);
     if (validation.errors.length) {
       return response.status(400).json({ ok: false, error: 'validation_failed', errors: validation.errors });
@@ -177,7 +183,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         .from('custom_word_lists')
         .insert({
           public_id: publicId,
-          title: CUSTOM_LIST_TITLE,
+          title: listTitle,
           source_language: 'en',
           target_language: 'cy',
           status: 'ready',
@@ -231,6 +237,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return response.status(201).json({
         ok: true,
         publicId,
+        title: listTitle,
         sharePath: `/custom-list/${publicId}/share`,
         shareUrl: `/custom-list/${publicId}/share`,
         practicePath: `/custom/${publicId}`,
@@ -420,7 +427,6 @@ function logModerationResult(result: ModerationResult, entryCount: number) {
   const details = {
     customListModerationProvider: diagnostics.provider,
     hasOpenAIKey: diagnostics.hasOpenAIKey,
-    openAIKeyPrefix: diagnostics.openAIKeyPrefix,
     openAIModel: diagnostics.model,
     nodeEnv: diagnostics.nodeEnv,
     vercelEnv: diagnostics.vercelEnv,
@@ -462,15 +468,15 @@ function normaliseIncomingEntry(value: unknown): CustomListEntryInput {
   return { welsh, english };
 }
 
-function parseBody(body: unknown): { entries?: unknown } | null {
+function parseBody(body: unknown): { entries?: unknown; title?: unknown } | null {
   if (typeof body === 'string') {
     try {
-      return JSON.parse(body) as { entries?: unknown };
+      return JSON.parse(body) as { entries?: unknown; title?: unknown };
     } catch {
       return null;
     }
   }
-  if (body && typeof body === 'object') return body as { entries?: unknown };
+  if (body && typeof body === 'object') return body as { entries?: unknown; title?: unknown };
   return null;
 }
 
@@ -533,6 +539,7 @@ function normalizeCreationError(error: unknown) {
 }
 
 function logCustomListCreationStep(step: string, details: Record<string, unknown>) {
+  if (process.env.VERCEL_ENV === 'production' && process.env.CUSTOM_LIST_VERBOSE_LOGS !== 'true') return;
   console.info('Custom list creation step', { step, ...details });
 }
 
