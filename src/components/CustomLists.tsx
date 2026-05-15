@@ -380,6 +380,10 @@ export function CustomListSharePage({
   const shareUrl = useMemo(() => getCustomListCanonicalUrl(publicId, undefined, { practiceTest: practiceTestLink }), [practiceTestLink, publicId]);
 
   useEffect(() => {
+    resetPublicPageScrollToTop();
+  }, [publicId]);
+
+  useEffect(() => {
     const shareNavigator = navigator as ShareDataNavigator;
     if (typeof shareNavigator.share !== 'function') return;
     const shareData = { title: listTitle, text: t('customLists.shareNativeText'), url: shareUrl };

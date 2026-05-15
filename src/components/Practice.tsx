@@ -18,6 +18,7 @@ import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevea
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
+import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
@@ -1665,10 +1666,29 @@ export function WordListSelectorPanel({
   const listGridId = variant === 'page' ? 'word-list-page-list-grid' : 'word-list-modal-list-grid';
   const searchId = variant === 'page' ? 'word-list-page-search' : 'word-list-modal-search';
   const [pageActionPortalTarget, setPageActionPortalTarget] = useState<Element | null>(null);
+  const pageShareReturnScrollRef = useRef<{ left: number; top: number } | null>(null);
+  const shouldRestorePageShareScrollRef = useRef(false);
 
   useEffect(() => {
     if (variant !== 'page') return;
     setPageActionPortalTarget(document.querySelector('.public-app') ?? document.body);
+  }, [variant]);
+
+  const openShareList = useCallback((list: WordList) => {
+    if (variant === 'page') {
+      pageShareReturnScrollRef.current = {
+        left: window.scrollX || document.scrollingElement?.scrollLeft || 0,
+        top: window.scrollY || document.scrollingElement?.scrollTop || 0
+      };
+    }
+
+    setShareList(list);
+    if (variant === 'page') resetPublicPageScrollToTop();
+  }, [variant]);
+
+  const closePageShareList = useCallback(() => {
+    if (variant === 'page') shouldRestorePageShareScrollRef.current = true;
+    setShareList(null);
   }, [variant]);
 
   useEffect(() => {
@@ -1679,9 +1699,22 @@ export function WordListSelectorPanel({
       return;
     }
 
-    onPageShareBackChange(() => setShareList(null));
+    onPageShareBackChange(closePageShareList);
     return () => onPageShareBackChange(null);
-  }, [onPageShareBackChange, shareList, variant]);
+  }, [closePageShareList, onPageShareBackChange, shareList, variant]);
+
+  useEffect(() => {
+    if (shareList || !shouldRestorePageShareScrollRef.current) return;
+    shouldRestorePageShareScrollRef.current = false;
+    const position = pageShareReturnScrollRef.current;
+    pageShareReturnScrollRef.current = null;
+    if (!position) return;
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ left: position.left, top: position.top, behavior: 'auto' });
+      document.scrollingElement?.scrollTo({ left: position.left, top: position.top, behavior: 'auto' });
+    });
+  }, [shareList]);
 
   if (shareList) {
     return (
@@ -1745,7 +1778,7 @@ export function WordListSelectorPanel({
                     completedLabel={t('wordLists.completed')}
                     shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
                     onSelect={selectList}
-                    onShare={setShareList}
+                    onShare={openShareList}
                   />
                 );
               })}
@@ -1769,7 +1802,7 @@ export function WordListSelectorPanel({
                         completedLabel={t('wordLists.completed')}
                         shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
                         onSelect={selectList}
-                        onShare={setShareList}
+                        onShare={openShareList}
                       />
                     );
                   })}
