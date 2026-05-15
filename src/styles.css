@@ -3389,7 +3389,7 @@
 .end-score-ring-track,
 .end-score-ring-progress{
   fill:none;
-  stroke-width:4.5;
+  stroke-width:5.4;
 }
 
 .end-score-ring-track{
@@ -3708,7 +3708,7 @@
 
   .end-score-ring-track,
   .end-score-ring-progress{
-    stroke-width:4.25;
+    stroke-width:5.1;
   }
 
   .end-score-ring-text{
@@ -3759,7 +3759,7 @@
 
   .end-score-ring-track,
   .end-score-ring-progress{
-    stroke-width:4.25;
+    stroke-width:5.1;
   }
 
   .end-score-ring-text{
