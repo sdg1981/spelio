@@ -5719,41 +5719,39 @@
 }
 
 .word-lists-recent-custom{
-  width:min(100%,720px);
-  margin:24px auto 0;
-  border:1px solid rgba(7,21,34,.065);
-  border-radius:10px;
-  background:rgba(255,255,255,.42);
-  box-shadow:0 10px 24px rgba(7,21,34,.025);
-  padding:16px;
+  width:min(100%,1040px);
+  margin:10px auto 0;
+  border-top:1px solid rgba(7,21,34,.08);
+  padding:20px 2px 0;
   display:grid;
-  gap:12px;
+  gap:10px;
 }
 
 .word-lists-recent-custom h2{
   margin:0;
   color:var(--text-primary, #071522);
-  font-size:16px;
-  font-weight:850;
+  font-size:15px;
+  font-weight:800;
   letter-spacing:0;
 }
 
 .word-lists-recent-custom p{
-  margin:5px 0 0;
+  margin:4px 0 0;
   color:var(--text-secondary, #5f6b78);
-  font-size:14px;
+  font-size:13px;
   line-height:1.4;
 }
 
 .word-lists-recent-custom-links{
   display:grid;
-  gap:7px;
+  gap:0;
 }
 
 .word-lists-recent-custom-item{
   display:flex;
   align-items:center;
   gap:8px;
+  border-top:1px solid rgba(7,21,34,.06);
 }
 
 .word-lists-recent-custom-item > button:first-child{
@@ -5762,37 +5760,43 @@
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  border:1px solid rgba(7,21,34,.065);
-  border-radius:8px;
-  background:rgba(255,255,255,.52);
+  border:0;
+  background:transparent;
   color:var(--text-primary, #071522);
-  padding:10px 12px;
+  padding:10px 0;
   text-align:left;
 }
 
 .word-lists-recent-custom-item > button:first-child:hover,
 .word-lists-recent-custom-item > button:first-child:focus-visible{
-  border-color:rgba(7,21,34,.16);
   outline:0;
+  color:var(--red, #d90000);
+}
+
+.word-lists-recent-custom-item > button:first-child:focus-visible{
+  border-radius:6px;
   box-shadow:0 0 0 3px rgba(7,21,34,.08);
 }
 
 .word-lists-recent-custom-remove{
   flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
   border:0;
+  border-radius:999px;
   background:transparent;
   color:var(--text-secondary, #5f6b78);
-  font-size:13px;
-  font-weight:800;
-  padding:9px 2px;
-  text-decoration:underline;
-  text-decoration-thickness:1px;
-  text-underline-offset:4px;
+  padding:0;
+  opacity:.62;
 }
 
 .word-lists-recent-custom-remove:hover,
 .word-lists-recent-custom-remove:focus-visible{
   color:var(--text-primary, #071522);
+  background:rgba(7,21,34,.06);
+  opacity:1;
   outline:0;
 }
 
@@ -5801,14 +5805,14 @@
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-size:15px;
-  font-weight:800;
+  font-size:14px;
+  font-weight:750;
 }
 
 .word-lists-recent-custom-links small{
   flex:0 0 auto;
   color:var(--text-secondary, #5f6b78);
-  font-size:13px;
+  font-size:12px;
   font-weight:800;
 }
 
@@ -5867,12 +5871,12 @@
   bottom:0;
   z-index:70;
   margin:0;
-  padding:10px clamp(24px,5vw,72px) calc(10px + env(safe-area-inset-bottom));
-  border-top:1px solid rgba(7,21,34,.055);
-  background:rgba(246,245,242,.78);
-  box-shadow:0 -10px 28px rgba(7,21,34,.055);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  padding:8px clamp(24px,5vw,72px) calc(8px + env(safe-area-inset-bottom));
+  border-top:1px solid rgba(7,21,34,.045);
+  background:rgba(246,245,242,.72);
+  box-shadow:0 -8px 22px rgba(7,21,34,.045);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
 }
 
 .wordlist-page-actions::before{
@@ -5889,7 +5893,7 @@
 
 .wordlist-page-actions .done-button{
   min-width:148px;
-  padding:16px 34px;
+  padding:15px 32px;
 }
 
 .word-lists-footer.public-info-footer{
@@ -5984,8 +5988,8 @@
   }
 
   .word-lists-recent-custom{
-    margin-top:22px;
-    padding:15px;
+    margin-top:8px;
+    padding:18px 0 0;
   }
 
   .word-lists-recent-custom-item{

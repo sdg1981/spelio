@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
@@ -72,6 +72,18 @@ export function WordListsPage({
           <h1 id="word-lists-page-title">{t('wordLists.title')}</h1>
         </div>
 
+        <WordListSelectorPanel
+          lists={lists}
+          initialSelectedIds={initialSelectedIds}
+          completedListIds={completedListIds}
+          onClose={onBack}
+          onDone={onDone}
+          onCreateCustomList={onCreateCustomList}
+          interfaceLanguage={interfaceLanguage}
+          t={t}
+          variant="page"
+        />
+
         {recentCustomLists.length > 0 && (
           <section className="word-lists-recent-custom" aria-labelledby="word-lists-recent-custom-title">
             <div>
@@ -89,27 +101,15 @@ export function WordListsPage({
                     className="word-lists-recent-custom-remove"
                     type="button"
                     onClick={() => removeRecentReference(reference.publicId)}
-                    aria-label={`${t('customLists.recentRemove')} - ${reference.title}`}
+                    aria-label={`${t('customLists.recentRemoveFromDevice')} - ${reference.title}`}
                   >
-                    {t('customLists.recentRemove')}
+                    <X size={14} strokeWidth={2.2} aria-hidden="true" />
                   </button>
                 </div>
               ))}
             </div>
           </section>
         )}
-
-        <WordListSelectorPanel
-          lists={lists}
-          initialSelectedIds={initialSelectedIds}
-          completedListIds={completedListIds}
-          onClose={onBack}
-          onDone={onDone}
-          onCreateCustomList={onCreateCustomList}
-          interfaceLanguage={interfaceLanguage}
-          t={t}
-          variant="page"
-        />
       </section>
 
       <Footer

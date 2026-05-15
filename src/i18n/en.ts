@@ -291,8 +291,8 @@ export const en = {
     loadErrorBody: 'Please try opening the link again.',
     recentHeading: 'Your recent custom lists',
     recentSupport: 'Saved on this device only.',
-    recentOpenShare: 'Open',
-    recentRemove: 'Remove',
+    recentOpenShare: 'Open →',
+    recentRemoveFromDevice: 'Remove from this device',
     spellingSingular: 'spelling',
     spellingPlural: 'spellings'
   },
