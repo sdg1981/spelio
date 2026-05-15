@@ -65,6 +65,41 @@ type AzureFetch = (url: string, options: {
   body: string;
 }) => Promise<AzureFetchResponse>;
 
+export type AzureSynthesisStage =
+  | 'azure_configuration'
+  | 'azure_request'
+  | 'azure_response'
+  | 'wav_received'
+  | 'post_processing';
+
+export class AzureSynthesisError extends Error {
+  stage: AzureSynthesisStage;
+  azureStatus?: number;
+  azureError?: string;
+  wavByteLength?: number;
+
+  constructor(message: string, details: {
+    stage: AzureSynthesisStage;
+    azureStatus?: number;
+    azureError?: string;
+    wavByteLength?: number;
+  }) {
+    super(message);
+    this.name = 'AzureSynthesisError';
+    this.stage = details.stage;
+    this.azureStatus = details.azureStatus;
+    this.azureError = details.azureError;
+    this.wavByteLength = details.wavByteLength;
+  }
+}
+
+export type AzureWelshMp3Diagnostics = {
+  mp3Bytes: Uint8Array;
+  azureStatus: number;
+  wavByteLength: number;
+  mp3ByteLength: number;
+};
+
 type HandlerDependencies = {
   env?: Record<string, string | undefined>;
   fetchImpl?: AzureFetch;
@@ -242,29 +277,65 @@ export async function synthesizeAzureWelshMp3Bytes(
   text: string,
   dependencies: Pick<HandlerDependencies, 'env' | 'fetchImpl' | 'postProcess'> = {}
 ) {
+  const result = await synthesizeAzureWelshMp3BytesWithDiagnostics(text, dependencies);
+  return result.mp3Bytes;
+}
+
+export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
+  text: string,
+  dependencies: Pick<HandlerDependencies, 'env' | 'fetchImpl' | 'postProcess'> = {}
+): Promise<AzureWelshMp3Diagnostics> {
   const env = dependencies.env ?? process.env;
   const { key, region } = getAzureSpeechConfig(env);
   if (!key || !region) {
-    throw new Error('Azure Speech is not configured.');
+    throw new AzureSynthesisError('Azure Speech is not configured.', { stage: 'azure_configuration' });
   }
 
-  const azureResponse = await requestAzureWelshAudio(text, {
-    key,
-    region,
-    fetchImpl: dependencies.fetchImpl ?? fetch
-  });
+  let azureResponse: AzureFetchResponse;
+  try {
+    azureResponse = await requestAzureWelshAudio(text, {
+      key,
+      region,
+      fetchImpl: dependencies.fetchImpl ?? fetch
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Azure Speech request failed.';
+    throw new AzureSynthesisError(message, { stage: 'azure_request' });
+  }
 
   if (!azureResponse.ok) {
     const azureError = await readAzureErrorBody(azureResponse);
-    throw new Error(azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError));
+    throw new AzureSynthesisError(
+      azureResponse.status === 429 ? 'Azure rate limit reached.' : createAzureFailureMessage(azureResponse.status, azureError),
+      { stage: 'azure_response', azureStatus: azureResponse.status, azureError }
+    );
   }
 
   const wavBuffer = await azureResponse.arrayBuffer();
   if (wavBuffer.byteLength < 100) {
-    throw new Error('Azure returned an unexpectedly small audio payload.');
+    throw new AzureSynthesisError('Azure returned an unexpectedly small audio payload.', {
+      stage: 'wav_received',
+      azureStatus: azureResponse.status,
+      wavByteLength: wavBuffer.byteLength
+    });
   }
 
-  return processAzureWelshAudio(wavBuffer, dependencies.postProcess);
+  try {
+    const mp3Bytes = await processAzureWelshAudio(wavBuffer, dependencies.postProcess);
+    return {
+      mp3Bytes,
+      azureStatus: azureResponse.status,
+      wavByteLength: wavBuffer.byteLength,
+      mp3ByteLength: mp3Bytes.byteLength
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Audio post-processing failed.';
+    throw new AzureSynthesisError(message, {
+      stage: 'post_processing',
+      azureStatus: azureResponse.status,
+      wavByteLength: wavBuffer.byteLength
+    });
+  }
 }
 
 function requestAzureWelshAudio(text: string, options: {

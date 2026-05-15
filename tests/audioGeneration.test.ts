@@ -2,8 +2,10 @@ import {
   AUDIO_PIPELINE_VERSION,
   AZURE_SPEECH_PROSODY_RATE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+  AzureSynthesisError,
   createWelshSsml,
-  handleAzureTtsRequest
+  handleAzureTtsRequest,
+  synthesizeAzureWelshMp3BytesWithDiagnostics
 } from '../api/azure-tts.js';
 import {
   AUDIO_FADE_OUT_SECONDS,
@@ -192,6 +194,52 @@ async function runAsyncAssertions() {
   assert(
     pipelineLogs.some(entry => entry.audioPipelineVersion === AUDIO_PIPELINE_VERSION),
     'The route should log the internal audio pipeline version marker.'
+  );
+
+  const diagnosticResult = await synthesizeAzureWelshMp3BytesWithDiagnostics('gwaith', {
+    env: {
+      AZURE_SPEECH_KEY: 'test-key',
+      AZURE_SPEECH_REGION: 'uksouth'
+    },
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => makeAudioBuffer(192)
+    }),
+    postProcess: async wavAudio => {
+      assertEqual(wavAudio.byteLength, 192, 'Diagnostic synthesis should post-process the full Azure WAV payload.');
+      return new Uint8Array(96);
+    }
+  });
+  assertEqual(diagnosticResult.azureStatus, 200, 'Diagnostic synthesis should expose the Azure status.');
+  assertEqual(diagnosticResult.wavByteLength, 192, 'Diagnostic synthesis should expose the WAV byte length.');
+  assertEqual(diagnosticResult.mp3ByteLength, 96, 'Diagnostic synthesis should expose the processed MP3 byte length.');
+
+  let diagnosticFailure: unknown = null;
+  try {
+    await synthesizeAzureWelshMp3BytesWithDiagnostics('gwaith', {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async () => ({
+        ok: true,
+        status: 200,
+        arrayBuffer: async () => makeAudioBuffer(192)
+      }),
+      postProcess: async () => {
+        throw new Error('processing exploded');
+      }
+    });
+  } catch (error) {
+    diagnosticFailure = error;
+  }
+  assert(
+    diagnosticFailure instanceof AzureSynthesisError &&
+      diagnosticFailure.stage === 'post_processing' &&
+      diagnosticFailure.azureStatus === 200 &&
+      diagnosticFailure.wavByteLength === 192,
+    'Diagnostic synthesis should preserve the precise post-processing failure stage and safe byte-length details.'
   );
 
   const azureFailedResponse = createResponse();

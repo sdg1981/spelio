@@ -25,7 +25,7 @@ import {
   validateCustomListRows
 } from '../src/lib/customListValidation.js';
 import { getCustomListModerationDiagnostics, getDeploymentDiagnosticFields } from './custom-list-config.js';
-import { synthesizeAzureWelshMp3Bytes } from './azure-tts.js';
+import { AzureSynthesisError, synthesizeAzureWelshMp3BytesWithDiagnostics } from './azure-tts.js';
 
 type ModerationStatus = 'pass' | 'rejected' | 'failed';
 
@@ -37,6 +37,28 @@ type ModerationResult = {
   httpStatus?: number;
   errorSummary?: string;
 };
+
+type CustomListCreationStage =
+  | 'azure_tts'
+  | 'post_processing'
+  | 'storage_upload'
+  | 'storage_public_url'
+  | 'db_insert_list'
+  | 'db_insert_words'
+  | 'cleanup_audio'
+  | 'cleanup_list';
+
+class CustomListCreationError extends Error {
+  stage: CustomListCreationStage;
+  details: Record<string, unknown>;
+
+  constructor(stage: CustomListCreationStage, message: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.name = 'CustomListCreationError';
+    this.stage = stage;
+    this.details = details;
+  }
+}
 
 const CREATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const CREATE_RATE_LIMIT_MAX = 6;
@@ -90,9 +112,31 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     try {
       for (const [index, entry] of validation.entries.entries()) {
-        const audioBytes = await synthesizeAzureWelshMp3Bytes(entry.welsh, { env: process.env });
+        logCustomListCreationStep('azure_tts_start', {
+          wordIndex: index + 1,
+          textLength: entry.welsh.length
+        });
+        let audioResult: Awaited<ReturnType<typeof synthesizeAzureWelshMp3BytesWithDiagnostics>>;
+        try {
+          audioResult = await synthesizeAzureWelshMp3BytesWithDiagnostics(entry.welsh, { env: process.env });
+        } catch (error) {
+          throw createAudioStageError(error, index + 1);
+        }
+        logCustomListCreationStep('azure_tts_success', {
+          wordIndex: index + 1,
+          azureStatus: audioResult.azureStatus,
+          wavByteLength: audioResult.wavByteLength,
+          mp3ByteLength: audioResult.mp3ByteLength
+        });
+        const audioBytes = audioResult.mp3Bytes;
         const audioBuffer = audioBytes.buffer.slice(audioBytes.byteOffset, audioBytes.byteOffset + audioBytes.byteLength) as ArrayBuffer;
         const storagePath = `custom/cy/${publicId}/${String(index + 1).padStart(2, '0')}.mp3`;
+        logCustomListCreationStep('storage_upload_start', {
+          wordIndex: index + 1,
+          bucket: 'audio',
+          storagePath,
+          mp3ByteLength: audioResult.mp3ByteLength
+        });
         const upload = await client.storage
           .from('audio')
           .upload(storagePath, new Blob([audioBuffer], { type: 'audio/mpeg' }), {
@@ -100,13 +144,35 @@ export default async function handler(request: ApiRequest, response: ApiResponse
             contentType: 'audio/mpeg',
             upsert: false
           });
-        if (upload.error) throw upload.error;
+        if (upload.error) {
+          throw new CustomListCreationError('storage_upload', 'Supabase storage upload failed.', {
+            wordIndex: index + 1,
+            bucket: 'audio',
+            storagePath,
+            uploadError: summarizeSupabaseError(upload.error)
+          });
+        }
         uploadedPaths.push(storagePath);
+        logCustomListCreationStep('storage_upload_success', {
+          wordIndex: index + 1,
+          bucket: 'audio',
+          storagePath
+        });
         const { data } = client.storage.from('audio').getPublicUrl(storagePath);
-        if (!data.publicUrl) throw new Error('Audio upload did not return a public URL.');
+        if (!data.publicUrl) {
+          throw new CustomListCreationError('storage_public_url', 'Audio upload did not return a public URL.', {
+            wordIndex: index + 1,
+            bucket: 'audio',
+            storagePath
+          });
+        }
         generatedWords.push({ ...entry, audioUrl: data.publicUrl, storagePath, order: index + 1 });
       }
 
+      logCustomListCreationStep('db_insert_list_start', {
+        publicId,
+        wordCount: generatedWords.length
+      });
       const listInsert = await client
         .from('custom_word_lists')
         .insert({
@@ -121,10 +187,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         })
         .select('id,public_id')
         .single();
-      if (listInsert.error) throw listInsert.error;
+      if (listInsert.error) {
+        throw new CustomListCreationError('db_insert_list', 'Custom list DB insert failed.', {
+          publicId,
+          insertError: summarizeSupabaseError(listInsert.error)
+        });
+      }
 
       const customListId = listInsert.data.id as string;
       createdListId = customListId;
+      logCustomListCreationStep('db_insert_list_success', {
+        publicId,
+        customListId
+      });
+      logCustomListCreationStep('db_insert_words_start', {
+        publicId,
+        customListId,
+        wordCount: generatedWords.length
+      });
       const wordsInsert = await client.from('custom_words').insert(generatedWords.map(word => ({
         custom_list_id: customListId,
         welsh_answer: word.welsh,
@@ -134,7 +214,19 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         audio_status: 'ready',
         order_index: word.order
       })));
-      if (wordsInsert.error) throw wordsInsert.error;
+      if (wordsInsert.error) {
+        throw new CustomListCreationError('db_insert_words', 'Custom words DB insert failed.', {
+          publicId,
+          customListId,
+          wordCount: generatedWords.length,
+          insertError: summarizeSupabaseError(wordsInsert.error)
+        });
+      }
+      logCustomListCreationStep('db_insert_words_success', {
+        publicId,
+        customListId,
+        wordCount: generatedWords.length
+      });
 
       return response.status(201).json({
         ok: true,
@@ -145,10 +237,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         expiresAt
       });
     } catch (error) {
-      await cleanupUploadedAudio(client, uploadedPaths);
-      if (createdListId) await cleanupInsertedList(client, createdListId);
-      const message = error instanceof Error ? error.message : 'Audio generation failed.';
-      console.error('Custom list creation failed', { error: message });
+      const creationError = normalizeCreationError(error);
+      await cleanupUploadedAudio(client, uploadedPaths, creationError);
+      if (createdListId) await cleanupInsertedList(client, createdListId, creationError);
+      logCustomListCreationFailure(creationError);
       return response.status(502).json({ ok: false, error: 'audio_failed' });
     }
   } catch (error) {
@@ -417,19 +509,120 @@ function createPublicId() {
   return `cl_${random}`;
 }
 
-async function cleanupUploadedAudio(client: { storage: { from: (bucket: string) => { remove: (paths: string[]) => Promise<unknown> } } }, paths: string[]) {
+function createAudioStageError(error: unknown, wordIndex: number) {
+  if (error instanceof AzureSynthesisError) {
+    return new CustomListCreationError(
+      error.stage === 'post_processing' ? 'post_processing' : 'azure_tts',
+      error.message,
+      {
+        wordIndex,
+        azureStage: error.stage,
+        azureStatus: error.azureStatus ?? null,
+        azureError: error.azureError ?? '',
+        wavByteLength: error.wavByteLength ?? null
+      }
+    );
+  }
+
+  return new CustomListCreationError('azure_tts', readErrorMessage(error, 'Azure audio synthesis failed.'), { wordIndex });
+}
+
+function normalizeCreationError(error: unknown) {
+  if (error instanceof CustomListCreationError) return error;
+  return new CustomListCreationError('azure_tts', readErrorMessage(error, 'Audio generation failed.'));
+}
+
+function logCustomListCreationStep(step: string, details: Record<string, unknown>) {
+  console.info('Custom list creation step', { step, ...details });
+}
+
+function logCustomListCreationFailure(error: CustomListCreationError) {
+  console.error('Custom list creation failed', {
+    stage: error.stage,
+    error: error.message,
+    ...error.details
+  });
+}
+
+function summarizeSupabaseError(error: unknown) {
+  const value = error && typeof error === 'object' ? error as Record<string, unknown> : {};
+  return {
+    message: typeof value.message === 'string' ? value.message : readErrorMessage(error, 'Unknown Supabase error.'),
+    code: typeof value.code === 'string' ? value.code : '',
+    statusCode: typeof value.statusCode === 'string' || typeof value.statusCode === 'number' ? value.statusCode : '',
+    details: typeof value.details === 'string' ? value.details.slice(0, 500) : '',
+    hint: typeof value.hint === 'string' ? value.hint.slice(0, 500) : ''
+  };
+}
+
+function readErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+async function cleanupUploadedAudio(client: { storage: { from: (bucket: string) => { remove: (paths: string[]) => Promise<unknown> } } }, paths: string[], originalError: CustomListCreationError) {
   if (!paths.length) return;
   try {
-    await client.storage.from('audio').remove(paths);
-  } catch {
+    logCustomListCreationStep('cleanup_audio_start', {
+      originalStage: originalError.stage,
+      bucket: 'audio',
+      paths
+    });
+    const result = await client.storage.from('audio').remove(paths);
+    const error = result && typeof result === 'object' && 'error' in result ? (result as { error?: unknown }).error : null;
+    if (error) {
+      console.error('Custom list cleanup failed', {
+        stage: 'cleanup_audio',
+        originalStage: originalError.stage,
+        bucket: 'audio',
+        paths,
+        cleanupError: summarizeSupabaseError(error)
+      });
+      return;
+    }
+    logCustomListCreationStep('cleanup_audio_success', {
+      originalStage: originalError.stage,
+      bucket: 'audio',
+      paths
+    });
+  } catch (error) {
+    console.error('Custom list cleanup failed', {
+      stage: 'cleanup_audio',
+      originalStage: originalError.stage,
+      bucket: 'audio',
+      paths,
+      cleanupError: readErrorMessage(error, 'Audio cleanup failed.')
+    });
     // Cleanup should not mask the user-facing failure.
   }
 }
 
-async function cleanupInsertedList(client: any, listId: string) {
+async function cleanupInsertedList(client: any, listId: string, originalError: CustomListCreationError) {
   try {
-    await client.from('custom_word_lists').delete().eq('id', listId);
-  } catch {
+    logCustomListCreationStep('cleanup_list_start', {
+      originalStage: originalError.stage,
+      customListId: listId
+    });
+    const result = await client.from('custom_word_lists').delete().eq('id', listId);
+    if (result?.error) {
+      console.error('Custom list cleanup failed', {
+        stage: 'cleanup_list',
+        originalStage: originalError.stage,
+        customListId: listId,
+        cleanupError: summarizeSupabaseError(result.error)
+      });
+      return;
+    }
+    logCustomListCreationStep('cleanup_list_success', {
+      originalStage: originalError.stage,
+      customListId: listId
+    });
+  } catch (error) {
+    console.error('Custom list cleanup failed', {
+      stage: 'cleanup_list',
+      originalStage: originalError.stage,
+      customListId: listId,
+      cleanupError: readErrorMessage(error, 'List cleanup failed.')
+    });
     // Cleanup should not mask the user-facing failure.
   }
 }
