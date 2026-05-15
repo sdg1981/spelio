@@ -24,6 +24,7 @@ import {
   type CustomListEntryInput,
   validateCustomListRows
 } from '../src/lib/customListValidation.js';
+import { getCustomListModerationDiagnostics, getDeploymentDiagnosticFields } from './custom-list-config.js';
 import { synthesizeAzureWelshMp3Bytes } from './azure-tts.js';
 
 type ModerationStatus = 'pass' | 'rejected' | 'failed';
@@ -158,35 +159,32 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 }
 
 export async function moderateCustomListEntries(entries: CustomListEntryInput[], env: Record<string, string | undefined> = process.env): Promise<ModerationResult> {
-  const provider = (env.CUSTOM_LIST_MODERATION_PROVIDER ?? '').trim().toLowerCase();
-  if (provider && !['azure', 'openai'].includes(provider)) {
+  const diagnostics = getCustomListModerationDiagnostics(env);
+  if (diagnostics.selectedProvider === 'unsupported') {
     return {
       status: 'failed',
-      provider,
-      errorSummary: `Unsupported custom list moderation provider: ${provider}`
+      provider: diagnostics.provider || 'unsupported',
+      missingEnv: diagnostics.missing,
+      errorSummary: `Unsupported custom list moderation provider: ${diagnostics.provider}`
     };
   }
 
-  if (provider === 'azure' || (!provider && (env.AZURE_CONTENT_SAFETY_ENDPOINT || env.AZURE_CONTENT_SAFETY_KEY))) {
+  if (diagnostics.selectedProvider === 'azure') {
     return moderateWithAzureContentSafety(entries, env);
   }
 
-  if (provider === 'openai' || (!provider && env.OPENAI_API_KEY)) {
+  if (diagnostics.selectedProvider === 'openai') {
     return moderateWithOpenAI(entries, env);
   }
 
-  if (env.CUSTOM_LIST_MODERATION_MOCK_SAFE === 'true' && env.NODE_ENV !== 'production' && env.VERCEL_ENV !== 'production') {
+  if (diagnostics.selectedProvider === 'mock-safe') {
     return { status: 'pass', provider: 'mock-safe' };
   }
 
   return {
     status: 'failed',
     provider: 'none',
-    missingEnv: [
-      'OPENAI_API_KEY',
-      'AZURE_CONTENT_SAFETY_ENDPOINT',
-      'AZURE_CONTENT_SAFETY_KEY'
-    ],
+    missingEnv: diagnostics.missing,
     errorSummary: 'No custom list moderation provider is configured.'
   };
 }
@@ -326,14 +324,23 @@ async function readSafeResponseSummary(response: { text?: () => Promise<string>;
 }
 
 function logModerationResult(result: ModerationResult, entryCount: number) {
+  const diagnostics = getCustomListModerationDiagnostics(process.env);
   const details = {
+    customListModerationProvider: diagnostics.provider,
+    hasOpenAIKey: diagnostics.hasOpenAIKey,
+    openAIKeyPrefix: diagnostics.openAIKeyPrefix,
+    openAIModel: diagnostics.model,
+    nodeEnv: diagnostics.nodeEnv,
+    vercelEnv: diagnostics.vercelEnv,
+    selectedProvider: diagnostics.selectedProvider,
     provider: result.provider,
     status: result.status,
     entryCount,
     flaggedEntryCount: result.flaggedEntryIndexes?.length ?? 0,
-    missingEnv: result.missingEnv ?? [],
+    missingEnv: result.missingEnv ?? diagnostics.missing,
     httpStatus: result.httpStatus ?? null,
-    errorSummary: result.errorSummary ?? ''
+    errorSummary: result.errorSummary ?? '',
+    ...getDeploymentDiagnosticFields(process.env)
   };
 
   if (result.status === 'failed') {
