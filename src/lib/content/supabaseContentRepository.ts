@@ -49,6 +49,8 @@ type WordListRow = {
   order_index: number | null;
   next_list_id: string | null;
   is_active: boolean | null;
+  list_type?: string | null;
+  hidden_from_main_catalogue?: boolean | null;
 };
 
 type WordRow = {
@@ -69,7 +71,7 @@ type WordRow = {
   difficulty: number | null;
 };
 
-const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active';
+const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue';
 const WORD_LIST_SELECT_WITHOUT_SLUG = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active';
 
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
@@ -116,8 +118,8 @@ function asAcceptedAlternatives(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
 }
 
-function isMissingSlugColumnError(error: { code?: string; message?: string } | null) {
-  return error?.code === '42703' && /\bslug\b/.test(error.message ?? '');
+function isMissingOptionalWordListColumnError(error: { code?: string; message?: string } | null) {
+  return error?.code === '42703' && /\b(slug|list_type|hidden_from_main_catalogue)\b/.test(error.message ?? '');
 }
 
 function mapCollection(row: CollectionRow): WordListCollection {
@@ -190,6 +192,9 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     order: row.order_index ?? 0,
     nextListId: row.next_list_id,
     isActive: row.is_active === true,
+    isSupportList: row.list_type === 'support' || row.hidden_from_main_catalogue === true || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
+    listType: row.list_type === 'support' ? 'support' : 'main',
+    hiddenFromMainCatalogue: row.hidden_from_main_catalogue === true || row.list_type === 'support' || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
     words: words
       .map(word => mapWord(word, { ...row, source_language: sourceLanguage, target_language: targetLanguage }))
       .filter((word): word is PracticeWord => Boolean(word))
@@ -222,7 +227,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
 
   let listsData: unknown[] | null = initialListsResult.data;
   if (initialListsResult.error) {
-    if (!isMissingSlugColumnError(initialListsResult.error)) throw initialListsResult.error;
+    if (!isMissingOptionalWordListColumnError(initialListsResult.error)) throw initialListsResult.error;
 
     const retryListsResult = await client
       .from('word_lists')

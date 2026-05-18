@@ -137,11 +137,60 @@ export const en = {
       practiceTestSharing: {
         title: 'Practice test sharing',
         body: 'Create shared practice-test links that hide English prompts and reveal tools for lightweight classroom or homework-style spelling checks.'
+      },
+      welshSpellingBasics: {
+        title: 'Welsh spelling basics',
+        body: 'Explore simple explanations of Welsh sounds, accents, and common spelling patterns whenever you need them.'
       }
     }
   },
   publicPages: {
     backLabel: 'Go back'
+  },
+  spellingBasics: {
+    menuLabel: 'Welsh spelling basics',
+    overview: {
+      title: 'Welsh spelling basics',
+      intro: 'Simple tips to help you understand how Welsh spelling works. Explore any topic below.',
+      startHeading: 'Start here',
+      soundsHeading: 'Welsh sounds',
+      accentsHeading: 'Accents',
+      mostlyPhonetic: 'Welsh is mostly phonetic',
+      looksDifferent: 'Why Welsh looks different from English',
+      howSpelioHelps: 'How Spelio helps you practise',
+      accentsTitle: 'Accents and long vowels',
+      accentsBody: 'Why the little marks matter',
+      accentsCount: '3 quick cards',
+      openDdAria: 'Open the Welsh dd spelling basics topic',
+      topicComingSoonAria: 'spelling basics topic coming soon'
+    },
+    topic: {
+      examplesHeading: 'Listen to examples',
+      audioUnavailable: 'Audio coming soon',
+      tipLabel: 'Tip:',
+      practicePattern: 'Practise this pattern',
+      previousCard: 'Previous',
+      nextCard: 'Next',
+      seriesStatus: 'Card'
+    },
+    dd: {
+      subtitle: 'A soft, gentle sound',
+      body1BeforeDd: 'The letters',
+      body1AfterDdBeforeThis: 'make a soft voiced “th” sound, like the th in',
+      body1AfterThis: '.',
+      body2: 'It’s one of the most common sounds in Welsh and appears in many everyday words.',
+      examplesHeading: 'Listen to examples',
+      day: 'day',
+      today: 'today',
+      mountain: 'mountain',
+      audioUnavailable: 'Audio coming soon',
+      tipLabel: 'Tip:',
+      tipBeforeDd: 'When you see',
+      tipAfterDdBeforeThis: 'in a word, think of the “th” sound in the English word',
+      tipAfterThis: '.',
+      practicePattern: 'Practise this pattern'
+    },
+    comingSoon: 'Coming soon'
   },
   practice: {
     backToHome: 'Back to home',
@@ -314,6 +363,7 @@ export const en = {
     pickUpWhereLeftOff: 'Pick up where you left off',
     practiseMixAgain: 'Practise this list again',
     practiseThisListAgain: 'Practise this list again',
+    backToSpellingBasics: 'Back to spelling basics',
     keepLearning: 'Keep learning',
     returnToYourLearning: 'Return to your learning',
     repeatSelectedLists: 'Repeat your selected list',

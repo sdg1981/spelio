@@ -27,6 +27,7 @@ export function Home({
   onRecapReview,
   onSelectList,
   onHowSpelioWorks,
+  onWelshSpellingBasics,
   onFeedback,
   onPrivacy,
   onAbout,
@@ -50,6 +51,7 @@ export function Home({
   onRecapReview: () => void;
   onSelectList: () => void;
   onHowSpelioWorks: () => void;
+  onWelshSpellingBasics: () => void;
   onFeedback: () => void;
   onPrivacy: () => void;
   onAbout: () => void;
@@ -91,6 +93,7 @@ export function Home({
       <HomepageMenu
         t={t}
         onHowSpelioWorks={onHowSpelioWorks}
+        onWelshSpellingBasics={onWelshSpellingBasics}
         onFeedback={onFeedback}
         onPrivacy={onPrivacy}
         onAbout={onAbout}
@@ -182,12 +185,14 @@ export function Home({
 function HomepageMenu({
   t,
   onHowSpelioWorks,
+  onWelshSpellingBasics,
   onFeedback,
   onPrivacy,
   onAbout
 }: {
   t: Translate;
   onHowSpelioWorks: () => void;
+  onWelshSpellingBasics: () => void;
   onFeedback: () => void;
   onPrivacy: () => void;
   onAbout: () => void;
@@ -244,6 +249,11 @@ function HomepageMenu({
     onHowSpelioWorks();
   }
 
+  function openWelshSpellingBasics() {
+    setOpen(false);
+    onWelshSpellingBasics();
+  }
+
   function showShareStatus(status: 'shared' | 'copied') {
     setShareStatus(status);
 
@@ -282,6 +292,9 @@ function HomepageMenu({
           <nav className="homepage-menu-popover" id={menuId} aria-label={t('home.menuLabel')}>
             <button ref={firstItemRef} className="homepage-menu-item" type="button" onClick={openHowSpelioWorks}>
               {t('home.howSpelioWorks')}
+            </button>
+            <button className="homepage-menu-item" type="button" onClick={openWelshSpellingBasics}>
+              {t('spellingBasics.menuLabel')}
             </button>
             <button className="homepage-menu-item" type="button" onClick={openFeedback}>
               {t('footer.feedback')}

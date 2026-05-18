@@ -1,12 +1,14 @@
 import type { WordList } from '../../data/wordLists';
+import { mainWordLists } from '../../data/supportWordLists';
 import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
 import { getListDisplayName } from './wordListDisplay';
 
 export function getSingleSelectedListId(selectedListIds: string[], lists: WordList[]) {
-  const activeById = new Map(lists.filter(list => list.isActive).map(list => [list.id, list]));
+  const eligibleLists = mainWordLists(lists);
+  const activeById = new Map(eligibleLists.filter(list => list.isActive).map(list => [list.id, list]));
   const selected = selectedListIds.find(id => activeById.has(id));
-  return selected ?? lists.find(list => list.isActive)?.id ?? lists[0]?.id;
+  return selected ?? eligibleLists.find(list => list.isActive)?.id ?? eligibleLists[0]?.id;
 }
 
 export function normalizeSingleSelectedListIds(selectedListIds: string[], lists: WordList[]) {
@@ -20,7 +22,7 @@ export function selectSingleWordList(listId: string) {
 
 export function normalizeStorageWordListSelection(storage: SpelioStorage, lists: WordList[]): SpelioStorage {
   const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
-  const activeIds = new Set(lists.filter(list => list.isActive).map(list => list.id));
+  const activeIds = new Set(mainWordLists(lists).filter(list => list.isActive).map(list => list.id));
   const alreadySingleSelection =
     storage.selectedListIds.length === selectedListIds.length &&
     storage.selectedListIds.every((id, index) => id === selectedListIds[index]);

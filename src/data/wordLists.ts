@@ -1,4 +1,5 @@
 import dataset from './spelio_welsh_35_list_dataset_dialect_v1_1.json';
+import { withSupportWordLists, type WordListType } from './supportWordLists';
 
 export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
@@ -85,6 +86,9 @@ export interface WordList {
   order: number;
   nextListId?: string | null;
   isActive: boolean;
+  isSupportList?: boolean;
+  listType?: WordListType;
+  hiddenFromMainCatalogue?: boolean;
   words: PracticeWord[];
 }
 
@@ -126,6 +130,9 @@ type DatasetList = {
   order: number;
   nextListId?: string | null;
   isActive: boolean;
+  isSupportList?: boolean;
+  listType?: WordListType;
+  hiddenFromMainCatalogue?: boolean;
   words: DatasetWord[];
 };
 
@@ -143,7 +150,7 @@ const usageNotesByWordId = new Map(
     .map(word => [word.id, word.usageNote ?? ''])
 );
 
-export const wordLists: WordList[] = rawLists
+const baseWordLists: WordList[] = rawLists
   .filter(list => list.isActive)
   .sort((a, b) => a.order - b.order)
   .map(list => ({
@@ -165,6 +172,9 @@ export const wordLists: WordList[] = rawLists
     order: list.order,
     nextListId: list.nextListId ?? null,
     isActive: list.isActive,
+    isSupportList: list.isSupportList === true || list.listType === 'support',
+    listType: list.listType ?? (list.isSupportList ? 'support' : 'main'),
+    hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support',
     words: [...list.words]
       .sort((a, b) => a.order - b.order)
       .map(word => ({
@@ -190,6 +200,8 @@ export const wordLists: WordList[] = rawLists
         variantGroupId: word.variantGroupId ?? ''
       }))
   }));
+
+export const wordLists: WordList[] = withSupportWordLists(baseWordLists);
 
 export function getPrompt(word: Pick<PracticeWord, 'prompt' | 'englishPrompt'>) {
   return word.prompt || word.englishPrompt;

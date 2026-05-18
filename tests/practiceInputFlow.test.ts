@@ -4,6 +4,8 @@ import {
   isCommittedAnswerComplete,
   processPracticeInput
 } from '../src/lib/practice/inputFlow';
+import { findSupportWordList } from '../src/data/supportWordLists';
+import { wordLists } from '../src/data/wordLists';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -107,6 +109,33 @@ function committedValue(letters: Array<{ value: string }>) {
   assertEqual(result.wrongFeedback?.inputPosition, 1, 'Strict mode should reject a missing accent on the current slot.');
   assertEqual(result.completed, false, 'Strict mode should not complete when an accent is wrong.');
   assertEqual(committedValue(result.letters), 'D__', 'Strict mode should not commit the wrong unaccented character.');
+}
+
+{
+  const supportFf = findSupportWordList(wordLists, 'support_ff');
+  const coffi = supportFf?.words.find(word => word.welshAnswer === 'coffi');
+  if (!supportFf || !coffi) throw new Error('Expected support_ff/coffi fixture to exist');
+
+  const firstLetter = processPracticeInput({
+    targetAnswer: coffi.welshAnswer,
+    letters: createInitialPracticeLetters(coffi.welshAnswer),
+    rawInput: 'c',
+    mode: 'flexible'
+  });
+
+  assertEqual(firstLetter.completed, false, 'Typing only the first letter of support_ff/coffi must not complete the word.');
+  assertEqual(findNextInputIndex(coffi.welshAnswer, firstLetter.letters), 1, 'After one correct letter, support_ff/coffi should remain on the second slot.');
+  assertEqual(committedValue(firstLetter.letters), 'c____', 'Only the first letter of support_ff/coffi should be committed.');
+
+  const fullWord = processPracticeInput({
+    targetAnswer: coffi.welshAnswer,
+    letters: firstLetter.letters,
+    rawInput: 'offi',
+    mode: 'flexible'
+  });
+
+  assertEqual(fullWord.completed, true, 'Completing support_ff/coffi should require all remaining letters.');
+  assertEqual(committedValue(fullWord.letters), 'coffi', 'support_ff/coffi should complete to the exact answer.');
 }
 
 console.log('practice input flow tests passed');

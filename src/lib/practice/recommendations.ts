@@ -1,4 +1,5 @@
 import type { WordList } from '../../data/wordLists';
+import { mainWordLists } from '../../data/supportWordLists';
 import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { SpelioStorage } from './storage';
 import { isListFullyComplete } from './storage';
@@ -48,7 +49,7 @@ export function isListFullyCompletedForRecommendation(storage: SpelioStorage, li
 }
 
 export function findNextSequentialRecommendationList(storage: SpelioStorage, lists: WordList[], current: WordList) {
-  const activeLists = lists.filter(list => list.isActive);
+  const activeLists = mainWordLists(lists).filter(list => list.isActive);
   const visited = new Set([current.id]);
   let nextListId = current.nextListId;
 
@@ -67,7 +68,7 @@ export function findNextSequentialRecommendationList(storage: SpelioStorage, lis
 }
 
 function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], current: WordList) {
-  const activeLists = lists.filter(list => list.isActive);
+  const activeLists = mainWordLists(lists).filter(list => list.isActive);
   const sequentialNext = findNextSequentialRecommendationList(storage, activeLists, current);
   if (sequentialNext) return sequentialNext;
 
@@ -92,8 +93,9 @@ function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], curre
 }
 
 export function getNormalContinuationRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {
-  const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
-  const current = findList(lists, storage.currentPathPosition) ?? findList(lists, selectedListIds[0]);
+  const recommendationLists = mainWordLists(lists);
+  const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, recommendationLists);
+  const current = findList(recommendationLists, storage.currentPathPosition) ?? findList(recommendationLists, selectedListIds[0]);
   if (current) {
     if (!isListProgressionComplete(storage, current)) {
       return asListRecommendation(current, t, interfaceLanguage);
@@ -103,13 +105,13 @@ export function getNormalContinuationRecommendation(storage: SpelioStorage, list
       return asListRecommendation(current, t, interfaceLanguage);
     }
 
-    const next = findNextUnfinishedList(storage, lists, current);
+    const next = findNextUnfinishedList(storage, recommendationLists, current);
     if (next) return asListRecommendation(next, t, interfaceLanguage);
 
     return asListRecommendation(current, t, interfaceLanguage);
   }
 
-  const fallback = lists.find(list => list.isActive) ?? lists[0];
+  const fallback = recommendationLists.find(list => list.isActive) ?? recommendationLists[0];
   return {
     kind: 'list',
     listId: fallback?.id,
@@ -119,8 +121,9 @@ export function getNormalContinuationRecommendation(storage: SpelioStorage, list
 }
 
 export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {
-  const difficultWordsExist = hasDifficultWords(storage, lists);
-  const selectedLists = getSelectedLists(normalizeSingleSelectedListIds(storage.selectedListIds, lists), lists);
+  const recommendationLists = mainWordLists(lists);
+  const difficultWordsExist = hasDifficultWords(storage, recommendationLists);
+  const selectedLists = getSelectedLists(normalizeSingleSelectedListIds(storage.selectedListIds, recommendationLists), recommendationLists);
 
   if (storage.lastSessionResult?.state === 'struggled' && difficultWordsExist) {
     return {
@@ -131,5 +134,5 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
     };
   }
 
-  return getNormalContinuationRecommendation(storage, lists, t, interfaceLanguage);
+  return getNormalContinuationRecommendation(storage, recommendationLists, t, interfaceLanguage);
 }

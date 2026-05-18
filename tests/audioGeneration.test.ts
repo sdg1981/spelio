@@ -15,7 +15,7 @@ import {
   createFfmpegPostProcessingArgs,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
@@ -93,6 +93,16 @@ assert(
 assert(
   createAdminWelshSsml('cân').includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">cân</prosody>`),
   'Admin SSML helper should expose the same subtle prosody rate.'
+);
+assertEqual(
+  createAudioStoragePath({ listId: 'support_ff', id: 'support_ff_006' }),
+  'cy/support/support-ff/support-ff-006.mp3',
+  'Support-list audio should be stored under a support-list-specific path.'
+);
+assertEqual(
+  createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
+  'cy/foundations-first-words/foundations-first-words-001.mp3',
+  'Normal list audio should keep the existing list-scoped path.'
 );
 
 const filter = createAudioPostProcessingFilter();

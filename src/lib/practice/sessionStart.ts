@@ -1,6 +1,7 @@
 import type { InterfaceLanguage, Translate } from '../../i18n';
 import type { WordList } from '../../data/wordLists';
 import type { Recommendation } from './recommendations';
+import { getListDisplayName } from './wordListDisplay';
 import { getNormalContinuationRecommendation, getRecommendation } from './recommendations';
 import { applyPracticeStartListSelection, type SpelioStorage } from './storage';
 
@@ -75,5 +76,29 @@ export function createPrimaryRecommendationPracticeStart(
     recap: false,
     storage: withPracticeStarted(applyPracticeStartListSelection(storage, recommendation.listId)),
     recommendation
+  };
+}
+
+export function createDetachedSupportPracticeStart(
+  storage: SpelioStorage,
+  list: WordList,
+  t?: Translate,
+  interfaceLanguage?: InterfaceLanguage
+): PracticeStart {
+  return {
+    mode: 'normal',
+    review: false,
+    recap: false,
+    storage: {
+      ...storage,
+      selectedListIds: [list.id],
+      currentPathPosition: list.id
+    },
+    recommendation: {
+      kind: 'list',
+      listId: list.id,
+      title: t ? t('home.continueLearning') : 'Continue learning',
+      subtitle: getListDisplayName(list, interfaceLanguage)
+    }
   };
 }

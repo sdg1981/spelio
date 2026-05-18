@@ -1,5 +1,6 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
+import { createSupportWordLists, findSupportWordList, isSupportWordList, mainWordLists, withSupportWordLists } from '../src/data/supportWordLists';
 import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel, normalizeSingleSelectedListIds, normalizeStorageWordListSelection, selectSingleWordList } from '../src/lib/practice/wordListSelection';
 import {
@@ -17,7 +18,7 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
-import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -589,6 +590,101 @@ test('completing foundations_numbers cleanly recommends foundations_mixed_01', (
   assertEqual(recommendation.title, 'Continue learning', 'Primary action title should stay as continue');
   assertEqual(recommendation.listId, 'foundations_mixed_01', 'Completed numbers list should advance to nextListId');
   assertEqual(recommendation.subtitle, 'Mixed Practice — Foundations', 'Primary action should show the next list name');
+});
+
+test('support-only lists are present but hidden from the main word-list catalogue', () => {
+  const support = findSupportWordList(wordLists, 'support_dd');
+
+  assert(support, 'Expected support_dd to exist');
+  assertEqual(isSupportWordList(support), true, 'Support list should carry explicit support metadata');
+  assertEqual(mainWordLists(wordLists).some(list => list.id === 'support_dd'), false, 'Main catalogue filter should exclude support lists');
+  assertEqual(normalizeSingleSelectedListIds(['support_dd'], wordLists)[0], 'foundations_first_words', 'Normal list selection should not select a support list');
+});
+
+test('support-only lists are excluded from normal recommendations', () => {
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['support_dd'],
+    currentPathPosition: 'support_dd'
+  };
+  const recommendation = getNormalContinuationRecommendation(storage, wordLists);
+
+  assertEqual(recommendation.listId, 'foundations_first_words', 'Normal continuation should fall back to a main list');
+  assertEqual(recommendation.listId?.startsWith('support_'), false, 'Normal recommendations should not point to support lists');
+});
+
+test('detached support practice starts from a support list without changing the original path storage', () => {
+  const original = numbersStorage();
+  const support = findSupportWordList(wordLists, 'support_dd');
+  assert(support, 'Expected support_dd to exist');
+
+  const start = createDetachedSupportPracticeStart(original, support);
+  const session = createPracticeSession(wordLists, start.storage, start.review, start.recap);
+
+  assertEqual(original.selectedListIds[0], 'foundations_numbers', 'Original selected list should remain unchanged');
+  assertEqual(original.currentPathPosition, 'foundations_numbers', 'Original path position should remain unchanged');
+  assertEqual(start.storage.selectedListIds[0], 'support_dd', 'Detached start should select the support list only in session storage');
+  assertEqual(start.storage.currentPathPosition, 'support_dd', 'Detached start should point session storage at the support list');
+  assertEqual(session.words.length, support.words.length, 'Detached support session should use the focused support words');
+  assertEqual(session.words.every(word => word.listId === 'support_dd'), true, 'Detached support session should only use support_dd words');
+});
+
+test('support_ff session queue is stable and ordered for contextual practice', () => {
+  const original = numbersStorage();
+  const support = findSupportWordList(wordLists, 'support_ff');
+  assert(support, 'Expected support_ff to exist');
+
+  const start = createDetachedSupportPracticeStart(original, support);
+  const session = createPracticeSession(wordLists, start.storage, start.review, start.recap);
+  const wordIds = session.words.map(word => word.id);
+
+  assertEqual(new Set(wordIds).size, wordIds.length, 'Support session words should have unique IDs');
+  assertEqual(session.words.slice(0, 5).map(word => word.welshAnswer).join('|'), 'ffordd|coffi|ffrind|ffôn|fferm', 'support_ff should queue focused words in seed order');
+  assertEqual(session.words.slice(0, 5).map(word => word.englishPrompt).join('|'), 'road|coffee|friend|phone|farm', 'support_ff prompts should match the focused words');
+});
+
+test('support words are standalone hidden-list data with stable IDs and missing audio until generated', () => {
+  const supportLists = createSupportWordLists();
+  const supportFf = findSupportWordList(supportLists, 'support_ff');
+  assert(supportFf, 'Expected support_ff to exist');
+
+  const supportWordIds = supportLists.flatMap(list => list.words.map(word => word.id));
+  const normalWordIds = new Set(mainWordLists(wordLists).flatMap(list => list.words.map(word => word.id)));
+  assertEqual(supportWordIds.length, new Set(supportWordIds).size, 'Support words should have unique stable IDs.');
+  assertEqual(supportWordIds.some(id => normalWordIds.has(id)), false, 'Support words should not reuse normal progression word IDs.');
+  assertEqual(supportFf.listType, 'support', 'Support FF should be explicitly typed as a support list.');
+  assertEqual(supportFf.isSupportList, true, 'Support FF should carry the support-list flag.');
+  assertEqual(supportFf.hiddenFromMainCatalogue, true, 'Support FF should be hidden from the public word-list catalogue.');
+  assertEqual(mainWordLists(supportLists).some(list => list.id === 'support_ff'), false, 'Support FF should not appear in the main catalogue filter.');
+
+  const ffrwyth = supportFf.words.find(word => word.welshAnswer === 'ffrwyth');
+  assert(ffrwyth, 'Support FF should keep pedagogically useful ffrwyth.');
+  assertEqual(ffrwyth.id, 'support_ff_006', 'ffrwyth should have a stable support-context word ID.');
+  assertEqual(ffrwyth.listId, 'support_ff', 'ffrwyth should belong to the support FF list, not a normal progression list.');
+  assertEqual(ffrwyth.audioUrl, '', 'ffrwyth should not inherit opportunistic audio from normal progression data.');
+  assertEqual(ffrwyth.audioStatus, 'missing', 'ffrwyth should remain missing until the support-list audio workflow generates it.');
+});
+
+test('support lists remain available when ordinary progression lists are removed', () => {
+  const ordinarySubset = mainWordLists(wordLists).filter(list => list.id !== 'foundations_first_words' && list.id !== 'stage2_food');
+  const listsWithSupport = withSupportWordLists(ordinarySubset);
+  const supportFf = findSupportWordList(listsWithSupport, 'support_ff');
+
+  assert(supportFf, 'Support FF should be added independently of ordinary progression list membership.');
+  assertEqual(supportFf.words.map(word => word.welshAnswer).join('|'), 'ffordd|coffi|ffrind|ffôn|fferm|ffrwyth', 'Support FF words should not depend on normal list contents.');
+  assertEqual(supportFf.words.every(word => word.listId === 'support_ff'), true, 'Support FF words should keep support-list ownership.');
+});
+
+test('support-list progress does not affect normal difficult-word review pools', () => {
+  const support = findSupportWordList(wordLists, 'support_dd');
+  assert(support, 'Expected support_dd to exist');
+
+  const storage = applyWordProgressPatch(createDefaultStorage(), support.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+
+  assertEqual(storage.wordProgress[support.words[0].id]?.difficult, true, 'Detached session storage may mark a support word difficult');
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'Normal difficult-word flow should ignore support-list words');
+  assertEqual(getDifficultWordCount(storage, wordLists), 0, 'Normal difficult-word count should ignore support-list words');
+  assertEqual(createPracticeSession(wordLists, storage, true).words.length, 0, 'Dedicated normal review should not include support-list words');
 });
 
 test('completing all difficult words cleanly removes them from review', () => {

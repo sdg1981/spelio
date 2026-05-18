@@ -1,0 +1,240 @@
+import type { PracticeWord, WordList, WordListCollection } from './wordLists';
+
+export type WordListType = 'main' | 'support';
+
+export const SUPPORT_WORD_LIST_COLLECTION_ID = 'spelio_support_welsh';
+
+export const supportWordListCollection: WordListCollection = {
+  id: SUPPORT_WORD_LIST_COLLECTION_ID,
+  slug: 'spelio-support-welsh',
+  name: 'Spelio Support Welsh',
+  description: 'Built-in contextual support lists for focused practice.',
+  type: 'spelio_core',
+  sourceLanguage: 'en',
+  targetLanguage: 'cy',
+  curriculumKeyStage: null,
+  curriculumArea: null,
+  ownerType: 'spelio',
+  ownerId: null,
+  order: 99,
+  isActive: true
+};
+
+type SupportWordSeed = {
+  englishPrompt: string;
+  welshAnswer: string;
+  acceptedAlternatives?: string[];
+  audioUrl?: string;
+  audioStatus?: PracticeWord['audioStatus'];
+  difficulty?: number;
+  dialect?: PracticeWord['dialect'];
+  dialectNote?: string;
+  usageNote?: string;
+  variantGroupId?: string;
+};
+
+type SupportListSeed = {
+  id: string;
+  name: string;
+  nameCy: string;
+  description: string;
+  descriptionCy: string;
+  focus: string;
+  words: SupportWordSeed[];
+};
+
+const supportListSeeds: SupportListSeed[] = [
+  {
+    id: 'support_ff',
+    name: 'Support: ff pattern',
+    nameCy: 'Cymorth: patrwm ff',
+    description: 'Focused support practice for Welsh ff.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer ff Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'road', welshAnswer: 'ffordd' },
+      { englishPrompt: 'coffee', welshAnswer: 'coffi' },
+      { englishPrompt: 'friend', welshAnswer: 'ffrind' },
+      { englishPrompt: 'phone', welshAnswer: 'ffôn' },
+      { englishPrompt: 'farm', welshAnswer: 'fferm' },
+      { englishPrompt: 'fruit', welshAnswer: 'ffrwyth' }
+    ]
+  },
+  {
+    id: 'support_dd',
+    name: 'Support: dd pattern',
+    nameCy: 'Cymorth: patrwm dd',
+    description: 'Focused support practice for Welsh dd.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer dd Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'day', welshAnswer: 'dydd' },
+      { englishPrompt: 'today', welshAnswer: 'heddiw' },
+      { englishPrompt: 'mountain', welshAnswer: 'mynydd' },
+      { englishPrompt: 'end', welshAnswer: 'diwedd' },
+      { englishPrompt: 'new', welshAnswer: 'newydd' },
+      { englishPrompt: 'will be', welshAnswer: 'bydd' }
+    ]
+  },
+  {
+    id: 'support_ll',
+    name: 'Support: ll pattern',
+    nameCy: 'Cymorth: patrwm ll',
+    description: 'Focused support practice for Welsh ll.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer ll Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'place', welshAnswer: 'lle' },
+      { englishPrompt: 'hand', welshAnswer: 'llaw' },
+      { englishPrompt: 'book', welshAnswer: 'llyfr' },
+      { englishPrompt: 'milk', welshAnswer: 'llaeth' },
+      { englishPrompt: 'out', welshAnswer: 'allan' },
+      { englishPrompt: 'can / able to', welshAnswer: 'gallu' }
+    ]
+  },
+  {
+    id: 'support_ch',
+    name: 'Support: ch pattern',
+    nameCy: 'Cymorth: patrwm ch',
+    description: 'Focused support practice for Welsh ch.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer ch Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'small', welshAnswer: 'bach' },
+      { englishPrompt: 'six', welshAnswer: 'chwech' },
+      { englishPrompt: 'health', welshAnswer: 'iechyd' },
+      { englishPrompt: 'high', welshAnswer: 'uchel' },
+      { englishPrompt: 'to play', welshAnswer: 'chwarae' },
+      { englishPrompt: 'to begin', welshAnswer: 'dechrau' }
+    ]
+  },
+  {
+    id: 'support_rh',
+    name: 'Support: rh pattern',
+    nameCy: 'Cymorth: patrwm rh',
+    description: 'Focused support practice for Welsh rh.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer rh Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'free', welshAnswer: 'rhydd' },
+      { englishPrompt: 'some / kind', welshAnswer: 'rhyw' },
+      { englishPrompt: 'maiden', welshAnswer: 'rhiain' },
+      { englishPrompt: 'must', welshAnswer: 'rhaid' },
+      { englishPrompt: 'between', welshAnswer: 'rhwng' },
+      { englishPrompt: 'to run', welshAnswer: 'rhedeg' }
+    ]
+  },
+  {
+    id: 'support_wy',
+    name: 'Support: w and y as vowels',
+    nameCy: 'Cymorth: w ac y fel llafariaid',
+    description: 'Focused support practice for Welsh w and y vowel patterns.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer patrymau llafariad w ac y.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'water', welshAnswer: 'dŵr' },
+      { englishPrompt: 'egg', welshAnswer: 'wy' },
+      { englishPrompt: 'living', welshAnswer: 'byw' },
+      { englishPrompt: 'white', welshAnswer: 'gwyn' },
+      { englishPrompt: 'to eat', welshAnswer: 'bwyta' },
+      { englishPrompt: 'more', welshAnswer: 'mwy' }
+    ]
+  },
+  {
+    id: 'support_accents',
+    name: 'Support: accents and long vowels',
+    nameCy: 'Cymorth: acenion a llafariaid hir',
+    description: 'Focused support practice for Welsh accents and long vowels.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer acenion a llafariaid hir Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'water', welshAnswer: 'dŵr' },
+      { englishPrompt: 'house', welshAnswer: 'tŷ' },
+      { englishPrompt: 'corn / grain', welshAnswer: 'ŷd' },
+      { englishPrompt: 'fire', welshAnswer: 'tân' },
+      { englishPrompt: 'sound', welshAnswer: 'sŵn' },
+      { englishPrompt: 'song', welshAnswer: 'cân' }
+    ]
+  }
+];
+
+function createSupportWord(seed: SupportWordSeed, listId: string, order: number): PracticeWord {
+  return {
+    id: `${listId}_${String(order).padStart(3, '0')}`,
+    listId,
+    prompt: seed.englishPrompt,
+    answer: seed.welshAnswer,
+    englishPrompt: seed.englishPrompt,
+    welshAnswer: seed.welshAnswer,
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    acceptedAlternatives: seed.acceptedAlternatives ?? [],
+    audioUrl: seed.audioUrl ?? '',
+    audioStatus: seed.audioStatus ?? 'missing',
+    notes: '',
+    order,
+    difficulty: seed.difficulty ?? 1,
+    dialect: seed.dialect ?? 'Both',
+    dialectNote: seed.dialectNote ?? '',
+    usageNote: seed.usageNote ?? '',
+    spellingHintId: '',
+    disablePatternHints: false,
+    variantGroupId: seed.variantGroupId ?? ''
+  };
+}
+
+export function isSupportWordList(list: Pick<WordList, 'id' | 'collectionId' | 'isSupportList' | 'listType' | 'hiddenFromMainCatalogue'>) {
+  return list.isSupportList === true ||
+    list.listType === 'support' ||
+    list.hiddenFromMainCatalogue === true ||
+    list.collectionId === SUPPORT_WORD_LIST_COLLECTION_ID ||
+    list.id.startsWith('support_');
+}
+
+export function mainWordLists(lists: WordList[]) {
+  return lists.filter(list => !isSupportWordList(list) && !list.hiddenFromMainCatalogue);
+}
+
+export function supportWordLists(lists: WordList[]) {
+  return lists.filter(isSupportWordList);
+}
+
+export function findSupportWordList(lists: WordList[], listId?: string | null) {
+  if (!listId) return undefined;
+  return lists.find(list => list.id === listId && list.isActive && isSupportWordList(list));
+}
+
+export function createSupportWordLists(): WordList[] {
+  return supportListSeeds.map((seed, index) => ({
+    id: seed.id,
+    slug: seed.id.replace(/_/g, '-'),
+    collectionId: SUPPORT_WORD_LIST_COLLECTION_ID,
+    collection: supportWordListCollection,
+    name: seed.name,
+    nameCy: seed.nameCy,
+    description: seed.description,
+    descriptionCy: seed.descriptionCy,
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Both',
+    stage: 'Support',
+    focus: seed.focus,
+    difficulty: 1,
+    order: 10_000 + index,
+    nextListId: null,
+    isActive: true,
+    isSupportList: true,
+    listType: 'support',
+    hiddenFromMainCatalogue: true,
+    words: seed.words.map((word, wordIndex) => (
+      createSupportWord(word, seed.id, wordIndex + 1)
+    ))
+  }));
+}
+
+export function withSupportWordLists(lists: WordList[]) {
+  const existingIds = new Set(lists.map(list => list.id));
+  const missingSupportLists = createSupportWordLists().filter(list => !existingIds.has(list.id));
+  return [...lists, ...missingSupportLists].sort((a, b) => a.order - b.order);
+}

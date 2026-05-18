@@ -36,6 +36,7 @@ type Feature = {
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
   icon: IconComponent;
+  href?: string;
 };
 
 const features: Feature[] = [
@@ -163,16 +164,24 @@ const features: Feature[] = [
     titleKey: 'how.features.practiceTestSharing.title',
     bodyKey: 'how.features.practiceTestSharing.body',
     icon: BadgeCheck
+  },
+  {
+    titleKey: 'how.features.welshSpellingBasics.title',
+    bodyKey: 'how.features.welshSpellingBasics.body',
+    icon: BookOpen,
+    href: '/spelling-basics'
   }
 ];
 
 export function HowSpelioWorks({
   onHome,
+  onWelshSpellingBasics,
   interfaceLanguage,
   onInterfaceLanguageChange,
   t
 }: {
   onHome: () => void;
+  onWelshSpellingBasics: () => void;
   interfaceLanguage: InterfaceLanguage;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
@@ -211,7 +220,12 @@ export function HowSpelioWorks({
 
       <section className="how-features" id="features" aria-label={t('how.featuresAriaLabel')}>
         {features.map(feature => (
-          <FeatureItem key={feature.titleKey} feature={feature} t={t} />
+          <FeatureItem
+            key={feature.titleKey}
+            feature={feature}
+            onWelshSpellingBasics={onWelshSpellingBasics}
+            t={t}
+          />
         ))}
       </section>
 
@@ -233,11 +247,18 @@ export function HowSpelioWorks({
   );
 }
 
-function FeatureItem({ feature, t }: { feature: Feature; t: Translate }) {
+function FeatureItem({
+  feature,
+  onWelshSpellingBasics,
+  t
+}: {
+  feature: Feature;
+  onWelshSpellingBasics: () => void;
+  t: Translate;
+}) {
   const Icon = feature.icon;
-
-  return (
-    <article className="how-feature">
+  const content = (
+    <>
       <span className="how-icon-circle how-feature-icon" aria-hidden="true">
         <Icon size={32} strokeWidth={1.85} />
       </span>
@@ -245,6 +266,27 @@ function FeatureItem({ feature, t }: { feature: Feature; t: Translate }) {
         <h2>{t(feature.titleKey)}</h2>
         <p>{t(feature.bodyKey)}</p>
       </div>
+    </>
+  );
+
+  if (feature.href) {
+    return (
+      <a
+        className="how-feature how-feature-link"
+        href={feature.href}
+        onClick={event => {
+          event.preventDefault();
+          onWelshSpellingBasics();
+        }}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <article className="how-feature">
+      {content}
     </article>
   );
 }

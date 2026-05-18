@@ -40,6 +40,53 @@ Spelio should remain:
 
 Future educational systems should support the spelling practice loop rather than turning the app into a full grammar or phonics course.
 
+## Adaptive replay and assisted listening
+
+Spelio should explore assisted listening as a future direction for replay audio and reveal behaviour.
+
+The product should not solve uncertainty primarily through visual answer exposure. It should quietly help learners hear Welsh more clearly before encouraging full Reveal.
+
+Preferred support hierarchy:
+
+1. Replay
+2. Assisted replay
+3. Reveal
+
+Current direction:
+
+- Replay may evolve into a layered listening-support system.
+- Replay may become progressively more helpful during repeated use on the same word.
+- Future replay assistance may include subtle slowing, chunk emphasis, small natural pauses, or clearer rhythmic separation.
+- The goal is to preserve natural Welsh rhythm while improving auditory decoding.
+- Reveal should remain available, but should not become the default easiest escape route.
+- The interface should remain visually simple even if replay becomes more intelligent underneath.
+
+UX principles:
+
+- Avoid robotic slowed-down phonics audio.
+- Avoid over-teaching syllables.
+- Avoid classroom-feeling pronunciation drills.
+- Avoid tutorial-heavy explanation around replay.
+- Replay support should feel natural and lightweight.
+- Learners should feel: "Oh, I can hear it now."
+- Learners should not feel: "The app is teaching me phonics."
+
+Lightweight behavioural guidance:
+
+- Spelio may later add tiny inline hints encouraging replay before reveal.
+- If a learner repeatedly uses Reveal quickly, the app may gently encourage another listen first.
+- Guidance should be non-intrusive and should use existing quiet UI areas where possible.
+- Do not add modal warnings, punitive systems, forced listening gates, or friction-heavy anti-reveal behaviour.
+
+Future AI / TTS direction:
+
+- Improving TTS and AI voice tooling may eventually allow smarter replay assistance.
+- Future systems could potentially support adaptive chunk replay, sound-aware replay, context-aware emphasis, or learner-specific replay assistance.
+- These should only be explored when audio quality supports them naturally.
+- Current implementation should remain lightweight and technically practical.
+- Advanced replay systems should still preserve Spelio's calm, minimal, adult-focused philosophy.
+- Spelio should avoid becoming a full phonics-analysis engine.
+
 ## 2. Future educational systems
 
 Possible future systems to keep in mind:

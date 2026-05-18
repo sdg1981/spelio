@@ -7,6 +7,7 @@ import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, T
 import { Footer } from './Footer';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
+import { mainWordLists } from '../data/supportWordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
@@ -153,6 +154,7 @@ export function Practice({
   showKeyboardHint = false,
   practiceTestMode = false,
   disableQuickRecap = false,
+  detached = false,
   onStorageChange,
   onComplete,
   onBackHome,
@@ -172,6 +174,7 @@ export function Practice({
   showKeyboardHint?: boolean;
   practiceTestMode?: boolean;
   disableQuickRecap?: boolean;
+  detached?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onBackHome: () => void;
@@ -248,7 +251,7 @@ export function Practice({
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, disableQuickRecap, sessionKey, onStorageChange, onComplete, t });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, disableQuickRecap, detached, sessionKey, onStorageChange, onComplete, t });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -1635,19 +1638,20 @@ export function WordListSelectorPanel({
   variant?: 'modal' | 'page';
 }) {
   const [query, setQuery] = useState('');
-  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, lists));
+  const selectableLists = useMemo(() => mainWordLists(lists), [lists]);
+  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, selectableLists));
   const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
   const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return lists;
-    return lists.filter(list => {
+    if (!normalizedQuery) return selectableLists;
+    return selectableLists.filter(list => {
       const displayName = getListDisplayName(list, interfaceLanguage);
       const displayDescription = getListDisplayDescription(list, interfaceLanguage);
       return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
     });
-  }, [interfaceLanguage, lists, query]);
+  }, [interfaceLanguage, selectableLists, query]);
   const groups = useMemo(() => {
     return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
       const collectionName = list.collection?.name ?? 'Spelio Core Welsh';

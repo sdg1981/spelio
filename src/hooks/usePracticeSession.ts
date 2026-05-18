@@ -106,6 +106,7 @@ export function usePracticeSession({
   includeRecapDue = false,
   forceAudioAvailable = false,
   disableQuickRecap = false,
+  detached = false,
   sessionKey = 0,
   onStorageChange,
   onComplete,
@@ -118,6 +119,7 @@ export function usePracticeSession({
   includeRecapDue?: boolean;
   forceAudioAvailable?: boolean;
   disableQuickRecap?: boolean;
+  detached?: boolean;
   sessionKey?: number;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
@@ -159,7 +161,7 @@ export function usePracticeSession({
   const isCompletingRevealedWordRef = useRef(false);
   const lettersRef = useRef<LetterState[]>(letters);
   const recapIssueRef = useRef(false);
-  const storageRef = useRef(storage);
+  const storageRef = useRef(detached ? sessionStorage : storage);
   const incorrectWordIdsRef = useRef(new Set<string>());
   const revealedWordIdsRef = useRef(new Set<string>());
   const sessionActiveMsRef = useRef(0);
@@ -172,8 +174,8 @@ export function usePracticeSession({
   const audioUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    storageRef.current = storage;
-  }, [storage]);
+    storageRef.current = detached ? sessionStorage : storage;
+  }, [detached, sessionStorage, storage]);
 
   function setLetters(nextLetters: LetterState[]) {
     lettersRef.current = nextLetters;
@@ -365,6 +367,7 @@ export function usePracticeSession({
     const nextStorage = applyWordProgressPatch(currentStorage, word, patch);
 
     storageRef.current = nextStorage;
+    if (detached) return;
     onStorageChange(nextStorage);
   }
 
@@ -391,23 +394,27 @@ export function usePracticeSession({
     };
     const result: SessionResult = { ...base, state: classifySession(base) };
 
-    let nextStorage: SpelioStorage = {
-      ...storageRef.current,
-      lastSessionDate: new Date().toISOString(),
-      lastSessionResult: result,
-      completedNormalSessionCount: reviewDifficult || includeRecapDue
-        ? storageRef.current.completedNormalSessionCount
-        : (storageRef.current.completedNormalSessionCount ?? 0) + 1,
-      recentlyResolvedReviewWordIds: reviewDifficult || includeRecapDue
-        ? storageRef.current.recentlyResolvedReviewWordIds
-        : []
-    };
-    if (!reviewDifficult && !includeRecapDue && storageRef.current.settings.dialectPreference === 'mixed') {
-      nextStorage = addMixedWelshExposure(nextStorage, session.words, lists);
-    }
-    nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
-    if (!reviewDifficult && !includeRecapDue) {
-      nextStorage = updateListCompletion(nextStorage, lists, result);
+    let nextStorage: SpelioStorage = detached
+      ? storageRef.current
+      : {
+          ...storageRef.current,
+          lastSessionDate: new Date().toISOString(),
+          lastSessionResult: result,
+          completedNormalSessionCount: reviewDifficult || includeRecapDue
+            ? storageRef.current.completedNormalSessionCount
+            : (storageRef.current.completedNormalSessionCount ?? 0) + 1,
+          recentlyResolvedReviewWordIds: reviewDifficult || includeRecapDue
+            ? storageRef.current.recentlyResolvedReviewWordIds
+            : []
+        };
+    if (!detached) {
+      if (!reviewDifficult && !includeRecapDue && storageRef.current.settings.dialectPreference === 'mixed') {
+        nextStorage = addMixedWelshExposure(nextStorage, session.words, lists);
+      }
+      nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
+      if (!reviewDifficult && !includeRecapDue) {
+        nextStorage = updateListCompletion(nextStorage, lists, result);
+      }
     }
 
     const completedSingleListId = result.listIds.length === 1 ? result.listIds[0] : null;
@@ -416,6 +423,7 @@ export function usePracticeSession({
     const shouldAdvancePath =
       !reviewDifficult &&
       !includeRecapDue &&
+      !detached &&
       completedList !== undefined &&
       nextList !== undefined &&
       isListProgressionComplete(nextStorage, completedList) &&
@@ -437,7 +445,7 @@ export function usePracticeSession({
     stopCurrentAudio(true);
     if (storageRef.current.settings.soundEffects) playTone('completion');
     onComplete(result, nextStorage);
-  }, [lists, onComplete, onStorageChange, reviewDifficult, includeRecapDue, session.listIds, session.words.length, stats, storage, stopCurrentAudio]);
+  }, [detached, lists, onComplete, onStorageChange, reviewDifficult, includeRecapDue, session.listIds, session.words.length, stats, storage, stopCurrentAudio]);
 
   function completeWord(forceDifficult = false) {
     if (!currentWord) return;

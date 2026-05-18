@@ -5,8 +5,9 @@ import {
   getSelectedVisibleBulkAudioIds,
   summarizeBulkAudioGeneration
 } from '../src/admin/services/audioQueueBulk';
+import { adminWordLists } from '../src/admin/data/mockAdminData';
 import type { AdminWord, AudioStatus } from '../src/admin/types';
-import type { AudioGenerationResult } from '../src/admin/services/audioGeneration';
+import { createAudioQueueSnapshot, type AudioGenerationResult } from '../src/admin/services/audioGeneration';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -94,6 +95,17 @@ assertEqual(
   summarizeBulkAudioGeneration([result('missing-1', true), result('ready-1', false)], 2),
   'Audio generation finished with 1 generated and 1 failure(s).',
   'Partial failures should produce a page-safe summary instead of treating the whole batch as successful.'
+);
+
+const adminWords = adminWordLists.flatMap(list => list.words);
+const supportFfrwyth = adminWords.find(word => word.id === 'support_ff_006');
+assert(supportFfrwyth?.welshAnswer === 'ffrwyth', 'Admin content should include support-list ffrwyth as its own word.');
+if (!supportFfrwyth) throw new Error('Expected support-list ffrwyth to exist in admin content.');
+assertEqual(supportFfrwyth.audioStatus, 'missing', 'Support-list ffrwyth should be visible to admin audio maintenance as missing audio.');
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_ff_006' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing support-list words.'
 );
 
 console.log('admin audio queue bulk tests passed');

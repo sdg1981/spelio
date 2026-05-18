@@ -3,6 +3,7 @@ import { Home } from './components/Home';
 import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from './components/CustomLists';
 import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
+import { WelshSpellingBasicsOverview, WelshSpellingBasicsTopicPage } from './components/WelshSpellingBasics';
 import { Practice } from './components/Practice';
 import { WordListsPage } from './components/WordListsPage';
 import { EndScreen } from './components/End';
@@ -10,12 +11,13 @@ import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptio
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
+import { findSupportWordList } from './data/supportWordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
-import { createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
@@ -24,8 +26,9 @@ import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib
 import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { createTranslator, type InterfaceLanguage } from './i18n';
+import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
 
-type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry';
+type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
@@ -109,6 +112,8 @@ function getScreenForPath(pathname: string): Screen {
   if (pathname === '/privacy') return 'privacy';
   if (pathname === '/about') return 'about';
   if (pathname === '/word-lists') return 'word-lists';
+  if (pathname === '/spelling-basics') return 'spelling-basics';
+  if (getSpellingBasicsTopicSlugFromPath(pathname)) return 'spelling-basics-topic';
   if (pathname === '/custom-list/new') return 'custom-new';
   if (getCustomSharePublicIdFromPath(pathname)) return 'custom-share';
   if (getCustomPublicIdFromPath(pathname)) return 'custom-entry';
@@ -116,7 +121,8 @@ function getScreenForPath(pathname: string): Screen {
 }
 
 function isStandalonePublicPagePath(pathname: string) {
-  return ['/how-spelio-works', '/feedback', '/privacy', '/about', '/word-lists', '/custom-list/new'].includes(pathname) ||
+  return ['/how-spelio-works', '/feedback', '/privacy', '/about', '/word-lists', '/spelling-basics', '/custom-list/new'].includes(pathname) ||
+    Boolean(getSpellingBasicsTopicSlugFromPath(pathname)) ||
     Boolean(getCustomSharePublicIdFromPath(pathname) || getCustomPublicIdFromPath(pathname));
 }
 
@@ -157,6 +163,8 @@ export default function App() {
   const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
   const [completedSharedContext, setCompletedSharedContext] = useState<SharedWordListContext | null>(null);
   const [practiceTestMode, setPracticeTestMode] = useState(false);
+  const [activeSupportPractice, setActiveSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
+  const [completedSupportPractice, setCompletedSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
@@ -269,6 +277,8 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setCompletedSupportPractice(null);
+    setActiveSupportPractice(null);
     setActiveCustomList(null);
     setWordListReturnScreen(null);
     setStorage(previous => ({
@@ -332,11 +342,15 @@ export default function App() {
     setShowFirstSessionKeyboardHint(!start.review && !start.recap && (storage.completedNormalSessionCount ?? 0) >= 5);
     if (isDetachedSharedStart && detachedContext) {
       setActiveSharedContext(detachedContext);
+      setActiveSupportPractice(null);
+      setCompletedSupportPractice(null);
       setPracticeTestMode(detachedContext.mode === 'practice-test');
     } else {
       setActiveSharedContext(null);
       setCompletedSharedContext(null);
       setActiveCustomList(null);
+      setActiveSupportPractice(null);
+      setCompletedSupportPractice(null);
       setPracticeTestMode(false);
       setStorage(start.storage);
     }
@@ -380,9 +394,52 @@ export default function App() {
     beginPractice(createSharedListPracticeStart(context, list), context);
   }
 
+  function startSupportPractice(practiceListId: string, topicSlug: SpellingBasicsTopicSlug) {
+    const list = findSupportWordList(practiceLists, practiceListId);
+    if (!list) return;
+
+    const returnTo = `/spelling-basics/${topicSlug}`;
+    const start = createDetachedSupportPracticeStart(storage, list, t, interfaceLanguage);
+    if (typeof window !== 'undefined') {
+      const url = `/practice?supportListId=${encodeURIComponent(list.id)}&returnTo=${encodeURIComponent(returnTo)}`;
+      window.history.pushState({ spelioPublicPage: true, spelioSupportPractice: true, returnTo }, '', url);
+      resetPublicPageScrollToTop();
+    }
+
+    setActiveSupportPractice({ listId: list.id, returnTo });
+    setCompletedSupportPractice(null);
+    setActiveSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveCustomList(null);
+    setPracticeTestMode(false);
+    setPracticeStartStorage(start.storage);
+    setPracticeSessionKey(key => key + 1);
+    setReviewMode(false);
+    setRecapMode(false);
+    setScreen('practice');
+  }
+
+  function updatePracticeSessionStorage(next: SpelioStorage) {
+    if (activeSupportPractice) {
+      if (!next.selectedListIds.includes(activeSupportPractice.listId)) {
+        setStorage(next);
+        setPracticeStartStorage(previous => previous ? { ...previous, settings: next.settings } : previous);
+        return;
+      }
+      setPracticeStartStorage(next);
+      return;
+    }
+
+    updateStorage(next);
+  }
+
   function handleComplete(result: SessionResult, nextStorage: SpelioStorage) {
     setLastResult(result);
-    if (activeSharedContext) {
+    if (activeSupportPractice) {
+      setCompletedSupportPractice(activeSupportPractice);
+      setActiveSupportPractice(null);
+      setPracticeTestMode(false);
+    } else if (activeSharedContext) {
       setStorage(restoreSharedWordListProgression(nextStorage, activeSharedContext));
       setCompletedSharedContext(activeSharedContext);
       setActiveSharedContext(null);
@@ -391,8 +448,25 @@ export default function App() {
     } else {
       setStorage(nextStorage);
       setCompletedSharedContext(null);
+      setCompletedSupportPractice(null);
     }
     setScreen('end');
+  }
+
+  function returnToCompletedSupportPracticeOrigin() {
+    const returnTo = completedSupportPractice?.returnTo ?? '/spelling-basics';
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ spelioPublicPage: true }, '', returnTo);
+      resetPublicPageScrollToTop();
+    }
+
+    setCompletedSupportPractice(null);
+    setActiveSupportPractice(null);
+    setPracticeStartStorage(null);
+    setReviewMode(false);
+    setRecapMode(false);
+    setPracticeTestMode(false);
+    setScreen(returnTo === '/spelling-basics' ? 'spelling-basics' : 'spelling-basics-topic');
   }
 
   function returnToLearning() {
@@ -404,6 +478,8 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setCompletedSupportPractice(null);
+    setActiveSupportPractice(null);
     setActiveCustomList(null);
     setPracticeStartStorage(null);
     setWordListReturnScreen(null);
@@ -422,6 +498,15 @@ export default function App() {
     setScreen('how');
   }
 
+  function openWelshSpellingBasics() {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/spelling-basics') {
+      window.history.pushState({ spelioPublicPage: true }, '', '/spelling-basics');
+      resetPublicPageScrollToTop();
+    }
+
+    setScreen('spelling-basics');
+  }
+
   function openPublicPage(nextScreen: Extract<Screen, 'feedback' | 'privacy' | 'about'>, path: string) {
     if (typeof window !== 'undefined' && window.location.pathname !== path) {
       window.history.pushState({ spelioPublicPage: true }, '', path);
@@ -429,6 +514,16 @@ export default function App() {
     }
 
     setScreen(nextScreen);
+  }
+
+  function openSpellingBasicsTopic(slug: SpellingBasicsTopicSlug) {
+    const path = `/spelling-basics/${slug}`;
+    if (typeof window !== 'undefined' && window.location.pathname !== path) {
+      window.history.pushState({ spelioPublicPage: true }, '', path);
+      resetPublicPageScrollToTop();
+    }
+
+    setScreen('spelling-basics-topic');
   }
 
   function hasUsefulPreviousPublicHistory() {
@@ -505,6 +600,8 @@ export default function App() {
       setSharedContext(null);
       setCompletedSharedContext(null);
       setActiveSharedContext(null);
+      setCompletedSupportPractice(null);
+      setActiveSupportPractice(null);
       setActiveCustomList(null);
       setPracticeTestMode(false);
       if (isWordListsPage) returnFromWordListsPage();
@@ -515,6 +612,8 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setCompletedSupportPractice(null);
+    setActiveSupportPractice(null);
     setActiveCustomList(null);
     setReviewMode(false);
     setRecapMode(false);
@@ -543,6 +642,8 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setCompletedSupportPractice(null);
+    setActiveSupportPractice(null);
     setActiveCustomList(null);
     setReviewMode(false);
     setRecapMode(false);
@@ -579,9 +680,11 @@ export default function App() {
       : 'returning';
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
+  const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
   const screenContent = activeScreen === 'how' ? (
     <HowSpelioWorks
       onHome={returnToLearning}
+      onWelshSpellingBasics={openWelshSpellingBasics}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
@@ -610,6 +713,26 @@ export default function App() {
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
     />
+  ) : activeScreen === 'spelling-basics' ? (
+    <WelshSpellingBasicsOverview
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      onOpenTopic={openSpellingBasicsTopic}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'spelling-basics-topic' && spellingBasicsTopic ? (
+    <WelshSpellingBasicsTopicPage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      isPracticeListAvailable={practiceListId => Boolean(findSupportWordList(practiceLists, practiceListId))}
+      onStartPractice={startSupportPractice}
+      topic={spellingBasicsTopic}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
   ) : activeScreen === 'practice' ? (
     <Practice
       lists={practiceLists}
@@ -620,10 +743,11 @@ export default function App() {
       sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
       practiceTestMode={practiceTestMode}
-      disableQuickRecap={Boolean(activeSharedContext) || practiceTestMode}
-      onStorageChange={updateStorage}
+      disableQuickRecap={Boolean(activeSharedContext) || Boolean(activeSupportPractice) || practiceTestMode}
+      detached={Boolean(activeSupportPractice)}
+      onStorageChange={updatePracticeSessionStorage}
       onComplete={handleComplete}
-      onBackHome={activeSharedContext ? returnToLearning : () => setScreen('home')}
+      onBackHome={activeSupportPractice ? () => openSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(activeSupportPractice.returnTo) ?? 'phonetic') : activeSharedContext ? returnToLearning : () => setScreen('home')}
       onWordListsDone={saveSelectedWordLists}
       onResetProgress={resetProgress}
       interfaceLanguage={interfaceLanguage}
@@ -639,7 +763,11 @@ export default function App() {
       onContinue={startNormalContinuationPractice}
       onReview={startReviewPractice}
       onChangeLists={() => openWordListsPage('end')}
-      onHome={completedSharedContext ? returnToLearning : () => setScreen('home')}
+      onHome={completedSharedContext ? returnToLearning : completedSupportPractice ? returnToCompletedSupportPracticeOrigin : () => setScreen('home')}
+      contextualReturn={completedSupportPractice ? {
+        label: t('end.backToSpellingBasics'),
+        onClick: returnToCompletedSupportPracticeOrigin
+      } : null}
       sharedSession={completedSharedListName && completedSharedContext ? {
         listName: completedSharedListName,
         hasPriorLearningHistory: completedSharedContext.previousHadMeaningfulLearningHistory
@@ -706,6 +834,7 @@ export default function App() {
       onRecapReview={startRecapPractice}
       onSelectList={() => openWordListsPage('home')}
       onHowSpelioWorks={openHowSpelioWorks}
+      onWelshSpellingBasics={openWelshSpellingBasics}
       onFeedback={() => openPublicPage('feedback', '/feedback')}
       onPrivacy={() => openPublicPage('privacy', '/privacy')}
       onAbout={() => openPublicPage('about', '/about')}

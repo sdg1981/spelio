@@ -76,6 +76,7 @@ export function EndScreen({
   onReview,
   onChangeLists,
   onHome,
+  contextualReturn,
   sharedSession,
   onReturnToLearning,
   onPractiseSharedListAgain,
@@ -91,6 +92,7 @@ export function EndScreen({
   onReview: () => void;
   onChangeLists: () => void;
   onHome: () => void;
+  contextualReturn?: { label: string; onClick: () => void } | null;
   sharedSession?: { listName: string; hasPriorLearningHistory: boolean } | null;
   onReturnToLearning?: () => void;
   onPractiseSharedListAgain?: () => void;
@@ -99,13 +101,16 @@ export function EndScreen({
   t: Translate;
 }) {
   const isSharedSession = Boolean(sharedSession);
-  const shouldPrioritiseReview = !isSharedSession && hasDifficultWords && recommendation.kind === 'review';
-  const shouldChooseAnotherList = !isSharedSession && recommendation.kind === 'choose_list';
+  const isContextualSession = Boolean(contextualReturn);
+  const shouldPrioritiseReview = !isSharedSession && !isContextualSession && hasDifficultWords && recommendation.kind === 'review';
+  const shouldChooseAnotherList = !isSharedSession && !isContextualSession && recommendation.kind === 'choose_list';
   const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
     ? t('end.keepBuilding')
     : recommendation.subtitle;
   const primaryTitle = isSharedSession
     ? sharedSession?.hasPriorLearningHistory ? t('end.returnToYourLearning') : t('end.keepLearning')
+    : isContextualSession
+    ? contextualReturn?.label ?? t('end.backToSpellingBasics')
     : shouldPrioritiseReview
     ? t('home.reviewDifficult')
     : shouldChooseAnotherList
@@ -113,6 +118,8 @@ export function EndScreen({
       : t('home.continueLearning');
   const handlePrimary = isSharedSession
     ? onReturnToLearning ?? onHome
+    : isContextualSession
+    ? contextualReturn?.onClick ?? onHome
     : shouldPrioritiseReview
     ? onReview
     : shouldChooseAnotherList
@@ -146,7 +153,7 @@ export function EndScreen({
               <h2>{t('wordLists.sharedWordList')}</h2>
               <p>{sharedSession?.listName}</p>
             </>
-          ) : !shouldPrioritiseReview && (
+          ) : !isContextualSession && !shouldPrioritiseReview && (
             <>
               <h2>{t('end.nextUp')}</h2>
               <p>{recommendedListName}</p>
@@ -181,12 +188,14 @@ export function EndScreen({
               onClick={onContinue}
             />
           )}
-          <ActionRow
-            icon={secondaryActionIcon}
-            title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
-            arrowVariant="arrow"
-            onClick={shouldChooseAnotherList ? onHome : onChangeLists}
-          />
+          {!isContextualSession && (
+            <ActionRow
+              icon={secondaryActionIcon}
+              title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
+              arrowVariant="arrow"
+              onClick={shouldChooseAnotherList ? onHome : onChangeLists}
+            />
+          )}
         </div>
 
         <Footer interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />

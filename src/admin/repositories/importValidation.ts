@@ -6,6 +6,7 @@ const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standar
 const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'ready', 'failed']);
 const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
 const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
+const validListTypes = new Set(['main', 'support']);
 
 export interface ImportValidationContext {
   existingCollectionIds?: string[];
@@ -107,6 +108,8 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     if (list.difficulty !== undefined && !validDifficulty(list.difficulty)) errors.push(`List ${listLabel} has invalid difficulty.`);
     if (list.order !== undefined && !validOrder(list.order)) errors.push(`List ${listLabel} has invalid order.`);
     if (list.isActive !== undefined && typeof list.isActive !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
+    if (list.hiddenFromMainCatalogue !== undefined && typeof list.hiddenFromMainCatalogue !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
+    if (stringValue(list.listType) && !validListTypes.has(stringValue(list.listType))) errors.push(`List ${listLabel} has invalid listType "${stringValue(list.listType)}".`);
     if (!validLanguage(sourceLanguage)) errors.push(`List ${listLabel} has malformed sourceLanguage "${sourceLanguage}".`);
     if (!validLanguage(targetLanguage)) errors.push(`List ${listLabel} has malformed targetLanguage "${targetLanguage}".`);
     if (!validLanguage(language)) warnings.push(`List ${listLabel} has unusual language "${language}".`);
@@ -149,6 +152,9 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       order: numberValue(list.order, listIndex + 1),
       nextListId: nextListId || null,
       isActive: typeof list.isActive === 'boolean' ? list.isActive : true,
+      isSupportList: stringValue(list.listType) === 'support' || list.isSupportList === true || list.hiddenFromMainCatalogue === true,
+      listType: stringValue(list.listType) === 'support' || list.isSupportList === true ? 'support' : 'main',
+      hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || stringValue(list.listType) === 'support' || list.isSupportList === true,
       createdAt: now,
       updatedAt: now,
       words: []

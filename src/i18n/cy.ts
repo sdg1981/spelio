@@ -137,11 +137,60 @@ export const cy = {
       practiceTestSharing: {
         title: 'Rhannu profion ymarfer',
         body: 'Crëwch ddolenni prawf ymarfer sy’n cuddio promptiau Saesneg ac offer datgelu ar gyfer gwiriadau sillafu ysgafn yn y dosbarth neu fel gwaith cartref.'
+      },
+      welshSpellingBasics: {
+        title: 'Hanfodion sillafu Cymraeg',
+        body: 'Archwiliwch esboniadau syml o seiniau Cymraeg, acenion, a phatrymau sillafu cyffredin pryd bynnag y bydd eu hangen arnoch.'
       }
     }
   },
   publicPages: {
     backLabel: 'Mynd yn ôl'
+  },
+  spellingBasics: {
+    menuLabel: 'Hanfodion sillafu Cymraeg',
+    overview: {
+      title: 'Hanfodion sillafu Cymraeg',
+      intro: 'Awgrymiadau syml i’ch helpu i ddeall sut mae sillafu Cymraeg yn gweithio. Dewiswch unrhyw bwnc isod.',
+      startHeading: 'Dechrau yma',
+      soundsHeading: 'Seiniau Cymraeg',
+      accentsHeading: 'Acenion',
+      mostlyPhonetic: 'Mae Cymraeg yn weddol ffonetig',
+      looksDifferent: 'Pam mae Cymraeg yn edrych yn wahanol i Saesneg',
+      howSpelioHelps: 'Sut mae Spelio yn eich helpu i ymarfer',
+      accentsTitle: 'Acenion a llafariaid hir',
+      accentsBody: 'Pam mae’r marciau bach yn bwysig',
+      accentsCount: '3 cerdyn cyflym',
+      openDdAria: 'Agor pwnc hanfodion sillafu dd',
+      topicComingSoonAria: 'pwnc hanfodion sillafu yn dod yn fuan'
+    },
+    topic: {
+      examplesHeading: 'Gwrando ar enghreifftiau',
+      audioUnavailable: 'Sain yn dod yn fuan',
+      tipLabel: 'Awgrym:',
+      practicePattern: 'Ymarfer y patrwm hwn',
+      previousCard: 'Blaenorol',
+      nextCard: 'Nesaf',
+      seriesStatus: 'Cerdyn'
+    },
+    dd: {
+      subtitle: 'Sain feddal, dyner',
+      body1BeforeDd: 'Mae’r llythrennau',
+      body1AfterDdBeforeThis: 'yn gwneud sain “th” feddal, fel y th yn y gair Saesneg',
+      body1AfterThis: '.',
+      body2: 'Mae’n un o’r seiniau mwyaf cyffredin yn Gymraeg ac mae’n ymddangos mewn llawer o eiriau bob dydd.',
+      examplesHeading: 'Gwrando ar enghreifftiau',
+      day: 'dydd',
+      today: 'heddiw',
+      mountain: 'mynydd',
+      audioUnavailable: 'Sain yn dod yn fuan',
+      tipLabel: 'Awgrym:',
+      tipBeforeDd: 'Pan welwch',
+      tipAfterDdBeforeThis: 'mewn gair, meddyliwch am y sain “th” yn y gair Saesneg',
+      tipAfterThis: '.',
+      practicePattern: 'Ymarfer y patrwm hwn'
+    },
+    comingSoon: 'Yn dod yn fuan'
   },
   practice: {
     backToHome: 'Yn ol i’r hafan',
@@ -314,6 +363,7 @@ export const cy = {
     pickUpWhereLeftOff: 'Parhau o ble wnaethoch chi stopio',
     practiseMixAgain: 'Ymarfer y rhestr hon eto',
     practiseThisListAgain: 'Ymarfer y rhestr hon eto',
+    backToSpellingBasics: 'Yn ôl i hanfodion sillafu',
     keepLearning: 'Dal ati i ddysgu',
     returnToYourLearning: 'Dychwelyd at eich dysgu',
     repeatSelectedLists: 'Ailadrodd eich rhestr ddewisol',

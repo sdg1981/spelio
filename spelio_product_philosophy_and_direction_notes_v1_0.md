@@ -156,6 +156,7 @@ The product should feel:
 Spelio prioritises:
 - active practice
 - recall
+- attentive listening
 - repetition
 - reinforcement
 - spelling confidence
@@ -177,6 +178,55 @@ The central learner problem is often:
 > “I know this word when I hear it, but I cannot confidently spell it.”
 
 Spelio exists to reduce that gap.
+
+## 5.1 Assisted Listening
+
+Spelio should increasingly help learners hear Welsh more clearly before encouraging full visual exposure of the answer.
+
+The core loop remains:
+
+> hear → recall → spell
+
+Assisted listening is a quiet support layer around that loop. It should help learners stay with the sound of the word for a little longer, decode what they are hearing, and build confidence before using Reveal.
+
+The ideal support hierarchy becomes:
+
+1. Replay
+2. Assisted replay
+3. Reveal
+
+rather than:
+
+1. Replay
+2. Immediate reveal
+
+This does not mean adding visible complexity. Simplicity does not require the replay system to be unsophisticated. Replay may become more intelligent underneath while still feeling like one calm, natural control on the surface.
+
+Assisted listening should feel:
+
+- calm
+- natural
+- lightweight
+- supportive
+- intelligent
+
+It should avoid feeling:
+
+- robotic
+- phonics-heavy
+- classroom-like
+- tutorial-driven
+- over-explanatory
+
+The learner should feel:
+
+> "Oh, I can hear it now."
+
+not:
+
+> "The app is teaching me phonics."
+
+Reveal should remain available. The goal is not to punish uncertainty, but to make listening support more useful so Reveal does not become the default easiest escape route.
 
 ---
 

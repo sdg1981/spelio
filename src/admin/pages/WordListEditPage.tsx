@@ -323,8 +323,22 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               }}>{focusCategories.map(focus => <option key={focus.id} value={focus.id}>{focus.name}</option>)}</AdminSelect></Field>
               <Field label="Dialect"><AdminSelect value={list.dialect} onChange={event => updateList({ dialect: event.target.value as AdminWordList['dialect'] })}><option>Mixed</option><option>Both</option><option>North Wales</option><option>South Wales / Standard</option><option>Standard</option><option>Other</option></AdminSelect></Field>
               <Field label="Difficulty"><AdminSelect value={list.difficulty} onChange={event => updateList({ difficulty: Number(event.target.value) as AdminWordList['difficulty'] })}><option value={1}>1 - Beginner</option><option value={2}>2 - Easy</option><option value={3}>3 - Developing</option><option value={4}>4 - Challenging</option><option value={5}>5 - Advanced</option></AdminSelect></Field>
+              <Field label="List type" helper="Support lists are hidden from learner catalogue/progression but remain available for contextual practice and audio maintenance."><AdminSelect value={list.listType ?? 'main'} onChange={event => {
+                const listType = event.target.value as AdminWordList['listType'];
+                updateList({
+                  listType,
+                  isSupportList: listType === 'support',
+                  hiddenFromMainCatalogue: listType === 'support' ? true : list.hiddenFromMainCatalogue
+                });
+              }}><option value="main">Main progression list</option><option value="support">Hidden support list</option></AdminSelect></Field>
               <Field label="Order"><AdminInput type="number" value={list.order} onChange={event => updateList({ order: Number(event.target.value) })} /></Field>
               <Field label="Next list"><AdminSelect value={list.nextListId ?? ''} onChange={event => updateList({ nextListId: event.target.value || null })}><option value="">None</option>{wordLists.map(next => <option key={next.id} value={next.id}>{next.name}</option>)}</AdminSelect></Field>
+              <Field label="Catalogue visibility" helper="Keep support lists hidden from public word-list selection.">
+                <label className="flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700">
+                  <input type="checkbox" checked={list.hiddenFromMainCatalogue === true} onChange={event => updateList({ hiddenFromMainCatalogue: event.target.checked })} />
+                  Hidden from main catalogue
+                </label>
+              </Field>
             </div>
             <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">

@@ -34,6 +34,8 @@ type WordListRow = {
   order_index: number;
   next_list_id: string | null;
   is_active: boolean;
+  list_type?: string | null;
+  hidden_from_main_catalogue?: boolean | null;
   created_at: string;
   updated_at: string;
   stages?: { name: string } | null;
@@ -474,6 +476,9 @@ function mapWordListRow(row: WordListRow): AdminWordList {
     order: row.order_index,
     nextListId: row.next_list_id,
     isActive: row.is_active,
+    isSupportList: row.list_type === 'support' || row.hidden_from_main_catalogue === true || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
+    listType: row.list_type === 'support' ? 'support' : 'main',
+    hiddenFromMainCatalogue: row.hidden_from_main_catalogue === true || row.list_type === 'support' || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     words
@@ -521,7 +526,9 @@ function toWordListRow(list: AdminWordList) {
     difficulty: list.difficulty,
     order_index: list.order,
     next_list_id: list.nextListId,
-    is_active: list.isActive
+    is_active: list.isActive,
+    list_type: list.listType ?? (list.isSupportList ? 'support' : 'main'),
+    hidden_from_main_catalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support'
   };
 }
 

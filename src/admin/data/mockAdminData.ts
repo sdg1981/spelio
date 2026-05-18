@@ -1,4 +1,5 @@
-import dataset from '../../data/spelio_welsh_35_list_dataset_dialect_v1_1.json';
+import { wordLists } from '../../data/wordLists';
+import { supportWordListCollection } from '../../data/supportWordLists';
 import type { AdminDialect, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 
@@ -38,10 +39,13 @@ type RawList = {
   order: number;
   nextListId?: string | null;
   isActive: boolean;
+  isSupportList?: boolean;
+  listType?: 'main' | 'support';
+  hiddenFromMainCatalogue?: boolean;
   words: RawWord[];
 };
 
-const rawLists = dataset.lists as RawList[];
+const rawLists = wordLists as unknown as RawList[];
 const baseCreatedAt = '2025-05-12';
 const baseUpdatedAt = '2025-05-19';
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -61,6 +65,14 @@ export const adminWordListCollections: AdminWordListCollection[] = [
     ownerId: null,
     order: 1,
     isActive: true,
+    createdAt: baseCreatedAt,
+    updatedAt: baseUpdatedAt
+  },
+  {
+    ...supportWordListCollection,
+    curriculumKeyStage: supportWordListCollection.curriculumKeyStage ?? null,
+    curriculumArea: supportWordListCollection.curriculumArea ?? null,
+    ownerId: supportWordListCollection.ownerId ?? null,
     createdAt: baseCreatedAt,
     updatedAt: baseUpdatedAt
   }
@@ -90,6 +102,9 @@ export const adminWordLists: AdminWordList[] = rawLists
     order: list.order,
     nextListId: list.nextListId ?? null,
     isActive: list.isActive,
+    isSupportList: list.isSupportList === true || list.listType === 'support' || list.hiddenFromMainCatalogue === true,
+    listType: list.listType ?? (list.isSupportList ? 'support' : 'main'),
+    hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support',
     createdAt: baseCreatedAt,
     updatedAt: baseUpdatedAt,
     words: [...list.words]

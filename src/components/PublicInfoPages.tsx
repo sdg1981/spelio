@@ -7,6 +7,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 
 type PublicPageShellProps = {
   children: ReactNode;
+  contentClassName?: string;
   interfaceLanguage: InterfaceLanguage;
   onBack: () => void;
   onHome: () => void;
@@ -15,8 +16,9 @@ type PublicPageShellProps = {
   t: Translate;
 };
 
-function PublicPageShell({
+export function PublicPageShell({
   children,
+  contentClassName = '',
   interfaceLanguage,
   onBack,
   onHome,
@@ -42,7 +44,7 @@ function PublicPageShell({
         <Logo onClick={onHome} backHomeLabel={t('how.backHomeLabel')} />
       </div>
 
-      <section className="public-info-content" aria-labelledby={titleId}>
+      <section className={['public-info-content', contentClassName].filter(Boolean).join(' ')} aria-labelledby={titleId}>
         {children}
       </section>
 

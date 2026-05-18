@@ -19,6 +19,8 @@ The core product loop is:
 
 The MVP should prove that the core practice loop is satisfying, clear, useful, and repeatable.
 
+The long-term product direction is to preserve the hear → recall → spell loop by making replay increasingly useful before learners rely on Reveal. This should remain audio-first and subtle; it is not an instruction to redesign the MVP into a phonics engine or tutorial system.
+
 ## 2. Product positioning
 
 Spelio should be positioned as:
@@ -350,6 +352,13 @@ Behaviour:
 - If subtitles are off, the pill may show only the speaker icon, but still remains tappable.
 - If audio is unavailable, tapping the pill should show a subtle temporary status message: “Audio unavailable”.
 
+Future direction:
+
+- Replay may evolve into assisted replay over time.
+- Any assisted replay behaviour should remain subtle, audio-first, and visually simple.
+- Repeated replay interactions may later trigger quieter, more helpful audio treatment underneath, such as slightly clearer pacing or separation where audio quality supports it.
+- Do not add visible replay modes, phonics controls, pronunciation drills, or tutorial-heavy explanation to the MVP.
+
 Recall pause:
 
 - Optional learning mode controlled from Settings.
@@ -418,6 +427,8 @@ Reveal supports two interactions:
 
 - Tap/click: reveal the next missing letter.
 - Press and hold: briefly peek at the full answer, mark the word as revealed/difficult, then return to memory practice.
+
+Reveal should remain available, but it should not become the dominant learner strategy. Future behaviour may gently make Replay and assisted replay feel more useful before Reveal, without adding forced listening gates, modal warnings, penalties, or friction-heavy anti-reveal mechanics.
 
 Bottom strip should be subtle:
 
@@ -2052,6 +2063,8 @@ This is not legal advice, but the product should be designed conservatively for 
 
 ## 18. Audio handling
 
+Audio is part of the core learning loop, not a decorative prompt. Spelio should help learners listen, recall, and spell before moving toward visual answer exposure.
+
 ### 18.1 Public app
 
 If audio exists:
@@ -2059,6 +2072,13 @@ If audio exists:
 - Load quickly.
 - Replay from word pill.
 - Respect audio prompts setting.
+
+Future-capable replay guidance:
+
+- Replay may later become assisted replay during repeated use on the same word.
+- Assistance should remain natural and lightweight, such as subtle slowing, chunk emphasis, small pauses, or clearer rhythmic separation where technically practical.
+- Preserve natural Welsh rhythm and avoid robotic slowed-down teaching audio.
+- Do not expose complex replay controls in the MVP learner interface.
 
 If audio is missing:
 
@@ -2092,6 +2112,8 @@ On tap/click:
 - Scale 0.98 briefly.
 - Play audio immediately.
 - No unnecessary status message unless audio fails.
+
+Repeated taps may later become a quiet signal that the learner needs assisted listening. Any escalation should happen underneath the interface and should not make the word pill feel like a phonics tool.
 
 ### 19.2 Post-answer notes display
 
@@ -2353,6 +2375,13 @@ The MVP should not become a full Welsh phonetics or pronunciation system.
 - Peek marks the word as revealed/difficult.
 - Peek should end automatically after a short delay and show a subtle “Now try from memory” status.
 - Peek should be available once per word; repeat attempts may show “Peek used”.
+
+Future reveal guidance:
+
+- Reveal should stay user-controlled and available.
+- Reveal should not become the app's main answer to uncertainty.
+- Future versions may add tiny inline replay encouragement before or after repeated reveal usage.
+- Avoid modal warnings, punitive reveal limits, mandatory replay sequences, or classroom-feeling anti-reveal messaging.
 
 ### 19.6 Word completion
 

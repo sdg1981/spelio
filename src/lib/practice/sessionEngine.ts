@@ -1,4 +1,5 @@
 import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
+import { isSupportWordList, mainWordLists } from '../../data/supportWordLists';
 import type { MixedWelshExposure, SessionResult, SessionState, SpelioStorage } from './storage';
 import { countUnseenLearningItems, groupLearningItems, learningItemKey } from './learningItems';
 import { normalizeSingleSelectedListIds } from './wordListSelection';
@@ -309,11 +310,19 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
 }
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
-  const selectedIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
   const recapOnly = includeRecapDue && !reviewDifficult;
+  const reviewLists = mainWordLists(lists);
+  const activeListIds = new Set(lists.filter(list => list.isActive).map(list => list.id));
+  const selectedSupportListId = storage.selectedListIds.find(id => {
+    const list = lists.find(item => item.id === id && activeListIds.has(id));
+    return list ? isSupportWordList(list) : false;
+  });
+  const normalSelectedIds = selectedSupportListId
+    ? [selectedSupportListId]
+    : normalizeSingleSelectedListIds(storage.selectedListIds, reviewLists);
   const eligibleLists = reviewDifficult || recapOnly
-    ? lists.filter(list => list.isActive)
-    : lists.filter(list => selectedIds.includes(list.id) && list.isActive);
+    ? reviewLists.filter(list => list.isActive)
+    : lists.filter(list => normalSelectedIds.includes(list.id) && list.isActive);
   const allCandidates = eligibleLists.flatMap(list => list.words);
   const dialectResolvedCandidates = filterDialectVariants(
     allCandidates,
@@ -346,7 +355,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 }
 
 export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
-  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
   return getRecapCandidates(activeWords, storage).length;
 }
 
@@ -356,7 +365,7 @@ export function formatRecapWordCount(count: number) {
 }
 
 export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
-  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
   return getDifficultCandidates(activeWords, storage).length;
 }
 
@@ -394,7 +403,7 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
   const sessionLearningItemKeys = new Set(sessionWords.map(learningItemKey));
   const recentlyResolvedReviewWordIds = new Set(storage.recentlyResolvedReviewWordIds ?? []);
-  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
   const candidates = getRecapCandidates(activeWords, storage)
     .filter(word => {
       if (recentlyResolvedReviewWordIds.has(word.id)) return false;
@@ -418,6 +427,6 @@ export function classifySession(base: Pick<SessionResult, 'correctWords' | 'tota
 export function hasDifficultWords(storage: SpelioStorage, lists?: WordList[]) {
   if (!lists) return Object.values(storage.wordProgress).some(progress => progress.difficult === true);
 
-  const activeWords = lists.filter(list => list.isActive).flatMap(list => list.words);
+  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
   return getDifficultCandidates(activeWords, storage).length > 0;
 }

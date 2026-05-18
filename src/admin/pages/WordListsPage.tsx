@@ -64,6 +64,9 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
       order: wordLists.length + 1,
       nextListId: null,
       isActive: false,
+      isSupportList: false,
+      listType: 'main',
+      hiddenFromMainCatalogue: false,
       createdAt: now,
       updatedAt: now,
       words: []
@@ -99,21 +102,22 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b border-slate-200 text-xs font-medium text-slate-500">
               <tr>
-                {['Name', 'Collection', 'Stage', 'Focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
+                {['Name', 'Type', 'Collection', 'Stage', 'Focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading && (
-                <tr><td colSpan={9} className="px-5 py-10 text-center text-slate-500">Loading word lists...</td></tr>
+                <tr><td colSpan={10} className="px-5 py-10 text-center text-slate-500">Loading word lists...</td></tr>
               )}
               {!loading && lists.length === 0 && (
-                <tr><td colSpan={9} className="px-5 py-10 text-center text-slate-500">No word lists found.</td></tr>
+                <tr><td colSpan={10} className="px-5 py-10 text-center text-slate-500">No word lists found.</td></tr>
               )}
               {lists.map(list => {
                 const audio = getAudioHealth(list);
                 return (
                   <tr key={list.id} className="cursor-pointer hover:bg-slate-50" onClick={() => navigate(`/admin/word-lists/${list.id}`)}>
                     <td className="px-5 py-4 font-bold text-slate-950">{list.name}</td>
+                    <td className="px-5 py-4"><StatusPill tone={list.listType === 'support' || list.isSupportList ? 'amber' : 'slate'}>{list.listType === 'support' || list.isSupportList ? 'Support list' : 'Main list'}</StatusPill></td>
                     <td className="px-5 py-4 text-slate-600">{list.collectionName}</td>
                     <td className="px-5 py-4 text-slate-600">{list.stage}</td>
                     <td className="px-5 py-4 text-slate-600">{list.focus}</td>

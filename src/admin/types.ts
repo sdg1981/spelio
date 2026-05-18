@@ -65,6 +65,9 @@ export interface AdminWordList {
   order: number;
   nextListId: string | null;
   isActive: boolean;
+  isSupportList?: boolean;
+  listType?: 'main' | 'support';
+  hiddenFromMainCatalogue?: boolean;
   createdAt: string;
   updatedAt: string;
   words: AdminWord[];

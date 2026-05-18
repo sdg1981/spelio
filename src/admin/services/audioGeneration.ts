@@ -98,6 +98,9 @@ function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload |
 }
 
 export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {
+  if (word.listId.startsWith('support_')) {
+    return `cy/support/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
+  }
   return `cy/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
 }
 
