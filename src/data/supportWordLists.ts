@@ -125,19 +125,43 @@ const supportListSeeds: SupportListSeed[] = [
     ]
   },
   {
-    id: 'support_wy',
-    name: 'Support: w and y as vowels',
-    nameCy: 'Cymorth: w ac y fel llafariaid',
-    description: 'Focused support practice for Welsh w and y vowel patterns.',
-    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer patrymau llafariad w ac y.',
+    id: 'support_w',
+    name: 'Support: w as a vowel',
+    nameCy: 'Cymorth: w fel llafariad',
+    description: 'Focused support practice for Welsh w as a vowel.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer w fel llafariad Gymraeg.',
     focus: 'Welsh spelling basics',
     words: [
       { englishPrompt: 'water', welshAnswer: 'dŵr' },
-      { englishPrompt: 'egg', welshAnswer: 'wy' },
+      { englishPrompt: 'valley', welshAnswer: 'cwm' },
       { englishPrompt: 'living', welshAnswer: 'byw' },
-      { englishPrompt: 'white', welshAnswer: 'gwyn' },
-      { englishPrompt: 'to eat', welshAnswer: 'bwyta' },
-      { englishPrompt: 'more', welshAnswer: 'mwy' }
+      { englishPrompt: 'table', welshAnswer: 'bwrdd' },
+      { englishPrompt: 'tower', welshAnswer: 'twr' },
+      { englishPrompt: 'meet', welshAnswer: 'cwrdd' },
+      { englishPrompt: 'sound', welshAnswer: 'sŵn' },
+      { englishPrompt: 'grandson / knows', welshAnswer: 'ŵyr' },
+      { englishPrompt: 'man / husband', welshAnswer: 'gwr' },
+      { englishPrompt: 'luck', welshAnswer: 'lwc' }
+    ]
+  },
+  {
+    id: 'support_y',
+    name: 'Support: y as a vowel',
+    nameCy: 'Cymorth: y fel llafariad',
+    description: 'Focused support practice for Welsh y as a vowel.',
+    descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer y fel llafariad Gymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'house', welshAnswer: 'tŷ' },
+      { englishPrompt: 'day', welshAnswer: 'dydd' },
+      { englishPrompt: 'today', welshAnswer: 'heddiw' },
+      { englishPrompt: 'mountain', welshAnswer: 'mynydd' },
+      { englishPrompt: 'book', welshAnswer: 'llyfr' },
+      { englishPrompt: 'school', welshAnswer: 'ysgol' },
+      { englishPrompt: 'drink', welshAnswer: 'yfed' },
+      { englishPrompt: 'island', welshAnswer: 'ynys' },
+      { englishPrompt: 'fish', welshAnswer: 'pysgod' },
+      { englishPrompt: 'weather', welshAnswer: 'tywydd' }
     ]
   },
   {

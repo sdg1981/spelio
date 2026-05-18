@@ -160,7 +160,7 @@ export const cy = {
       howSpelioHelps: 'Sut mae Spelio yn eich helpu i ymarfer',
       accentsTitle: 'Acenion a llafariaid hir',
       accentsBody: 'Pam mae’r marciau bach yn bwysig',
-      accentsCount: '3 cerdyn cyflym',
+      accentsCount: '2 gerdyn cyflym',
       openDdAria: 'Agor pwnc hanfodion sillafu dd',
       topicComingSoonAria: 'pwnc hanfodion sillafu yn dod yn fuan'
     },

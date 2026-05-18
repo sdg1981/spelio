@@ -15,7 +15,7 @@ export const spellingBasicsCategories: SpellingBasicsCategory[] = [
       en: 'Welsh sounds',
       cy: 'Seiniau Cymraeg'
     },
-    topicSlugs: ['ff', 'dd', 'll', 'wy', 'ch', 'rh']
+    topicSlugs: ['ff', 'dd', 'll', 'w', 'y', 'ch', 'rh']
   },
   {
     id: 'accents',
@@ -338,36 +338,78 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
     }
   },
   {
-    slug: 'wy',
+    slug: 'w',
     categoryId: 'sounds',
     kind: 'single',
-    symbol: 'wy',
-    practiceListId: 'support_wy',
-    overviewTitle: { en: 'wy', cy: 'wy' },
+    symbol: 'w',
+    practiceListId: 'support_w',
+    overviewTitle: { en: 'w', cy: 'w' },
     card: {
       subtitle: {
-        en: 'W and Y often sound like vowels.',
-        cy: 'Mae W ac Y yn aml yn swnio fel llafariaid.'
+        en: 'W can sound like a vowel.',
+        cy: 'Gall W swnio fel llafariad.'
       },
       body: [
         {
-          en: 'In Welsh, w and y often work as vowels. This is one reason Welsh words can look surprising if you are reading them through English habits.',
-          cy: 'Yn Gymraeg, mae w ac y yn aml yn gweithio fel llafariaid. Dyma un rheswm pam gall geiriau Cymraeg edrych yn annisgwyl os ydych yn eu darllen drwy arferion Saesneg.'
+          en: 'In Welsh, w is often used as a vowel sound.',
+          cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad.'
         },
         {
-          en: 'Once you notice this, words like dŵr, tŷ, byw, and gwyn start to make more sense.',
-          cy: 'Unwaith rydych yn sylwi ar hyn, mae geiriau fel dŵr, tŷ, byw, a gwyn yn dechrau gwneud mwy o synnwyr.'
+          en: 'This is one reason Welsh words can look surprising if you are reading them through English habits.',
+          cy: 'Dyma un rheswm pam gall geiriau Cymraeg edrych yn annisgwyl os ydych yn eu darllen drwy arferion Saesneg.'
+        },
+        {
+          en: 'Once you recognise w as a vowel, words like dŵr, cwm, byw, and bwrdd start to make more sense.',
+          cy: 'Unwaith rydych chi’n adnabod w fel llafariad, mae geiriau fel dŵr, cwm, byw, a bwrdd yn dechrau gwneud mwy o synnwyr.'
         }
       ],
       tip: {
-        en: 'Do not assume w and y are always consonants in Welsh.',
-        cy: 'Peidiwch â chymryd yn ganiataol fod w ac y bob amser yn gytseiniaid yn Gymraeg.'
+        en: 'Do not assume w is always a consonant in Welsh.',
+        cy: 'Peidiwch â chymryd yn ganiataol fod w bob amser yn gytsain yn Gymraeg.'
       },
       examples: [
         { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } },
-        { welsh: 'wy', meaning: { en: 'egg', cy: 'wy' } },
+        { welsh: 'cwm', meaning: { en: 'valley', cy: 'cwm' } },
         { welsh: 'byw', meaning: { en: 'living', cy: 'byw' } },
-        { welsh: 'gwyn', meaning: { en: 'white', cy: 'gwyn' } }
+        { welsh: 'bwrdd', meaning: { en: 'table', cy: 'bwrdd' } }
+      ]
+    }
+  },
+  {
+    slug: 'y',
+    categoryId: 'sounds',
+    kind: 'single',
+    symbol: 'y',
+    practiceListId: 'support_y',
+    overviewTitle: { en: 'y', cy: 'y' },
+    card: {
+      subtitle: {
+        en: 'Y can sound like a vowel.',
+        cy: 'Gall Y swnio fel llafariad.'
+      },
+      body: [
+        {
+          en: 'Welsh y often works as a vowel, but its sound can change depending on where it appears in the word.',
+          cy: 'Mae y Gymraeg yn aml yn gweithio fel llafariad, ond gall ei sain newid yn ôl ble mae’n ymddangos yn y gair.'
+        },
+        {
+          en: 'That can feel unfamiliar at first, because English readers often expect y to behave differently.',
+          cy: 'Gall hynny deimlo’n anghyfarwydd ar y dechrau, oherwydd mae darllenwyr Saesneg yn aml yn disgwyl i y ymddwyn yn wahanol.'
+        },
+        {
+          en: 'Once you notice y in words like tŷ, dydd, mynydd, and llyfr, Welsh spelling starts to feel more predictable.',
+          cy: 'Unwaith rydych chi’n sylwi ar y mewn geiriau fel tŷ, dydd, mynydd, a llyfr, mae sillafu Cymraeg yn dechrau teimlo’n fwy rhagweladwy.'
+        }
+      ],
+      tip: {
+        en: 'Welsh y is worth noticing carefully because it appears in many common words.',
+        cy: 'Mae y Gymraeg yn werth sylwi arni’n ofalus oherwydd mae’n ymddangos mewn llawer o eiriau cyffredin.'
+      },
+      examples: [
+        { welsh: 'tŷ', meaning: { en: 'house', cy: 'tŷ' } },
+        { welsh: 'dydd', meaning: { en: 'day', cy: 'dydd' } },
+        { welsh: 'mynydd', meaning: { en: 'mountain', cy: 'mynydd' } },
+        { welsh: 'llyfr', meaning: { en: 'book', cy: 'llyfr' } }
       ]
     }
   },

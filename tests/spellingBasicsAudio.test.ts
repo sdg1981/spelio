@@ -1,6 +1,6 @@
 import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { createSupportWordLists } from '../src/data/supportWordLists';
-import { spellingBasicsTopics } from '../src/content/spellingBasics/topics';
+import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, spellingBasicsCategories, spellingBasicsTopics } from '../src/content/spellingBasics';
 import { createSupportPracticeRoute, handleSpellingBasicsExampleAudioClick, resolveSpellingBasicsExampleAudio } from '../src/lib/spellingBasicsAudio';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -98,6 +98,16 @@ assertEqual(
   '/practice?supportListId=support_ff&returnTo=%2Fspelling-basics%2Fff',
   'Practise this pattern should have a stable support-practice route target.'
 );
+assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/w'), 'w', 'W as a vowel should have a spelling basics route.');
+assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/y'), 'y', 'Y as a vowel should have a spelling basics route.');
+assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/wy'), 'w', 'The old wy route should resolve to the W topic for compatibility.');
+const soundCategory = spellingBasicsCategories.find(category => category.id === 'sounds');
+assert(soundCategory, 'Spelling basics should have a Welsh sounds category.');
+assertEqual(soundCategory.topicSlugs.includes('w'), true, 'Overview should include a separate w tile.');
+assertEqual(soundCategory.topicSlugs.includes('y'), true, 'Overview should include a separate y tile.');
+assertEqual(soundCategory.topicSlugs.includes('wy' as never), false, 'Overview should not show the retired combined wy tile.');
+assertEqual(getSpellingBasicsTopic('w')?.practiceListId, 'support_w', 'W topic should launch support_w practice.');
+assertEqual(getSpellingBasicsTopic('y')?.practiceListId, 'support_y', 'Y topic should launch support_y practice.');
 
 const accentsTopic = spellingBasicsTopics.find(topic => topic.slug === 'accents');
 assert(accentsTopic && accentsTopic.kind === 'series', 'Accents topic should be a series topic.');

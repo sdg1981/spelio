@@ -105,6 +105,17 @@ assertEqual(supportFfrwyth.audioStatus, 'missing', 'Support-list ffrwyth should 
 const supportAfal = adminWords.find(word => word.id === 'support_spelling_basics_examples_001');
 assertEqual(supportAfal?.welshAnswer, 'afal', 'Admin content should include phonetic support example afal.');
 assertEqual(supportAfal?.audioStatus, 'missing', 'Phonetic support example afal should be visible as missing audio until generated.');
+const supportCwm = adminWords.find(word => word.id === 'support_w_002');
+assertEqual(supportCwm?.welshAnswer, 'cwm', 'Admin content should include split support W word cwm.');
+assertEqual(supportCwm?.audioStatus, 'missing', 'Split support W words should be visible as missing audio until generated.');
+const supportTywydd = adminWords.find(word => word.id === 'support_y_010');
+assertEqual(supportTywydd?.welshAnswer, 'tywydd', 'Admin content should include split support Y word tywydd.');
+assertEqual(supportTywydd?.audioStatus, 'missing', 'Split support Y words should be visible as missing audio until generated.');
+assertEqual(
+  adminWords.some(word => word.id.startsWith('support_wy_')),
+  false,
+  'Retired support_wy words should not remain in active static admin support content.'
+);
 assertEqual(
   adminWords.some(word => word.id.startsWith('support_spelling_basics_examples') && word.welshAnswer === 'ddwy'),
   false,
@@ -119,6 +130,16 @@ assertEqual(
   createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_spelling_basics_examples_001' && word.audioStatus === 'missing'),
   true,
   'The admin audio queue snapshot should include missing spelling-basics support example words.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_w_002' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing split support W words.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_y_010' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing split support Y words.'
 );
 
 console.log('admin audio queue bulk tests passed');

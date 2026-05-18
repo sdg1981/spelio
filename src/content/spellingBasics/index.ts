@@ -18,6 +18,7 @@ export type {
 } from './types';
 
 export function getSpellingBasicsTopic(slug: string | null | undefined) {
+  if (slug === 'wy') return getSpellingBasicsTopic('w');
   return spellingBasicsTopics.find(topic => topic.slug === slug) ?? null;
 }
 
@@ -28,5 +29,6 @@ export function isSpellingBasicsTopicSlug(value: string | null | undefined): val
 export function getSpellingBasicsTopicSlugFromPath(pathname: string) {
   const match = pathname.match(/^\/spelling-basics\/([^/]+)$/);
   if (!match) return null;
+  if (match[1] === 'wy') return 'w';
   return isSpellingBasicsTopicSlug(match[1]) ? match[1] : null;
 }

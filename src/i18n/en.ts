@@ -160,7 +160,7 @@ export const en = {
       howSpelioHelps: 'How Spelio helps you practise',
       accentsTitle: 'Accents and long vowels',
       accentsBody: 'Why the little marks matter',
-      accentsCount: '3 quick cards',
+      accentsCount: '2 quick cards',
       openDdAria: 'Open the Welsh dd spelling basics topic',
       topicComingSoonAria: 'spelling basics topic coming soon'
     },

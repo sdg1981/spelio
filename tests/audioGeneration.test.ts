@@ -100,6 +100,16 @@ assertEqual(
   'Support-list audio should be stored under a support-list-specific path.'
 );
 assertEqual(
+  createAudioStoragePath({ listId: 'support_w', id: 'support_w_001' }),
+  'cy/support/support-w/support-w-001.mp3',
+  'Split support W audio should use the support-w storage path.'
+);
+assertEqual(
+  createAudioStoragePath({ listId: 'support_y', id: 'support_y_001' }),
+  'cy/support/support-y/support-y-001.mp3',
+  'Split support Y audio should use the support-y storage path.'
+);
+assertEqual(
   createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
   'cy/foundations-first-words/foundations-first-words-001.mp3',
   'Normal list audio should keep the existing list-scoped path.'

@@ -245,6 +245,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (window.location.pathname === '/spelling-basics/wy') {
+      window.history.replaceState({ spelioPublicPage: true }, '', '/spelling-basics/w');
+      setScreen('spelling-basics-topic');
+    }
+  }, []);
+
+  useEffect(() => {
     function handlePopState() {
       setWordListReturnScreen(null);
       setScreen(getInitialPublicScreen());

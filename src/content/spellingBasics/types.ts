@@ -13,7 +13,8 @@ export type SpellingBasicsTopicSlug =
   | 'll'
   | 'ch'
   | 'rh'
-  | 'wy'
+  | 'w'
+  | 'y'
   | 'accents';
 
 export type SpellingBasicsIconKey = 'ear' | 'book' | 'lightbulb';

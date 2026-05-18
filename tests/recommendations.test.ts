@@ -594,10 +594,15 @@ test('completing foundations_numbers cleanly recommends foundations_mixed_01', (
 
 test('support-only lists are present but hidden from the main word-list catalogue', () => {
   const support = findSupportWordList(wordLists, 'support_dd');
+  const supportW = findSupportWordList(wordLists, 'support_w');
+  const supportY = findSupportWordList(wordLists, 'support_y');
 
   assert(support, 'Expected support_dd to exist');
+  assert(supportW, 'Expected support_w to exist');
+  assert(supportY, 'Expected support_y to exist');
   assertEqual(isSupportWordList(support), true, 'Support list should carry explicit support metadata');
   assertEqual(mainWordLists(wordLists).some(list => list.id === 'support_dd'), false, 'Main catalogue filter should exclude support lists');
+  assertEqual(mainWordLists(wordLists).some(list => list.id === 'support_w' || list.id === 'support_y'), false, 'Split W/Y support lists should be excluded from the main catalogue');
   assertEqual(normalizeSingleSelectedListIds(['support_dd'], wordLists)[0], 'foundations_first_words', 'Normal list selection should not select a support list');
 });
 
@@ -608,9 +613,17 @@ test('support-only lists are excluded from normal recommendations', () => {
     currentPathPosition: 'support_dd'
   };
   const recommendation = getNormalContinuationRecommendation(storage, wordLists);
+  const splitWStorage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['support_w', 'support_y'],
+    currentPathPosition: 'support_w'
+  };
+  const splitWRecommendation = getNormalContinuationRecommendation(splitWStorage, wordLists);
 
   assertEqual(recommendation.listId, 'foundations_first_words', 'Normal continuation should fall back to a main list');
   assertEqual(recommendation.listId?.startsWith('support_'), false, 'Normal recommendations should not point to support lists');
+  assertEqual(splitWRecommendation.listId, 'foundations_first_words', 'Normal continuation should ignore split W/Y support lists');
+  assertEqual(splitWRecommendation.listId?.startsWith('support_'), false, 'Normal recommendations should not point to split W/Y support lists');
 });
 
 test('detached support practice starts from a support list without changing the original path storage', () => {
@@ -646,16 +659,25 @@ test('support_ff session queue is stable and ordered for contextual practice', (
 test('support words are standalone hidden-list data with stable IDs and missing audio until generated', () => {
   const supportLists = createSupportWordLists();
   const supportFf = findSupportWordList(supportLists, 'support_ff');
+  const supportW = findSupportWordList(supportLists, 'support_w');
+  const supportY = findSupportWordList(supportLists, 'support_y');
   assert(supportFf, 'Expected support_ff to exist');
+  assert(supportW, 'Expected support_w to exist');
+  assert(supportY, 'Expected support_y to exist');
 
   const supportWordIds = supportLists.flatMap(list => list.words.map(word => word.id));
   const normalWordIds = new Set(mainWordLists(wordLists).flatMap(list => list.words.map(word => word.id)));
   assertEqual(supportWordIds.length, new Set(supportWordIds).size, 'Support words should have unique stable IDs.');
   assertEqual(supportWordIds.some(id => normalWordIds.has(id)), false, 'Support words should not reuse normal progression word IDs.');
+  assertEqual(supportLists.some(list => list.id === 'support_wy'), false, 'Retired support_wy should not be part of the active static support-list seed.');
   assertEqual(supportFf.listType, 'support', 'Support FF should be explicitly typed as a support list.');
   assertEqual(supportFf.isSupportList, true, 'Support FF should carry the support-list flag.');
   assertEqual(supportFf.hiddenFromMainCatalogue, true, 'Support FF should be hidden from the public word-list catalogue.');
   assertEqual(mainWordLists(supportLists).some(list => list.id === 'support_ff'), false, 'Support FF should not appear in the main catalogue filter.');
+  assertEqual(supportW.words.map(word => word.id).join('|'), 'support_w_001|support_w_002|support_w_003|support_w_004|support_w_005|support_w_006|support_w_007|support_w_008|support_w_009|support_w_010', 'Support W should use stable support_w word IDs.');
+  assertEqual(supportW.words.map(word => word.welshAnswer).join('|'), 'dŵr|cwm|byw|bwrdd|twr|cwrdd|sŵn|ŵyr|gwr|lwc', 'Support W should contain the focused w-as-vowel practice words.');
+  assertEqual(supportY.words.map(word => word.id).join('|'), 'support_y_001|support_y_002|support_y_003|support_y_004|support_y_005|support_y_006|support_y_007|support_y_008|support_y_009|support_y_010', 'Support Y should use stable support_y word IDs.');
+  assertEqual(supportY.words.map(word => word.welshAnswer).join('|'), 'tŷ|dydd|heddiw|mynydd|llyfr|ysgol|yfed|ynys|pysgod|tywydd', 'Support Y should contain the focused y-as-vowel practice words.');
 
   const ffrwyth = supportFf.words.find(word => word.welshAnswer === 'ffrwyth');
   assert(ffrwyth, 'Support FF should keep pedagogically useful ffrwyth.');
