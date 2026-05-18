@@ -1,0 +1,157 @@
+import type { PracticeWord, WordList } from '../src/data/wordLists';
+import { createSupportPracticeRoute, handleSpellingBasicsExampleAudioClick, resolveSpellingBasicsExampleAudio } from '../src/lib/spellingBasicsAudio';
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+function assertEqual<T>(actual: T, expected: T, message: string) {
+  if (actual !== expected) {
+    throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
+  }
+}
+
+function makeWord(overrides: Partial<PracticeWord>): PracticeWord {
+  const id = overrides.id ?? 'word-1';
+  const listId = overrides.listId ?? 'list-1';
+  const welshAnswer = overrides.welshAnswer ?? 'dydd';
+  const englishPrompt = overrides.englishPrompt ?? 'day';
+
+  return {
+    id,
+    listId,
+    prompt: englishPrompt,
+    answer: welshAnswer,
+    englishPrompt,
+    welshAnswer,
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    acceptedAlternatives: [],
+    audioUrl: '',
+    audioStatus: 'missing',
+    notes: '',
+    order: 1,
+    difficulty: 1,
+    dialect: 'Both',
+    dialectNote: '',
+    usageNote: '',
+    variantGroupId: '',
+    ...overrides
+  };
+}
+
+function makeList(overrides: Partial<WordList> & { words: PracticeWord[] }): WordList {
+  return {
+    id: overrides.id ?? 'list-1',
+    collectionId: overrides.collectionId ?? 'test',
+    name: overrides.name ?? 'Test list',
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Both',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    ...overrides
+  };
+}
+
+const supportList = makeList({
+  id: 'support_ff',
+  collectionId: 'spelio_support_welsh',
+  name: 'Support FF',
+  isSupportList: true,
+  listType: 'support',
+  hiddenFromMainCatalogue: true,
+  words: [
+    makeWord({
+      id: 'support_ff_006',
+      listId: 'support_ff',
+      welshAnswer: 'ffrwyth',
+      englishPrompt: 'fruit',
+      audioUrl: '',
+      audioStatus: 'missing'
+    })
+  ]
+});
+const normalList = makeList({
+  id: 'normal_food',
+  words: [
+    makeWord({
+      id: 'normal_food_001',
+      listId: 'normal_food',
+      welshAnswer: 'ffrwyth',
+      englishPrompt: 'fruit',
+      audioUrl: 'https://example.com/audio/ffrwyth.mp3',
+      audioStatus: 'ready'
+    })
+  ]
+});
+
+assertEqual(
+  createSupportPracticeRoute('support_ff', '/spelling-basics/ff'),
+  '/practice?supportListId=support_ff&returnTo=%2Fspelling-basics%2Fff',
+  'Practise this pattern should have a stable support-practice route target.'
+);
+
+const supportResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList, supportList], 'support_ff');
+assertEqual(supportResolution.word?.id, 'support_ff_006', 'Support topic examples should resolve through the support-list word first.');
+assertEqual(supportResolution.available, false, 'Missing support-list audio should be treated as unavailable even if a normal list has a matching word.');
+assertEqual(supportResolution.audioStatus, 'missing', 'Missing support-list audio should preserve the support word audio status.');
+
+const readyResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList], null);
+assertEqual(readyResolution.word?.id, 'normal_food_001', 'Non-support example lookup may use available public word-list audio.');
+assertEqual(readyResolution.available, true, 'Ready public word-list audio should be playable.');
+
+void runAsyncAssertions();
+
+async function runAsyncAssertions() {
+  let prevented = false;
+  let stopped = false;
+  let playedUrl = '';
+  const played = await handleSpellingBasicsExampleAudioClick(
+    {
+      preventDefault: () => {
+        prevented = true;
+      },
+      stopPropagation: () => {
+        stopped = true;
+      }
+    },
+    readyResolution,
+    {
+      play: async audioUrl => {
+        playedUrl = audioUrl ?? '';
+        return true;
+      }
+    }
+  );
+  assertEqual(played, true, 'Example audio click should report successful playback when audio exists.');
+  assertEqual(playedUrl, 'https://example.com/audio/ffrwyth.mp3', 'Example audio click should call the playback handler with the resolved URL.');
+  assertEqual(prevented, true, 'Example audio click should prevent parent navigation defaults.');
+  assertEqual(stopped, true, 'Example audio click should stop parent practise-link propagation.');
+
+  let unavailableHandled = false;
+  let missingPlayCalled = false;
+  const missingPlayed = await handleSpellingBasicsExampleAudioClick(
+    {},
+    supportResolution,
+    {
+      play: async () => {
+        missingPlayCalled = true;
+        return true;
+      },
+      onUnavailable: () => {
+        unavailableHandled = true;
+      }
+    }
+  );
+  assertEqual(missingPlayed, false, 'Missing example audio should not attempt playback.');
+  assertEqual(missingPlayCalled, false, 'Missing example audio should not call the playback handler.');
+  assertEqual(unavailableHandled, true, 'Missing example audio should run the unavailable handler.');
+
+  console.log('spelling basics audio tests passed');
+}

@@ -102,3 +102,19 @@ export function createDetachedSupportPracticeStart(
     }
   };
 }
+
+export function createDetachedSupportReviewPracticeStart(
+  storage: SpelioStorage,
+  list: WordList
+): PracticeStart {
+  return {
+    mode: 'review',
+    review: true,
+    recap: false,
+    storage: {
+      ...storage,
+      selectedListIds: [list.id],
+      currentPathPosition: list.id
+    }
+  };
+}

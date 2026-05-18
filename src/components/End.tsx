@@ -77,6 +77,8 @@ export function EndScreen({
   onChangeLists,
   onHome,
   contextualReturn,
+  contextualHasDifficultWords = false,
+  onContextualReview,
   sharedSession,
   onReturnToLearning,
   onPractiseSharedListAgain,
@@ -93,6 +95,8 @@ export function EndScreen({
   onChangeLists: () => void;
   onHome: () => void;
   contextualReturn?: { label: string; onClick: () => void } | null;
+  contextualHasDifficultWords?: boolean;
+  onContextualReview?: () => void;
   sharedSession?: { listName: string; hasPriorLearningHistory: boolean } | null;
   onReturnToLearning?: () => void;
   onPractiseSharedListAgain?: () => void;
@@ -102,6 +106,7 @@ export function EndScreen({
 }) {
   const isSharedSession = Boolean(sharedSession);
   const isContextualSession = Boolean(contextualReturn);
+  const shouldPrioritiseContextualReview = isContextualSession && contextualHasDifficultWords && Boolean(onContextualReview);
   const shouldPrioritiseReview = !isSharedSession && !isContextualSession && hasDifficultWords && recommendation.kind === 'review';
   const shouldChooseAnotherList = !isSharedSession && !isContextualSession && recommendation.kind === 'choose_list';
   const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
@@ -109,6 +114,8 @@ export function EndScreen({
     : recommendation.subtitle;
   const primaryTitle = isSharedSession
     ? sharedSession?.hasPriorLearningHistory ? t('end.returnToYourLearning') : t('end.keepLearning')
+    : shouldPrioritiseContextualReview
+    ? t('home.reviewDifficult')
     : isContextualSession
     ? contextualReturn?.label ?? t('end.backToSpellingBasics')
     : shouldPrioritiseReview
@@ -118,6 +125,8 @@ export function EndScreen({
       : t('home.continueLearning');
   const handlePrimary = isSharedSession
     ? onReturnToLearning ?? onHome
+    : shouldPrioritiseContextualReview
+    ? onContextualReview ?? onHome
     : isContextualSession
     ? contextualReturn?.onClick ?? onHome
     : shouldPrioritiseReview
@@ -162,6 +171,11 @@ export function EndScreen({
         </div>
 
         <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>
+        {shouldPrioritiseContextualReview && contextualReturn && (
+          <button className="end-contextual-return-link" type="button" onClick={contextualReturn.onClick}>
+            {contextualReturn.label}
+          </button>
+        )}
 
         <div className="action-list end-action-list">
           {isSharedSession && onPractiseSharedListAgain && (

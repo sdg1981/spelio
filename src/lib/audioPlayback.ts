@@ -1,6 +1,8 @@
 export { getPlayableAudioUrl, hasPlayableAudioUrl } from './practice/audioAvailability';
 import { getPlayableAudioUrl } from './practice/audioAvailability';
 
+let currentAudio: HTMLAudioElement | null = null;
+
 export function logAudioPlaybackClick(source: string, audioUrl?: string | null) {
   logAudioPlaybackDiagnostic('click handler fired', { source, audioUrl });
 }
@@ -22,15 +24,28 @@ export async function playAudioUrl(audioUrl?: string | null) {
   }
 
   try {
+    if (currentAudio) {
+      currentAudio.pause();
+      try {
+        currentAudio.currentTime = 0;
+      } catch {
+        // Some browsers can throw while resetting an unloaded audio element.
+      }
+    }
     const audio = new Audio();
+    currentAudio = audio;
     audio.preload = 'auto';
     audio.src = playableUrl;
     audio.currentTime = 0;
     logAudioPlaybackDiagnostic('audio.play() called', { audioUrl: playableUrl });
     await audio.play();
     logAudioPlaybackDiagnostic('audio.play() resolved', { audioUrl: playableUrl });
+    audio.onended = () => {
+      if (currentAudio === audio) currentAudio = null;
+    };
     return true;
   } catch (error) {
+    if (currentAudio?.src === playableUrl) currentAudio = null;
     logAudioPlaybackDiagnostic('audio.play() rejected', { audioUrl: playableUrl, error });
     return false;
   }
@@ -38,6 +53,6 @@ export async function playAudioUrl(audioUrl?: string | null) {
 
 function logAudioPlaybackDiagnostic(message: string, details: Record<string, unknown>) {
   // TODO: Remove temporary audio playback diagnostics before production if noisy.
-  if (!import.meta.env.DEV) return;
+  if (typeof window === 'undefined') return;
   console.info(`[audioPlayback] ${message}`, details);
 }

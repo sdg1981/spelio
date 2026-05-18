@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, Ear, Lightbulb, Volume2 } from 'lucide-react';
 import { PublicPageShell } from './PublicInfoPages';
@@ -13,6 +13,13 @@ import {
   type SpellingBasicsTopicSlug
 } from '../content/spellingBasics';
 import type { InterfaceLanguage, Translate } from '../i18n';
+import type { WordList } from '../data/wordLists';
+import {
+  createSupportPracticeRoute,
+  handleSpellingBasicsExampleAudioClick,
+  resolveSpellingBasicsExampleAudio,
+  type SpellingBasicsAudioResolution
+} from '../lib/spellingBasicsAudio';
 
 type WelshSpellingBasicsPageProps = {
   interfaceLanguage: InterfaceLanguage;
@@ -22,6 +29,7 @@ type WelshSpellingBasicsPageProps = {
   onOpenTopic: (slug: SpellingBasicsTopicSlug) => void;
   onStartPractice?: (practiceListId: string, topicSlug: SpellingBasicsTopicSlug) => void;
   isPracticeListAvailable?: (practiceListId: string) => boolean;
+  wordLists?: WordList[];
   t: Translate;
 };
 
@@ -175,6 +183,7 @@ export function WelshSpellingBasicsTopicPage({
   onInterfaceLanguageChange,
   isPracticeListAvailable,
   onStartPractice,
+  wordLists = [],
   topic,
   t
 }: Omit<WelshSpellingBasicsPageProps, 'onOpenTopic'> & {
@@ -205,6 +214,9 @@ export function WelshSpellingBasicsTopicPage({
     onStartPractice &&
     (!isPracticeListAvailable || isPracticeListAvailable(topic.practiceListId))
   );
+  const practiceRoute = topic.practiceListId
+    ? createSupportPracticeRoute(topic.practiceListId, `/spelling-basics/${topic.slug}`)
+    : null;
 
   return (
     <PublicPageShell
@@ -233,20 +245,29 @@ export function WelshSpellingBasicsTopicPage({
             content={topic.phoneticOrientation}
             introCard={activeCard}
             interfaceLanguage={interfaceLanguage}
+            wordLists={wordLists}
             selectedSoundIndex={selectedSoundIndex}
             onSelectedSoundIndexChange={setSelectedSoundIndex}
+            t={t}
           />
         ) : (
           <TopicCardContent
             card={activeCard}
             interfaceLanguage={interfaceLanguage}
+            preferredPracticeListId={topic.practiceListId}
             showTitle={isSeries}
+            wordLists={wordLists}
             t={t}
           />
         )}
 
         {canStartPractice && topic.practiceListId && onStartPractice && (
-          <button className="spelling-basics-practice-row" type="button" onClick={() => onStartPractice(topic.practiceListId as string, topic.slug)}>
+          <button
+            className="spelling-basics-practice-row"
+            type="button"
+            onClick={() => onStartPractice(topic.practiceListId as string, topic.slug)}
+            data-href={practiceRoute ?? undefined}
+          >
             <span className="spelling-basics-mini-symbol" aria-hidden="true">{topic.symbol}</span>
             <span>{t('spellingBasics.topic.practicePattern')}</span>
             <ChevronRight size={24} strokeWidth={2.2} aria-hidden="true" />
@@ -286,12 +307,16 @@ function TopicHeroMarker({ topic }: { topic: SpellingBasicsTopic }) {
 function TopicCardContent({
   card,
   interfaceLanguage,
+  preferredPracticeListId,
   showTitle,
+  wordLists,
   t
 }: {
   card: SpellingBasicsTopicCard;
   interfaceLanguage: InterfaceLanguage;
+  preferredPracticeListId?: string;
   showTitle: boolean;
+  wordLists: WordList[];
   t: Translate;
 }) {
   return (
@@ -310,14 +335,19 @@ function TopicCardContent({
           <div className="spelling-basics-example-list">
             {card.examples.map(example => {
               const showMeaning = interfaceLanguage !== 'cy' && Boolean(example.meaning);
+              const audio = resolveSpellingBasicsExampleAudio(example.welsh, wordLists, preferredPracticeListId);
 
               return (
                 <div className={`spelling-basics-example-row ${showMeaning ? '' : 'no-meaning'}`} key={example.welsh}>
                   <strong>{example.welsh}</strong>
                   {showMeaning && example.meaning && <span>{localize(example.meaning, interfaceLanguage)}</span>}
-                  <button type="button" disabled aria-label={`${example.welsh}: ${t('spellingBasics.topic.audioUnavailable')}`}>
-                    <Volume2 size={23} strokeWidth={2.35} aria-hidden="true" />
-                  </button>
+                  <SpellingBasicsAudioButton
+                    audio={audio}
+                    interfaceLanguage={interfaceLanguage}
+                    labelWord={example.welsh}
+                    size={23}
+                    t={t}
+                  />
                 </div>
               );
             })}
@@ -339,16 +369,28 @@ function PhoneticOrientationContent({
   content,
   introCard,
   interfaceLanguage,
+  wordLists,
   selectedSoundIndex,
-  onSelectedSoundIndexChange
+  onSelectedSoundIndexChange,
+  t
 }: {
   content: SpellingBasicsPhoneticOrientation;
   introCard: SpellingBasicsTopicCard;
   interfaceLanguage: InterfaceLanguage;
+  wordLists: WordList[];
   selectedSoundIndex: number;
   onSelectedSoundIndexChange: (index: number) => void;
+  t: Translate;
 }) {
   const selectedSound = content.sounds[selectedSoundIndex] ?? content.sounds[0];
+  const selectedSoundAudio = useMemo(
+    () => selectedSound ? resolveSpellingBasicsExampleAudio(selectedSound.example, wordLists) : null,
+    [selectedSound, wordLists]
+  );
+  const patternWordAudio = useMemo(
+    () => content.patternExample ? resolveSpellingBasicsExampleAudio(content.patternExample.word, wordLists) : null,
+    [content.patternExample, wordLists]
+  );
   const labels = interfaceLanguage === 'cy'
     ? {
         sound: 'Sain:',
@@ -393,9 +435,15 @@ function PhoneticOrientationContent({
             <p><span>{labels.sound}</span> {renderLocalizedText(selectedSound.hint, interfaceLanguage)}</p>
             <p className="spelling-basics-sound-detail-example">
               <span>{labels.example}</span> {selectedSound.example}
-              <button type="button" disabled aria-label={selectedSound.example}>
-                <Volume2 size={19} strokeWidth={2.35} aria-hidden="true" />
-              </button>
+              {selectedSoundAudio && (
+                <SpellingBasicsAudioButton
+                  audio={selectedSoundAudio}
+                  interfaceLanguage={interfaceLanguage}
+                  labelWord={selectedSound.example}
+                  size={19}
+                  t={t}
+                />
+              )}
             </p>
             {selectedSound.symbol === 'll' && (
               <p className="spelling-basics-sound-detail-note">{renderLocalizedText(content.llNote, interfaceLanguage)}</p>
@@ -426,9 +474,15 @@ function PhoneticOrientationContent({
 
           <div className="spelling-basics-pattern-word-card">
             <strong>{content.patternExample.word}</strong>
-            <button type="button" disabled aria-label={content.patternExample.word}>
-              <Volume2 size={19} strokeWidth={2.35} aria-hidden="true" />
-            </button>
+            {patternWordAudio && (
+              <SpellingBasicsAudioButton
+                audio={patternWordAudio}
+                interfaceLanguage={interfaceLanguage}
+                labelWord={content.patternExample.word}
+                size={19}
+                t={t}
+              />
+            )}
           </div>
 
           <p className="spelling-basics-pattern-helper">
@@ -441,5 +495,48 @@ function PhoneticOrientationContent({
         <p className="spelling-basics-phonetic-closing">{renderLocalizedText(content.closing, interfaceLanguage)}</p>
       </div>
     </>
+  );
+}
+
+function createAudioLabel(word: string, interfaceLanguage: InterfaceLanguage) {
+  return interfaceLanguage === 'cy'
+    ? `Chwarae sain ar gyfer ${word}`
+    : `Play audio for ${word}`;
+}
+
+function SpellingBasicsAudioButton({
+  audio,
+  interfaceLanguage,
+  labelWord,
+  size,
+  t
+}: {
+  audio: SpellingBasicsAudioResolution;
+  interfaceLanguage: InterfaceLanguage;
+  labelWord: string;
+  size: number;
+  t: Translate;
+}) {
+  const [playbackFailed, setPlaybackFailed] = useState(false);
+  const unavailable = playbackFailed || !audio.available;
+  const unavailableLabel = `${labelWord}: ${t('spellingBasics.topic.audioUnavailable')}`;
+
+  return (
+    <button
+      type="button"
+      disabled={unavailable}
+      aria-label={unavailable ? unavailableLabel : createAudioLabel(labelWord, interfaceLanguage)}
+      title={unavailable ? t('spellingBasics.topic.audioUnavailable') : createAudioLabel(labelWord, interfaceLanguage)}
+      data-audio-status={audio.audioStatus}
+      onClick={event => {
+        void handleSpellingBasicsExampleAudioClick(event, audio, {
+          onUnavailable: () => setPlaybackFailed(true)
+        }).then(played => {
+          if (!played) setPlaybackFailed(true);
+        });
+      }}
+    >
+      <Volume2 size={size} strokeWidth={2.35} aria-hidden="true" />
+    </button>
   );
 }

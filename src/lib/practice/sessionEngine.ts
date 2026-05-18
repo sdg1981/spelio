@@ -311,12 +311,17 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
   const recapOnly = includeRecapDue && !reviewDifficult;
-  const reviewLists = mainWordLists(lists);
   const activeListIds = new Set(lists.filter(list => list.isActive).map(list => list.id));
   const selectedSupportListId = storage.selectedListIds.find(id => {
     const list = lists.find(item => item.id === id && activeListIds.has(id));
     return list ? isSupportWordList(list) : false;
   });
+  const selectedSupportList = selectedSupportListId
+    ? lists.find(list => list.id === selectedSupportListId && list.isActive && isSupportWordList(list))
+    : undefined;
+  const reviewLists = reviewDifficult && selectedSupportList
+    ? [selectedSupportList]
+    : mainWordLists(lists);
   const normalSelectedIds = selectedSupportListId
     ? [selectedSupportListId]
     : normalizeSingleSelectedListIds(storage.selectedListIds, reviewLists);
@@ -367,6 +372,11 @@ export function formatRecapWordCount(count: number) {
 export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
   const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
   return getDifficultCandidates(activeWords, storage).length;
+}
+
+export function getDifficultWordCountInList(storage: SpelioStorage, list: WordList) {
+  if (!list.isActive) return 0;
+  return getDifficultCandidates(list.words, storage).length;
 }
 
 function recapDifficultyRank(word: PracticeWord) {

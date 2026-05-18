@@ -17,8 +17,8 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practic
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
-import { createDetachedSupportPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
-import { getDifficultWordCount, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
+import { getDifficultWordCount, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
@@ -216,6 +216,16 @@ export default function App() {
     () => formatCumulativeProgress(storage, publicWordLists, { prefix: t('progress.totalProgress'), t }),
     [publicWordLists, storage.learningStats, storage.wordProgress, t]
   );
+  const completedSupportList = useMemo(
+    () => completedSupportPractice ? findSupportWordList(practiceLists, completedSupportPractice.listId) ?? null : null,
+    [completedSupportPractice, practiceLists]
+  );
+  const completedSupportDifficultWordCount = useMemo(
+    () => completedSupportList && practiceStartStorage
+      ? getDifficultWordCountInList(practiceStartStorage, completedSupportList)
+      : 0,
+    [completedSupportList, practiceStartStorage]
+  );
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, publicWordLists),
     [publicWordLists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -376,6 +386,28 @@ export default function App() {
 
   function startReviewPractice() {
     beginPractice(createReviewPracticeStart(storage));
+  }
+
+  function startCompletedSupportReviewPractice() {
+    if (!completedSupportPractice || !completedSupportList || !practiceStartStorage) return;
+    const start = createDetachedSupportReviewPracticeStart(practiceStartStorage, completedSupportList);
+    if (typeof window !== 'undefined') {
+      const url = `/practice?supportListId=${encodeURIComponent(completedSupportList.id)}&returnTo=${encodeURIComponent(completedSupportPractice.returnTo)}`;
+      window.history.pushState({ spelioPublicPage: true, spelioSupportPractice: true, returnTo: completedSupportPractice.returnTo }, '', url);
+      resetPublicPageScrollToTop();
+    }
+
+    setActiveSupportPractice(completedSupportPractice);
+    setCompletedSupportPractice(null);
+    setActiveSharedContext(null);
+    setCompletedSharedContext(null);
+    setActiveCustomList(null);
+    setPracticeTestMode(false);
+    setPracticeStartStorage(start.storage);
+    setPracticeSessionKey(key => key + 1);
+    setReviewMode(true);
+    setRecapMode(false);
+    setScreen('practice');
   }
 
   function startRecapPractice() {
@@ -728,6 +760,7 @@ export default function App() {
       onHome={returnToLearning}
       isPracticeListAvailable={practiceListId => Boolean(findSupportWordList(practiceLists, practiceListId))}
       onStartPractice={startSupportPractice}
+      wordLists={practiceLists}
       topic={spellingBasicsTopic}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}
@@ -768,6 +801,8 @@ export default function App() {
         label: t('end.backToSpellingBasics'),
         onClick: returnToCompletedSupportPracticeOrigin
       } : null}
+      contextualHasDifficultWords={completedSupportDifficultWordCount > 0}
+      onContextualReview={completedSupportPractice ? startCompletedSupportReviewPractice : undefined}
       sharedSession={completedSharedListName && completedSharedContext ? {
         listName: completedSharedListName,
         hasPriorLearningHistory: completedSharedContext.previousHadMeaningfulLearningHistory
