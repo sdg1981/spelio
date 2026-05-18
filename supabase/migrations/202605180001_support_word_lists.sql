@@ -99,7 +99,8 @@ insert into public.word_lists (
   ('support_ch', 'support-ch', 'spelio_support_welsh', 'Support: ch pattern', 'Cymorth: patrwm ch', 'Focused support practice for Welsh ch.', 'Ymarfer cymorth ffocysedig ar gyfer ch Cymraeg.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10003, null, true, 'support', true),
   ('support_rh', 'support-rh', 'spelio_support_welsh', 'Support: rh pattern', 'Cymorth: patrwm rh', 'Focused support practice for Welsh rh.', 'Ymarfer cymorth ffocysedig ar gyfer rh Cymraeg.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10004, null, true, 'support', true),
   ('support_wy', 'support-wy', 'spelio_support_welsh', 'Support: w and y as vowels', 'Cymorth: w ac y fel llafariaid', 'Focused support practice for Welsh w and y vowel patterns.', 'Ymarfer cymorth ffocysedig ar gyfer patrymau llafariad w ac y.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10005, null, true, 'support', true),
-  ('support_accents', 'support-accents', 'spelio_support_welsh', 'Support: accents and long vowels', 'Cymorth: acenion a llafariaid hir', 'Focused support practice for Welsh accents and long vowels.', 'Ymarfer cymorth ffocysedig ar gyfer acenion a llafariaid hir Cymraeg.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10006, null, true, 'support', true)
+  ('support_accents', 'support-accents', 'spelio_support_welsh', 'Support: accents and long vowels', 'Cymorth: acenion a llafariaid hir', 'Focused support practice for Welsh accents and long vowels.', 'Ymarfer cymorth ffocysedig ar gyfer acenion a llafariaid hir Cymraeg.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10006, null, true, 'support', true),
+  ('support_spelling_basics_examples', 'support-spelling-basics-examples', 'spelio_support_welsh', 'Support: spelling basics examples', 'Cymorth: enghreifftiau hanfodion sillafu', 'Hidden support audio list for Welsh Spelling Basics explanatory examples.', 'Rhestr sain gymorth gudd ar gyfer enghreifftiau esboniadol Hanfodion Sillafu Cymraeg.', 'Welsh', 'en', 'cy', 'Both', 'support', 'welsh-spelling-basics', 1, 10007, null, true, 'support', true)
 on conflict (id) do update set
   slug = excluded.slug,
   collection_id = excluded.collection_id,
@@ -177,7 +178,13 @@ insert into public.words (
   ('support_accents_003', 'support_accents', 'corn / grain', 'ŷd', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 3, 1),
   ('support_accents_004', 'support_accents', 'fire', 'tân', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 4, 1),
   ('support_accents_005', 'support_accents', 'sound', 'sŵn', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 5, 1),
-  ('support_accents_006', 'support_accents', 'song', 'cân', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 6, 1)
+  ('support_accents_006', 'support_accents', 'song', 'cân', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 6, 1),
+  ('support_spelling_basics_examples_001', 'support_spelling_basics_examples', 'apple', 'afal', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 1, 1),
+  ('support_spelling_basics_examples_002', 'support_spelling_basics_examples', 'old', 'hen', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 2, 1),
+  ('support_spelling_basics_examples_003', 'support_spelling_basics_examples', 'you', 'ti', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 3, 1),
+  ('support_spelling_basics_examples_004', 'support_spelling_basics_examples', 'morning', 'bore', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 4, 1),
+  ('support_spelling_basics_examples_005', 'support_spelling_basics_examples', 'school', 'ysgol', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 5, 1),
+  ('support_spelling_basics_examples_006', 'support_spelling_basics_examples', 'until', 'tan', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 6, 1)
 on conflict (id) do update set
   list_id = excluded.list_id,
   english_prompt = excluded.english_prompt,

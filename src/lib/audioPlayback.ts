@@ -53,6 +53,11 @@ export async function playAudioUrl(audioUrl?: string | null) {
 
 function logAudioPlaybackDiagnostic(message: string, details: Record<string, unknown>) {
   // TODO: Remove temporary audio playback diagnostics before production if noisy.
-  if (typeof window === 'undefined') return;
+  if (!isDevelopmentAudioDiagnosticsEnabled()) return;
   console.info(`[audioPlayback] ${message}`, details);
+}
+
+function isDevelopmentAudioDiagnosticsEnabled() {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 }

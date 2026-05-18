@@ -83,15 +83,15 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       ],
       patternExample: {
         title: {
-          en: 'Example: ddwy',
-          cy: 'Enghraifft: ddwy'
+          en: 'Example: heddiw',
+          cy: 'Enghraifft: heddiw'
         },
         body: {
           en: 'Some Welsh words look difficult at first, but they often become easier once you recognise the patterns.',
           cy: 'Mae rhai geiriau Cymraeg yn edrych yn anodd ar y dechrau, ond maen nhw’n aml yn dod yn haws pan fyddwch chi’n sylwi ar y patrymau.'
         },
-        patterns: ['dd', 'w', 'y'],
-        word: 'ddwy',
+        patterns: ['h', 'e', 'dd', 'iw'],
+        word: 'heddiw',
         helper: {
           en: 'Listen to the whole word, then notice how the patterns sit inside it.',
           cy: 'Gwrandewch ar y gair cyfan, wedyn sylwch sut mae’r patrymau’n eistedd ynddo.'

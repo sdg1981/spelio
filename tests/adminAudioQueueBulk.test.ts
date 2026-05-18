@@ -102,10 +102,23 @@ const supportFfrwyth = adminWords.find(word => word.id === 'support_ff_006');
 assert(supportFfrwyth?.welshAnswer === 'ffrwyth', 'Admin content should include support-list ffrwyth as its own word.');
 if (!supportFfrwyth) throw new Error('Expected support-list ffrwyth to exist in admin content.');
 assertEqual(supportFfrwyth.audioStatus, 'missing', 'Support-list ffrwyth should be visible to admin audio maintenance as missing audio.');
+const supportAfal = adminWords.find(word => word.id === 'support_spelling_basics_examples_001');
+assertEqual(supportAfal?.welshAnswer, 'afal', 'Admin content should include phonetic support example afal.');
+assertEqual(supportAfal?.audioStatus, 'missing', 'Phonetic support example afal should be visible as missing audio until generated.');
+assertEqual(
+  adminWords.some(word => word.id.startsWith('support_spelling_basics_examples') && word.welshAnswer === 'ddwy'),
+  false,
+  'ddwy should not remain in hidden spelling-basics support examples after the phonetic breakdown changed.'
+);
 assertEqual(
   createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_ff_006' && word.audioStatus === 'missing'),
   true,
   'The admin audio queue snapshot should include missing support-list words.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_spelling_basics_examples_001' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing spelling-basics support example words.'
 );
 
 console.log('admin audio queue bulk tests passed');

@@ -155,6 +155,22 @@ const supportListSeeds: SupportListSeed[] = [
       { englishPrompt: 'sound', welshAnswer: 'sŵn' },
       { englishPrompt: 'song', welshAnswer: 'cân' }
     ]
+  },
+  {
+    id: 'support_spelling_basics_examples',
+    name: 'Support: spelling basics examples',
+    nameCy: 'Cymorth: enghreifftiau hanfodion sillafu',
+    description: 'Hidden support audio list for Welsh Spelling Basics explanatory examples.',
+    descriptionCy: 'Rhestr sain gymorth gudd ar gyfer enghreifftiau esboniadol Hanfodion Sillafu Cymraeg.',
+    focus: 'Welsh spelling basics',
+    words: [
+      { englishPrompt: 'apple', welshAnswer: 'afal' },
+      { englishPrompt: 'old', welshAnswer: 'hen' },
+      { englishPrompt: 'you', welshAnswer: 'ti' },
+      { englishPrompt: 'morning', welshAnswer: 'bore' },
+      { englishPrompt: 'school', welshAnswer: 'ysgol' },
+      { englishPrompt: 'until', welshAnswer: 'tan' }
+    ]
   }
 ];
 

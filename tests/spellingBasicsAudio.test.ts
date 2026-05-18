@@ -1,4 +1,5 @@
 import type { PracticeWord, WordList } from '../src/data/wordLists';
+import { createSupportWordLists } from '../src/data/supportWordLists';
 import { createSupportPracticeRoute, handleSpellingBasicsExampleAudioClick, resolveSpellingBasicsExampleAudio } from '../src/lib/spellingBasicsAudio';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -105,6 +106,52 @@ assertEqual(supportResolution.audioStatus, 'missing', 'Missing support-list audi
 const readyResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList], null);
 assertEqual(readyResolution.word?.id, 'normal_food_001', 'Non-support example lookup may use available public word-list audio.');
 assertEqual(readyResolution.available, true, 'Ready public word-list audio should be playable.');
+
+const supportExampleLists = createSupportWordLists();
+const nestedExampleWords = ['afal', 'hen', 'ti', 'bore', 'tan'];
+for (const welsh of nestedExampleWords) {
+  const resolution = resolveSpellingBasicsExampleAudio(welsh, supportExampleLists);
+  assert(resolution.word, `${welsh} should resolve to hidden support example audio data.`);
+  assertEqual(resolution.word.listId, 'support_spelling_basics_examples', `${welsh} should resolve through the spelling-basics examples support list.`);
+  assertEqual(resolution.audioStatus, 'missing', `${welsh} should be discoverable as missing support audio until generated.`);
+}
+
+const readySupportExamples = makeList({
+  id: 'support_spelling_basics_examples',
+  collectionId: 'spelio_support_welsh',
+  isSupportList: true,
+  listType: 'support',
+  hiddenFromMainCatalogue: true,
+  words: [
+    makeWord({
+      id: 'support_spelling_basics_examples_001',
+      listId: 'support_spelling_basics_examples',
+      welshAnswer: 'afal',
+      englishPrompt: 'apple',
+      audioUrl: 'https://example.com/audio/support/afal.mp3',
+      audioStatus: 'ready'
+    }),
+    makeWord({
+      id: 'support_dd_002',
+      listId: 'support_dd',
+      welshAnswer: 'heddiw',
+      englishPrompt: 'today',
+      audioUrl: 'https://example.com/audio/support/heddiw.mp3',
+      audioStatus: 'ready',
+      order: 6
+    })
+  ]
+});
+assertEqual(
+  resolveSpellingBasicsExampleAudio('afal', [readySupportExamples]).audioUrl,
+  'https://example.com/audio/support/afal.mp3',
+  'Phonetic sound examples should play support example audio once generated.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('heddiw', [readySupportExamples]).audioUrl,
+  'https://example.com/audio/support/heddiw.mp3',
+  'Pattern breakdown examples should play support example audio once generated.'
+);
 
 void runAsyncAssertions();
 
