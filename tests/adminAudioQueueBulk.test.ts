@@ -105,6 +105,15 @@ assertEqual(supportFfrwyth.audioStatus, 'missing', 'Support-list ffrwyth should 
 const supportAfal = adminWords.find(word => word.id === 'support_spelling_basics_examples_001');
 assertEqual(supportAfal?.welshAnswer, 'afal', 'Admin content should include phonetic support example afal.');
 assertEqual(supportAfal?.audioStatus, 'missing', 'Phonetic support example afal should be visible as missing audio until generated.');
+const supportRhRhaid = adminWords.find(word => word.id === 'support_rh_003');
+assertEqual(supportRhRhaid?.welshAnswer, 'rhaid', 'Admin content should include replacement support RH word rhaid.');
+assertEqual(supportRhRhaid?.englishPrompt, 'must', 'Admin content should prompt rhaid as must.');
+assertEqual(supportRhRhaid?.audioStatus, 'missing', 'Replacement support RH word rhaid should be queued as missing audio until generated.');
+assertEqual(
+  adminWords.some(word => word.id === 'support_rh_003' && word.welshAnswer === 'rhiain'),
+  false,
+  'Support RH should no longer expose rhiain in admin content.'
+);
 const supportCwm = adminWords.find(word => word.id === 'support_w_002');
 assertEqual(supportCwm?.welshAnswer, 'cwm', 'Admin content should include split support W word cwm.');
 assertEqual(supportCwm?.audioStatus, 'missing', 'Split support W words should be visible as missing audio until generated.');
@@ -157,6 +166,11 @@ assertEqual(
   createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_spelling_basics_examples_001' && word.audioStatus === 'missing'),
   true,
   'The admin audio queue snapshot should include missing spelling-basics support example words.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_rh_003' && word.welshAnswer === 'rhaid' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing replacement support RH word rhaid.'
 );
 assertEqual(
   createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_w_002' && word.audioStatus === 'missing'),

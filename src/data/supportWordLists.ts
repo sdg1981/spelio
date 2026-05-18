@@ -118,7 +118,7 @@ const supportListSeeds: SupportListSeed[] = [
     words: [
       { englishPrompt: 'free', welshAnswer: 'rhydd' },
       { englishPrompt: 'some / kind', welshAnswer: 'rhyw' },
-      { englishPrompt: 'maiden', welshAnswer: 'rhiain' },
+      { englishPrompt: 'must', welshAnswer: 'rhaid' },
       { englishPrompt: 'must', welshAnswer: 'rhaid' },
       { englishPrompt: 'between', welshAnswer: 'rhwng' },
       { englishPrompt: 'to run', welshAnswer: 'rhedeg' }

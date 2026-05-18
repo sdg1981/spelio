@@ -659,9 +659,11 @@ test('support_ff session queue is stable and ordered for contextual practice', (
 test('support words are standalone hidden-list data with stable IDs and missing audio until generated', () => {
   const supportLists = createSupportWordLists();
   const supportFf = findSupportWordList(supportLists, 'support_ff');
+  const supportRh = findSupportWordList(supportLists, 'support_rh');
   const supportW = findSupportWordList(supportLists, 'support_w');
   const supportY = findSupportWordList(supportLists, 'support_y');
   assert(supportFf, 'Expected support_ff to exist');
+  assert(supportRh, 'Expected support_rh to exist');
   assert(supportW, 'Expected support_w to exist');
   assert(supportY, 'Expected support_y to exist');
 
@@ -674,6 +676,13 @@ test('support words are standalone hidden-list data with stable IDs and missing 
   assertEqual(supportFf.isSupportList, true, 'Support FF should carry the support-list flag.');
   assertEqual(supportFf.hiddenFromMainCatalogue, true, 'Support FF should be hidden from the public word-list catalogue.');
   assertEqual(mainWordLists(supportLists).some(list => list.id === 'support_ff'), false, 'Support FF should not appear in the main catalogue filter.');
+  assertEqual(supportRh.listType, 'support', 'Support RH should be explicitly typed as a support list.');
+  assertEqual(supportRh.isSupportList, true, 'Support RH should carry the support-list flag.');
+  assertEqual(supportRh.hiddenFromMainCatalogue, true, 'Support RH should be hidden from the public word-list catalogue.');
+  assertEqual(mainWordLists(supportLists).some(list => list.id === 'support_rh'), false, 'Support RH should not appear in the main catalogue filter.');
+  assertEqual(supportRh.words.some(word => word.welshAnswer === 'rhiain'), false, 'Support RH should not include obscure rhiain.');
+  assertEqual(supportRh.words.some(word => word.welshAnswer === 'rhaid'), true, 'Support RH should include rhaid.');
+  assertEqual(supportRh.words.every(word => word.welshAnswer.includes('rh')), true, 'Every Support RH answer should visibly contain rh.');
   assertEqual(supportW.words.map(word => word.id).join('|'), 'support_w_001|support_w_002|support_w_003|support_w_004|support_w_005|support_w_006|support_w_007|support_w_008|support_w_009|support_w_010', 'Support W should use stable support_w word IDs.');
   assertEqual(supportW.words.map(word => word.welshAnswer).join('|'), 'dŵr|cwm|byw|bwrdd|twr|cwrdd|sŵn|mwg|gŵr|lwc', 'Support W should contain the focused w-as-vowel practice words.');
   assertEqual(supportW.words.some(word => word.welshAnswer === 'ŵyr'), false, 'Support W should not include ambiguous ŵyr.');
@@ -696,6 +705,12 @@ test('support words are standalone hidden-list data with stable IDs and missing 
   assertEqual(ffrwyth.listId, 'support_ff', 'ffrwyth should belong to the support FF list, not a normal progression list.');
   assertEqual(ffrwyth.audioUrl, '', 'ffrwyth should not inherit opportunistic audio from normal progression data.');
   assertEqual(ffrwyth.audioStatus, 'missing', 'ffrwyth should remain missing until the support-list audio workflow generates it.');
+  const rhaid = supportRh.words.find(word => word.id === 'support_rh_003');
+  assert(rhaid, 'Support RH should include replacement rhaid at support_rh_003.');
+  assertEqual(rhaid.welshAnswer, 'rhaid', 'support_rh_003 should be the replacement rhaid word.');
+  assertEqual(rhaid.englishPrompt, 'must', 'support_rh_003 should prompt rhaid as must.');
+  assertEqual(rhaid.audioUrl, '', 'replacement rhaid should start without generated support-list audio.');
+  assertEqual(rhaid.audioStatus, 'missing', 'replacement rhaid should remain missing until the support-list audio workflow generates it.');
   const mwg = supportW.words.find(word => word.welshAnswer === 'mwg');
   assert(mwg, 'Support W should include mwg.');
   assertEqual(mwg.id, 'support_w_008', 'mwg should use the stable support_w_008 support-context word ID.');

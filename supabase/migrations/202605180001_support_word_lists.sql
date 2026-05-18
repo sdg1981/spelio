@@ -163,7 +163,7 @@ insert into public.words (
   ('support_ch_006', 'support_ch', 'to begin', 'dechrau', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 6, 1),
   ('support_rh_001', 'support_rh', 'free', 'rhydd', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 1, 1),
   ('support_rh_002', 'support_rh', 'some / kind', 'rhyw', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 2, 1),
-  ('support_rh_003', 'support_rh', 'maiden', 'rhiain', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 3, 1),
+  ('support_rh_003', 'support_rh', 'must', 'rhaid', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 3, 1),
   ('support_rh_004', 'support_rh', 'must', 'rhaid', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 4, 1),
   ('support_rh_005', 'support_rh', 'between', 'rhwng', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 5, 1),
   ('support_rh_006', 'support_rh', 'to run', 'rhedeg', '[]'::jsonb, '', 'missing', '', '', 'Both', '', '', 6, 1),
