@@ -210,6 +210,7 @@ export function WelshSpellingBasicsTopicPage({
       : topic.overviewTitle;
   const canStartPractice = Boolean(
     !isPhoneticOrientation &&
+    !(topic.slug === 'accents' && seriesIndex === 0) &&
     topic.practiceListId &&
     onStartPractice &&
     (!isPracticeListAvailable || isPracticeListAvailable(topic.practiceListId))

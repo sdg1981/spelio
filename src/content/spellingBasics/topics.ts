@@ -388,14 +388,30 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
     cards: [
       {
         title: {
-          en: 'What accents do',
-          cy: 'Beth mae acenion yn ei wneud'
+          en: 'Small marks that change words',
+          cy: 'Marciau bach sy’n newid geiriau'
         },
         body: [
           {
-            en: 'Welsh accents can show that a vowel is longer or that a word needs a particular spelling. The most common mark learners notice is the to bach — the little roof-shaped accent.',
-            cy: 'Gall acenion Cymraeg ddangos bod llafariad yn hirach neu fod angen sillafiad penodol ar air. Y marc mwyaf cyffredin y mae dysgwyr yn sylwi arno yw’r to bach — yr acen fach siâp to.'
+            en: 'Welsh accents are small marks written above letters.',
+            cy: 'Mae acenion Cymraeg yn farciau bach uwchben llythrennau.'
+          },
+          {
+            en: 'You will often see them on vowels like: â, ê, î, ô, û, ŵ, and ŷ.',
+            cy: 'Byddwch yn aml yn eu gweld ar lafariaid fel: â, ê, î, ô, û, ŵ, ac ŷ.'
+          },
+          {
+            en: 'Sometimes they change how a word sounds.',
+            cy: 'Weithiau maen nhw’n newid sut mae gair yn swnio.'
+          },
+          {
+            en: 'Sometimes they help show the correct spelling.',
+            cy: 'Weithiau maen nhw’n helpu dangos y sillafiad cywir.'
           }
+        ],
+        examples: [
+          { welsh: 'tan', meaning: { en: 'until', cy: 'tan' } },
+          { welsh: 'tân', meaning: { en: 'fire', cy: 'tân' } }
         ],
         tip: {
           en: 'Accents are small, but they can change how a word sounds.',
