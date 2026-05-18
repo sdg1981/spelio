@@ -108,6 +108,12 @@ assertEqual(soundCategory.topicSlugs.includes('y'), true, 'Overview should inclu
 assertEqual(soundCategory.topicSlugs.includes('wy' as never), false, 'Overview should not show the retired combined wy tile.');
 assertEqual(getSpellingBasicsTopic('w')?.practiceListId, 'support_w', 'W topic should launch support_w practice.');
 assertEqual(getSpellingBasicsTopic('y')?.practiceListId, 'support_y', 'Y topic should launch support_y practice.');
+const phoneticTopic = getSpellingBasicsTopic('phonetic');
+assert(phoneticTopic?.kind === 'single' && phoneticTopic.phoneticOrientation, 'Phonetic topic should expose sound anchors.');
+const phoneticYSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'y');
+assertEqual(phoneticYSound?.example, 'tŷ', 'Phonetic y sound should keep tŷ as the example word.');
+assertEqual(phoneticYSound?.hint.en, '“ee” in see', 'Phonetic y sound should keep only the softened sound anchor text in data.');
+assertEqual(phoneticYSound?.hint.cy, '“ee” yn y gair Saesneg see', 'Phonetic y sound should keep the softened Welsh sound anchor text in data.');
 
 const accentsTopic = spellingBasicsTopics.find(topic => topic.slug === 'accents');
 assert(accentsTopic && accentsTopic.kind === 'series', 'Accents topic should be a series topic.');

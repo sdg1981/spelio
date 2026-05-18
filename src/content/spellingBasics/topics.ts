@@ -73,7 +73,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         { symbol: 'i', hint: { en: 'often like “ee” in see', cy: 'fel y sain “ee” yn y gair Saesneg see' }, example: 'ti' },
         { symbol: 'o', hint: { en: 'like “o” in hot', cy: 'fel yr “o” yn y gair Saesneg hot' }, example: 'bore' },
         { symbol: 'w', hint: { en: '“oo” in food', cy: 'fel y sain “oo” yn y gair Saesneg food' }, example: 'dŵr' },
-        { symbol: 'y', hint: { en: '“ee” in see', cy: 'fel y sain “ee” yn y gair Saesneg see' }, example: 'tŷ' },
+        { symbol: 'y', hint: { en: '“ee” in see', cy: '“ee” yn y gair Saesneg see' }, example: 'tŷ' },
         { symbol: 'f', hint: { en: 'usually like English “v”', cy: 'fel y sain “v” yn y gair Saesneg van' }, example: 'afal' },
         { symbol: 'ff', hint: { en: 'usually like English “f”', cy: 'fel y sain “f” yn y gair Saesneg fish' }, example: 'ffordd' },
         { symbol: 'dd', hint: { en: 'like “th” in this', cy: 'fel y sain “th” yn y gair Saesneg this' }, example: 'dydd' },
@@ -351,22 +351,18 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       body: [
         {
-          en: 'In Welsh, w is often used as a vowel sound.',
-          cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad.'
+          en: 'In Welsh, w is often used as a vowel sound — usually a little like the “oo” sound in English words like food.',
+          cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad — yn aml ychydig fel y sain “oo/ŵ” mewn geiriau Saesneg fel food.'
         },
         {
           en: 'This is one reason Welsh words can look surprising if you are reading them through English habits.',
           cy: 'Dyma un rheswm pam gall geiriau Cymraeg edrych yn annisgwyl os ydych yn eu darllen drwy arferion Saesneg.'
         },
         {
-          en: 'Once you recognise w as a vowel, words like dŵr, cwm, byw, and bwrdd start to make more sense.',
-          cy: 'Unwaith rydych chi’n adnabod w fel llafariad, mae geiriau fel dŵr, cwm, byw, a bwrdd yn dechrau gwneud mwy o synnwyr.'
+          en: 'Once you start hearing w as a vowel, words like dŵr, cwm, byw, and bwrdd start to make more sense.',
+          cy: 'Unwaith rydych chi’n dechrau clywed w fel llafariad, mae geiriau fel dŵr, cwm, byw, a bwrdd yn dechrau gwneud mwy o synnwyr.'
         }
       ],
-      tip: {
-        en: 'Do not assume w is always a consonant in Welsh.',
-        cy: 'Peidiwch â chymryd yn ganiataol fod w bob amser yn gytsain yn Gymraeg.'
-      },
       examples: [
         { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } },
         { welsh: 'cwm', meaning: { en: 'valley', cy: 'cwm' } },
@@ -389,16 +385,20 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       body: [
         {
-          en: 'Welsh y often works as a vowel, but its sound can change depending on where it appears in the word.',
-          cy: 'Mae y Gymraeg yn aml yn gweithio fel llafariad, ond gall ei sain newid yn ôl ble mae’n ymddangos yn y gair.'
+          en: 'Welsh y often works as a vowel, but its sound can change depending on the word.',
+          cy: 'Mae y Gymraeg yn aml yn gweithio fel llafariad, ond gall ei sain newid yn ôl y gair.'
         },
         {
-          en: 'That can feel unfamiliar at first, because English readers often expect y to behave differently.',
-          cy: 'Gall hynny deimlo’n anghyfarwydd ar y dechrau, oherwydd mae darllenwyr Saesneg yn aml yn disgwyl i y ymddwyn yn wahanol.'
+          en: 'It can sound a little like the “ee” in English words like see, or softer like the “u” in English words like up.',
+          cy: 'Gall swnio ychydig fel yr “ee” mewn geiriau Saesneg fel see, neu’n feddalach fel yr “u” mewn geiriau Saesneg fel up.'
         },
         {
-          en: 'Once you notice y in words like tŷ, dydd, mynydd, and llyfr, Welsh spelling starts to feel more predictable.',
-          cy: 'Unwaith rydych chi’n sylwi ar y mewn geiriau fel tŷ, dydd, mynydd, a llyfr, mae sillafu Cymraeg yn dechrau teimlo’n fwy rhagweladwy.'
+          en: 'That can feel unfamiliar at first, because English readers are not used to y behaving this way.',
+          cy: 'Gall hynny deimlo’n anghyfarwydd ar y dechrau, oherwydd nid yw darllenwyr Saesneg wedi arfer â y yn ymddwyn fel hyn.'
+        },
+        {
+          en: 'Once you start noticing y in words like tŷ, dydd, mynydd, and llyfr, Welsh spelling starts to feel more predictable.',
+          cy: 'Unwaith rydych chi’n dechrau sylwi ar y mewn geiriau fel tŷ, dydd, mynydd, a llyfr, mae sillafu Cymraeg yn dechrau teimlo’n fwy rhagweladwy.'
         }
       ],
       tip: {

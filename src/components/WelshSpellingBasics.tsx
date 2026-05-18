@@ -392,14 +392,15 @@ function PhoneticOrientationContent({
     () => content.patternExample ? resolveSpellingBasicsExampleAudio(content.patternExample.word, wordLists) : null,
     [content.patternExample, wordLists]
   );
+  const isSelectedYSound = selectedSound?.symbol === 'y';
   const labels = interfaceLanguage === 'cy'
     ? {
-        sound: 'Sain:',
-        example: 'Enghraifft:'
+        sound: isSelectedYSound ? 'Gall swnio ychydig fel:' : 'Sain:',
+        example: isSelectedYSound ? 'Gair enghreifftiol:' : 'Enghraifft:'
       }
     : {
-        sound: 'Usually sounds like:',
-        example: 'Example:'
+        sound: isSelectedYSound ? 'Can sound a little like:' : 'Usually sounds like:',
+        example: isSelectedYSound ? 'Example word:' : 'Example:'
       };
 
   return (
