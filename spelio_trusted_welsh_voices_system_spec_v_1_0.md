@@ -538,16 +538,57 @@ not:
 A contributor receives:
 
 - assigned word lists
+- recording variant for the session
 - estimated completion time
 - progress tracking
 - optional pronunciation notes
 - dialect notes where needed
+
+Normal and Assisted recordings should normally be recorded in separate contributor sessions rather than alternating after every word.
+
+This is preferred because repeated switching creates unnecessary cognitive load.
+
+Contributors tend to perform more consistently when they remain in one pacing mode.
+
+Separate sessions improve:
+
+- rhythm
+- pacing consistency
+- articulation consistency
+- contributor flow
+
+The contributor should ideally stay in one recording mindset during a session.
+
+Preferred assignment structure:
+
+### Assignment
+North Wales Core Set
+
+### Contains
+- Normal recordings session
+- Assisted recordings session
+
+Contributor session cards may therefore read:
+
+- Foundations Core Set — Normal recordings
+- Foundations Core Set — Assisted recordings
+
+Avoid presenting the ordinary workflow as:
+
+- Foundations Core Set — Normal + Assisted
+
+Mixed-mode recording may still be useful for future experimentation, internal tooling, or admin override flows.
+
+However:
+
+The preferred default should be separate sessions for separate recording variants.
 
 The interface should display:
 
 - large centred Welsh word
 - optional English meaning
 - optional contributor notes
+- current recording variant
 - clear recording state
 - progress count
 - estimated time remaining
@@ -582,6 +623,12 @@ The workflow should feel:
 ## 8.4 Recording state clarity
 
 The interface must make recording state extremely obvious.
+
+The recording screen should ideally remain in one recording variant mode during a session.
+
+Contributors should not need to repeatedly switch mentally between Normal and Assisted pacing.
+
+The UI should therefore avoid constant visible NORMAL / ASSISTED mode switching during ordinary flow.
 
 Recommended behaviour:
 
@@ -924,7 +971,8 @@ Hire:
 Record:
 
 - core foundational corpus
-- normal + assisted variants
+- normal recording sessions
+- assisted recording sessions
 
 ---
 
@@ -961,4 +1009,3 @@ The long-term goal is not:
 The goal is:
 
 > beautifully crafted Welsh listening that helps learners feel confident spelling Welsh.
-
