@@ -68,17 +68,17 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         cy: 'Dyma rai o’r blociau adeiladu sy’n gwneud i sillafu Cymraeg deimlo’n fwy rheolaidd.'
       },
       sounds: [
-        { symbol: 'a', hint: { en: 'like “a” in cat', cy: 'fel yr “a” yn y gair Saesneg cat' }, example: 'afal' },
-        { symbol: 'e', hint: { en: 'like “e” in bed', cy: 'fel yr “e” yn y gair Saesneg bed' }, example: 'hen' },
-        { symbol: 'i', hint: { en: 'often like “ee” in see', cy: 'fel y sain “ee” yn y gair Saesneg see' }, example: 'ti' },
-        { symbol: 'o', hint: { en: 'like “o” in hot', cy: 'fel yr “o” yn y gair Saesneg hot' }, example: 'bore' },
-        { symbol: 'w', hint: { en: '“oo” in food', cy: 'fel y sain “oo” yn y gair Saesneg food' }, example: 'dŵr' },
-        { symbol: 'y', hint: { en: '“ee” in see', cy: '“ee” yn y gair Saesneg see' }, example: 'tŷ' },
-        { symbol: 'f', hint: { en: 'usually like English “v”', cy: 'fel y sain “v” yn y gair Saesneg van' }, example: 'afal' },
-        { symbol: 'ff', hint: { en: 'usually like English “f”', cy: 'fel y sain “f” yn y gair Saesneg fish' }, example: 'ffordd' },
-        { symbol: 'dd', hint: { en: 'like “th” in this', cy: 'fel y sain “th” yn y gair Saesneg this' }, example: 'dydd' },
+        { symbol: 'a', hint: { en: '“a” in the English word cat', cy: 'yr “a” yn y gair Saesneg cat' }, example: 'afal' },
+        { symbol: 'e', hint: { en: '“e” in the English word bed', cy: 'yr “e” yn y gair Saesneg bed' }, example: 'hen' },
+        { symbol: 'i', hint: { en: '“ee” in the English word see', cy: 'y sain “ee” yn y gair Saesneg see' }, example: 'ti' },
+        { symbol: 'o', hint: { en: '“o” in the English word hot', cy: 'yr “o” yn y gair Saesneg hot' }, example: 'bore' },
+        { symbol: 'w', hint: { en: '“oo” in the English word food', cy: 'y sain “oo” yn y gair Saesneg food' }, example: 'dŵr' },
+        { symbol: 'y', hint: { en: '“ee” in the English word see', cy: '“ee” yn y gair Saesneg see' }, example: 'tŷ' },
+        { symbol: 'f', hint: { en: '“v” in the English word van', cy: 'y sain “v” yn y gair Saesneg van' }, example: 'afal' },
+        { symbol: 'ff', hint: { en: '“f” in the English word fish', cy: 'y sain “f” yn y gair Saesneg fish' }, example: 'ffordd' },
+        { symbol: 'dd', hint: { en: '“th” in the English word this', cy: 'y sain “th” yn y gair Saesneg this' }, example: 'dydd' },
         { symbol: 'll', hint: { en: 'a distinctive Welsh sound', cy: 'sain Gymraeg arbennig, nid sain Saesneg arferol' }, example: 'llaw' },
-        { symbol: 'ch', hint: { en: 'the “ch” in Scottish loch', cy: 'fel yr “ch” yn y gair Scottish loch' }, example: 'bach' },
+        { symbol: 'ch', hint: { en: '“ch” in the Scottish word loch', cy: 'yr “ch” yn y gair Sgoteg loch' }, example: 'bach' },
         { symbol: 'rh', hint: { en: 'a breathy Welsh r sound', cy: 'sain “r” Gymraeg anadlol, nid sain Saesneg arferol' }, example: 'rhydd' }
       ],
       patternExample: {
@@ -333,7 +333,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       examples: [
         { welsh: 'rhydd', meaning: { en: 'free', cy: 'rhydd' } },
         { welsh: 'rhyw', meaning: { en: 'some / kind', cy: 'rhyw' } },
-        { welsh: 'rhiain', meaning: { en: 'maiden', cy: 'rhiain' } }
+        { welsh: 'rhaid', meaning: { en: 'must', cy: 'rhaid' } }
       ]
     }
   },
@@ -352,7 +352,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       body: [
         {
           en: 'In Welsh, w is often used as a vowel sound — usually a little like the “oo” sound in English words like food.',
-          cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad — yn aml ychydig fel y sain “oo/ŵ” mewn geiriau Saesneg fel food.'
+          cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad — yn aml ychydig fel y sain “oo” mewn geiriau Saesneg fel food.'
         },
         {
           en: 'This is one reason Welsh words can look surprising if you are reading them through English habits.',
@@ -401,6 +401,22 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           cy: 'Unwaith rydych chi’n dechrau sylwi ar y mewn geiriau fel tŷ, dydd, mynydd, a llyfr, mae sillafu Cymraeg yn dechrau teimlo’n fwy rhagweladwy.'
         }
       ],
+      observation: {
+        title: {
+          en: 'Helpful pattern to notice:',
+          cy: 'Patrwm defnyddiol i sylwi arno:'
+        },
+        body: [
+          {
+            en: 'Y near the end of short words often sounds more like “ee”.',
+            cy: 'Mae y ger diwedd geiriau byr yn aml yn swnio’n fwy fel “ee”.'
+          },
+          {
+            en: 'Earlier in longer words it is often softer.',
+            cy: 'Mewn geiriau hirach, mae’n aml yn swnio’n feddalach.'
+          }
+        ]
+      },
       tip: {
         en: 'Welsh y is worth noticing carefully because it appears in many common words.',
         cy: 'Mae y Gymraeg yn werth sylwi arni’n ofalus oherwydd mae’n ymddangos mewn llawer o eiriau cyffredin.'
@@ -458,8 +474,8 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       {
         title: {
-          en: 'Ŵ and Ŷ',
-          cy: 'Ŵ ac Ŷ'
+          en: 'Accented vowels',
+          cy: 'Llafariaid ag acen'
         },
         body: [
           {

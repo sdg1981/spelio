@@ -112,8 +112,10 @@ const phoneticTopic = getSpellingBasicsTopic('phonetic');
 assert(phoneticTopic?.kind === 'single' && phoneticTopic.phoneticOrientation, 'Phonetic topic should expose sound anchors.');
 const phoneticYSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'y');
 assertEqual(phoneticYSound?.example, 'tŷ', 'Phonetic y sound should keep tŷ as the example word.');
-assertEqual(phoneticYSound?.hint.en, '“ee” in see', 'Phonetic y sound should keep only the softened sound anchor text in data.');
+assertEqual(phoneticYSound?.hint.en, '“ee” in the English word see', 'Phonetic y sound should explicitly label the English anchor word.');
 assertEqual(phoneticYSound?.hint.cy, '“ee” yn y gair Saesneg see', 'Phonetic y sound should keep the softened Welsh sound anchor text in data.');
+const phoneticOSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'o');
+assertEqual(phoneticOSound?.hint.en, '“o” in the English word hot', 'Phonetic sound anchors should explicitly label English reference words.');
 
 const accentsTopic = spellingBasicsTopics.find(topic => topic.slug === 'accents');
 assert(accentsTopic && accentsTopic.kind === 'series', 'Accents topic should be a series topic.');
@@ -126,7 +128,8 @@ assert(accentsLongVowelCard && accentsLongVowelCard.title, 'Accents card 2 shoul
 assertEqual(accentsIntroCard.title.en, 'Small marks that change words', 'Accents card 1 should introduce accents concretely.');
 assertEqual(accentsIntroCard.examples?.[0]?.welsh, 'tan', 'Accents card 1 should compare tan first.');
 assertEqual(accentsIntroCard.examples?.[1]?.welsh, 'tân', 'Accents card 1 should compare tân second.');
-assertEqual(accentsLongVowelCard.title.en, 'Ŵ and Ŷ', 'Accents card 2 should explain accented w and y.');
+assertEqual(accentsLongVowelCard.title.en, 'Accented vowels', 'Accents card 2 title should align with its broader accented-vowel body.');
+assertEqual(accentsLongVowelCard.title.cy, 'Llafariaid ag acen', 'Accents card 2 Welsh title should align with its broader accented-vowel body.');
 assert(
   accentsIntroCard.body.some(copy => copy.en.includes('the â is held a little longer')),
   'Accents card 1 should tell learners what to listen for in tân.'
@@ -143,6 +146,18 @@ assert(
   !accentsIntroCard.body.some(copy => copy.en.includes('â, ê') || copy.en.includes('correct spelling')),
   'Accents card 1 should not include the old abstract vowel list or spelling-copy line.'
 );
+const rhTopic = getSpellingBasicsTopic('rh');
+assert(rhTopic?.kind === 'single', 'RH topic should be a single spelling-basics topic.');
+assertEqual(rhTopic.card.examples?.some(example => example.welsh === 'rhiain'), false, 'RH examples should not include obscure rhiain.');
+assertEqual(rhTopic.card.examples?.some(example => example.welsh === 'rhaid'), true, 'RH examples should use the more useful rhaid example.');
+const yTopic = getSpellingBasicsTopic('y');
+assert(yTopic?.kind === 'single', 'Y topic should be a single spelling-basics topic.');
+assertEqual(yTopic.card.observation?.title.en, 'Helpful pattern to notice:', 'Y topic should include a lightweight observation heading.');
+assertEqual(yTopic.card.observation?.body.map(copy => copy.en).join('|'), 'Y near the end of short words often sounds more like “ee”.|Earlier in longer words it is often softer.', 'Y topic observation should give a practical non-technical clue.');
+assertEqual(yTopic.card.observation?.title.cy, 'Patrwm defnyddiol i sylwi arno:', 'Y topic should include the Welsh observation heading.');
+assertEqual(yTopic.card.observation?.body.map(copy => copy.cy).join('|'), 'Mae y ger diwedd geiriau byr yn aml yn swnio’n fwy fel “ee”.|Mewn geiriau hirach, mae’n aml yn swnio’n feddalach.', 'Y topic observation should include the Welsh wording.');
+assertEqual(yTopic.card.examples?.map(example => example.welsh).join('|'), 'tŷ|dydd|mynydd|llyfr', 'Y topic examples should remain unchanged.');
+assertEqual(spellingBasicsTopics.filter(topic => topic.kind === 'single' && topic.card.observation).map(topic => topic.slug).join('|'), 'y', 'Only the Y page should gain the new observation block.');
 
 const supportResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList, supportList], 'support_ff');
 assertEqual(supportResolution.word?.id, 'support_ff_006', 'Support topic examples should resolve through the support-list word first.');

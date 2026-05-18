@@ -139,8 +139,8 @@ const supportListSeeds: SupportListSeed[] = [
       { englishPrompt: 'tower', welshAnswer: 'twr' },
       { englishPrompt: 'meet', welshAnswer: 'cwrdd' },
       { englishPrompt: 'sound', welshAnswer: 'sŵn' },
-      { englishPrompt: 'grandson / knows', welshAnswer: 'ŵyr' },
-      { englishPrompt: 'man / husband', welshAnswer: 'gwr' },
+      { englishPrompt: 'smoke', welshAnswer: 'mwg' },
+      { englishPrompt: 'man / husband', welshAnswer: 'gŵr' },
       { englishPrompt: 'luck', welshAnswer: 'lwc' }
     ]
   },
@@ -154,7 +154,7 @@ const supportListSeeds: SupportListSeed[] = [
     words: [
       { englishPrompt: 'house', welshAnswer: 'tŷ' },
       { englishPrompt: 'day', welshAnswer: 'dydd' },
-      { englishPrompt: 'today', welshAnswer: 'heddiw' },
+      { englishPrompt: 'world', welshAnswer: 'byd' },
       { englishPrompt: 'mountain', welshAnswer: 'mynydd' },
       { englishPrompt: 'book', welshAnswer: 'llyfr' },
       { englishPrompt: 'school', welshAnswer: 'ysgol' },

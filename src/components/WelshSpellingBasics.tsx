@@ -328,6 +328,14 @@ function TopicCardContent({
         {card.body.map((paragraph, index) => (
           <p key={index}>{renderLocalizedText(paragraph, interfaceLanguage)}</p>
         ))}
+        {card.observation && (
+          <div className="spelling-basics-observation">
+            <strong>{renderLocalizedText(card.observation.title, interfaceLanguage)}</strong>
+            {card.observation.body.map((paragraph, index) => (
+              <p key={index}>{renderLocalizedText(paragraph, interfaceLanguage)}</p>
+            ))}
+          </div>
+        )}
       </div>
 
       {card.examples && card.examples.length > 0 && (
@@ -392,15 +400,14 @@ function PhoneticOrientationContent({
     () => content.patternExample ? resolveSpellingBasicsExampleAudio(content.patternExample.word, wordLists) : null,
     [content.patternExample, wordLists]
   );
-  const isSelectedYSound = selectedSound?.symbol === 'y';
   const labels = interfaceLanguage === 'cy'
     ? {
-        sound: isSelectedYSound ? 'Gall swnio ychydig fel:' : 'Sain:',
-        example: isSelectedYSound ? 'Gair enghreifftiol:' : 'Enghraifft:'
+        sound: 'Gall swnio ychydig fel:',
+        example: 'Enghraifft:'
       }
     : {
-        sound: isSelectedYSound ? 'Can sound a little like:' : 'Usually sounds like:',
-        example: isSelectedYSound ? 'Example word:' : 'Example:'
+        sound: 'Can sound a little like:',
+        example: 'Example:'
       };
 
   return (
@@ -468,7 +475,7 @@ function PhoneticOrientationContent({
               <span className="spelling-basics-pattern-chip" key={pattern}>
                 {pattern}
                 {index < content.patternExample!.patterns.length - 1 && (
-                  <span className="spelling-basics-pattern-plus" aria-hidden="true">+</span>
+                  <span className="spelling-basics-pattern-plus" aria-hidden="true">·</span>
                 )}
               </span>
             ))}

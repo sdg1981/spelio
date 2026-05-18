@@ -28,6 +28,10 @@ export type SpellingBasicsTopicCard = {
   title?: LocalizedString;
   subtitle?: LocalizedString;
   body: LocalizedString[];
+  observation?: {
+    title: LocalizedString;
+    body: LocalizedString[];
+  };
   examples?: SpellingBasicsExample[];
   tip?: LocalizedString;
 };

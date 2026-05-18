@@ -2891,7 +2891,7 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap:20px;
   margin-top:2px;
 }
 
@@ -2915,14 +2915,15 @@
 
 .spelling-basics-pattern-plus{
   position:absolute;
-  left:calc(100% + 7px);
+  left:calc(100% + 9px);
   top:50%;
-  transform:translateY(-50%);
+  transform:translate(-50%, -52%);
   color:var(--text-secondary, #5f6b78);
   font-family:var(--font-sans, Inter, system-ui, sans-serif);
-  font-size:20px;
-  font-weight:850;
+  font-size:28px;
+  font-weight:760;
   line-height:1;
+  opacity:.78;
 }
 
 .spelling-basics-pattern-word-card{
@@ -3178,7 +3179,7 @@
   }
 
   .spelling-basics-pattern-row{
-    gap:9px;
+    gap:18px;
   }
 
   .spelling-basics-pattern-chip{
@@ -3188,8 +3189,8 @@
   }
 
   .spelling-basics-pattern-plus{
-    left:calc(100% + 6px);
-    font-size:18px;
+    left:calc(100% + 8px);
+    font-size:26px;
   }
 
   .spelling-basics-pattern-word-card{

@@ -108,9 +108,36 @@ assertEqual(supportAfal?.audioStatus, 'missing', 'Phonetic support example afal 
 const supportCwm = adminWords.find(word => word.id === 'support_w_002');
 assertEqual(supportCwm?.welshAnswer, 'cwm', 'Admin content should include split support W word cwm.');
 assertEqual(supportCwm?.audioStatus, 'missing', 'Split support W words should be visible as missing audio until generated.');
+const supportMwg = adminWords.find(word => word.id === 'support_w_008');
+assertEqual(supportMwg?.welshAnswer, 'mwg', 'Admin content should include replacement support W word mwg.');
+assertEqual(supportMwg?.englishPrompt, 'smoke', 'Admin content should prompt mwg as smoke.');
+assertEqual(supportMwg?.audioStatus, 'missing', 'Replacement support W word mwg should be queued as missing audio until generated.');
+const supportGwr = adminWords.find(word => word.id === 'support_w_009');
+assertEqual(supportGwr?.welshAnswer, 'gŵr', 'Admin content should include corrected support W word gŵr.');
+assertEqual(supportGwr?.englishPrompt, 'man / husband', 'Admin content should keep the man / husband prompt for gŵr.');
+assertEqual(supportGwr?.audioStatus, 'missing', 'Corrected support W word gŵr should be queued as missing audio until generated.');
+assertEqual(
+  adminWords.some(word => word.id === 'support_w_008' && word.welshAnswer === 'ŵyr'),
+  false,
+  'Support W should no longer expose ambiguous ŵyr in admin content.'
+);
+assertEqual(
+  adminWords.some(word => word.id === 'support_w_009' && word.welshAnswer === 'gwr'),
+  false,
+  'Support W should no longer expose unaccented gwr in admin content.'
+);
 const supportTywydd = adminWords.find(word => word.id === 'support_y_010');
 assertEqual(supportTywydd?.welshAnswer, 'tywydd', 'Admin content should include split support Y word tywydd.');
 assertEqual(supportTywydd?.audioStatus, 'missing', 'Split support Y words should be visible as missing audio until generated.');
+const supportByd = adminWords.find(word => word.id === 'support_y_003');
+assertEqual(supportByd?.welshAnswer, 'byd', 'Admin content should include replacement support Y word byd.');
+assertEqual(supportByd?.englishPrompt, 'world', 'Admin content should prompt byd as world.');
+assertEqual(supportByd?.audioStatus, 'missing', 'Replacement support Y word byd should be queued as missing audio until generated.');
+assertEqual(
+  adminWords.some(word => word.id === 'support_y_003' && word.welshAnswer === 'heddiw'),
+  false,
+  'Support Y should no longer expose heddiw in admin content.'
+);
 assertEqual(
   adminWords.some(word => word.id.startsWith('support_wy_')),
   false,
@@ -137,9 +164,24 @@ assertEqual(
   'The admin audio queue snapshot should include missing split support W words.'
 );
 assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_w_008' && word.welshAnswer === 'mwg' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing replacement support W word mwg.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_w_009' && word.welshAnswer === 'gŵr' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing corrected support W word gŵr.'
+);
+assertEqual(
   createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_y_010' && word.audioStatus === 'missing'),
   true,
   'The admin audio queue snapshot should include missing split support Y words.'
+);
+assertEqual(
+  createAudioQueueSnapshot(adminWords).words.some(word => word.id === 'support_y_003' && word.welshAnswer === 'byd' && word.audioStatus === 'missing'),
+  true,
+  'The admin audio queue snapshot should include missing replacement support Y word byd.'
 );
 
 console.log('admin audio queue bulk tests passed');
