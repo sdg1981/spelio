@@ -690,15 +690,17 @@ test('support-list progress does not affect normal difficult-word review pools',
 test('detached support review is scoped to difficult words from the current support list', () => {
   const supportDd = findSupportWordList(wordLists, 'support_dd');
   const supportFf = findSupportWordList(wordLists, 'support_ff');
-  assert(supportDd && supportFf, 'Expected support_dd and support_ff to exist');
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(supportDd && supportFf && numbers, 'Expected support_dd, support_ff, and foundations_numbers to exist');
 
   const original = numbersStorage();
   const start = createDetachedSupportPracticeStart(original, supportDd);
   let sessionStorage = applyWordProgressPatch(start.storage, supportDd.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
   sessionStorage = applyWordProgressPatch(sessionStorage, supportFf.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  sessionStorage = applyWordProgressPatch(sessionStorage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
 
   assertEqual(getDifficultWordCountInList(sessionStorage, supportDd), 1, 'Support end screen should see difficult words from the completed support list.');
-  assertEqual(hasDifficultWords(sessionStorage, wordLists), false, 'Support difficult words should still be invisible to the global review pool.');
+  assertEqual(hasDifficultWords(sessionStorage, wordLists), true, 'Setup should include a normal difficult word to prove support review stays scoped.');
 
   const reviewStart = createDetachedSupportReviewPracticeStart(sessionStorage, supportDd);
   const reviewSession = createPracticeSession(wordLists, reviewStart.storage, reviewStart.review, reviewStart.recap);
@@ -707,8 +709,23 @@ test('detached support review is scoped to difficult words from the current supp
   assertEqual(reviewStart.storage.currentPathPosition, 'support_dd', 'Support review should keep the detached support path position.');
   assertEqual(reviewSession.words.length, 1, 'Support review should include only unresolved difficult words from that support list.');
   assertEqual(reviewSession.words[0]?.id, supportDd.words[0].id, 'Support review should not mix in difficult words from another support list.');
+  assertEqual(reviewSession.words.some(word => word.listId === 'foundations_numbers'), false, 'Support review should not include normal progression difficult words.');
   assertEqual(original.selectedListIds[0], 'foundations_numbers', 'Support review start should not mutate the original selected list.');
   assertEqual(original.currentPathPosition, 'foundations_numbers', 'Support review start should not mutate the original path position.');
+});
+
+test('detached support end-screen difficult count is zero without support mistakes', () => {
+  const support = findSupportWordList(wordLists, 'support_accents');
+  assert(support, 'Expected support_accents to exist');
+
+  const start = createDetachedSupportPracticeStart(numbersStorage(), support);
+  const cleanStorage = applyWordProgressPatch(start.storage, support.words[0], {
+    completed: true,
+    cleanCompleted: true
+  }, '2026-05-05T00:00:00.000Z');
+
+  assertEqual(getDifficultWordCountInList(cleanStorage, support), 0, 'Clean detached support sessions should keep Back to spelling basics as the primary CTA.');
+  assertEqual(createPracticeSession(wordLists, cleanStorage, true).words.length, 0, 'Clean support sessions should have no scoped review pool.');
 });
 
 test('detached support review disappears after clean resolution', () => {

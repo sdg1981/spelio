@@ -22,6 +22,7 @@ import { getDifficultWordCount, getDifficultWordCountInList, getRecapWordCount, 
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
+import { getEndScreenProgressSummary } from './lib/practice/endScreenState';
 import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib/customListRoutes';
 import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
@@ -470,6 +471,7 @@ export default function App() {
     if (activeSupportPractice) {
       setCompletedSupportPractice(activeSupportPractice);
       setActiveSupportPractice(null);
+      setPracticeStartStorage(nextStorage);
       setPracticeTestMode(false);
     } else if (activeSharedContext) {
       setStorage(restoreSharedWordListProgression(nextStorage, activeSharedContext));
@@ -791,7 +793,7 @@ export default function App() {
     <EndScreen
       result={lastResult}
       recommendation={recommendation}
-      progressSummary={endProgressSummary}
+      progressSummary={getEndScreenProgressSummary(endProgressSummary, completedSupportPractice)}
       hasDifficultWords={difficultWords}
       onContinue={startNormalContinuationPractice}
       onReview={startReviewPractice}
