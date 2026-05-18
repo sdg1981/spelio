@@ -397,12 +397,12 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
             cy: 'Mae acenion Cymraeg yn farciau bach uwchben llythrennau.'
           },
           {
-            en: 'They can change how a word sounds — and sometimes the meaning too.',
-            cy: 'Gallan nhw newid sut mae gair yn swnio — ac weithiau’r ystyr hefyd.'
+            en: 'They often show that a vowel sound is longer.',
+            cy: 'Yn aml, maen nhw’n dangos bod sain llafariad yn hirach.'
           },
           {
-            en: 'Listen to this example:',
-            cy: 'Gwrandewch ar yr enghraifft hon:'
+            en: 'Listen carefully: in tân, the â is held a little longer than the a in tan. The accent also changes the meaning.',
+            cy: 'Gwrandewch yn ofalus: yn tân, mae’r â yn cael ei ddal ychydig yn hirach na’r a yn tan. Mae’r acen hefyd yn newid yr ystyr.'
           }
         ],
         examples: [
@@ -410,8 +410,8 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           { welsh: 'tân', meaning: { en: 'fire', cy: 'tân' } }
         ],
         tip: {
-          en: 'A small accent can make a real difference.',
-          cy: 'Gall acen fach wneud gwahaniaeth go iawn.'
+          en: 'The difference can be subtle, so listening side by side helps.',
+          cy: 'Gall y gwahaniaeth fod yn gynnil, felly mae gwrando ochr yn ochr yn helpu.'
         }
       },
       {
@@ -421,8 +421,12 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         },
         body: [
           {
-            en: 'You will often see accents on w and y in short Welsh words. They can help show a longer vowel sound.',
-            cy: 'Byddwch yn aml yn gweld acenion ar w ac y mewn geiriau Cymraeg byr. Gallant helpu i ddangos sain llafariad hirach.'
+            en: 'Welsh accents can appear on vowels such as â, ê, î, ô, û, ŵ, and ŷ.',
+            cy: 'Gall acenion Cymraeg ymddangos ar lafariaid fel â, ê, î, ô, û, ŵ, ac ŷ.'
+          },
+          {
+            en: 'You will often notice ŵ and ŷ in short Welsh words. They can help show a longer vowel sound.',
+            cy: 'Byddwch yn aml yn sylwi ar ŵ ac ŷ mewn geiriau Cymraeg byr. Gallant helpu i ddangos sain llafariad hirach.'
           }
         ],
         examples: [

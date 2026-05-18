@@ -112,6 +112,14 @@ assertEqual(accentsIntroCard.examples?.[0]?.welsh, 'tan', 'Accents card 1 should
 assertEqual(accentsIntroCard.examples?.[1]?.welsh, 'tân', 'Accents card 1 should compare tân second.');
 assertEqual(accentsLongVowelCard.title.en, 'Ŵ and Ŷ', 'Accents card 2 should explain accented w and y.');
 assert(
+  accentsIntroCard.body.some(copy => copy.en.includes('the â is held a little longer')),
+  'Accents card 1 should tell learners what to listen for in tân.'
+);
+assert(
+  accentsLongVowelCard.body.some(copy => copy.en.includes('â, ê, î, ô, û, ŵ, and ŷ')),
+  'Accents card 2 should include the useful accented-vowel list.'
+);
+assert(
   !accentsCards.some(card => card.title?.en === 'Hear the difference'),
   'Accents topic should not include the removed third comparison card.'
 );
