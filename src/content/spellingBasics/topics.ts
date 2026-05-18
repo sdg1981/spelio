@@ -397,16 +397,12 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
             cy: 'Mae acenion Cymraeg yn farciau bach uwchben llythrennau.'
           },
           {
-            en: 'You will often see them on vowels like: â, ê, î, ô, û, ŵ, and ŷ.',
-            cy: 'Byddwch yn aml yn eu gweld ar lafariaid fel: â, ê, î, ô, û, ŵ, ac ŷ.'
+            en: 'They can change how a word sounds — and sometimes the meaning too.',
+            cy: 'Gallan nhw newid sut mae gair yn swnio — ac weithiau’r ystyr hefyd.'
           },
           {
-            en: 'Sometimes they change how a word sounds.',
-            cy: 'Weithiau maen nhw’n newid sut mae gair yn swnio.'
-          },
-          {
-            en: 'Sometimes they help show the correct spelling.',
-            cy: 'Weithiau maen nhw’n helpu dangos y sillafiad cywir.'
+            en: 'Listen to this example:',
+            cy: 'Gwrandewch ar yr enghraifft hon:'
           }
         ],
         examples: [
@@ -414,8 +410,8 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           { welsh: 'tân', meaning: { en: 'fire', cy: 'tân' } }
         ],
         tip: {
-          en: 'Accents are small, but they can change how a word sounds.',
-          cy: 'Mae acenion yn fach, ond gallant newid sut mae gair yn swnio.'
+          en: 'A small accent can make a real difference.',
+          cy: 'Gall acen fach wneud gwahaniaeth go iawn.'
         }
       },
       {
@@ -434,26 +430,6 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           { welsh: 'tŷ', meaning: { en: 'house', cy: 'tŷ' } },
           { welsh: 'ŷd', meaning: { en: 'corn / grain', cy: 'ŷd' } }
         ]
-      },
-      {
-        title: {
-          en: 'Hear the difference',
-          cy: 'Clywed y gwahaniaeth'
-        },
-        body: [
-          {
-            en: 'Sometimes an accent changes how a word sounds. Listening to the accented and unaccented forms side by side can make the difference easier to notice.',
-            cy: 'Weithiau mae acen yn newid sut mae gair yn swnio. Gall gwrando ar ffurfiau ag acen a heb acen ochr yn ochr wneud y gwahaniaeth yn haws i’w sylwi.'
-          }
-        ],
-        examples: [
-          { welsh: 'tan', meaning: { en: 'until', cy: 'tan' } },
-          { welsh: 'tân', meaning: { en: 'fire', cy: 'tân' } }
-        ],
-        tip: {
-          en: 'The accent may look small, but it can change both sound and meaning.',
-          cy: 'Gall yr acen edrych yn fach, ond gall newid y sain a’r ystyr.'
-        }
       }
     ]
   }

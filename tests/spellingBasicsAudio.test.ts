@@ -1,5 +1,6 @@
 import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { createSupportWordLists } from '../src/data/supportWordLists';
+import { spellingBasicsTopics } from '../src/content/spellingBasics/topics';
 import { createSupportPracticeRoute, handleSpellingBasicsExampleAudioClick, resolveSpellingBasicsExampleAudio } from '../src/lib/spellingBasicsAudio';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -96,6 +97,27 @@ assertEqual(
   createSupportPracticeRoute('support_ff', '/spelling-basics/ff'),
   '/practice?supportListId=support_ff&returnTo=%2Fspelling-basics%2Fff',
   'Practise this pattern should have a stable support-practice route target.'
+);
+
+const accentsTopic = spellingBasicsTopics.find(topic => topic.slug === 'accents');
+assert(accentsTopic && accentsTopic.kind === 'series', 'Accents topic should be a series topic.');
+const accentsCards = accentsTopic.cards;
+assertEqual(accentsCards.length, 2, 'Accents topic should have exactly two cards.');
+const accentsIntroCard = accentsCards[0];
+const accentsLongVowelCard = accentsCards[1];
+assert(accentsIntroCard && accentsIntroCard.title, 'Accents card 1 should have a title.');
+assert(accentsLongVowelCard && accentsLongVowelCard.title, 'Accents card 2 should have a title.');
+assertEqual(accentsIntroCard.title.en, 'Small marks that change words', 'Accents card 1 should introduce accents concretely.');
+assertEqual(accentsIntroCard.examples?.[0]?.welsh, 'tan', 'Accents card 1 should compare tan first.');
+assertEqual(accentsIntroCard.examples?.[1]?.welsh, 'tân', 'Accents card 1 should compare tân second.');
+assertEqual(accentsLongVowelCard.title.en, 'Ŵ and Ŷ', 'Accents card 2 should explain accented w and y.');
+assert(
+  !accentsCards.some(card => card.title?.en === 'Hear the difference'),
+  'Accents topic should not include the removed third comparison card.'
+);
+assert(
+  !accentsIntroCard.body.some(copy => copy.en.includes('â, ê') || copy.en.includes('correct spelling')),
+  'Accents card 1 should not include the old abstract vowel list or spelling-copy line.'
 );
 
 const supportResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList, supportList], 'support_ff');
