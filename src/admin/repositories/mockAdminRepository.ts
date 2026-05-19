@@ -161,9 +161,12 @@ export const mockAdminRepository: AdminRepository = {
     const normalizedMode = mode === 'azure_transform' ? 'azure_transform' as const : 'direct' as const;
     const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: normalizedMode };
     await this.saveWord(pendingWord);
+    const pronunciationHint = word.elevenLabsPronunciationHint.trim();
     const readyWord = {
       ...pendingWord,
       elevenLabsAudioStatus: 'generated' as const,
+      elevenLabsPronunciationHintUsed: normalizedMode === 'direct' && Boolean(pronunciationHint),
+      elevenLabsPronunciationHintText: normalizedMode === 'direct' ? pronunciationHint : '',
       elevenLabsGeneratedAt: new Date().toISOString(),
       elevenLabsModel: mode === 'azure_transform' ? 'eleven_multilingual_sts_v2' : 'eleven_v3',
       elevenLabsVoiceId: 'DikmR0aoFXAp1A3NcovW',

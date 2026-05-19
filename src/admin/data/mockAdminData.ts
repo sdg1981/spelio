@@ -14,6 +14,9 @@ type RawWord = {
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   elevenLabsGenerationMode?: ElevenLabsGenerationMode;
   preferredElevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  elevenLabsPronunciationHint?: string;
+  elevenLabsPronunciationHintUsed?: boolean;
+  elevenLabsPronunciationHintText?: string;
   elevenLabsGeneratedAt?: string;
   elevenLabsModel?: string;
   elevenLabsVoiceId?: string;
@@ -131,6 +134,9 @@ export const adminWordLists: AdminWordList[] = rawLists
         elevenLabsAudioStatus: word.elevenLabsAudioStatus ?? 'missing',
         elevenLabsGenerationMode: word.elevenLabsGenerationMode ?? 'direct',
         preferredElevenLabsGenerationMode: word.preferredElevenLabsGenerationMode ?? 'direct',
+        elevenLabsPronunciationHint: word.elevenLabsPronunciationHint ?? '',
+        elevenLabsPronunciationHintUsed: word.elevenLabsPronunciationHintUsed ?? false,
+        elevenLabsPronunciationHintText: word.elevenLabsPronunciationHintText ?? '',
         elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',
         elevenLabsModel: word.elevenLabsModel ?? '',
         elevenLabsVoiceId: word.elevenLabsVoiceId ?? '',

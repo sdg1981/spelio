@@ -75,6 +75,9 @@ type WordRow = {
   elevenlabs_audio_status?: string | null;
   elevenlabs_generation_mode?: string | null;
   preferred_elevenlabs_generation_mode?: string | null;
+  elevenlabs_pronunciation_hint?: string | null;
+  elevenlabs_pronunciation_hint_used?: boolean | null;
+  elevenlabs_pronunciation_hint_text?: string | null;
   elevenlabs_generated_at?: string | null;
   elevenlabs_model?: string | null;
   elevenlabs_voice_id?: string | null;
@@ -295,9 +298,11 @@ export const supabaseAdminRepository: AdminRepository = {
       await this.saveWord({ ...word, elevenLabsGenerationMode: mode, elevenLabsAudioStatus: 'pending' }).catch(error => {
         throw new Error(`Supabase save failed while marking ElevenLabs audio as pending: ${readErrorMessage(error)}`);
       });
+      const pronunciationHint = word.elevenLabsPronunciationHint.trim();
+      const directText = pronunciationHint || word.welshAnswer;
       const audio = mode === 'azure_transform'
         ? await transformAzureMp3WithElevenLabs(word.audioUrl)
-        : await synthesizeElevenLabsWelshMp3(word.welshAnswer);
+        : await synthesizeElevenLabsWelshMp3(directText);
       const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio.blob).catch(error => {
         throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
       });
@@ -306,6 +311,8 @@ export const supabaseAdminRepository: AdminRepository = {
         elevenLabsAudioUrl,
         elevenLabsAudioStatus: 'generated',
         elevenLabsGenerationMode: mode,
+        elevenLabsPronunciationHintUsed: mode === 'direct' && Boolean(pronunciationHint),
+        elevenLabsPronunciationHintText: mode === 'direct' ? pronunciationHint : '',
         elevenLabsGeneratedAt: new Date().toISOString(),
         elevenLabsModel: audio.diagnostics.model,
         elevenLabsVoiceId: audio.diagnostics.voiceId,
@@ -585,6 +592,9 @@ function mapWordRow(row: WordRow): AdminWord {
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status) as ElevenLabsAudioStatus,
     elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode) as ElevenLabsGenerationMode,
     preferredElevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.preferred_elevenlabs_generation_mode) as ElevenLabsGenerationMode,
+    elevenLabsPronunciationHint: row.elevenlabs_pronunciation_hint ?? '',
+    elevenLabsPronunciationHintUsed: row.elevenlabs_pronunciation_hint_used === true,
+    elevenLabsPronunciationHintText: row.elevenlabs_pronunciation_hint_text ?? '',
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
     elevenLabsModel: row.elevenlabs_model ?? '',
     elevenLabsVoiceId: row.elevenlabs_voice_id ?? '',
@@ -676,6 +686,9 @@ function toWordRow(word: AdminWord) {
     elevenlabs_audio_status: word.elevenLabsAudioStatus,
     elevenlabs_generation_mode: word.elevenLabsGenerationMode,
     preferred_elevenlabs_generation_mode: word.preferredElevenLabsGenerationMode,
+    elevenlabs_pronunciation_hint: word.elevenLabsPronunciationHint || null,
+    elevenlabs_pronunciation_hint_used: word.elevenLabsPronunciationHintUsed,
+    elevenlabs_pronunciation_hint_text: word.elevenLabsPronunciationHintText || null,
     elevenlabs_generated_at: word.elevenLabsGeneratedAt || null,
     elevenlabs_model: word.elevenLabsModel || null,
     elevenlabs_voice_id: word.elevenLabsVoiceId || null,

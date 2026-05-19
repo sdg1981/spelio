@@ -39,6 +39,9 @@ export interface AdminWord {
   elevenLabsAudioStatus: ElevenLabsAudioStatus;
   elevenLabsGenerationMode: ElevenLabsGenerationMode;
   preferredElevenLabsGenerationMode: ElevenLabsGenerationMode;
+  elevenLabsPronunciationHint: string;
+  elevenLabsPronunciationHintUsed: boolean;
+  elevenLabsPronunciationHintText: string;
   elevenLabsGeneratedAt: string;
   elevenLabsModel: string;
   elevenLabsVoiceId: string;

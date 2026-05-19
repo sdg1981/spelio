@@ -66,6 +66,9 @@ type WordRow = {
   elevenlabs_audio_status?: string | null;
   elevenlabs_generation_mode?: string | null;
   preferred_elevenlabs_generation_mode?: string | null;
+  elevenlabs_pronunciation_hint?: string | null;
+  elevenlabs_pronunciation_hint_used?: boolean | null;
+  elevenlabs_pronunciation_hint_text?: string | null;
   elevenlabs_generated_at?: string | null;
   elevenlabs_model?: string | null;
   elevenlabs_voice_id?: string | null;
@@ -172,6 +175,9 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status),
     elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode),
     preferredElevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.preferred_elevenlabs_generation_mode),
+    elevenLabsPronunciationHint: row.elevenlabs_pronunciation_hint ?? '',
+    elevenLabsPronunciationHintUsed: row.elevenlabs_pronunciation_hint_used === true,
+    elevenLabsPronunciationHintText: row.elevenlabs_pronunciation_hint_text ?? '',
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
     elevenLabsModel: row.elevenlabs_model ?? '',
     elevenLabsVoiceId: row.elevenlabs_voice_id ?? '',

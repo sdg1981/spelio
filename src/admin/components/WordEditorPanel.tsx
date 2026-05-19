@@ -138,6 +138,9 @@ export function WordEditorPanel({
           <div className="mt-5 max-w-xs">
             <PreferredElevenLabsModeControl word={word} onChange={onChange} />
           </div>
+          <div className="mt-5 max-w-xl">
+            <ElevenLabsPronunciationHintField word={word} onChange={onChange} />
+          </div>
           <ElevenLabsDiagnostics word={word} />
         </div>
         <div className="p-5">
@@ -295,6 +298,7 @@ export function WordEditorPanel({
             </AdminSelect>
           </Field>
           <PreferredElevenLabsModeControl word={word} onChange={onChange} />
+          <ElevenLabsPronunciationHintField word={word} onChange={onChange} />
           <Field label="ElevenLabs mode">
             <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
               <option value="direct">direct</option>
@@ -351,6 +355,23 @@ function PreferredElevenLabsModeControl({ word, onChange }: { word: AdminWord; o
   );
 }
 
+function ElevenLabsPronunciationHintField({ word, onChange }: { word: AdminWord; onChange: (patch: Partial<AdminWord>) => void }) {
+  const hasWyPattern = word.welshAnswer.toLowerCase().includes('wy');
+
+  return (
+    <Field label="ElevenLabs pronunciation hint" helper="Optional. Used only when generating direct ElevenLabs audio.">
+      <div className="grid gap-2">
+        <AdminInput
+          value={word.elevenLabsPronunciationHint}
+          placeholder="e.g. penwythnos (pen-oi-th-nos)"
+          onChange={event => onChange({ elevenLabsPronunciationHint: event.target.value })}
+        />
+        {hasWyPattern && <div className="text-xs font-bold text-amber-700">WY pattern detected - check audio carefully.</div>}
+      </div>
+    </Field>
+  );
+}
+
 function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
   const hasElevenLabsMetadata =
     word.elevenLabsAudioStatus !== 'missing' ||
@@ -371,6 +392,8 @@ function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
         <DiagnosticItem label="Voice ID" value={word.elevenLabsVoiceId} mono />
         <DiagnosticItem label="Language" value={word.elevenLabsLanguageOverride} />
         <DiagnosticItem label="Prompt" value={word.elevenLabsPrompt} wide />
+        <DiagnosticItem label="Hint used" value={word.elevenLabsPronunciationHintUsed ? 'yes' : 'no'} />
+        <DiagnosticItem label="Hint text used" value={word.elevenLabsPronunciationHintText} wide />
       </dl>
     </div>
   );
