@@ -11,6 +11,7 @@ import { mainWordLists } from '../data/supportWordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
+import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
@@ -153,6 +154,7 @@ export function Practice({
   sessionKey = 0,
   showKeyboardHint = false,
   practiceTestMode = false,
+  defaultAudioProvider = DEFAULT_AUDIO_PROVIDER,
   disableQuickRecap = false,
   detached = false,
   onStorageChange,
@@ -173,6 +175,7 @@ export function Practice({
   sessionKey?: number;
   showKeyboardHint?: boolean;
   practiceTestMode?: boolean;
+  defaultAudioProvider?: DefaultAudioProvider;
   disableQuickRecap?: boolean;
   detached?: boolean;
   onStorageChange: (next: SpelioStorage) => void;
@@ -251,7 +254,7 @@ export function Practice({
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, disableQuickRecap, detached, sessionKey, onStorageChange, onComplete, t });
+  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, defaultAudioProvider, disableQuickRecap, detached, sessionKey, onStorageChange, onComplete, t });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -336,7 +339,7 @@ export function Practice({
 
     restorePracticeInputFocus();
 
-    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
     const promptAlreadyVisible = shouldShowEnglishPrompt(storage.settings.englishVisible, currentWordAudioUnavailable) || isEnglishPromptPeeking;
     if (promptAlreadyVisible) return;
 
@@ -417,7 +420,7 @@ export function Practice({
       spellingHintTimerRef.current = null;
     }, 4000);
 
-    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
     if (storage.settings.audioPrompts && !currentWordAudioUnavailable) {
       clearScheduledSpellingHintAudioReplay();
       spellingHintAudioReplayTimerRef.current = window.setTimeout(() => {
@@ -592,7 +595,7 @@ export function Practice({
     }
 
     const playbackFailed = audioPlaybackFailedWordIds.has(currentWord.id);
-    const shouldDelay = shouldDelayEnglishPrompt(storage.settings, currentWord, playbackFailed);
+    const shouldDelay = shouldDelayEnglishPrompt(storage.settings, currentWord, playbackFailed, defaultAudioProvider);
     if (!shouldDelay || isComplete || modal || settingsModalOpenRef.current) {
       setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       return;
@@ -617,6 +620,9 @@ export function Practice({
     clearRecallPauseTimer,
     currentWord?.audioStatus,
     currentWord?.audioUrl,
+    currentWord?.elevenLabsAudioStatus,
+    currentWord?.elevenLabsAudioUrl,
+    defaultAudioProvider,
     currentWord?.id,
     isComplete,
     modal,
@@ -809,7 +815,7 @@ export function Practice({
     };
 
     logAudioPlaybackClick('learner-word-pill', currentWord?.audioUrl);
-    if (currentWord && isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id))) {
+    if (currentWord && isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider)) {
       showLocalStatus(t('practice.audioUnavailable'));
       if (shouldUseMobileKeyboard()) {
         window.setTimeout(focusMobileInput, 40);
@@ -865,12 +871,13 @@ export function Practice({
   const displayTone = status ? statusTone : 'neutral';
   const dialectLabel = getDialectLabel(currentWord, t);
   const spellingHintText = !practiceTestMode && spellingHint ? t(spellingHint.translationKey) : null;
-  const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id));
+  const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
   const effectiveEnglishVisible = practiceTestMode ? false : storage.settings.englishVisible;
   const shouldDelayCurrentEnglishPrompt = shouldDelayEnglishPrompt(
     practiceTestMode ? { ...storage.settings, englishVisible: false, recallPause: false } : storage.settings,
     currentWord,
-    audioPlaybackFailedWordIds.has(currentWord.id)
+    audioPlaybackFailedWordIds.has(currentWord.id),
+    defaultAudioProvider
   );
   const basePromptVisible = practiceTestMode ? false : shouldShowEnglishPrompt(effectiveEnglishVisible, currentWordAudioUnavailable);
   const recallPausePromptReleased =

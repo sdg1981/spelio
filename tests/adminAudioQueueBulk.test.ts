@@ -43,6 +43,8 @@ function result(id: string, ok: boolean): AudioGenerationResult {
       acceptedAlternatives: [],
       audioUrl: ok ? '/audio/work.mp3' : '',
       audioStatus: ok ? 'ready' : 'failed',
+      elevenLabsAudioUrl: '',
+      elevenLabsAudioStatus: 'missing',
       notes: '',
       order: 1,
       difficulty: 1,

@@ -10,6 +10,7 @@ import {
   type WordListCollectionType
 } from '../../data/wordLists';
 import type { PublicContent } from './staticContentRepository';
+import { DEFAULT_AUDIO_PROVIDER, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus } from '../audioProvider';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -61,6 +62,8 @@ type WordRow = {
   accepted_alternatives: unknown;
   audio_url: string | null;
   audio_status: string | null;
+  elevenlabs_audio_url?: string | null;
+  elevenlabs_audio_status?: string | null;
   usage_note: string | null;
   spelling_hint_id?: string | null;
   disable_pattern_hints?: boolean | null;
@@ -157,6 +160,8 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     acceptedAlternatives: asAcceptedAlternatives(row.accepted_alternatives),
     audioUrl: row.audio_url ?? '',
     audioStatus: asAudioStatus(row.audio_status),
+    elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
+    elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status),
     notes: '',
     order: row.order_index ?? 0,
     difficulty: row.difficulty ?? undefined,
@@ -205,7 +210,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
 export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const client = requireSupabase();
 
-  const [collectionsResult, initialListsResult, wordsResult] = await Promise.all([
+  const [collectionsResult, initialListsResult, wordsResult, audioProviderResult] = await Promise.all([
     client
       .from('word_list_collections')
       .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
@@ -219,11 +224,17 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
     client
       .from('words')
       .select('*')
-      .order('order_index', { ascending: true })
+      .order('order_index', { ascending: true }),
+    client
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'default_audio_provider')
+      .maybeSingle()
   ]);
 
   if (collectionsResult.error) throw collectionsResult.error;
   if (wordsResult.error) throw wordsResult.error;
+  if (audioProviderResult.error) throw audioProviderResult.error;
 
   let listsData: unknown[] | null = initialListsResult.data;
   if (initialListsResult.error) {
@@ -264,6 +275,12 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
 
   return {
     lists,
-    source: 'supabase'
+    source: 'supabase',
+    defaultAudioProvider: readDefaultAudioProvider(audioProviderResult.data?.value)
   };
+}
+
+function readDefaultAudioProvider(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return DEFAULT_AUDIO_PROVIDER;
+  return normalizeDefaultAudioProvider((value as { provider?: unknown }).provider);
 }

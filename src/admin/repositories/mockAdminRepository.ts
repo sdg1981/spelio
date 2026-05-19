@@ -4,9 +4,11 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
+import type { AdminAudioSettings } from './adminRepository';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
+let audioSettings: AdminAudioSettings = { defaultAudioProvider: 'azure' };
 
 function cloneList(list: AdminWordList): AdminWordList {
   return { ...list, words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] })) };
@@ -173,6 +175,15 @@ export const mockAdminRepository: AdminRepository = {
 
   async uploadAudioFile(word: AdminWord) {
     return createMockAudioUrl(word);
+  },
+
+  async getAudioSettings() {
+    return { ...audioSettings };
+  },
+
+  async saveAudioSettings(settings: AdminAudioSettings) {
+    audioSettings = { defaultAudioProvider: settings.defaultAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'azure' };
+    return { ...audioSettings };
   },
 
   async listCustomWordLists() {

@@ -1,6 +1,7 @@
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldAllowAudioPlayback, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../src/lib/practice/audioAvailability';
 import type { PracticeWord } from '../src/data/wordLists';
 import { createDefaultStorage, normaliseStorage } from '../src/lib/practice/storage';
+import { getResolvedPracticeAudioUrl } from '../src/lib/audioProvider';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -67,6 +68,26 @@ assertEqual(
   promptVisible(false, makeWord()),
   false,
   'English off + audio available should keep the prompt hidden.'
+);
+
+assertEqual(
+  getResolvedPracticeAudioUrl(makeWord({
+    audioUrl: 'https://example.com/audio/azure.mp3',
+    elevenLabsAudioUrl: 'https://example.com/audio/elevenlabs.mp3',
+    elevenLabsAudioStatus: 'generated'
+  }), 'elevenlabs'),
+  'https://example.com/audio/elevenlabs.mp3',
+  'ElevenLabs provider should use transformed audio when it exists.'
+);
+
+assertEqual(
+  getResolvedPracticeAudioUrl(makeWord({
+    audioUrl: 'https://example.com/audio/azure.mp3',
+    elevenLabsAudioUrl: '',
+    elevenLabsAudioStatus: 'missing'
+  }), 'elevenlabs'),
+  'https://example.com/audio/azure.mp3',
+  'ElevenLabs provider should fall back to Azure when transformed audio is missing.'
 );
 
 assertEqual(

@@ -1,8 +1,12 @@
+import { getResolvedPracticeAudioUrl, type DefaultAudioProvider, type ElevenLabsAudioStatus } from '../audioProvider';
+
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 
 export interface AudioAvailabilityInput {
   audioUrl?: string | null;
   audioStatus?: AudioStatus | null;
+  elevenLabsAudioUrl?: string | null;
+  elevenLabsAudioStatus?: ElevenLabsAudioStatus | null;
 }
 
 const RECALL_PAUSE_BASE_DELAY_MS = 2500;
@@ -31,12 +35,13 @@ export function shouldAllowAudioPlayback(audioPrompts: boolean, forceAudioAvaila
   return audioPrompts || forceAudioAvailable;
 }
 
-export function isAudioUnavailableForPrompt(word: AudioAvailabilityInput, playbackFailed = false) {
+export function isAudioUnavailableForPrompt(word: AudioAvailabilityInput, playbackFailed = false, provider?: DefaultAudioProvider) {
+  const resolvedAudioUrl = getResolvedPracticeAudioUrl(word, provider);
+  const usingElevenLabs = provider === 'elevenlabs' && resolvedAudioUrl === word.elevenLabsAudioUrl?.trim();
   return (
     playbackFailed ||
-    word.audioStatus === 'missing' ||
-    word.audioStatus === 'failed' ||
-    !hasPlayableAudioUrl(word.audioUrl)
+    !hasPlayableAudioUrl(resolvedAudioUrl) ||
+    (!usingElevenLabs && (word.audioStatus === 'missing' || word.audioStatus === 'failed'))
   );
 }
 
@@ -47,13 +52,14 @@ export function shouldShowEnglishPrompt(englishVisible: boolean, audioUnavailabl
 export function shouldDelayEnglishPrompt(
   settings: { recallPause: boolean; audioPrompts: boolean; englishVisible: boolean },
   word: AudioAvailabilityInput,
-  playbackFailed = false
+  playbackFailed = false,
+  provider?: DefaultAudioProvider
 ) {
   return (
     settings.recallPause === true &&
     settings.audioPrompts === true &&
     settings.englishVisible === true &&
-    !isAudioUnavailableForPrompt(word, playbackFailed)
+    !isAudioUnavailableForPrompt(word, playbackFailed, provider)
   );
 }
 

@@ -1,5 +1,6 @@
 import dataset from './spelio_welsh_35_list_dataset_dialect_v1_1.json';
 import { withSupportWordLists, type WordListType } from './supportWordLists';
+import type { ElevenLabsAudioStatus } from '../lib/audioProvider';
 
 export type WelshSpellingMode = 'flexible' | 'strict';
 export type Dialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
@@ -56,6 +57,8 @@ export interface PracticeWord {
   acceptedAlternatives?: string[];
   audioUrl?: string;
   audioStatus?: 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+  elevenLabsAudioUrl?: string;
+  elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   notes?: string;
   order: number;
   difficulty?: number;
@@ -101,6 +104,8 @@ type DatasetWord = {
   acceptedAlternatives?: string[];
   audioUrl?: string;
   audioStatus?: 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+  elevenLabsAudioUrl?: string;
+  elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   notes?: string;
   order: number;
   difficulty?: number;
@@ -189,6 +194,8 @@ const baseWordLists: WordList[] = rawLists
         acceptedAlternatives: word.acceptedAlternatives ?? [],
         audioUrl: word.audioUrl ?? '',
         audioStatus: word.audioStatus ?? 'missing',
+        elevenLabsAudioUrl: word.elevenLabsAudioUrl ?? '',
+        elevenLabsAudioStatus: word.elevenLabsAudioStatus ?? 'missing',
         notes: word.notes ?? '',
         order: word.order,
         difficulty: word.difficulty,

@@ -1,11 +1,10 @@
-import { Play, RefreshCw, Wand2 } from 'lucide-react';
+import { RefreshCw, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
-import { AudioDownloadLink } from '../components/AudioDownloadLink';
+import { AdminAudioControls } from '../components/AdminAudioControls';
 import { AudioStatusPill } from '../components/audioStatus';
 import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
-import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import type { AudioStatus } from '../types';
 import {
   getBulkAudioActionLabel,
@@ -260,13 +259,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
                 </div>
                 <AudioStatusPill status={word.audioStatus} />
                 <div className="flex flex-wrap justify-end gap-2">
-                  <AdminButton onClick={() => {
-                    logAudioPlaybackClick('admin-audio-queue-preview', word.audioUrl);
-                    void playAudioUrl(word.audioUrl);
-                  }} disabled={!hasPlayableAudioUrl(word.audioUrl)}>
-                    <Play size={15} /> Preview
-                  </AdminButton>
-                  <AudioDownloadLink word={word} className="min-h-10" />
+                  <AdminAudioControls word={word} source="admin-audio-queue" className="justify-items-end" />
                   <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || isGenerated || isGenerating} aria-disabled={wordBusy || isGenerated || isGenerating}>
                     {wordBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
                     {wordBusy ? runningLabel : isGenerated ? 'Generated' : isGenerating ? 'Generating...' : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}

@@ -411,6 +411,8 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     acceptedAlternatives: [],
     audioUrl: '',
     audioStatus: 'missing',
+    elevenLabsAudioUrl: '',
+    elevenLabsAudioStatus: 'missing',
     notes: '',
     order,
     difficulty,

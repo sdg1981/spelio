@@ -4,6 +4,8 @@ export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
 export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
+export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
+export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
 
 export type AudioQueueCounts = Record<AudioStatus, number>;
 
@@ -102,6 +104,13 @@ export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {
     return `cy/support/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
   }
   return `cy/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
+}
+
+export function createElevenLabsAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {
+  if (word.listId.startsWith('support_')) {
+    return `cy-elevenlabs/support/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
+  }
+  return `cy-elevenlabs/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
 }
 
 export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {

@@ -18,6 +18,7 @@ import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, update
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt, shouldAllowAudioPlayback } from '../lib/practice/audioAvailability';
+import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
 type LetterState = PracticeLetterState;
@@ -105,6 +106,7 @@ export function usePracticeSession({
   reviewDifficult = false,
   includeRecapDue = false,
   forceAudioAvailable = false,
+  defaultAudioProvider = DEFAULT_AUDIO_PROVIDER,
   disableQuickRecap = false,
   detached = false,
   sessionKey = 0,
@@ -118,6 +120,7 @@ export function usePracticeSession({
   reviewDifficult?: boolean;
   includeRecapDue?: boolean;
   forceAudioAvailable?: boolean;
+  defaultAudioProvider?: DefaultAudioProvider;
   disableQuickRecap?: boolean;
   detached?: boolean;
   sessionKey?: number;
@@ -219,15 +222,22 @@ export function usePracticeSession({
     if (!shouldAllowAudioPlayback(storageRef.current.settings.audioPrompts, forceAudioAvailable)) return false;
     if (recordInteraction) recordPracticeInteraction();
 
-    if (!currentWord?.audioUrl) {
-      if (currentWord) markAudioPlaybackFailed(currentWord.id);
+    const wordForPlayback = currentWord;
+    if (!wordForPlayback) {
       if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
       return false;
     }
 
-    const playableUrl = getPlayableAudioUrl(currentWord.audioUrl);
+    const resolvedAudioUrl = getResolvedPracticeAudioUrl(wordForPlayback, defaultAudioProvider);
+    if (!resolvedAudioUrl) {
+      markAudioPlaybackFailed(wordForPlayback.id);
+      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      return false;
+    }
+
+    const playableUrl = getPlayableAudioUrl(resolvedAudioUrl);
     if (!playableUrl) {
-      markAudioPlaybackFailed(currentWord.id);
+      markAudioPlaybackFailed(wordForPlayback.id);
       if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
       return false;
     }
@@ -262,12 +272,12 @@ export function usePracticeSession({
       return true;
     } catch {
       if (audioRef.current === audio && audioUrlRef.current === playableUrl) {
-        markAudioPlaybackFailed(currentWord.id);
+        markAudioPlaybackFailed(wordForPlayback.id);
         if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
       }
       return false;
     }
-  }, [currentWord?.audioUrl, currentWord?.id, forceAudioAvailable, stopCurrentAudio, t]);
+  }, [currentWord?.audioUrl, currentWord?.elevenLabsAudioUrl, currentWord?.elevenLabsAudioStatus, currentWord?.id, defaultAudioProvider, forceAudioAvailable, stopCurrentAudio, t]);
 
   useEffect(() => {
     return () => {
@@ -333,10 +343,10 @@ export function usePracticeSession({
     recapIssueRef.current = false;
     inputLockedRef.current = false;
 
-    if (storage.settings.audioPrompts && !isAudioUnavailableForPrompt(currentWord)) {
+    if (storage.settings.audioPrompts && !isAudioUnavailableForPrompt(currentWord, false, defaultAudioProvider)) {
       void restartCurrentAudio({ recordInteraction: false, showUnavailableStatus: false });
     }
-  }, [currentWord?.id]);
+  }, [currentWord?.id, defaultAudioProvider]);
 
   function markAudioPlaybackFailed(wordId: string) {
     setAudioPlaybackFailedWordIds(previous => {

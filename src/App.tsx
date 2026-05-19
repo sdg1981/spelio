@@ -28,6 +28,7 @@ import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
+import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
 
 type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
 
@@ -159,6 +160,7 @@ export default function App() {
   const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
+  const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
   const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
   const [sharedContext, setSharedContext] = useState<SharedWordListContext | null>(initialAppState.sharedContext);
   const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
@@ -267,6 +269,7 @@ export default function App() {
     loadPublicContent().then(content => {
       if (cancelled) return;
       setPublicWordLists(content.lists);
+      setDefaultAudioProvider(content.defaultAudioProvider);
       setStorage(previous => {
         const normalized = normalizeStorageWordListSelection(previous, content.lists);
         setSharedContext(createSharedContextFromRoute(normalized, content.lists));
@@ -785,6 +788,7 @@ export default function App() {
       sessionKey={practiceSessionKey}
       showKeyboardHint={showFirstSessionKeyboardHint}
       practiceTestMode={practiceTestMode}
+      defaultAudioProvider={defaultAudioProvider}
       disableQuickRecap={Boolean(activeSharedContext) || Boolean(activeSupportPractice) || practiceTestMode}
       detached={Boolean(activeSupportPractice)}
       onStorageChange={updatePracticeSessionStorage}

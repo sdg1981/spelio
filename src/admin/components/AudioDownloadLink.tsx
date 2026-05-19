@@ -7,20 +7,24 @@ type AudioDownloadWord = Pick<AdminWord, 'audioUrl' | 'id' | 'listId' | 'welshAn
 export function AudioDownloadLink({
   word,
   className = '',
-  label = 'Download MP3'
+  label = 'Download MP3',
+  audioUrl = word.audioUrl,
+  filenamePrefix
 }: {
   word: AudioDownloadWord;
   className?: string;
   label?: string;
+  audioUrl?: string | null;
+  filenamePrefix?: string;
 }) {
-  const href = getPlayableAudioUrl(word.audioUrl);
+  const href = getPlayableAudioUrl(audioUrl);
   if (!href) return null;
 
   return (
     <a
       className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-950 transition hover:border-slate-300 hover:bg-slate-50 ${className}`}
       href={href}
-      download={getAdminAudioDownloadFilename(word)}
+      download={getAdminAudioDownloadFilename(word, filenamePrefix)}
       target="_blank"
       rel="noreferrer"
       onClick={event => event.stopPropagation()}
@@ -31,8 +35,8 @@ export function AudioDownloadLink({
   );
 }
 
-export function getAdminAudioDownloadFilename(word: Pick<AdminWord, 'id' | 'listId' | 'welshAnswer'>) {
-  const parts = [word.listId, word.id, word.welshAnswer].map(sanitizeFilenamePart).filter(Boolean);
+export function getAdminAudioDownloadFilename(word: Pick<AdminWord, 'id' | 'listId' | 'welshAnswer'>, prefix?: string) {
+  const parts = [prefix ?? '', word.listId, word.id, word.welshAnswer].map(sanitizeFilenamePart).filter(Boolean);
   return `${parts.join('_') || 'audio'}.mp3`;
 }
 

@@ -40,7 +40,7 @@ function AdminRoute({ path, navigate, repository }: { path: string; navigate: (p
   if (path === '/admin/stages') return <StagesPage repository={repository} />;
   if (path === '/admin/focus-categories') return <FocusCategoriesPage repository={repository} />;
   if (path === '/admin/dialects') return <DialectsPage repository={repository} />;
-  if (path === '/admin/settings') return <SettingsPage />;
+  if (path === '/admin/settings') return <SettingsPage repository={repository} />;
 
   return <OverviewPage navigate={navigate} repository={repository} />;
 }

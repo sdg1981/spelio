@@ -1,9 +1,8 @@
-import { ChevronDown, ChevronUp, Info, Play, RefreshCw, Wand2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { AdminWord } from '../types';
-import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AdminTimestamp } from './AdminTimestamp';
-import { AudioDownloadLink } from './AudioDownloadLink';
+import { AdminAudioControls } from './AdminAudioControls';
 import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminSpinner, AdminTextarea, Field } from './primitives';
 
@@ -30,7 +29,7 @@ export function WordEditorPanel({
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const hasAudioPreview = hasPlayableAudioUrl(word.audioUrl);
+  const hasAudioPreview = Boolean(word.audioUrl.trim());
   const isRegenerating = word.audioStatus === 'ready';
   const generateAudioLabel = isRegenerating ? 'Regenerate audio' : 'Generate audio';
   const generatingAudioLabel = isRegenerating ? 'Regenerating...' : 'Generating...';
@@ -99,15 +98,7 @@ export function WordEditorPanel({
           </div>
           <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
           <div className="flex flex-wrap gap-2">
-            {hasAudioPreview && (
-              <AdminButton onClick={() => {
-                logAudioPlaybackClick('admin-word-editor-preview', word.audioUrl);
-                void playAudioUrl(word.audioUrl);
-              }}>
-                <Play size={15} /> Preview
-              </AdminButton>
-            )}
-            <AudioDownloadLink word={word} />
+            <AdminAudioControls word={word} source="admin-word-editor" />
             <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
               {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {audioBusy ? generatingAudioLabel : generateAudioLabel}
@@ -144,6 +135,17 @@ export function WordEditorPanel({
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Audio URL">
                   <AdminInput className="font-mono text-xs text-slate-600" value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
+                </Field>
+                <Field label="ElevenLabs audio URL">
+                  <AdminInput className="font-mono text-xs text-slate-600" value={word.elevenLabsAudioUrl} onChange={event => onChange({ elevenLabsAudioUrl: event.target.value })} />
+                </Field>
+                <Field label="ElevenLabs audio status">
+                  <AdminSelect value={word.elevenLabsAudioStatus} onChange={event => onChange({ elevenLabsAudioStatus: event.target.value as AdminWord['elevenLabsAudioStatus'] })}>
+                    <option value="missing">missing</option>
+                    <option value="pending">pending</option>
+                    <option value="generated">generated</option>
+                    <option value="failed">failed</option>
+                  </AdminSelect>
                 </Field>
                 <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
               </div>
@@ -224,15 +226,7 @@ export function WordEditorPanel({
         </div>
         <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
         <div className="flex flex-wrap gap-2">
-          {hasAudioPreview && (
-            <AdminButton onClick={() => {
-              logAudioPlaybackClick('admin-word-editor-preview', word.audioUrl);
-              void playAudioUrl(word.audioUrl);
-            }}>
-              <Play size={15} /> Preview
-            </AdminButton>
-          )}
-          <AudioDownloadLink word={word} />
+          <AdminAudioControls word={word} source="admin-word-editor" />
           <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
             {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {audioBusy ? generatingAudioLabel : generateAudioLabel}
@@ -247,6 +241,17 @@ export function WordEditorPanel({
         <div className="mt-4 grid gap-4">
           <Field label="Audio URL">
             <AdminInput value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
+          </Field>
+          <Field label="ElevenLabs audio URL">
+            <AdminInput value={word.elevenLabsAudioUrl} onChange={event => onChange({ elevenLabsAudioUrl: event.target.value })} />
+          </Field>
+          <Field label="ElevenLabs audio status">
+            <AdminSelect value={word.elevenLabsAudioStatus} onChange={event => onChange({ elevenLabsAudioStatus: event.target.value as AdminWord['elevenLabsAudioStatus'] })}>
+              <option value="missing">missing</option>
+              <option value="pending">pending</option>
+              <option value="generated">generated</option>
+              <option value="failed">failed</option>
+            </AdminSelect>
           </Field>
           <Field label="Audio status">
             <AdminSelect value={word.audioStatus} onChange={event => onChange({ audioStatus: event.target.value as AdminWord['audioStatus'] })}>

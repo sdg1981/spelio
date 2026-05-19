@@ -1,10 +1,11 @@
 import { supabase } from '../../lib/supabaseClient';
-import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ImportContentResult, ImportValidationResult } from '../types';
+import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, DefaultAudioProvider, ElevenLabsAudioStatus, ImportContentResult, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { createAudioQueueSnapshot, createAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3 } from '../services/audioGeneration';
+import { DEFAULT_AUDIO_PROVIDER, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus } from '../../lib/audioProvider';
 
 type CustomWordListRow = {
   id: string;
@@ -70,6 +71,8 @@ type WordRow = {
   accepted_alternatives: unknown;
   audio_url: string;
   audio_status: string;
+  elevenlabs_audio_url?: string | null;
+  elevenlabs_audio_status?: string | null;
   notes: string;
   usage_note: string;
   spelling_hint_id?: string | null;
@@ -300,6 +303,25 @@ export const supabaseAdminRepository: AdminRepository = {
     return data.publicUrl;
   },
 
+  async getAudioSettings() {
+    const client = requireSupabase();
+    const { data, error } = await client.from('admin_settings').select('value').eq('key', 'default_audio_provider').maybeSingle();
+    if (error) throw error;
+    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+  },
+
+  async saveAudioSettings(settings) {
+    const client = requireSupabase();
+    const defaultAudioProvider = normalizeDefaultAudioProvider(settings.defaultAudioProvider);
+    const { data, error } = await client
+      .from('admin_settings')
+      .upsert({ key: 'default_audio_provider', value: { provider: defaultAudioProvider } }, { onConflict: 'key' })
+      .select('value')
+      .single();
+    if (error) throw error;
+    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+  },
+
   async listCustomWordLists() {
     const client = requireSupabase();
     const { data, error } = await client
@@ -494,6 +516,8 @@ function mapWordRow(row: WordRow): AdminWord {
     acceptedAlternatives: Array.isArray(row.accepted_alternatives) ? row.accepted_alternatives.map(String) : [],
     audioUrl: row.audio_url,
     audioStatus: normalizeLegacyAudioStatus(row.audio_status),
+    elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
+    elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status) as ElevenLabsAudioStatus,
     notes: row.notes,
     usageNote: row.usage_note,
     spellingHintId: row.spelling_hint_id ?? '',
@@ -575,6 +599,8 @@ function toWordRow(word: AdminWord) {
     accepted_alternatives: word.acceptedAlternatives,
     audio_url: word.audioUrl,
     audio_status: word.audioStatus,
+    elevenlabs_audio_url: word.elevenLabsAudioUrl,
+    elevenlabs_audio_status: word.elevenLabsAudioStatus,
     notes: word.notes,
     usage_note: word.usageNote,
     spelling_hint_id: word.spellingHintId?.trim() || null,
@@ -593,4 +619,9 @@ function slugOrNull(value: string) {
 
 function readErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function readDefaultAudioProvider(value: unknown): DefaultAudioProvider {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return DEFAULT_AUDIO_PROVIDER;
+  return normalizeDefaultAudioProvider((value as { provider?: unknown }).provider);
 }

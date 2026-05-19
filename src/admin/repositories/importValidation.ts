@@ -1,9 +1,10 @@
-import type { AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ImportValidationResult } from '../types';
+import type { AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ElevenLabsAudioStatus, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'ready', 'failed']);
+const validElevenLabsAudioStatuses = new Set<ElevenLabsAudioStatus>(['missing', 'pending', 'generated', 'failed']);
 const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
 const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
 const validListTypes = new Set(['main', 'support']);
@@ -245,6 +246,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   const englishPrompt = stringValue(word.englishPrompt) || stringValue(word.prompt);
   const welshAnswer = stringValue(word.welshAnswer) || stringValue(word.answer);
   const audioStatus = stringValue(word.audioStatus) || 'missing';
+  const elevenLabsAudioStatus = stringValue(word.elevenLabsAudioStatus) || 'missing';
   const dialect = stringValue(word.dialect) || 'Both';
   const listId = stringValue(word.listId);
 
@@ -254,6 +256,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (listId && listId !== list.id) errors.push(`Word ${label} belongs to ${listId} but is nested in ${list.id}.`);
   if (word.acceptedAlternatives !== undefined && !Array.isArray(word.acceptedAlternatives)) errors.push(`Word ${label} acceptedAlternatives must be an array.`);
   if (!validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Word ${label} has invalid audioStatus "${audioStatus}".`);
+  if (!validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus)) errors.push(`Word ${label} has invalid elevenLabsAudioStatus "${elevenLabsAudioStatus}".`);
   if (stringValue(word.dialect) && !validWordDialects.has(dialect)) errors.push(`Word ${label} has invalid dialect "${dialect}".`);
   if (word.difficulty !== undefined && !validDifficulty(word.difficulty)) errors.push(`Word ${label} has invalid difficulty.`);
   if (word.order !== undefined && !validOrder(word.order)) errors.push(`Word ${label} has invalid order.`);
@@ -266,7 +269,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (word.disablePatternHints !== undefined && typeof word.disablePatternHints !== 'boolean') {
     errors.push(`Word ${label} disablePatternHints must be a boolean when provided.`);
   }
-  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus)) return null;
+  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus)) return null;
 
   const acceptedAlternatives = Array.isArray(word.acceptedAlternatives) ? word.acceptedAlternatives.map(String) : [];
   const usageNote = stringValue(word.usageNote);
@@ -288,6 +291,8 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     acceptedAlternatives,
     audioUrl: stringValue(word.audioUrl),
     audioStatus: audioStatus as AudioStatus,
+    elevenLabsAudioUrl: stringValue(word.elevenLabsAudioUrl),
+    elevenLabsAudioStatus: elevenLabsAudioStatus as ElevenLabsAudioStatus,
     notes: stringValue(word.notes),
     order: numberValue(word.order, wordIndex + 1),
     difficulty: normalizeDifficulty(word.difficulty, list.difficulty),

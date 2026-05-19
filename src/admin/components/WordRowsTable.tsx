@@ -85,15 +85,27 @@ export function WordRowsTable({
                 <td className="px-4 py-3 font-medium text-slate-950">{word.welshAnswer}</td>
                 <td className="px-4 py-3 text-slate-700">{word.dialect}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={!hasPlayableAudioUrl(word.audioUrl)} onClick={event => {
                       event.stopPropagation();
                       logAudioPlaybackClick('admin-word-row-preview', word.audioUrl);
                       void playAudioUrl(word.audioUrl);
-                    }} aria-label="Preview audio">
+                    }} aria-label="Preview Azure audio" title="Preview Azure audio">
                       <Play size={14} fill="currentColor" />
                     </button>
-                    <AudioDownloadLink word={word} className="min-h-8 px-2 text-xs" label="Download MP3" />
+                    {hasPlayableAudioUrl(word.elevenLabsAudioUrl) && (
+                      <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50" onClick={event => {
+                        event.stopPropagation();
+                        logAudioPlaybackClick('admin-word-row-elevenlabs-preview', word.elevenLabsAudioUrl);
+                        void playAudioUrl(word.elevenLabsAudioUrl);
+                      }} aria-label="Preview ElevenLabs audio" title="Preview ElevenLabs audio">
+                        <Play size={14} fill="currentColor" />
+                      </button>
+                    )}
+                    <AudioDownloadLink word={word} audioUrl={word.audioUrl} className="min-h-8 px-2 text-xs" label="Download Azure MP3" filenamePrefix="azure" />
+                    {hasPlayableAudioUrl(word.elevenLabsAudioUrl) && (
+                      <AudioDownloadLink word={word} audioUrl={word.elevenLabsAudioUrl} className="min-h-8 px-2 text-xs" label="Download ElevenLabs MP3" filenamePrefix="elevenlabs" />
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-3">

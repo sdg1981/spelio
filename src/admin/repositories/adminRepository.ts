@@ -1,5 +1,5 @@
 import type { AdminFocusFilters } from './filters';
-import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ImportContentResult, ImportValidationResult } from '../types';
 import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
 
 export interface AdminWordWithListName extends AdminWord {
@@ -17,6 +17,10 @@ export interface AdminCustomWordListSummary {
   audioReady: number;
   audioFailed: number;
   shareUrl: string;
+}
+
+export interface AdminAudioSettings {
+  defaultAudioProvider: DefaultAudioProvider;
 }
 
 export interface AdminRepository {
@@ -44,6 +48,8 @@ export interface AdminRepository {
   generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
   retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
   uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;
+  getAudioSettings(): Promise<AdminAudioSettings>;
+  saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
   cleanupExpiredCustomWordLists(): Promise<number>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;

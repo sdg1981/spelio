@@ -1,4 +1,6 @@
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
+export type DefaultAudioProvider = 'azure' | 'elevenlabs';
 export type AdminDialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
 export type AdminCollectionType = 'spelio_core' | 'curriculum' | 'course' | 'school' | 'teacher' | 'personal' | 'custom';
 export type AdminCollectionOwnerType = 'spelio' | 'school' | 'teacher' | 'user' | null;
@@ -31,6 +33,8 @@ export interface AdminWord {
   acceptedAlternatives: string[];
   audioUrl: string;
   audioStatus: AudioStatus;
+  elevenLabsAudioUrl: string;
+  elevenLabsAudioStatus: ElevenLabsAudioStatus;
   notes: string;
   order: number;
   difficulty: number;
