@@ -5,7 +5,7 @@ import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import { UnsavedChangesBar } from '../components/UnsavedChangesBar';
 import { WordEditorPanel } from '../components/WordEditorPanel';
 import type { AdminRepository } from '../repositories';
-import type { AdminWord, AdminWordList } from '../types';
+import type { AdminWord, AdminWordList, ElevenLabsGenerationMode } from '../types';
 
 export function WordEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [source, setSource] = useState<AdminWord | null>(null);
@@ -118,7 +118,7 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
     }
   }
 
-  async function generateElevenLabsAudio(target: AdminWord) {
+  async function generateElevenLabsAudio(target: AdminWord, mode: ElevenLabsGenerationMode) {
     if (elevenLabsAudioBusyRef.current) return;
     if (dirty) {
       setErrorMessage('Save word changes before generating ElevenLabs audio.');
@@ -130,9 +130,9 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
       setElevenLabsAudioBusy(true);
       setErrorMessage('');
       setStatusMessage('');
-      const result = await repository.generateElevenLabsAudioForWord(target.id);
+      const result = await repository.generateElevenLabsAudioForWord(target.id, mode);
       await refreshWord(target.id);
-      if (result.ok) setStatusMessage('ElevenLabs audio generated.');
+      if (result.ok) setStatusMessage(mode === 'azure_transform' ? 'ElevenLabs audio generated using Azure pronunciation.' : 'ElevenLabs audio generated.');
       else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
     } catch (error) {
       setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));

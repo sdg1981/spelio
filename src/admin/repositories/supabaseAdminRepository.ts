@@ -1,11 +1,11 @@
 import { supabase } from '../../lib/supabaseClient';
-import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, DefaultAudioProvider, ElevenLabsAudioStatus, ImportContentResult, ImportValidationResult } from '../types';
+import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, DefaultAudioProvider, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
-import { DEFAULT_AUDIO_PROVIDER, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus } from '../../lib/audioProvider';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeLegacyAudioStatus, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 
 type CustomWordListRow = {
   id: string;
@@ -73,6 +73,8 @@ type WordRow = {
   audio_status: string;
   elevenlabs_audio_url?: string | null;
   elevenlabs_audio_status?: string | null;
+  elevenlabs_generation_mode?: string | null;
+  audio_review_status?: string | null;
   notes: string;
   usage_note: string;
   spelling_hint_id?: string | null;
@@ -275,29 +277,31 @@ export const supabaseAdminRepository: AdminRepository = {
     }
   },
 
-  async generateElevenLabsAudioForWord(wordId: string) {
+  async generateElevenLabsAudioForWord(wordId: string, mode: ElevenLabsGenerationMode = 'direct') {
     const word = await this.getWord(wordId);
     if (!word) throw new Error('Word not found.');
-    if (!word.audioUrl.trim() || word.audioStatus !== 'ready') {
+    if (mode === 'azure_transform' && (!word.audioUrl.trim() || word.audioStatus !== 'ready')) {
       throw new Error('Generate Azure audio before creating an ElevenLabs version.');
     }
     const previousElevenLabsAudioUrl = word.elevenLabsAudioUrl;
 
     try {
-      await this.saveWord({ ...word, elevenLabsAudioStatus: 'pending' }).catch(error => {
+      await this.saveWord({ ...word, elevenLabsGenerationMode: mode, elevenLabsAudioStatus: 'pending' }).catch(error => {
         throw new Error(`Supabase save failed while marking ElevenLabs audio as pending: ${readErrorMessage(error)}`);
       });
-      const audio = await transformAzureMp3WithElevenLabs(word.audioUrl);
+      const audio = mode === 'azure_transform'
+        ? await transformAzureMp3WithElevenLabs(word.audioUrl)
+        : await synthesizeElevenLabsWelshMp3(word.welshAnswer);
       const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio).catch(error => {
         throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
       });
-      const readyWord = await this.saveWord({ ...word, elevenLabsAudioUrl, elevenLabsAudioStatus: 'generated' }).catch(error => {
+      const readyWord = await this.saveWord({ ...word, elevenLabsAudioUrl, elevenLabsAudioStatus: 'generated', elevenLabsGenerationMode: mode, audioReviewStatus: 'unchecked' }).catch(error => {
         throw new Error(`Supabase save failed after ElevenLabs audio upload: ${readErrorMessage(error)}`);
       });
       return { word: readyWord, ok: true };
     } catch (error) {
       const generationError = error instanceof Error ? error.message : 'ElevenLabs audio generation failed.';
-      const failedWord = await this.saveWord({ ...word, elevenLabsAudioUrl: previousElevenLabsAudioUrl, elevenLabsAudioStatus: 'failed' }).catch(saveError => {
+      const failedWord = await this.saveWord({ ...word, elevenLabsAudioUrl: previousElevenLabsAudioUrl, elevenLabsAudioStatus: 'failed', elevenLabsGenerationMode: mode }).catch(saveError => {
         throw new Error(`${generationError}; Supabase save failed while marking ElevenLabs audio as failed: ${readErrorMessage(saveError)}`);
       });
       return { word: failedWord, ok: false, error: generationError };
@@ -562,6 +566,8 @@ function mapWordRow(row: WordRow): AdminWord {
     audioStatus: normalizeLegacyAudioStatus(row.audio_status),
     elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status) as ElevenLabsAudioStatus,
+    elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode) as ElevenLabsGenerationMode,
+    audioReviewStatus: normalizeAudioReviewStatus(row.audio_review_status) as AudioReviewStatus,
     notes: row.notes,
     usageNote: row.usage_note,
     spellingHintId: row.spelling_hint_id ?? '',
@@ -645,6 +651,8 @@ function toWordRow(word: AdminWord) {
     audio_status: word.audioStatus,
     elevenlabs_audio_url: word.elevenLabsAudioUrl,
     elevenlabs_audio_status: word.elevenLabsAudioStatus,
+    elevenlabs_generation_mode: word.elevenLabsGenerationMode,
+    audio_review_status: word.audioReviewStatus,
     notes: word.notes,
     usage_note: word.usageNote,
     spelling_hint_id: word.spellingHintId?.trim() || null,

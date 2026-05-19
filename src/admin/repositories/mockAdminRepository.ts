@@ -152,17 +152,18 @@ export const mockAdminRepository: AdminRepository = {
     return { word: readyWord, ok: true };
   },
 
-  async generateElevenLabsAudioForWord(wordId: string) {
+  async generateElevenLabsAudioForWord(wordId: string, mode = 'direct') {
     const word = await this.getWord(wordId);
     if (!word) throw new Error('Word not found.');
-    if (!word.audioUrl.trim() || word.audioStatus !== 'ready') {
+    if (mode === 'azure_transform' && (!word.audioUrl.trim() || word.audioStatus !== 'ready')) {
       throw new Error('Generate Azure audio before creating an ElevenLabs version.');
     }
-    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const };
+    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: mode === 'azure_transform' ? 'azure_transform' as const : 'direct' as const };
     await this.saveWord(pendingWord);
     const readyWord = {
       ...pendingWord,
       elevenLabsAudioStatus: 'generated' as const,
+      audioReviewStatus: 'unchecked' as const,
       elevenLabsAudioUrl: `${createMockAudioUrl(word)}-elevenlabs`
     };
     await this.saveWord(readyWord);

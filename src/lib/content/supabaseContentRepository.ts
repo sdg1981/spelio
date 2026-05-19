@@ -10,7 +10,7 @@ import {
   type WordListCollectionType
 } from '../../data/wordLists';
 import type { PublicContent } from './staticContentRepository';
-import { DEFAULT_AUDIO_PROVIDER, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus } from '../audioProvider';
+import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../audioProvider';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -64,6 +64,8 @@ type WordRow = {
   audio_status: string | null;
   elevenlabs_audio_url?: string | null;
   elevenlabs_audio_status?: string | null;
+  elevenlabs_generation_mode?: string | null;
+  audio_review_status?: string | null;
   usage_note: string | null;
   spelling_hint_id?: string | null;
   disable_pattern_hints?: boolean | null;
@@ -162,6 +164,8 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     audioStatus: asAudioStatus(row.audio_status),
     elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status),
+    elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode),
+    audioReviewStatus: normalizeAudioReviewStatus(row.audio_review_status),
     notes: '',
     order: row.order_index ?? 0,
     difficulty: row.difficulty ?? undefined,

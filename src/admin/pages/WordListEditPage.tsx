@@ -9,7 +9,7 @@ import { WordEditorPanel } from '../components/WordEditorPanel';
 import { WordRowsTable } from '../components/WordRowsTable';
 import type { AdminRepository } from '../repositories';
 import { validateAdminWordListSlug } from '../services/wordListSlug';
-import type { AdminWord, AdminWordList, AdminWordListCollection } from '../types';
+import type { AdminWord, AdminWordList, AdminWordListCollection, ElevenLabsGenerationMode } from '../types';
 import type { AdminStructureOption } from '../types';
 import { getWordListCanonicalUrl } from '../../lib/wordListSharing';
 
@@ -214,7 +214,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     }
   }
 
-  async function generateElevenLabsAudio(word: AdminWord) {
+  async function generateElevenLabsAudio(word: AdminWord, mode: ElevenLabsGenerationMode) {
     if (generatingElevenLabsAudioWordIdsRef.current.has(word.id)) return;
     if (dirty) {
       setErrorMessage('Save word changes before generating ElevenLabs audio.');
@@ -225,9 +225,9 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       setGeneratingElevenLabsAudioWordIds(new Set(generatingElevenLabsAudioWordIdsRef.current));
       setErrorMessage('');
       setStatusMessage('');
-      const result = await repository.generateElevenLabsAudioForWord(word.id);
+      const result = await repository.generateElevenLabsAudioForWord(word.id, mode);
       await refreshCurrentList(word.listId);
-      if (result.ok) setStatusMessage('ElevenLabs audio generated.');
+      if (result.ok) setStatusMessage(mode === 'azure_transform' ? 'ElevenLabs audio generated using Azure pronunciation.' : 'ElevenLabs audio generated.');
       else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
     } catch (error) {
       setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));
@@ -442,6 +442,8 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     audioStatus: 'missing',
     elevenLabsAudioUrl: '',
     elevenLabsAudioStatus: 'missing',
+    elevenLabsGenerationMode: 'direct',
+    audioReviewStatus: 'unchecked',
     notes: '',
     order,
     difficulty,

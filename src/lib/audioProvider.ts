@@ -2,6 +2,8 @@ import type { PracticeWord } from '../data/wordLists';
 
 export type DefaultAudioProvider = 'azure' | 'elevenlabs';
 export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
+export type ElevenLabsGenerationMode = 'direct' | 'azure_transform';
+export type AudioReviewStatus = 'unchecked' | 'approved' | 'needs_review' | 'needs_regeneration';
 
 export const DEFAULT_AUDIO_PROVIDER: DefaultAudioProvider = 'azure';
 
@@ -19,6 +21,15 @@ export function normalizeDefaultAudioProvider(value: unknown): DefaultAudioProvi
 export function normalizeElevenLabsAudioStatus(value: unknown): ElevenLabsAudioStatus {
   if (value === 'pending' || value === 'generated' || value === 'failed') return value;
   return 'missing';
+}
+
+export function normalizeElevenLabsGenerationMode(value: unknown): ElevenLabsGenerationMode {
+  return value === 'azure_transform' ? 'azure_transform' : 'direct';
+}
+
+export function normalizeAudioReviewStatus(value: unknown): AudioReviewStatus {
+  if (value === 'approved' || value === 'needs_review' || value === 'needs_regeneration') return value;
+  return 'unchecked';
 }
 
 export function getResolvedPracticeAudioUrl(

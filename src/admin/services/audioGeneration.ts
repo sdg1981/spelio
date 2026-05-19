@@ -1,4 +1,4 @@
-import type { AdminWord, AudioStatus } from '../types';
+import type { AdminWord, AudioStatus, ElevenLabsGenerationMode } from '../types';
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
@@ -89,13 +89,21 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
   return new Blob([audioBuffer], { type: 'audio/mpeg' });
 }
 
+export async function synthesizeElevenLabsWelshMp3(text: string): Promise<Blob> {
+  return requestElevenLabsMp3({ mode: 'direct', text });
+}
+
 export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<Blob> {
+  return requestElevenLabsMp3({ mode: 'azure_transform', audioUrl });
+}
+
+async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string }): Promise<Blob> {
   const response = await fetch('/api/elevenlabs-transform', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ audioUrl })
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {

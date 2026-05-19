@@ -4,6 +4,9 @@ declare const process: {
 
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
+export const ELEVENLABS_DIRECT_TTS_MODEL_ID = 'eleven_v3';
+export const ELEVENLABS_WELSH_LANGUAGE_CODE = 'cy';
+export const ELEVENLABS_DIRECT_TTS_PROMPT = 'Speak clearly and naturally in Welsh.';
 
 export type ElevenLabsTransformConfig = {
   apiKey: string;
@@ -52,16 +55,20 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
   }
 
   const body = parseBody(request.body);
+  const mode = body?.mode === 'azure_transform' ? 'azure_transform' : 'direct';
   const audioUrl = typeof body?.audioUrl === 'string' ? body.audioUrl.trim() : '';
-  if (!audioUrl) return response.status(400).json({ ok: false, error: 'Azure audio URL is required.' });
+  const text = typeof body?.text === 'string' ? body.text.trim() : '';
+  if (mode === 'azure_transform' && !audioUrl) return response.status(400).json({ ok: false, error: 'Azure audio URL is required.' });
+  if (mode === 'direct' && !text) return response.status(400).json({ ok: false, error: 'Welsh text is required.' });
 
   const config = getElevenLabsTransformConfig(dependencies.env ?? process.env);
   if (!config.apiKey) return response.status(500).json({ ok: false, error: 'ElevenLabs is not configured.' });
 
   try {
     const fetchImpl = dependencies.fetchImpl ?? fetch;
-    const azureAudio = await fetchExistingAzureMp3(audioUrl, fetchImpl);
-    const transformedAudio = await transformAzureMp3WithElevenLabs(azureAudio, config, fetchImpl);
+    const transformedAudio = mode === 'azure_transform'
+      ? await transformAzureMp3WithElevenLabs(await fetchExistingAzureMp3(audioUrl, fetchImpl), config, fetchImpl)
+      : await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl);
 
     response.setHeader('Content-Type', 'audio/mpeg');
     response.setHeader('Cache-Control', 'no-store');
@@ -75,6 +82,44 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
       voiceName: ELEVENLABS_DEFAULT_VOICE_NAME
     });
   }
+}
+
+export async function synthesizeWelshTextWithElevenLabs(
+  text: string,
+  config = getElevenLabsTransformConfig(),
+  fetchImpl: ElevenLabsFetch = fetch
+): Promise<Uint8Array> {
+  const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(config.defaultVoiceId)}?output_format=mp3_44100_128`;
+  const result = await fetchImpl(endpoint, {
+    method: 'POST',
+    headers: {
+      Accept: 'audio/mpeg',
+      'Content-Type': 'application/json',
+      'xi-api-key': config.apiKey
+    },
+    body: JSON.stringify({
+      text: `${ELEVENLABS_DIRECT_TTS_PROMPT}\n\n${text}`,
+      model_id: ELEVENLABS_DIRECT_TTS_MODEL_ID,
+      language_code: ELEVENLABS_WELSH_LANGUAGE_CODE,
+      apply_text_normalization: 'auto',
+      voice_settings: {
+        stability: 0.78,
+        similarity_boost: 0.9,
+        style: 0.04,
+        use_speaker_boost: true
+      }
+    })
+  });
+
+  if (!result.ok) {
+    const details = await result.text().catch(() => '');
+    throw new Error(result.status === 429 ? 'ElevenLabs rate limit reached.' : `ElevenLabs direct TTS failed (${result.status})${details ? `: ${details.slice(0, 300)}` : ''}`);
+  }
+
+  const buffer = await result.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  assertMp3Payload(bytes, 'ElevenLabs direct TTS returned a non-MP3 payload.');
+  return bytes;
 }
 
 export function getElevenLabsTransformConfig(env: Record<string, string | undefined> = process.env): ElevenLabsTransformConfig {

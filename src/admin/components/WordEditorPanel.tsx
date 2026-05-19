@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Info, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
-import type { AdminWord } from '../types';
+import type { AdminWord, ElevenLabsGenerationMode } from '../types';
 import { AdminTimestamp } from './AdminTimestamp';
 import { AdminAudioControls } from './AdminAudioControls';
 import { AudioStatusPill } from './audioStatus';
@@ -25,7 +25,7 @@ export function WordEditorPanel({
   onClose: () => void;
   onChange: (patch: Partial<AdminWord>) => void;
   onGenerateAudio: (word: AdminWord) => void;
-  onGenerateElevenLabsAudio: (word: AdminWord) => void;
+  onGenerateElevenLabsAudio: (word: AdminWord, mode: ElevenLabsGenerationMode) => void;
   onRetryAudio: (word: AdminWord) => void;
   audioBusy?: boolean;
   elevenLabsAudioBusy?: boolean;
@@ -108,9 +108,13 @@ export function WordEditorPanel({
               {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {audioBusy ? generatingAudioLabel : generateAudioLabel}
             </AdminButton>
-            <AdminButton onClick={() => onGenerateElevenLabsAudio(word)} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+            <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'direct')} disabled={elevenLabsAudioBusy} aria-disabled={elevenLabsAudioBusy}>
               {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
-              {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Generate ElevenLabs version'}
+              {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate ElevenLabs'}
+            </AdminButton>
+            <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'azure_transform')} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+              {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+              {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate via Azure'}
             </AdminButton>
             {word.audioStatus === 'failed' && (
               <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
@@ -154,6 +158,20 @@ export function WordEditorPanel({
                     <option value="pending">pending</option>
                     <option value="generated">generated</option>
                     <option value="failed">failed</option>
+                  </AdminSelect>
+                </Field>
+                <Field label="ElevenLabs mode">
+                  <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
+                    <option value="direct">direct</option>
+                    <option value="azure_transform">azure_transform</option>
+                  </AdminSelect>
+                </Field>
+                <Field label="Audio review status">
+                  <AdminSelect value={word.audioReviewStatus} onChange={event => onChange({ audioReviewStatus: event.target.value as AdminWord['audioReviewStatus'] })}>
+                    <option value="unchecked">unchecked</option>
+                    <option value="approved">approved</option>
+                    <option value="needs_review">needs_review</option>
+                    <option value="needs_regeneration">needs_regeneration</option>
                   </AdminSelect>
                 </Field>
                 <Field label="Order"><AdminInput type="number" value={word.order} onChange={event => onChange({ order: Number(event.target.value) })} /></Field>
@@ -240,9 +258,13 @@ export function WordEditorPanel({
             {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {audioBusy ? generatingAudioLabel : generateAudioLabel}
           </AdminButton>
-          <AdminButton onClick={() => onGenerateElevenLabsAudio(word)} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+          <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'direct')} disabled={elevenLabsAudioBusy} aria-disabled={elevenLabsAudioBusy}>
             {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
-            {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Generate ElevenLabs version'}
+            {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate ElevenLabs'}
+          </AdminButton>
+          <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'azure_transform')} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+            {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+            {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate via Azure'}
           </AdminButton>
           {word.audioStatus === 'failed' && (
             <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
@@ -264,6 +286,20 @@ export function WordEditorPanel({
               <option value="pending">pending</option>
               <option value="generated">generated</option>
               <option value="failed">failed</option>
+            </AdminSelect>
+          </Field>
+          <Field label="ElevenLabs mode">
+            <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
+              <option value="direct">direct</option>
+              <option value="azure_transform">azure_transform</option>
+            </AdminSelect>
+          </Field>
+          <Field label="Audio review status">
+            <AdminSelect value={word.audioReviewStatus} onChange={event => onChange({ audioReviewStatus: event.target.value as AdminWord['audioReviewStatus'] })}>
+              <option value="unchecked">unchecked</option>
+              <option value="approved">approved</option>
+              <option value="needs_review">needs_review</option>
+              <option value="needs_regeneration">needs_regeneration</option>
             </AdminSelect>
           </Field>
           <Field label="Audio status">

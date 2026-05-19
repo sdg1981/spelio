@@ -28,6 +28,8 @@ type SupportWordSeed = {
   audioStatus?: PracticeWord['audioStatus'];
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: PracticeWord['elevenLabsAudioStatus'];
+  elevenLabsGenerationMode?: PracticeWord['elevenLabsGenerationMode'];
+  audioReviewStatus?: PracticeWord['audioReviewStatus'];
   difficulty?: number;
   dialect?: PracticeWord['dialect'];
   dialectNote?: string;
@@ -215,6 +217,8 @@ function createSupportWord(seed: SupportWordSeed, listId: string, order: number)
     audioStatus: seed.audioStatus ?? 'missing',
     elevenLabsAudioUrl: seed.elevenLabsAudioUrl ?? '',
     elevenLabsAudioStatus: seed.elevenLabsAudioStatus ?? 'missing',
+    elevenLabsGenerationMode: seed.elevenLabsGenerationMode ?? 'direct',
+    audioReviewStatus: seed.audioReviewStatus ?? 'unchecked',
     notes: '',
     order,
     difficulty: seed.difficulty ?? 1,

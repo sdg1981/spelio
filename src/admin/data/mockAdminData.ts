@@ -1,6 +1,6 @@
 import { wordLists } from '../../data/wordLists';
 import { supportWordListCollection } from '../../data/supportWordLists';
-import type { AdminDialect, AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ElevenLabsAudioStatus } from '../types';
+import type { AdminDialect, AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 
 type RawWord = {
@@ -12,6 +12,8 @@ type RawWord = {
   audioStatus?: AudioStatus;
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
+  elevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  audioReviewStatus?: AudioReviewStatus;
   notes?: string;
   order: number;
   difficulty?: number;
@@ -121,6 +123,8 @@ export const adminWordLists: AdminWordList[] = rawLists
         audioStatus: word.audioStatus ?? 'missing',
         elevenLabsAudioUrl: word.elevenLabsAudioUrl ?? '',
         elevenLabsAudioStatus: word.elevenLabsAudioStatus ?? 'missing',
+        elevenLabsGenerationMode: word.elevenLabsGenerationMode ?? 'direct',
+        audioReviewStatus: word.audioReviewStatus ?? 'unchecked',
         notes: word.notes ?? '',
         order: word.order,
         difficulty: word.difficulty ?? list.difficulty,

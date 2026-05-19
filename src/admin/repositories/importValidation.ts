@@ -1,10 +1,12 @@
-import type { AdminWord, AdminWordList, AdminWordListCollection, AudioStatus, ElevenLabsAudioStatus, ImportValidationResult } from '../types';
+import type { AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validAudioStatuses = new Set<AudioStatus>(['missing', 'queued', 'generating', 'ready', 'failed']);
 const validElevenLabsAudioStatuses = new Set<ElevenLabsAudioStatus>(['missing', 'pending', 'generated', 'failed']);
+const validElevenLabsGenerationModes = new Set<ElevenLabsGenerationMode>(['direct', 'azure_transform']);
+const validAudioReviewStatuses = new Set<AudioReviewStatus>(['unchecked', 'approved', 'needs_review', 'needs_regeneration']);
 const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
 const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
 const validListTypes = new Set(['main', 'support']);
@@ -247,6 +249,8 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   const welshAnswer = stringValue(word.welshAnswer) || stringValue(word.answer);
   const audioStatus = stringValue(word.audioStatus) || 'missing';
   const elevenLabsAudioStatus = stringValue(word.elevenLabsAudioStatus) || 'missing';
+  const elevenLabsGenerationMode = stringValue(word.elevenLabsGenerationMode) || 'direct';
+  const audioReviewStatus = stringValue(word.audioReviewStatus) || 'unchecked';
   const dialect = stringValue(word.dialect) || 'Both';
   const listId = stringValue(word.listId);
 
@@ -257,6 +261,8 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (word.acceptedAlternatives !== undefined && !Array.isArray(word.acceptedAlternatives)) errors.push(`Word ${label} acceptedAlternatives must be an array.`);
   if (!validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Word ${label} has invalid audioStatus "${audioStatus}".`);
   if (!validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus)) errors.push(`Word ${label} has invalid elevenLabsAudioStatus "${elevenLabsAudioStatus}".`);
+  if (!validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode)) errors.push(`Word ${label} has invalid elevenLabsGenerationMode "${elevenLabsGenerationMode}".`);
+  if (!validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) errors.push(`Word ${label} has invalid audioReviewStatus "${audioReviewStatus}".`);
   if (stringValue(word.dialect) && !validWordDialects.has(dialect)) errors.push(`Word ${label} has invalid dialect "${dialect}".`);
   if (word.difficulty !== undefined && !validDifficulty(word.difficulty)) errors.push(`Word ${label} has invalid difficulty.`);
   if (word.order !== undefined && !validOrder(word.order)) errors.push(`Word ${label} has invalid order.`);
@@ -269,7 +275,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (word.disablePatternHints !== undefined && typeof word.disablePatternHints !== 'boolean') {
     errors.push(`Word ${label} disablePatternHints must be a boolean when provided.`);
   }
-  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus)) return null;
+  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus) || !validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode) || !validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) return null;
 
   const acceptedAlternatives = Array.isArray(word.acceptedAlternatives) ? word.acceptedAlternatives.map(String) : [];
   const usageNote = stringValue(word.usageNote);
@@ -293,6 +299,8 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     audioStatus: audioStatus as AudioStatus,
     elevenLabsAudioUrl: stringValue(word.elevenLabsAudioUrl),
     elevenLabsAudioStatus: elevenLabsAudioStatus as ElevenLabsAudioStatus,
+    elevenLabsGenerationMode: elevenLabsGenerationMode as ElevenLabsGenerationMode,
+    audioReviewStatus: audioReviewStatus as AudioReviewStatus,
     notes: stringValue(word.notes),
     order: numberValue(word.order, wordIndex + 1),
     difficulty: normalizeDifficulty(word.difficulty, list.difficulty),

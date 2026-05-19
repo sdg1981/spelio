@@ -170,10 +170,10 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
       setBatchGeneratingElevenLabsWordIds(new Set(batchGeneratingElevenLabsWordIdsRef.current));
       clearSelection();
       setErrorMessage('');
-      setStatusMessage(`Generating ${wordIds.length} ElevenLabs audio item(s)...`);
+      setStatusMessage(`Generating ${wordIds.length} direct ElevenLabs audio item(s)...`);
 
       for (const [index, wordId] of wordIds.entries()) {
-        setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length}...`);
+        setStatusMessage(`Generating direct ElevenLabs audio ${index + 1} of ${wordIds.length}...`);
         try {
           results.push(await repository.generateElevenLabsAudioForWord(wordId));
         } catch (error) {
@@ -267,10 +267,10 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
           <QueueMetric label="Generating" value={counts.generating} helper="Currently being synthesized." />
           <QueueMetric label="Failed" value={counts.failed} helper="Last generation attempt failed." />
           <QueueMetric label="Generated" value={counts.ready} helper="Audio has been generated successfully." />
-          <QueueMetric label="Missing ElevenLabs" value={counts.elevenLabsMissing} helper="No transformed ElevenLabs audio yet." />
-          <QueueMetric label="Pending ElevenLabs" value={counts.elevenLabsPending} helper="Currently transforming through ElevenLabs." />
+          <QueueMetric label="Missing ElevenLabs" value={counts.elevenLabsMissing} helper="No direct ElevenLabs audio yet." />
+          <QueueMetric label="Pending ElevenLabs" value={counts.elevenLabsPending} helper="Currently generating through ElevenLabs." />
           <QueueMetric label="Failed ElevenLabs" value={counts.elevenLabsFailed} helper="Last ElevenLabs attempt failed." />
-          <QueueMetric label="Generated ElevenLabs" value={counts.elevenLabsGenerated} helper="ElevenLabs transformed audio is available." />
+          <QueueMetric label="Generated ElevenLabs" value={counts.elevenLabsGenerated} helper="ElevenLabs audio is available." />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -302,7 +302,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses visible selected rows with Azure audio and missing/failed ElevenLabs audio.
+            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses direct ElevenLabs TTS from the Welsh answer for visible selected rows with missing/failed ElevenLabs audio.
             {selectedVisibleIds.length > 0 && selectedVisibleElevenLabsGeneratableIds.length !== selectedVisibleIds.length && statusFilter.toString().startsWith('elevenlabs') && <> {selectedVisibleIds.length - selectedVisibleElevenLabsGeneratableIds.length} ElevenLabs-ineligible item(s) will be skipped.</>}
           </div>
         </div>

@@ -2,7 +2,7 @@ import type { AdminWord } from '../types';
 import type { AudioGenerationResult } from './audioGeneration';
 
 type BulkAudioWord = Pick<AdminWord, 'id' | 'audioStatus'>;
-type BulkElevenLabsAudioWord = Pick<AdminWord, 'id' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus'>;
+type BulkElevenLabsAudioWord = Pick<AdminWord, 'id' | 'welshAnswer' | 'elevenLabsAudioStatus'>;
 
 export function canBulkGenerateAudio(word: BulkAudioWord) {
   return word.audioStatus === 'missing' || word.audioStatus === 'failed' || word.audioStatus === 'ready';
@@ -14,8 +14,7 @@ export function getSelectedVisibleBulkAudioIds(selectedIds: string[], visibleWor
 }
 
 export function canBulkGenerateElevenLabsAudio(word: BulkElevenLabsAudioWord) {
-  return Boolean(word.audioUrl.trim()) &&
-    word.audioStatus === 'ready' &&
+  return Boolean(word.welshAnswer.trim()) &&
     (word.elevenLabsAudioStatus === 'missing' || word.elevenLabsAudioStatus === 'failed');
 }
 

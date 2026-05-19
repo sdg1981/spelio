@@ -1,5 +1,5 @@
 import type { AdminFocusFilters } from './filters';
-import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ImportContentResult, ImportValidationResult } from '../types';
+import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
 import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
 
 export interface AdminWordWithListName extends AdminWord {
@@ -45,7 +45,7 @@ export interface AdminRepository {
   getAudioQueue(): Promise<AudioQueueSnapshot<AdminWordWithListName>>;
   queueAudioGeneration(wordIds: string[]): Promise<AdminWordWithListName[]>;
   generateAudioForWord(wordId: string): Promise<AudioGenerationResult>;
-  generateElevenLabsAudioForWord(wordId: string): Promise<AudioGenerationResult>;
+  generateElevenLabsAudioForWord(wordId: string, mode?: ElevenLabsGenerationMode): Promise<AudioGenerationResult>;
   generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
   retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
   uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;
