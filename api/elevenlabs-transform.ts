@@ -9,7 +9,7 @@ export const ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID = 'eleven_multilingual_sts_v2'
 export const ELEVENLABS_WELSH_LANGUAGE_CODE = 'cy';
 export const ELEVENLABS_WELSH_LANGUAGE_OVERRIDE_LABEL = 'Welsh';
 export const ELEVENLABS_NOT_APPLICABLE = 'not_applicable';
-export const ELEVENLABS_DIRECT_TTS_PROMPT = 'Speak clearly and naturally in Welsh.';
+export const ELEVENLABS_DIRECT_TTS_PROMPT = 'none - Welsh answer only';
 
 export type ElevenLabsTransformConfig = {
   apiKey: string;
@@ -105,7 +105,7 @@ export async function synthesizeWelshTextWithElevenLabs(
       'xi-api-key': config.apiKey
     },
     body: JSON.stringify({
-      text: `${ELEVENLABS_DIRECT_TTS_PROMPT}\n\n${text}`,
+      text,
       model_id: ELEVENLABS_DIRECT_TTS_MODEL_ID,
       language_code: ELEVENLABS_WELSH_LANGUAGE_CODE,
       apply_text_normalization: 'auto',

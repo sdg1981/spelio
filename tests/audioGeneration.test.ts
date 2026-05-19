@@ -8,6 +8,11 @@ import {
   synthesizeAzureWelshMp3BytesWithDiagnostics
 } from '../api/azure-tts.js';
 import {
+  ELEVENLABS_DIRECT_TTS_MODEL_ID,
+  ELEVENLABS_DIRECT_TTS_PROMPT,
+  synthesizeWelshTextWithElevenLabs
+} from '../api/elevenlabs-transform.js';
+import {
   AUDIO_FADE_OUT_SECONDS,
   AUDIO_TRAILING_SILENCE_SAMPLES,
   AUDIO_TRAILING_SILENCE_SECONDS,
@@ -73,6 +78,14 @@ function makeAudioBuffer(byteLength = 128) {
   bytes[1] = 0x49;
   bytes[2] = 0x46;
   bytes[3] = 0x46;
+  return bytes.buffer;
+}
+
+function makeMp3Buffer(byteLength = 128) {
+  const bytes = new Uint8Array(byteLength);
+  bytes[0] = 0x49;
+  bytes[1] = 0x44;
+  bytes[2] = 0x33;
   return bytes.buffer;
 }
 
@@ -215,6 +228,28 @@ async function runAsyncAssertions() {
     pipelineLogs.some(entry => entry.audioPipelineVersion === AUDIO_PIPELINE_VERSION),
     'The route should log the internal audio pipeline version marker.'
   );
+
+  let elevenLabsDirectText: unknown = null;
+  let elevenLabsDirectModel: unknown = null;
+  await synthesizeWelshTextWithElevenLabs(
+    'penwythnos',
+    { apiKey: 'test-elevenlabs-key', defaultVoiceId: 'test-voice-id' },
+    async (_url, options) => {
+      const payload = JSON.parse(String(options?.body ?? '{}')) as Record<string, unknown>;
+      elevenLabsDirectText = payload.text;
+      elevenLabsDirectModel = payload.model_id;
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        arrayBuffer: async () => makeMp3Buffer(),
+        text: async () => ''
+      };
+    }
+  );
+  assertEqual(elevenLabsDirectText, 'penwythnos', 'ElevenLabs direct TTS should send only the Welsh answer as speakable text.');
+  assertEqual(elevenLabsDirectModel, ELEVENLABS_DIRECT_TTS_MODEL_ID, 'ElevenLabs direct TTS should keep the explicit Eleven v3 model.');
+  assertEqual(ELEVENLABS_DIRECT_TTS_PROMPT, 'none - Welsh answer only', 'ElevenLabs direct prompt diagnostic should make clear no instruction is spoken.');
 
   const diagnosticResult = await synthesizeAzureWelshMp3BytesWithDiagnostics('gwaith', {
     env: {

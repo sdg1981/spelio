@@ -167,7 +167,7 @@ export const mockAdminRepository: AdminRepository = {
       elevenLabsModel: mode === 'azure_transform' ? 'eleven_multilingual_sts_v2' : 'eleven_v3',
       elevenLabsVoiceId: 'DikmR0aoFXAp1A3NcovW',
       elevenLabsLanguageOverride: mode === 'azure_transform' ? 'not_applicable' : 'Welsh',
-      elevenLabsPrompt: mode === 'azure_transform' ? 'not_applicable' : 'Speak clearly and naturally in Welsh.',
+      elevenLabsPrompt: mode === 'azure_transform' ? 'not_applicable' : 'none - Welsh answer only',
       audioReviewStatus: 'unchecked' as const,
       elevenLabsAudioUrl: `${createMockAudioUrl(word)}-elevenlabs`
     };
