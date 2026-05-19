@@ -443,6 +443,7 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     elevenLabsAudioUrl: '',
     elevenLabsAudioStatus: 'missing',
     elevenLabsGenerationMode: 'direct',
+    preferredElevenLabsGenerationMode: 'direct',
     elevenLabsGeneratedAt: '',
     elevenLabsModel: '',
     elevenLabsVoiceId: '',

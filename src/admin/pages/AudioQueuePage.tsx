@@ -170,14 +170,22 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
       setBatchGeneratingElevenLabsWordIds(new Set(batchGeneratingElevenLabsWordIdsRef.current));
       clearSelection();
       setErrorMessage('');
-      setStatusMessage(`Generating ${wordIds.length} direct ElevenLabs audio item(s)...`);
+      setStatusMessage(`Generating ${wordIds.length} ElevenLabs audio item(s) using saved preferences...`);
 
       for (const [index, wordId] of wordIds.entries()) {
-        setStatusMessage(`Generating direct ElevenLabs audio ${index + 1} of ${wordIds.length}...`);
+        const word = allWords.find(item => item.id === wordId);
+        const preferredMode = word?.preferredElevenLabsGenerationMode === 'azure_transform' ? 'azure_transform' : 'direct';
+        setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length} (${preferredMode === 'azure_transform' ? 'Azure pronunciation' : 'direct'})...`);
         try {
-          results.push(await repository.generateElevenLabsAudioForWord(wordId));
+          if (preferredMode === 'azure_transform' && word && (word.audioStatus !== 'ready' || !word.audioUrl.trim())) {
+            const azureResult = await repository.generateAudioForWord(wordId);
+            if (!azureResult.ok) {
+              results.push({ word: azureResult.word, ok: false, error: azureResult.error ?? 'Azure audio generation failed.' });
+              continue;
+            }
+          }
+          results.push(await repository.generateElevenLabsAudioForWord(wordId, preferredMode));
         } catch (error) {
-          const word = allWords.find(item => item.id === wordId);
           if (word) results.push({ word, ok: false, error: readError(error, 'ElevenLabs audio generation failed.') });
         }
       }
@@ -302,7 +310,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses direct ElevenLabs TTS from the Welsh answer for visible selected rows with missing/failed ElevenLabs audio.
+            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses each word's preferred ElevenLabs generation mode for visible selected rows with missing/failed ElevenLabs audio.
             {selectedVisibleIds.length > 0 && selectedVisibleElevenLabsGeneratableIds.length !== selectedVisibleIds.length && statusFilter.toString().startsWith('elevenlabs') && <> {selectedVisibleIds.length - selectedVisibleElevenLabsGeneratableIds.length} ElevenLabs-ineligible item(s) will be skipped.</>}
           </div>
         </div>

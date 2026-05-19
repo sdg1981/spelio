@@ -60,6 +60,7 @@ export interface PracticeWord {
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   elevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  preferredElevenLabsGenerationMode?: ElevenLabsGenerationMode;
   elevenLabsGeneratedAt?: string;
   elevenLabsModel?: string;
   elevenLabsVoiceId?: string;
@@ -114,6 +115,7 @@ type DatasetWord = {
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   elevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  preferredElevenLabsGenerationMode?: ElevenLabsGenerationMode;
   elevenLabsGeneratedAt?: string;
   elevenLabsModel?: string;
   elevenLabsVoiceId?: string;
@@ -211,6 +213,7 @@ const baseWordLists: WordList[] = rawLists
         elevenLabsAudioUrl: word.elevenLabsAudioUrl ?? '',
         elevenLabsAudioStatus: word.elevenLabsAudioStatus ?? 'missing',
         elevenLabsGenerationMode: word.elevenLabsGenerationMode ?? 'direct',
+        preferredElevenLabsGenerationMode: word.preferredElevenLabsGenerationMode ?? 'direct',
         elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',
         elevenLabsModel: word.elevenLabsModel ?? '',
         elevenLabsVoiceId: word.elevenLabsVoiceId ?? '',

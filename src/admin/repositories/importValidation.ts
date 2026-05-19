@@ -250,6 +250,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   const audioStatus = stringValue(word.audioStatus) || 'missing';
   const elevenLabsAudioStatus = stringValue(word.elevenLabsAudioStatus) || 'missing';
   const elevenLabsGenerationMode = stringValue(word.elevenLabsGenerationMode) || 'direct';
+  const preferredElevenLabsGenerationMode = stringValue(word.preferredElevenLabsGenerationMode) || 'direct';
   const audioReviewStatus = stringValue(word.audioReviewStatus) || 'unchecked';
   const dialect = stringValue(word.dialect) || 'Both';
   const listId = stringValue(word.listId);
@@ -262,6 +263,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (!validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Word ${label} has invalid audioStatus "${audioStatus}".`);
   if (!validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus)) errors.push(`Word ${label} has invalid elevenLabsAudioStatus "${elevenLabsAudioStatus}".`);
   if (!validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode)) errors.push(`Word ${label} has invalid elevenLabsGenerationMode "${elevenLabsGenerationMode}".`);
+  if (!validElevenLabsGenerationModes.has(preferredElevenLabsGenerationMode as ElevenLabsGenerationMode)) errors.push(`Word ${label} has invalid preferredElevenLabsGenerationMode "${preferredElevenLabsGenerationMode}".`);
   if (!validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) errors.push(`Word ${label} has invalid audioReviewStatus "${audioReviewStatus}".`);
   if (stringValue(word.dialect) && !validWordDialects.has(dialect)) errors.push(`Word ${label} has invalid dialect "${dialect}".`);
   if (word.difficulty !== undefined && !validDifficulty(word.difficulty)) errors.push(`Word ${label} has invalid difficulty.`);
@@ -275,7 +277,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (word.disablePatternHints !== undefined && typeof word.disablePatternHints !== 'boolean') {
     errors.push(`Word ${label} disablePatternHints must be a boolean when provided.`);
   }
-  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus) || !validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode) || !validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) return null;
+  if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus) || !validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode) || !validElevenLabsGenerationModes.has(preferredElevenLabsGenerationMode as ElevenLabsGenerationMode) || !validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) return null;
 
   const acceptedAlternatives = Array.isArray(word.acceptedAlternatives) ? word.acceptedAlternatives.map(String) : [];
   const usageNote = stringValue(word.usageNote);
@@ -300,6 +302,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     elevenLabsAudioUrl: stringValue(word.elevenLabsAudioUrl),
     elevenLabsAudioStatus: elevenLabsAudioStatus as ElevenLabsAudioStatus,
     elevenLabsGenerationMode: elevenLabsGenerationMode as ElevenLabsGenerationMode,
+    preferredElevenLabsGenerationMode: preferredElevenLabsGenerationMode as ElevenLabsGenerationMode,
     elevenLabsGeneratedAt: stringValue(word.elevenLabsGeneratedAt),
     elevenLabsModel: stringValue(word.elevenLabsModel),
     elevenLabsVoiceId: stringValue(word.elevenLabsVoiceId),

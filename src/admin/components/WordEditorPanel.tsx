@@ -135,6 +135,9 @@ export function WordEditorPanel({
               </AdminSelect>
             </Field>
           </div>
+          <div className="mt-5 max-w-xs">
+            <PreferredElevenLabsModeControl word={word} onChange={onChange} />
+          </div>
           <ElevenLabsDiagnostics word={word} />
         </div>
         <div className="p-5">
@@ -291,6 +294,7 @@ export function WordEditorPanel({
               <option value="failed">failed</option>
             </AdminSelect>
           </Field>
+          <PreferredElevenLabsModeControl word={word} onChange={onChange} />
           <Field label="ElevenLabs mode">
             <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
               <option value="direct">direct</option>
@@ -336,6 +340,17 @@ export function WordEditorPanel({
   );
 }
 
+function PreferredElevenLabsModeControl({ word, onChange }: { word: AdminWord; onChange: (patch: Partial<AdminWord>) => void }) {
+  return (
+    <Field label="Preferred ElevenLabs generation" helper="Used by batch generation. Does not regenerate automatically.">
+      <AdminSelect value={word.preferredElevenLabsGenerationMode} onChange={event => onChange({ preferredElevenLabsGenerationMode: event.target.value as AdminWord['preferredElevenLabsGenerationMode'] })}>
+        <option value="direct">Direct</option>
+        <option value="azure_transform">Use Azure pronunciation</option>
+      </AdminSelect>
+    </Field>
+  );
+}
+
 function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
   const hasElevenLabsMetadata =
     word.elevenLabsAudioStatus !== 'missing' ||
@@ -350,6 +365,7 @@ function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
       <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
         <DiagnosticItem label="Status" value={word.elevenLabsAudioStatus} />
         <DiagnosticItem label="Mode" value={word.elevenLabsGenerationMode} />
+        <DiagnosticItem label="Preferred mode" value={word.preferredElevenLabsGenerationMode} />
         <DiagnosticItem label="Generated" value={word.elevenLabsGeneratedAt ? <AdminTimestamp value={word.elevenLabsGeneratedAt} /> : ''} />
         <DiagnosticItem label="Model" value={word.elevenLabsModel} mono />
         <DiagnosticItem label="Voice ID" value={word.elevenLabsVoiceId} mono />

@@ -87,6 +87,21 @@ Future AI / TTS direction:
 - Advanced replay systems should still preserve Spelio's calm, minimal, adult-focused philosophy.
 - Spelio should avoid becoming a full phonics-analysis engine.
 
+Experimental ElevenLabs audio direction:
+
+- Spelio is now exploring ElevenLabs as a premium generated-audio layer.
+- Direct ElevenLabs Welsh TTS is often preferred for naturalness, warmth, and voice quality.
+- Azure remains valuable as a pronunciation fallback and rescue route, especially when direct generation struggles.
+- The current preferred workflow is direct ElevenLabs generation from Welsh text, followed by review or spot-checking.
+- Problematic words may be regenerated directly, improved later with pronunciation hints, or regenerated using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+- Azure should not be assumed as the default source for every ElevenLabs file.
+- Per-word metadata may track `elevenLabsGenerationMode`, `preferredElevenLabsGenerationMode`, and audio review status.
+- Current generation modes are `direct` and `azure_transform`.
+- Direct generation should use Eleven v3, Welsh language override, a configured voice ID, and stable conservative settings.
+- The current preferred experimental voice ID is `G7ILShrCNLfmS0A37SXS`; the previous tested Welsh-ish voice ID was `DikmR0aoFXAp1A3NcovW`.
+- Voice IDs should remain configurable rather than hardcoded throughout the app.
+- This should remain a pragmatic hybrid experiment and should not imply that ElevenLabs replaces trusted human recordings or makes Azure obsolete.
+
 ## 2. Future educational systems
 
 Possible future systems to keep in mind:

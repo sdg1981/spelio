@@ -61,6 +61,7 @@ function result(id: string, ok: boolean): AudioGenerationResult {
       elevenLabsAudioUrl: '',
       elevenLabsAudioStatus: 'missing',
       elevenLabsGenerationMode: 'direct',
+      preferredElevenLabsGenerationMode: 'direct',
       elevenLabsGeneratedAt: '',
       elevenLabsModel: '',
       elevenLabsVoiceId: '',

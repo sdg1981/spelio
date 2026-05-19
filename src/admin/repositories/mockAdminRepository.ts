@@ -158,7 +158,8 @@ export const mockAdminRepository: AdminRepository = {
     if (mode === 'azure_transform' && (!word.audioUrl.trim() || word.audioStatus !== 'ready')) {
       throw new Error('Generate Azure audio before creating an ElevenLabs version.');
     }
-    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: mode === 'azure_transform' ? 'azure_transform' as const : 'direct' as const };
+    const normalizedMode = mode === 'azure_transform' ? 'azure_transform' as const : 'direct' as const;
+    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: normalizedMode };
     await this.saveWord(pendingWord);
     const readyWord = {
       ...pendingWord,

@@ -74,6 +74,7 @@ type WordRow = {
   elevenlabs_audio_url?: string | null;
   elevenlabs_audio_status?: string | null;
   elevenlabs_generation_mode?: string | null;
+  preferred_elevenlabs_generation_mode?: string | null;
   elevenlabs_generated_at?: string | null;
   elevenlabs_model?: string | null;
   elevenlabs_voice_id?: string | null;
@@ -583,6 +584,7 @@ function mapWordRow(row: WordRow): AdminWord {
     elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status) as ElevenLabsAudioStatus,
     elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode) as ElevenLabsGenerationMode,
+    preferredElevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.preferred_elevenlabs_generation_mode) as ElevenLabsGenerationMode,
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
     elevenLabsModel: row.elevenlabs_model ?? '',
     elevenLabsVoiceId: row.elevenlabs_voice_id ?? '',
@@ -673,6 +675,7 @@ function toWordRow(word: AdminWord) {
     elevenlabs_audio_url: word.elevenLabsAudioUrl,
     elevenlabs_audio_status: word.elevenLabsAudioStatus,
     elevenlabs_generation_mode: word.elevenLabsGenerationMode,
+    preferred_elevenlabs_generation_mode: word.preferredElevenLabsGenerationMode,
     elevenlabs_generated_at: word.elevenLabsGeneratedAt || null,
     elevenlabs_model: word.elevenLabsModel || null,
     elevenlabs_voice_id: word.elevenLabsVoiceId || null,

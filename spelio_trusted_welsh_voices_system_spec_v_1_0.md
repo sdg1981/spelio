@@ -11,6 +11,7 @@ This specification expands beyond the current Azure-generated audio pipeline and
 - trusted human Welsh recordings
 - premium assisted replay variants
 - dialect-aware voice selection
+- experimental premium ElevenLabs-generated audio
 - scalable Azure fallback audio
 - contributor recording workflows
 - admin approval tooling
@@ -120,7 +121,41 @@ Azure-generated audio remains important for:
 
 ---
 
-## 2.2 Naturalness is critical
+## 2.2 Experimental ElevenLabs generation layer
+
+Spelio is now exploring ElevenLabs as a premium generated-audio layer within the broader human-first Trusted Welsh Voices direction.
+
+This should be treated as an experimental, pragmatic hybrid workflow, not as a replacement for trusted human recordings and not as a reason to remove Azure fallback infrastructure.
+
+Current observations:
+
+- Direct ElevenLabs Welsh text-to-speech is often preferred for naturalness, warmth, and voice quality.
+- Azure remains valuable as a pronunciation fallback and rescue route, especially for words where direct generation struggles.
+- Azure should not be assumed as the default source for every ElevenLabs file.
+
+Preferred current experimental workflow:
+
+1. Generate ElevenLabs audio directly from Welsh text by default.
+2. Review or spot-check the generated audio.
+3. For problematic words, either regenerate directly, add future pronunciation hints, or regenerate using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+
+Direct ElevenLabs generation should currently use:
+
+- Eleven v3
+- Welsh language override
+- configured voice ID
+- stable, conservative settings
+
+Current experimental voice configuration:
+
+- Preferred experimental voice ID: `G7ILShrCNLfmS0A37SXS`
+- Previous tested Welsh-ish voice ID: `DikmR0aoFXAp1A3NcovW`
+
+Voice IDs should remain configurable and should not be hardcoded throughout the app.
+
+---
+
+## 2.3 Naturalness is critical
 
 The system must preserve:
 
@@ -150,7 +185,7 @@ not:
 
 ---
 
-## 2.3 Assisted listening philosophy
+## 2.4 Assisted listening philosophy
 
 Replay support should become:
 
@@ -354,6 +389,7 @@ AudioRecording = {
 
   source:
     | "human"
+    | "elevenlabs"
     | "azure"
 
   dialect:
@@ -400,6 +436,29 @@ Existing `audioUrl` fields may remain temporarily.
 Long-term audio should resolve dynamically through the recording system.
 
 Azure-generated audio remains important as fallback infrastructure.
+
+---
+
+## 5.4 Experimental ElevenLabs generation metadata
+
+During the experimental ElevenLabs phase, each word may store lightweight generation and review metadata alongside its audio fields.
+
+Suggested fields:
+
+- `elevenLabsGenerationMode`
+- `preferredElevenLabsGenerationMode`
+- audio review status metadata
+
+`elevenLabsGenerationMode` records how the current ElevenLabs file was made.
+
+`preferredElevenLabsGenerationMode` records how the word should be regenerated in future.
+
+Current generation modes:
+
+- `direct`
+- `azure_transform`
+
+This distinction matters because the best current file and the best future regeneration route may differ. A word may currently use an Azure-transformed rescue file while still being marked for future direct ElevenLabs regeneration once pronunciation hints, voice choice, or model behaviour improves.
 
 ---
 

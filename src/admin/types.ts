@@ -38,6 +38,7 @@ export interface AdminWord {
   elevenLabsAudioUrl: string;
   elevenLabsAudioStatus: ElevenLabsAudioStatus;
   elevenLabsGenerationMode: ElevenLabsGenerationMode;
+  preferredElevenLabsGenerationMode: ElevenLabsGenerationMode;
   elevenLabsGeneratedAt: string;
   elevenLabsModel: string;
   elevenLabsVoiceId: string;
