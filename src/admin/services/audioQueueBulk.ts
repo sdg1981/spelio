@@ -2,6 +2,7 @@ import type { AdminWord } from '../types';
 import type { AudioGenerationResult } from './audioGeneration';
 
 type BulkAudioWord = Pick<AdminWord, 'id' | 'audioStatus'>;
+type BulkElevenLabsAudioWord = Pick<AdminWord, 'id' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus'>;
 
 export function canBulkGenerateAudio(word: BulkAudioWord) {
   return word.audioStatus === 'missing' || word.audioStatus === 'failed' || word.audioStatus === 'ready';
@@ -9,6 +10,17 @@ export function canBulkGenerateAudio(word: BulkAudioWord) {
 
 export function getSelectedVisibleBulkAudioIds(selectedIds: string[], visibleWords: BulkAudioWord[]) {
   const visibleGeneratableIds = new Set(visibleWords.filter(canBulkGenerateAudio).map(word => word.id));
+  return selectedIds.filter(id => visibleGeneratableIds.has(id));
+}
+
+export function canBulkGenerateElevenLabsAudio(word: BulkElevenLabsAudioWord) {
+  return Boolean(word.audioUrl.trim()) &&
+    word.audioStatus === 'ready' &&
+    (word.elevenLabsAudioStatus === 'missing' || word.elevenLabsAudioStatus === 'failed');
+}
+
+export function getSelectedVisibleBulkElevenLabsAudioIds(selectedIds: string[], visibleWords: BulkElevenLabsAudioWord[]) {
+  const visibleGeneratableIds = new Set(visibleWords.filter(canBulkGenerateElevenLabsAudio).map(word => word.id));
   return selectedIds.filter(id => visibleGeneratableIds.has(id));
 }
 
@@ -31,4 +43,11 @@ export function summarizeBulkAudioGeneration(results: AudioGenerationResult[], r
     return `Audio generation finished with ${succeeded} generated and ${failed} failure(s).`;
   }
   return `Generated ${requestedCount} selected audio item(s).`;
+}
+
+export function summarizeBulkElevenLabsAudioGeneration(results: AudioGenerationResult[], requestedCount: number) {
+  const failed = results.filter(result => !result.ok).length;
+  const succeeded = Math.max(0, results.length - failed);
+  if (failed) return `ElevenLabs generation finished with ${succeeded} generated and ${failed} failure(s).`;
+  return `Generated ${requestedCount} ElevenLabs audio item(s).`;
 }

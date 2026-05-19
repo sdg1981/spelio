@@ -5,17 +5,20 @@ import { AdminAudioControls } from '../components/AdminAudioControls';
 import { AudioStatusPill } from '../components/audioStatus';
 import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
-import type { AudioStatus } from '../types';
+import type { AudioGenerationResult } from '../services/audioGeneration';
+import type { AudioStatus, ElevenLabsAudioStatus } from '../types';
 import {
   getBulkAudioActionLabel,
   getBulkAudioRunningLabel,
   getSelectedVisibleBulkAudioIds,
-  summarizeBulkAudioGeneration
+  getSelectedVisibleBulkElevenLabsAudioIds,
+  summarizeBulkAudioGeneration,
+  summarizeBulkElevenLabsAudioGeneration
 } from '../services/audioQueueBulk';
 
 const PAGE_SIZE = 40;
 
-type StatusFilter = 'all' | AudioStatus;
+type StatusFilter = 'all' | AudioStatus | 'elevenlabs-missing' | 'elevenlabs-generated' | 'elevenlabs-failed';
 
 const statusFilters: Array<{ value: StatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -23,7 +26,10 @@ const statusFilters: Array<{ value: StatusFilter; label: string }> = [
   { value: 'queued', label: 'Queued' },
   { value: 'generating', label: 'Generating' },
   { value: 'failed', label: 'Failed' },
-  { value: 'ready', label: 'Generated' }
+  { value: 'ready', label: 'Generated' },
+  { value: 'elevenlabs-missing', label: 'Missing ElevenLabs' },
+  { value: 'elevenlabs-generated', label: 'Generated ElevenLabs' },
+  { value: 'elevenlabs-failed', label: 'Failed ElevenLabs' }
 ];
 
 export function AudioQueuePage({ repository }: { repository: AdminRepository }) {
@@ -31,15 +37,19 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [queueMissingBusy, setQueueMissingBusy] = useState(false);
   const [selectedBatchBusy, setSelectedBatchBusy] = useState(false);
+  const [selectedElevenLabsBatchBusy, setSelectedElevenLabsBatchBusy] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [generatingWordIds, setGeneratingWordIds] = useState<Set<string>>(() => new Set());
   const [batchGeneratingWordIds, setBatchGeneratingWordIds] = useState<Set<string>>(() => new Set());
+  const [batchGeneratingElevenLabsWordIds, setBatchGeneratingElevenLabsWordIds] = useState<Set<string>>(() => new Set());
   const [selectedBatchIncludesGenerated, setSelectedBatchIncludesGenerated] = useState(false);
   const queueMissingBusyRef = useRef(false);
   const selectedBatchBusyRef = useRef(false);
+  const selectedElevenLabsBatchBusyRef = useRef(false);
   const generatingWordIdsRef = useRef<Set<string>>(new Set());
   const batchGeneratingWordIdsRef = useRef<Set<string>>(new Set());
+  const batchGeneratingElevenLabsWordIdsRef = useRef<Set<string>>(new Set());
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -57,29 +67,45 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   }, [statusFilter]);
 
   const effectiveWords = useMemo(() => {
-    if (!generatingWordIds.size && !batchGeneratingWordIds.size) return allWords;
-    return allWords.map(word => generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id)
-      ? { ...word, audioStatus: 'generating' as const }
-      : word
-    );
-  }, [allWords, batchGeneratingWordIds, generatingWordIds]);
+    if (!generatingWordIds.size && !batchGeneratingWordIds.size && !batchGeneratingElevenLabsWordIds.size) return allWords;
+    return allWords.map(word => {
+      if (generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id)) {
+        return { ...word, audioStatus: 'generating' as const };
+      }
+      if (batchGeneratingElevenLabsWordIds.has(word.id)) {
+        return { ...word, elevenLabsAudioStatus: 'pending' as const };
+      }
+      return word;
+    });
+  }, [allWords, batchGeneratingElevenLabsWordIds, batchGeneratingWordIds, generatingWordIds]);
 
   const counts = useMemo(() => ({
     missing: effectiveWords.filter(word => word.audioStatus === 'missing').length,
     queued: effectiveWords.filter(word => word.audioStatus === 'queued').length,
     generating: effectiveWords.filter(word => word.audioStatus === 'generating').length,
     failed: effectiveWords.filter(word => word.audioStatus === 'failed').length,
-    ready: effectiveWords.filter(word => word.audioStatus === 'ready').length
+    ready: effectiveWords.filter(word => word.audioStatus === 'ready').length,
+    elevenLabsMissing: effectiveWords.filter(word => word.elevenLabsAudioStatus === 'missing').length,
+    elevenLabsPending: effectiveWords.filter(word => word.elevenLabsAudioStatus === 'pending').length,
+    elevenLabsFailed: effectiveWords.filter(word => word.elevenLabsAudioStatus === 'failed').length,
+    elevenLabsGenerated: effectiveWords.filter(word => word.elevenLabsAudioStatus === 'generated').length
   }), [effectiveWords]);
 
   const filteredWords = useMemo(
-    () => statusFilter === 'all' ? effectiveWords.filter(word => word.audioStatus !== 'ready') : effectiveWords.filter(word => word.audioStatus === statusFilter),
+    () => {
+      if (statusFilter === 'all') return effectiveWords.filter(word => word.audioStatus !== 'ready' || word.elevenLabsAudioStatus !== 'generated');
+      if (statusFilter === 'elevenlabs-missing') return effectiveWords.filter(word => word.elevenLabsAudioStatus === 'missing');
+      if (statusFilter === 'elevenlabs-generated') return effectiveWords.filter(word => word.elevenLabsAudioStatus === 'generated');
+      if (statusFilter === 'elevenlabs-failed') return effectiveWords.filter(word => word.elevenLabsAudioStatus === 'failed');
+      return effectiveWords.filter(word => word.audioStatus === statusFilter);
+    },
     [effectiveWords, statusFilter]
   );
   const visibleWords = filteredWords.slice(0, visibleCount);
   const selectedVisibleIds = selectedIds.filter(id => visibleWords.some(word => word.id === id));
   const selectedVisibleGeneratableIds = getSelectedVisibleBulkAudioIds(selectedIds, visibleWords);
   const selectedVisibleGeneratableWords = visibleWords.filter(word => selectedVisibleGeneratableIds.includes(word.id));
+  const selectedVisibleElevenLabsGeneratableIds = getSelectedVisibleBulkElevenLabsAudioIds(selectedIds, visibleWords);
   const visibleMissingIds = visibleWords.filter(word => word.audioStatus === 'missing').map(word => word.id);
   const selectedMissingIds = selectedIds.filter(id => effectiveWords.some(word => word.id === id && word.audioStatus === 'missing'));
   const allVisibleSelected = visibleWords.length > 0 && visibleWords.every(word => selectedIds.includes(word.id));
@@ -131,6 +157,41 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
       setSelectedBatchBusy(false);
       setSelectedBatchIncludesGenerated(false);
       setBatchGeneratingWordIds(new Set(batchGeneratingWordIdsRef.current));
+    }
+  }
+
+  async function generateSelectedElevenLabsAudio(wordIds: string[]) {
+    if (selectedElevenLabsBatchBusyRef.current || !wordIds.length) return;
+    const results: AudioGenerationResult[] = [];
+    try {
+      selectedElevenLabsBatchBusyRef.current = true;
+      batchGeneratingElevenLabsWordIdsRef.current = new Set(wordIds);
+      setSelectedElevenLabsBatchBusy(true);
+      setBatchGeneratingElevenLabsWordIds(new Set(batchGeneratingElevenLabsWordIdsRef.current));
+      clearSelection();
+      setErrorMessage('');
+      setStatusMessage(`Generating ${wordIds.length} ElevenLabs audio item(s)...`);
+
+      for (const [index, wordId] of wordIds.entries()) {
+        setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length}...`);
+        try {
+          results.push(await repository.generateElevenLabsAudioForWord(wordId));
+        } catch (error) {
+          const word = allWords.find(item => item.id === wordId);
+          if (word) results.push({ word, ok: false, error: readError(error, 'ElevenLabs audio generation failed.') });
+        }
+      }
+
+      await refresh();
+      setStatusMessage(summarizeBulkElevenLabsAudioGeneration(results, wordIds.length));
+    } catch (error) {
+      await refresh().catch(() => undefined);
+      setErrorMessage(readError(error, 'Selected ElevenLabs generation failed.'));
+    } finally {
+      selectedElevenLabsBatchBusyRef.current = false;
+      batchGeneratingElevenLabsWordIdsRef.current = new Set();
+      setSelectedElevenLabsBatchBusy(false);
+      setBatchGeneratingElevenLabsWordIds(new Set(batchGeneratingElevenLabsWordIdsRef.current));
     }
   }
 
@@ -187,6 +248,10 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
               {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
               {selectedBatchBusy ? getBulkAudioRunningLabel(selectedBatchIncludesGenerated, batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length) : getBulkAudioActionLabel(selectedVisibleGeneratableWords)}
             </AdminButton>
+            <AdminButton onClick={() => generateSelectedElevenLabsAudio(selectedVisibleElevenLabsGeneratableIds)} disabled={selectedElevenLabsBatchBusy || selectedVisibleElevenLabsGeneratableIds.length === 0} aria-disabled={selectedElevenLabsBatchBusy}>
+              {selectedElevenLabsBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
+              {selectedElevenLabsBatchBusy ? `Generating ElevenLabs ${batchGeneratingElevenLabsWordIds.size || selectedVisibleElevenLabsGeneratableIds.length}...` : 'Generate ElevenLabs selected'}
+            </AdminButton>
           </div>
         }
       />
@@ -196,12 +261,16 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
         </div>
       )}
       <AdminCard className="overflow-hidden">
-        <div className="grid gap-3 border-b border-slate-200 p-5 sm:grid-cols-5">
+        <div className="grid gap-3 border-b border-slate-200 p-5 sm:grid-cols-5 lg:grid-cols-9">
           <QueueMetric label="Missing audio" value={counts.missing} helper="No generated audio URL yet." />
           <QueueMetric label="Queued" value={counts.queued} helper="Waiting to be generated." />
           <QueueMetric label="Generating" value={counts.generating} helper="Currently being synthesized." />
           <QueueMetric label="Failed" value={counts.failed} helper="Last generation attempt failed." />
           <QueueMetric label="Generated" value={counts.ready} helper="Audio has been generated successfully." />
+          <QueueMetric label="Missing ElevenLabs" value={counts.elevenLabsMissing} helper="No transformed ElevenLabs audio yet." />
+          <QueueMetric label="Pending ElevenLabs" value={counts.elevenLabsPending} helper="Currently transforming through ElevenLabs." />
+          <QueueMetric label="Failed ElevenLabs" value={counts.elevenLabsFailed} helper="Last ElevenLabs attempt failed." />
+          <QueueMetric label="Generated ElevenLabs" value={counts.elevenLabsGenerated} helper="ElevenLabs transformed audio is available." />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -233,13 +302,14 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses only visible selected rows that are missing, failed, or generated.
-            {selectedVisibleIds.length > 0 && selectedVisibleGeneratableIds.length !== selectedVisibleIds.length && <> {selectedVisibleIds.length - selectedVisibleGeneratableIds.length} ineligible item(s) will be skipped.</>}
+            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses visible selected rows with Azure audio and missing/failed ElevenLabs audio.
+            {selectedVisibleIds.length > 0 && selectedVisibleElevenLabsGeneratableIds.length !== selectedVisibleIds.length && statusFilter.toString().startsWith('elevenlabs') && <> {selectedVisibleIds.length - selectedVisibleElevenLabsGeneratableIds.length} ElevenLabs-ineligible item(s) will be skipped.</>}
           </div>
         </div>
         <div className="divide-y divide-slate-100">
           {visibleWords.map(word => {
             const wordBusy = generatingWordIds.has(word.id) || batchGeneratingWordIds.has(word.id);
+            const elevenLabsBusy = batchGeneratingElevenLabsWordIds.has(word.id);
             const runningLabel = word.audioStatus === 'failed' ? 'Regenerating...' : 'Generating...';
             const isGenerated = word.audioStatus === 'ready';
             const isGenerating = word.audioStatus === 'generating';
@@ -255,12 +325,12 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
                 />
                 <div>
                   <div className="font-bold text-slate-950">{word.englishPrompt} {'->'} {word.welshAnswer}</div>
-                  <div className="mt-1 text-sm text-slate-500">{word.listName} · {word.dialect}</div>
+                  <div className="mt-1 text-sm text-slate-500">{word.listName} · {word.dialect} · ElevenLabs: {formatElevenLabsStatus(word.elevenLabsAudioStatus)}</div>
                 </div>
                 <AudioStatusPill status={word.audioStatus} />
                 <div className="flex flex-wrap justify-end gap-2">
                   <AdminAudioControls word={word} source="admin-audio-queue" className="justify-items-end" />
-                  <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || isGenerated || isGenerating} aria-disabled={wordBusy || isGenerated || isGenerating}>
+                  <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || elevenLabsBusy || isGenerated || isGenerating} aria-disabled={wordBusy || elevenLabsBusy || isGenerated || isGenerating}>
                     {wordBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
                     {wordBusy ? runningLabel : isGenerated ? 'Generated' : isGenerating ? 'Generating...' : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}
                   </AdminButton>
@@ -298,7 +368,17 @@ function getEmptyStateCopy(statusFilter: StatusFilter) {
   if (statusFilter === 'generating') return 'No audio jobs are generating.';
   if (statusFilter === 'failed') return 'No failed audio jobs.';
   if (statusFilter === 'ready') return 'No generated audio found.';
+  if (statusFilter === 'elevenlabs-missing') return 'No missing ElevenLabs audio found.';
+  if (statusFilter === 'elevenlabs-generated') return 'No generated ElevenLabs audio found.';
+  if (statusFilter === 'elevenlabs-failed') return 'No failed ElevenLabs audio found.';
   return 'No audio items found.';
+}
+
+function formatElevenLabsStatus(status: ElevenLabsAudioStatus) {
+  if (status === 'generated') return 'generated';
+  if (status === 'pending') return 'pending';
+  if (status === 'failed') return 'failed';
+  return 'missing';
 }
 
 function canGenerateAudio(word: AdminWordWithListName) {
