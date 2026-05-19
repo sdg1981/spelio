@@ -1,6 +1,6 @@
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
-export type ElevenLabsGenerationMode = 'direct' | 'azure_transform';
+export type ElevenLabsGenerationMode = 'direct' | 'azure_transform' | 'context_extract';
 export type AudioReviewStatus = 'unchecked' | 'approved' | 'needs_review' | 'needs_regeneration';
 export type DefaultAudioProvider = 'azure' | 'elevenlabs';
 export type AdminDialect = 'Both' | 'Mixed' | 'North Wales' | 'South Wales / Standard' | 'Standard' | 'Other';
@@ -42,6 +42,10 @@ export interface AdminWord {
   elevenLabsPronunciationHint: string;
   elevenLabsPronunciationHintUsed: boolean;
   elevenLabsPronunciationHintText: string;
+  elevenLabsContextPhrase: string;
+  elevenLabsExtractMode: 'none' | 'final_chunk';
+  elevenLabsExtractionUsed: boolean;
+  elevenLabsContextPhraseUsed: string;
   elevenLabsGeneratedAt: string;
   elevenLabsModel: string;
   elevenLabsVoiceId: string;

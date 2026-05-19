@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeLegacyAudioStatus, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 
 type CustomWordListRow = {
@@ -78,6 +78,10 @@ type WordRow = {
   elevenlabs_pronunciation_hint?: string | null;
   elevenlabs_pronunciation_hint_used?: boolean | null;
   elevenlabs_pronunciation_hint_text?: string | null;
+  elevenlabs_context_phrase?: string | null;
+  elevenlabs_extract_mode?: string | null;
+  elevenlabs_extraction_used?: boolean | null;
+  elevenlabs_context_phrase_used?: string | null;
   elevenlabs_generated_at?: string | null;
   elevenlabs_model?: string | null;
   elevenlabs_voice_id?: string | null;
@@ -292,6 +296,9 @@ export const supabaseAdminRepository: AdminRepository = {
     if (mode === 'azure_transform' && (!word.audioUrl.trim() || word.audioStatus !== 'ready')) {
       throw new Error('Generate Azure audio before creating an ElevenLabs version.');
     }
+    if (mode === 'context_extract' && !word.elevenLabsContextPhrase.trim()) {
+      throw new Error('Add a context phrase before generating context-extracted ElevenLabs audio.');
+    }
     const previousElevenLabsAudioUrl = word.elevenLabsAudioUrl;
 
     try {
@@ -300,9 +307,12 @@ export const supabaseAdminRepository: AdminRepository = {
       });
       const pronunciationHint = word.elevenLabsPronunciationHint.trim();
       const directText = pronunciationHint || word.welshAnswer;
+      const contextPhrase = word.elevenLabsContextPhrase.trim();
       const audio = mode === 'azure_transform'
         ? await transformAzureMp3WithElevenLabs(word.audioUrl)
-        : await synthesizeElevenLabsWelshMp3(directText);
+        : mode === 'context_extract'
+          ? await synthesizeElevenLabsContextExtractMp3(contextPhrase)
+          : await synthesizeElevenLabsWelshMp3(directText);
       const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio.blob).catch(error => {
         throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
       });
@@ -313,6 +323,9 @@ export const supabaseAdminRepository: AdminRepository = {
         elevenLabsGenerationMode: mode,
         elevenLabsPronunciationHintUsed: mode === 'direct' && Boolean(pronunciationHint),
         elevenLabsPronunciationHintText: mode === 'direct' ? pronunciationHint : '',
+        elevenLabsContextPhraseUsed: mode === 'context_extract' ? contextPhrase : '',
+        elevenLabsExtractionUsed: audio.diagnostics.extractionUsed,
+        elevenLabsExtractMode: audio.diagnostics.extractMode,
         elevenLabsGeneratedAt: new Date().toISOString(),
         elevenLabsModel: audio.diagnostics.model,
         elevenLabsVoiceId: audio.diagnostics.voiceId,
@@ -595,6 +608,10 @@ function mapWordRow(row: WordRow): AdminWord {
     elevenLabsPronunciationHint: row.elevenlabs_pronunciation_hint ?? '',
     elevenLabsPronunciationHintUsed: row.elevenlabs_pronunciation_hint_used === true,
     elevenLabsPronunciationHintText: row.elevenlabs_pronunciation_hint_text ?? '',
+    elevenLabsContextPhrase: row.elevenlabs_context_phrase ?? '',
+    elevenLabsExtractMode: row.elevenlabs_extract_mode === 'final_chunk' ? 'final_chunk' : 'none',
+    elevenLabsExtractionUsed: row.elevenlabs_extraction_used === true,
+    elevenLabsContextPhraseUsed: row.elevenlabs_context_phrase_used ?? '',
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
     elevenLabsModel: row.elevenlabs_model ?? '',
     elevenLabsVoiceId: row.elevenlabs_voice_id ?? '',
@@ -689,6 +706,10 @@ function toWordRow(word: AdminWord) {
     elevenlabs_pronunciation_hint: word.elevenLabsPronunciationHint || null,
     elevenlabs_pronunciation_hint_used: word.elevenLabsPronunciationHintUsed,
     elevenlabs_pronunciation_hint_text: word.elevenLabsPronunciationHintText || null,
+    elevenlabs_context_phrase: word.elevenLabsContextPhrase || null,
+    elevenlabs_extract_mode: word.elevenLabsExtractMode,
+    elevenlabs_extraction_used: word.elevenLabsExtractionUsed,
+    elevenlabs_context_phrase_used: word.elevenLabsContextPhraseUsed || null,
     elevenlabs_generated_at: word.elevenLabsGeneratedAt || null,
     elevenlabs_model: word.elevenLabsModel || null,
     elevenlabs_voice_id: word.elevenLabsVoiceId || null,

@@ -30,6 +30,8 @@ export interface ElevenLabsAudioDiagnostics {
   voiceId: string;
   languageOverride: string;
   prompt: string;
+  extractionUsed: boolean;
+  extractMode: 'none' | 'final_chunk';
 }
 
 export interface ElevenLabsAudioBlob {
@@ -110,6 +112,10 @@ export async function synthesizeElevenLabsWelshMp3(text: string): Promise<Eleven
   return requestElevenLabsMp3({ mode: 'direct', text });
 }
 
+export async function synthesizeElevenLabsContextExtractMp3(text: string): Promise<ElevenLabsAudioBlob> {
+  return requestElevenLabsMp3({ mode: 'context_extract', text });
+}
+
 export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<ElevenLabsAudioBlob> {
   return requestElevenLabsMp3({ mode: 'azure_transform', audioUrl });
 }
@@ -141,10 +147,12 @@ async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; t
   return {
     blob: new Blob([audioBuffer], { type: 'audio/mpeg' }),
     diagnostics: {
-      model: response.headers.get('x-spelio-elevenlabs-model') || (payload.mode === 'direct' ? ELEVENLABS_DIRECT_TTS_MODEL_ID : ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID),
+      model: response.headers.get('x-spelio-elevenlabs-model') || (payload.mode === 'azure_transform' ? ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID : ELEVENLABS_DIRECT_TTS_MODEL_ID),
       voiceId: response.headers.get('x-spelio-elevenlabs-voice-id') || FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID,
-      languageOverride: response.headers.get('x-spelio-elevenlabs-language-override') || (payload.mode === 'direct' ? ELEVENLABS_WELSH_LANGUAGE_OVERRIDE : ELEVENLABS_NOT_APPLICABLE),
-      prompt: response.headers.get('x-spelio-elevenlabs-prompt') || (payload.mode === 'direct' ? ELEVENLABS_DIRECT_TTS_PROMPT : ELEVENLABS_NOT_APPLICABLE)
+      languageOverride: response.headers.get('x-spelio-elevenlabs-language-override') || (payload.mode === 'azure_transform' ? ELEVENLABS_NOT_APPLICABLE : ELEVENLABS_WELSH_LANGUAGE_OVERRIDE),
+      prompt: response.headers.get('x-spelio-elevenlabs-prompt') || (payload.mode === 'azure_transform' ? ELEVENLABS_NOT_APPLICABLE : ELEVENLABS_DIRECT_TTS_PROMPT),
+      extractionUsed: response.headers.get('x-spelio-elevenlabs-extraction-used') === 'true',
+      extractMode: response.headers.get('x-spelio-elevenlabs-extract-mode') === 'final_chunk' ? 'final_chunk' : 'none'
     }
   };
 }

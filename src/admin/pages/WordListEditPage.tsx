@@ -227,7 +227,15 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       setStatusMessage('');
       const result = await repository.generateElevenLabsAudioForWord(word.id, mode);
       await refreshCurrentList(word.listId);
-      if (result.ok) setStatusMessage(mode === 'azure_transform' ? 'ElevenLabs audio generated using Azure pronunciation.' : 'ElevenLabs audio generated.');
+      if (result.ok) {
+        setStatusMessage(
+          mode === 'azure_transform'
+            ? 'ElevenLabs audio generated using Azure pronunciation.'
+            : mode === 'context_extract'
+              ? 'ElevenLabs audio generated from context phrase.'
+              : 'ElevenLabs audio generated.'
+        );
+      }
       else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
     } catch (error) {
       setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));
@@ -447,6 +455,10 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     elevenLabsPronunciationHint: '',
     elevenLabsPronunciationHintUsed: false,
     elevenLabsPronunciationHintText: '',
+    elevenLabsContextPhrase: '',
+    elevenLabsExtractMode: 'none',
+    elevenLabsExtractionUsed: false,
+    elevenLabsContextPhraseUsed: '',
     elevenLabsGeneratedAt: '',
     elevenLabsModel: '',
     elevenLabsVoiceId: '',

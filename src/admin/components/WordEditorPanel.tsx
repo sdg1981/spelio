@@ -39,6 +39,7 @@ export function WordEditorPanel({
   const generateAudioLabel = isRegenerating ? 'Regenerate Azure audio' : 'Generate Azure audio';
   const generatingAudioLabel = isRegenerating ? 'Regenerating Azure...' : 'Generating Azure...';
   const canGenerateElevenLabsAudio = word.audioStatus === 'ready' && Boolean(word.audioUrl.trim());
+  const canGenerateElevenLabsFromContext = Boolean(word.elevenLabsContextPhrase.trim());
 
   if (variant === 'page') {
     return (
@@ -117,6 +118,10 @@ export function WordEditorPanel({
               {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate via Azure'}
             </AdminButton>
+            <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'context_extract')} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsFromContext} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsFromContext}>
+              {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+              {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate from context'}
+            </AdminButton>
             {word.audioStatus === 'failed' && (
               <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
                 {audioBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
@@ -140,6 +145,9 @@ export function WordEditorPanel({
           </div>
           <div className="mt-5 max-w-xl">
             <ElevenLabsPronunciationHintField word={word} onChange={onChange} />
+          </div>
+          <div className="mt-5 max-w-xl">
+            <ElevenLabsContextPhraseField word={word} onChange={onChange} />
           </div>
           <ElevenLabsDiagnostics word={word} />
         </div>
@@ -172,6 +180,7 @@ export function WordEditorPanel({
                   <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
                     <option value="direct">direct</option>
                     <option value="azure_transform">azure_transform</option>
+                    <option value="context_extract">context_extract</option>
                   </AdminSelect>
                 </Field>
                 <Field label="Audio review status">
@@ -274,6 +283,10 @@ export function WordEditorPanel({
             {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate via Azure'}
           </AdminButton>
+          <AdminButton onClick={() => onGenerateElevenLabsAudio(word, 'context_extract')} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsFromContext} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsFromContext}>
+            {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+            {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Regenerate from context'}
+          </AdminButton>
           {word.audioStatus === 'failed' && (
             <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
               {audioBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
@@ -299,10 +312,12 @@ export function WordEditorPanel({
           </Field>
           <PreferredElevenLabsModeControl word={word} onChange={onChange} />
           <ElevenLabsPronunciationHintField word={word} onChange={onChange} />
+          <ElevenLabsContextPhraseField word={word} onChange={onChange} />
           <Field label="ElevenLabs mode">
             <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
               <option value="direct">direct</option>
               <option value="azure_transform">azure_transform</option>
+              <option value="context_extract">context_extract</option>
             </AdminSelect>
           </Field>
           <Field label="Audio review status">
@@ -372,11 +387,23 @@ function ElevenLabsPronunciationHintField({ word, onChange }: { word: AdminWord;
   );
 }
 
+function ElevenLabsContextPhraseField({ word, onChange }: { word: AdminWord; onChange: (patch: Partial<AdminWord>) => void }) {
+  return (
+    <Field label="Context phrase for ElevenLabs" helper="Optional. Used only for context-based generation when a word sounds wrong in isolation.">
+      <AdminInput
+        value={word.elevenLabsContextPhrase}
+        placeholder="e.g. dych chi"
+        onChange={event => onChange({ elevenLabsContextPhrase: event.target.value })}
+      />
+    </Field>
+  );
+}
+
 function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
   const hasElevenLabsMetadata =
     word.elevenLabsAudioStatus !== 'missing' ||
     Boolean(word.elevenLabsAudioUrl.trim()) ||
-    Boolean(word.elevenLabsGeneratedAt || word.elevenLabsModel || word.elevenLabsVoiceId || word.elevenLabsLanguageOverride || word.elevenLabsPrompt);
+    Boolean(word.elevenLabsGeneratedAt || word.elevenLabsModel || word.elevenLabsVoiceId || word.elevenLabsLanguageOverride || word.elevenLabsPrompt || word.elevenLabsContextPhraseUsed);
 
   if (!hasElevenLabsMetadata) return null;
 
@@ -394,6 +421,9 @@ function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
         <DiagnosticItem label="Prompt" value={word.elevenLabsPrompt} wide />
         <DiagnosticItem label="Hint used" value={word.elevenLabsPronunciationHintUsed ? 'yes' : 'no'} />
         <DiagnosticItem label="Hint text used" value={word.elevenLabsPronunciationHintText} wide />
+        <DiagnosticItem label="Extraction used" value={word.elevenLabsExtractionUsed ? 'yes' : 'no'} />
+        <DiagnosticItem label="Extract mode" value={word.elevenLabsExtractMode} />
+        <DiagnosticItem label="Context phrase used" value={word.elevenLabsContextPhraseUsed} wide />
       </dl>
     </div>
   );

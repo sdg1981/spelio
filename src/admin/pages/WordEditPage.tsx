@@ -132,7 +132,15 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
       setStatusMessage('');
       const result = await repository.generateElevenLabsAudioForWord(target.id, mode);
       await refreshWord(target.id);
-      if (result.ok) setStatusMessage(mode === 'azure_transform' ? 'ElevenLabs audio generated using Azure pronunciation.' : 'ElevenLabs audio generated.');
+      if (result.ok) {
+        setStatusMessage(
+          mode === 'azure_transform'
+            ? 'ElevenLabs audio generated using Azure pronunciation.'
+            : mode === 'context_extract'
+              ? 'ElevenLabs audio generated from context phrase.'
+              : 'ElevenLabs audio generated.'
+        );
+      }
       else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
     } catch (error) {
       setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));

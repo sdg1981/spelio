@@ -42,6 +42,7 @@ export const AUDIO_TRAILING_SILENCE_SAMPLES = 2400;
 export const AUDIO_LOUDNESS_FILTER = 'loudnorm=I=-20:TP=-3:LRA=13:linear=true';
 export const FINAL_MP3_BITRATE = '32k';
 export const FINAL_MP3_SAMPLE_RATE = '16000';
+export const CONTEXT_EXTRACTION_FALLBACK_SECONDS = 1.1;
 
 export function createAudioPostProcessingFilter() {
   return [
@@ -63,6 +64,36 @@ export function createFfmpegPostProcessingArgs(inputPath: string, outputPath: st
     inputPath,
     '-af',
     createAudioPostProcessingFilter(),
+    '-codec:a',
+    'libmp3lame',
+    '-b:a',
+    FINAL_MP3_BITRATE,
+    '-ar',
+    FINAL_MP3_SAMPLE_RATE,
+    '-ac',
+    '1',
+    outputPath
+  ];
+}
+
+export function createContextFinalChunkExtractionArgs(inputPath: string, outputPath: string, fallbackSeconds = CONTEXT_EXTRACTION_FALLBACK_SECONDS) {
+  return [
+    '-y',
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-sseof',
+    `-${fallbackSeconds}`,
+    '-i',
+    inputPath,
+    '-af',
+    [
+      'silenceremove=start_periods=1:start_duration=0.03:start_threshold=-45dB',
+      'areverse',
+      'silenceremove=start_periods=1:start_duration=0.03:start_threshold=-45dB',
+      'areverse',
+      createAudioPostProcessingFilter()
+    ].join(','),
     '-codec:a',
     'libmp3lame',
     '-b:a',
@@ -99,6 +130,34 @@ export async function postProcessAzureWavToMp3(wavAudio: ArrayBuffer | Uint8Arra
     await tools.fs.rm(tempDir, { recursive: true, force: true }).catch(error => {
       const message = error instanceof Error ? error.message : String(error);
       console.error('Audio temp cleanup failed', { error: message });
+    });
+  }
+}
+
+export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Array) {
+  const tools = await loadNodeAudioTools();
+  const tempDir = await tools.fs.mkdtemp(tools.path.join(tools.os.tmpdir(), 'spelio-context-audio-'));
+  const inputPath = tools.path.join(tempDir, 'context.mp3');
+  const outputPath = tools.path.join(tempDir, 'final-chunk.mp3');
+
+  try {
+    await tools.fs.writeFile(inputPath, toUint8Array(mp3Audio));
+    await runFfmpeg(tools.spawn, tools.ffmpegPath, createContextFinalChunkExtractionArgs(inputPath, outputPath));
+
+    const processedAudio = await tools.fs.readFile(outputPath);
+    if (processedAudio.byteLength < AUDIO_POST_PROCESSING_MIN_BYTES) {
+      throw new Error('Extracted audio payload was unexpectedly small.');
+    }
+
+    return processedAudio;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown audio extraction error.';
+    console.error('Context audio extraction failed', { error: message });
+    throw new Error(`Context audio extraction failed: ${message}`);
+  } finally {
+    await tools.fs.rm(tempDir, { recursive: true, force: true }).catch(error => {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Context audio temp cleanup failed', { error: message });
     });
   }
 }

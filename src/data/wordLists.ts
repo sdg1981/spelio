@@ -64,6 +64,10 @@ export interface PracticeWord {
   elevenLabsPronunciationHint?: string;
   elevenLabsPronunciationHintUsed?: boolean;
   elevenLabsPronunciationHintText?: string;
+  elevenLabsContextPhrase?: string;
+  elevenLabsExtractMode?: 'none' | 'final_chunk';
+  elevenLabsExtractionUsed?: boolean;
+  elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
   elevenLabsModel?: string;
   elevenLabsVoiceId?: string;
@@ -122,6 +126,10 @@ type DatasetWord = {
   elevenLabsPronunciationHint?: string;
   elevenLabsPronunciationHintUsed?: boolean;
   elevenLabsPronunciationHintText?: string;
+  elevenLabsContextPhrase?: string;
+  elevenLabsExtractMode?: 'none' | 'final_chunk';
+  elevenLabsExtractionUsed?: boolean;
+  elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
   elevenLabsModel?: string;
   elevenLabsVoiceId?: string;
@@ -223,6 +231,10 @@ const baseWordLists: WordList[] = rawLists
         elevenLabsPronunciationHint: word.elevenLabsPronunciationHint ?? '',
         elevenLabsPronunciationHintUsed: word.elevenLabsPronunciationHintUsed ?? false,
         elevenLabsPronunciationHintText: word.elevenLabsPronunciationHintText ?? '',
+        elevenLabsContextPhrase: word.elevenLabsContextPhrase ?? '',
+        elevenLabsExtractMode: word.elevenLabsExtractMode ?? 'none',
+        elevenLabsExtractionUsed: word.elevenLabsExtractionUsed ?? false,
+        elevenLabsContextPhraseUsed: word.elevenLabsContextPhraseUsed ?? '',
         elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',
         elevenLabsModel: word.elevenLabsModel ?? '',
         elevenLabsVoiceId: word.elevenLabsVoiceId ?? '',
