@@ -19,6 +19,7 @@ type RawWord = {
   elevenLabsPronunciationHintText?: string;
   elevenLabsContextPhrase?: string;
   elevenLabsExtractMode?: AdminWord['elevenLabsExtractMode'];
+  elevenLabsExtractChunkCount?: AdminWord['elevenLabsExtractChunkCount'];
   elevenLabsExtractionUsed?: boolean;
   elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
@@ -143,6 +144,7 @@ export const adminWordLists: AdminWordList[] = rawLists
         elevenLabsPronunciationHintText: word.elevenLabsPronunciationHintText ?? '',
         elevenLabsContextPhrase: word.elevenLabsContextPhrase ?? '',
         elevenLabsExtractMode: word.elevenLabsExtractMode ?? 'none',
+        elevenLabsExtractChunkCount: word.elevenLabsExtractChunkCount ?? 1,
         elevenLabsExtractionUsed: word.elevenLabsExtractionUsed ?? false,
         elevenLabsContextPhraseUsed: word.elevenLabsContextPhraseUsed ?? '',
         elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',

@@ -309,6 +309,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     elevenLabsPronunciationHintText: stringValue(word.elevenLabsPronunciationHintText),
     elevenLabsContextPhrase: stringValue(word.elevenLabsContextPhrase),
     elevenLabsExtractMode: word.elevenLabsExtractMode === 'final_chunk' ? 'final_chunk' : 'none',
+    elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(word.elevenLabsExtractChunkCount),
     elevenLabsExtractionUsed: word.elevenLabsExtractionUsed === true,
     elevenLabsContextPhraseUsed: stringValue(word.elevenLabsContextPhraseUsed),
     elevenLabsGeneratedAt: stringValue(word.elevenLabsGeneratedAt),
@@ -329,6 +330,10 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     createdAt: now,
     updatedAt: now
   };
+}
+
+function normalizeElevenLabsExtractChunkCount(value: unknown): 1 | 2 | 3 {
+  return value === 2 || value === 3 ? value : 1;
 }
 
 function validateCollection(collection: RawCollection, id: string, errors: string[], warnings: string[]) {

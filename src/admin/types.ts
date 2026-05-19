@@ -44,6 +44,7 @@ export interface AdminWord {
   elevenLabsPronunciationHintText: string;
   elevenLabsContextPhrase: string;
   elevenLabsExtractMode: 'none' | 'final_chunk';
+  elevenLabsExtractChunkCount: 1 | 2 | 3;
   elevenLabsExtractionUsed: boolean;
   elevenLabsContextPhraseUsed: string;
   elevenLabsGeneratedAt: string;

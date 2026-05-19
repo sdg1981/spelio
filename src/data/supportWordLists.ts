@@ -35,6 +35,7 @@ type SupportWordSeed = {
   elevenLabsPronunciationHintText?: string;
   elevenLabsContextPhrase?: string;
   elevenLabsExtractMode?: PracticeWord['elevenLabsExtractMode'];
+  elevenLabsExtractChunkCount?: PracticeWord['elevenLabsExtractChunkCount'];
   elevenLabsExtractionUsed?: boolean;
   elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
@@ -237,6 +238,7 @@ function createSupportWord(seed: SupportWordSeed, listId: string, order: number)
     elevenLabsPronunciationHintText: seed.elevenLabsPronunciationHintText ?? '',
     elevenLabsContextPhrase: seed.elevenLabsContextPhrase ?? '',
     elevenLabsExtractMode: seed.elevenLabsExtractMode ?? 'none',
+    elevenLabsExtractChunkCount: seed.elevenLabsExtractChunkCount ?? 1,
     elevenLabsExtractionUsed: seed.elevenLabsExtractionUsed ?? false,
     elevenLabsContextPhraseUsed: seed.elevenLabsContextPhraseUsed ?? '',
     elevenLabsGeneratedAt: seed.elevenLabsGeneratedAt ?? '',

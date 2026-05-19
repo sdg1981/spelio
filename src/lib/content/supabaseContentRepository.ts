@@ -71,6 +71,7 @@ type WordRow = {
   elevenlabs_pronunciation_hint_text?: string | null;
   elevenlabs_context_phrase?: string | null;
   elevenlabs_extract_mode?: string | null;
+  elevenlabs_extract_chunk_count?: number | null;
   elevenlabs_extraction_used?: boolean | null;
   elevenlabs_context_phrase_used?: string | null;
   elevenlabs_generated_at?: string | null;
@@ -132,6 +133,10 @@ function asDifficulty(value: number | null): WordList['difficulty'] {
   return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 ? value : 1;
 }
 
+function normalizeElevenLabsExtractChunkCount(value: unknown): 1 | 2 | 3 {
+  return value === 2 || value === 3 ? value : 1;
+}
+
 function asAcceptedAlternatives(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
 }
@@ -184,6 +189,7 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     elevenLabsPronunciationHintText: row.elevenlabs_pronunciation_hint_text ?? '',
     elevenLabsContextPhrase: row.elevenlabs_context_phrase ?? '',
     elevenLabsExtractMode: row.elevenlabs_extract_mode === 'final_chunk' ? 'final_chunk' : 'none',
+    elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(row.elevenlabs_extract_chunk_count),
     elevenLabsExtractionUsed: row.elevenlabs_extraction_used === true,
     elevenLabsContextPhraseUsed: row.elevenlabs_context_phrase_used ?? '',
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',

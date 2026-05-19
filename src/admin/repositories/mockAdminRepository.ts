@@ -180,6 +180,7 @@ export const mockAdminRepository: AdminRepository = {
       elevenLabsContextPhraseUsed: normalizedMode === 'context_extract' ? contextPhrase : '',
       elevenLabsExtractionUsed: normalizedMode === 'context_extract',
       elevenLabsExtractMode: normalizedMode === 'context_extract' ? 'final_chunk' as const : word.elevenLabsExtractMode,
+      elevenLabsExtractChunkCount: word.elevenLabsExtractChunkCount,
       elevenLabsGeneratedAt: new Date().toISOString(),
       elevenLabsModel: mode === 'azure_transform' ? 'eleven_multilingual_sts_v2' : 'eleven_v3',
       elevenLabsVoiceId: 'DikmR0aoFXAp1A3NcovW',

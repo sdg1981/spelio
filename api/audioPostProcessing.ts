@@ -42,7 +42,19 @@ export const AUDIO_TRAILING_SILENCE_SAMPLES = 2400;
 export const AUDIO_LOUDNESS_FILTER = 'loudnorm=I=-20:TP=-3:LRA=13:linear=true';
 export const FINAL_MP3_BITRATE = '32k';
 export const FINAL_MP3_SAMPLE_RATE = '16000';
-export const CONTEXT_EXTRACTION_FALLBACK_SECONDS = 1.1;
+export const CONTEXT_EXTRACTION_FALLBACK_SECONDS_BY_CHUNK_COUNT: Record<1 | 2 | 3, number> = {
+  1: 1.1,
+  2: 1.8,
+  3: 2.5
+};
+
+export function normalizeContextExtractChunkCount(value: unknown): 1 | 2 | 3 {
+  return value === 2 || value === 3 ? value : 1;
+}
+
+export function getContextExtractionFallbackSeconds(chunkCount: unknown) {
+  return CONTEXT_EXTRACTION_FALLBACK_SECONDS_BY_CHUNK_COUNT[normalizeContextExtractChunkCount(chunkCount)];
+}
 
 export function createAudioPostProcessingFilter() {
   return [
@@ -76,7 +88,8 @@ export function createFfmpegPostProcessingArgs(inputPath: string, outputPath: st
   ];
 }
 
-export function createContextFinalChunkExtractionArgs(inputPath: string, outputPath: string, fallbackSeconds = CONTEXT_EXTRACTION_FALLBACK_SECONDS) {
+export function createContextFinalChunkExtractionArgs(inputPath: string, outputPath: string, chunkCount: unknown = 1) {
+  const fallbackSeconds = getContextExtractionFallbackSeconds(chunkCount);
   return [
     '-y',
     '-hide_banner',
@@ -134,7 +147,7 @@ export async function postProcessAzureWavToMp3(wavAudio: ArrayBuffer | Uint8Arra
   }
 }
 
-export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Array) {
+export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Array, chunkCount: unknown = 1) {
   const tools = await loadNodeAudioTools();
   const tempDir = await tools.fs.mkdtemp(tools.path.join(tools.os.tmpdir(), 'spelio-context-audio-'));
   const inputPath = tools.path.join(tempDir, 'context.mp3');
@@ -142,7 +155,7 @@ export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Arra
 
   try {
     await tools.fs.writeFile(inputPath, toUint8Array(mp3Audio));
-    await runFfmpeg(tools.spawn, tools.ffmpegPath, createContextFinalChunkExtractionArgs(inputPath, outputPath));
+    await runFfmpeg(tools.spawn, tools.ffmpegPath, createContextFinalChunkExtractionArgs(inputPath, outputPath, chunkCount));
 
     const processedAudio = await tools.fs.readFile(outputPath);
     if (processedAudio.byteLength < AUDIO_POST_PROCESSING_MIN_BYTES) {

@@ -74,6 +74,7 @@ function result(id: string, ok: boolean): AudioGenerationResult {
       elevenLabsPronunciationHintText: '',
       elevenLabsContextPhrase: '',
       elevenLabsExtractMode: 'none',
+      elevenLabsExtractChunkCount: 1,
       elevenLabsExtractionUsed: false,
       elevenLabsContextPhraseUsed: '',
       elevenLabsGeneratedAt: '',

@@ -32,6 +32,7 @@ export interface ElevenLabsAudioDiagnostics {
   prompt: string;
   extractionUsed: boolean;
   extractMode: 'none' | 'final_chunk';
+  extractChunkCount: 1 | 2 | 3;
 }
 
 export interface ElevenLabsAudioBlob {
@@ -112,15 +113,15 @@ export async function synthesizeElevenLabsWelshMp3(text: string): Promise<Eleven
   return requestElevenLabsMp3({ mode: 'direct', text });
 }
 
-export async function synthesizeElevenLabsContextExtractMp3(text: string): Promise<ElevenLabsAudioBlob> {
-  return requestElevenLabsMp3({ mode: 'context_extract', text });
+export async function synthesizeElevenLabsContextExtractMp3(text: string, extractChunkCount: 1 | 2 | 3 = 1): Promise<ElevenLabsAudioBlob> {
+  return requestElevenLabsMp3({ mode: 'context_extract', text, extractChunkCount });
 }
 
 export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<ElevenLabsAudioBlob> {
   return requestElevenLabsMp3({ mode: 'azure_transform', audioUrl });
 }
 
-async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string }): Promise<ElevenLabsAudioBlob> {
+async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string; extractChunkCount?: 1 | 2 | 3 }): Promise<ElevenLabsAudioBlob> {
   const response = await fetch('/api/elevenlabs-transform', {
     method: 'POST',
     headers: {
@@ -152,9 +153,15 @@ async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; t
       languageOverride: response.headers.get('x-spelio-elevenlabs-language-override') || (payload.mode === 'azure_transform' ? ELEVENLABS_NOT_APPLICABLE : ELEVENLABS_WELSH_LANGUAGE_OVERRIDE),
       prompt: response.headers.get('x-spelio-elevenlabs-prompt') || (payload.mode === 'azure_transform' ? ELEVENLABS_NOT_APPLICABLE : ELEVENLABS_DIRECT_TTS_PROMPT),
       extractionUsed: response.headers.get('x-spelio-elevenlabs-extraction-used') === 'true',
-      extractMode: response.headers.get('x-spelio-elevenlabs-extract-mode') === 'final_chunk' ? 'final_chunk' : 'none'
+      extractMode: response.headers.get('x-spelio-elevenlabs-extract-mode') === 'final_chunk' ? 'final_chunk' : 'none',
+      extractChunkCount: normalizeElevenLabsExtractChunkCount(response.headers.get('x-spelio-elevenlabs-extract-chunk-count'))
     }
   };
+}
+
+export function normalizeElevenLabsExtractChunkCount(value: unknown): 1 | 2 | 3 {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return numeric === 2 || numeric === 3 ? numeric : 1;
 }
 
 function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload | null) {

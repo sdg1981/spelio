@@ -2,7 +2,7 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
-import { extractFinalChunkFromMp3 } from './audioPostProcessing.js';
+import { extractFinalChunkFromMp3, normalizeContextExtractChunkCount } from './audioPostProcessing.js';
 
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
@@ -63,6 +63,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
   const mode = body?.mode === 'azure_transform' ? 'azure_transform' : body?.mode === 'context_extract' ? 'context_extract' : 'direct';
   const audioUrl = typeof body?.audioUrl === 'string' ? body.audioUrl.trim() : '';
   const text = typeof body?.text === 'string' ? body.text.trim() : '';
+  const extractChunkCount = normalizeContextExtractChunkCount(body?.extractChunkCount);
   if (mode === 'azure_transform' && !audioUrl) return response.status(400).json({ ok: false, error: 'Azure audio URL is required.' });
   if ((mode === 'direct' || mode === 'context_extract') && !text) return response.status(400).json({ ok: false, error: 'Welsh text is required.' });
 
@@ -74,7 +75,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
     const transformedAudio = mode === 'azure_transform'
       ? await transformAzureMp3WithElevenLabs(await fetchExistingAzureMp3(audioUrl, fetchImpl), config, fetchImpl)
       : mode === 'context_extract'
-        ? await extractFinalChunkFromMp3(await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl))
+        ? await extractFinalChunkFromMp3(await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl), extractChunkCount)
         : await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl);
 
     response.setHeader('Content-Type', 'audio/mpeg');
@@ -85,6 +86,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
     response.setHeader('X-Spelio-ElevenLabs-Prompt', mode === 'azure_transform' ? ELEVENLABS_NOT_APPLICABLE : ELEVENLABS_DIRECT_TTS_PROMPT);
     response.setHeader('X-Spelio-ElevenLabs-Extraction-Used', mode === 'context_extract' ? 'true' : 'false');
     response.setHeader('X-Spelio-ElevenLabs-Extract-Mode', mode === 'context_extract' ? 'final_chunk' : 'none');
+    response.setHeader('X-Spelio-ElevenLabs-Extract-Chunk-Count', mode === 'context_extract' ? String(extractChunkCount) : '1');
     return response.status(200).send(Buffer.from(transformedAudio));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ElevenLabs transformation failed.';

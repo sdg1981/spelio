@@ -16,8 +16,10 @@ import {
   AUDIO_FADE_OUT_SECONDS,
   AUDIO_TRAILING_SILENCE_SAMPLES,
   AUDIO_TRAILING_SILENCE_SECONDS,
+  createContextFinalChunkExtractionArgs,
   createAudioPostProcessingFilter,
   createFfmpegPostProcessingArgs,
+  getContextExtractionFallbackSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
 import { createAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
@@ -137,6 +139,13 @@ assert(filter.includes(`apad=pad_len=${AUDIO_TRAILING_SILENCE_SAMPLES}`), 'Post-
 const args = createFfmpegPostProcessingArgs('/tmp/input.wav', '/tmp/output.mp3');
 assert(args.includes('libmp3lame'), 'FFmpeg should encode the final output as MP3.');
 assert(args.includes('32k'), 'FFmpeg should preserve the existing 32k MP3 bitrate expectation.');
+assertEqual(getContextExtractionFallbackSeconds(1), 1.1, 'Context extraction should keep last-word fallback timing as the default.');
+assertEqual(getContextExtractionFallbackSeconds(2), 1.8, 'Context extraction should support a wider fallback window for two final chunks.');
+assertEqual(getContextExtractionFallbackSeconds(3), 2.5, 'Context extraction should support a wider fallback window for three final chunks.');
+assert(
+  createContextFinalChunkExtractionArgs('/tmp/context.mp3', '/tmp/final.mp3', 2).includes('-1.8'),
+  'Context extraction FFmpeg args should respect the selected final chunk count.'
+);
 
 void runAsyncAssertions();
 
