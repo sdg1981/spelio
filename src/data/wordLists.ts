@@ -60,6 +60,11 @@ export interface PracticeWord {
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   elevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  elevenLabsGeneratedAt?: string;
+  elevenLabsModel?: string;
+  elevenLabsVoiceId?: string;
+  elevenLabsLanguageOverride?: string;
+  elevenLabsPrompt?: string;
   audioReviewStatus?: AudioReviewStatus;
   notes?: string;
   order: number;
@@ -109,6 +114,11 @@ type DatasetWord = {
   elevenLabsAudioUrl?: string;
   elevenLabsAudioStatus?: ElevenLabsAudioStatus;
   elevenLabsGenerationMode?: ElevenLabsGenerationMode;
+  elevenLabsGeneratedAt?: string;
+  elevenLabsModel?: string;
+  elevenLabsVoiceId?: string;
+  elevenLabsLanguageOverride?: string;
+  elevenLabsPrompt?: string;
   audioReviewStatus?: AudioReviewStatus;
   notes?: string;
   order: number;
@@ -201,6 +211,11 @@ const baseWordLists: WordList[] = rawLists
         elevenLabsAudioUrl: word.elevenLabsAudioUrl ?? '',
         elevenLabsAudioStatus: word.elevenLabsAudioStatus ?? 'missing',
         elevenLabsGenerationMode: word.elevenLabsGenerationMode ?? 'direct',
+        elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',
+        elevenLabsModel: word.elevenLabsModel ?? '',
+        elevenLabsVoiceId: word.elevenLabsVoiceId ?? '',
+        elevenLabsLanguageOverride: word.elevenLabsLanguageOverride ?? '',
+        elevenLabsPrompt: word.elevenLabsPrompt ?? '',
         audioReviewStatus: word.audioReviewStatus ?? 'unchecked',
         notes: word.notes ?? '',
         order: word.order,

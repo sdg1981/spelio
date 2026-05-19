@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Info, RefreshCw, Wand2, X } from 'lucide-react';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { AdminWord, ElevenLabsGenerationMode } from '../types';
 import { AdminTimestamp } from './AdminTimestamp';
 import { AdminAudioControls } from './AdminAudioControls';
@@ -35,8 +36,8 @@ export function WordEditorPanel({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const hasAudioPreview = Boolean(word.audioUrl.trim());
   const isRegenerating = word.audioStatus === 'ready';
-  const generateAudioLabel = isRegenerating ? 'Regenerate audio' : 'Generate audio';
-  const generatingAudioLabel = isRegenerating ? 'Regenerating...' : 'Generating...';
+  const generateAudioLabel = isRegenerating ? 'Regenerate Azure audio' : 'Generate Azure audio';
+  const generatingAudioLabel = isRegenerating ? 'Regenerating Azure...' : 'Generating Azure...';
   const canGenerateElevenLabsAudio = word.audioStatus === 'ready' && Boolean(word.audioUrl.trim());
 
   if (variant === 'page') {
@@ -134,6 +135,7 @@ export function WordEditorPanel({
               </AdminSelect>
             </Field>
           </div>
+          <ElevenLabsDiagnostics word={word} />
         </div>
         <div className="p-5">
           <button className="flex w-full items-center justify-between text-left font-black text-slate-950" onClick={() => setAdvancedOpen(open => !open)}>
@@ -274,6 +276,7 @@ export function WordEditorPanel({
           )}
         </div>
         <div className="mt-4 grid gap-4">
+          <ElevenLabsDiagnostics word={word} />
           <Field label="Audio URL">
             <AdminInput value={word.audioUrl} onChange={event => onChange({ audioUrl: event.target.value })} />
           </Field>
@@ -330,6 +333,39 @@ export function WordEditorPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
+  const hasElevenLabsMetadata =
+    word.elevenLabsAudioStatus !== 'missing' ||
+    Boolean(word.elevenLabsAudioUrl.trim()) ||
+    Boolean(word.elevenLabsGeneratedAt || word.elevenLabsModel || word.elevenLabsVoiceId || word.elevenLabsLanguageOverride || word.elevenLabsPrompt);
+
+  if (!hasElevenLabsMetadata) return null;
+
+  return (
+    <div className="mt-5 rounded-md border border-slate-100 bg-slate-50/70 p-3 text-xs leading-5 text-slate-600">
+      <div className="mb-2 font-black uppercase tracking-[0.12em] text-slate-500">ElevenLabs diagnostics</div>
+      <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+        <DiagnosticItem label="Status" value={word.elevenLabsAudioStatus} />
+        <DiagnosticItem label="Mode" value={word.elevenLabsGenerationMode} />
+        <DiagnosticItem label="Generated" value={word.elevenLabsGeneratedAt ? <AdminTimestamp value={word.elevenLabsGeneratedAt} /> : ''} />
+        <DiagnosticItem label="Model" value={word.elevenLabsModel} mono />
+        <DiagnosticItem label="Voice ID" value={word.elevenLabsVoiceId} mono />
+        <DiagnosticItem label="Language" value={word.elevenLabsLanguageOverride} />
+        <DiagnosticItem label="Prompt" value={word.elevenLabsPrompt} wide />
+      </dl>
+    </div>
+  );
+}
+
+function DiagnosticItem({ label, value, mono = false, wide = false }: { label: string; value: ReactNode; mono?: boolean; wide?: boolean }) {
+  return (
+    <div className={wide ? 'sm:col-span-2' : ''}>
+      <dt className="font-bold text-slate-500">{label}</dt>
+      <dd className={`${mono ? 'font-mono' : 'font-medium'} break-words text-slate-700`}>{value || 'not set'}</dd>
+    </div>
   );
 }
 

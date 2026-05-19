@@ -15,13 +15,15 @@ export function AdminAudioControls({
 }) {
   const hasAzureAudio = hasPlayableAudioUrl(word.audioUrl);
   const hasElevenLabsAudio = hasPlayableAudioUrl(word.elevenLabsAudioUrl);
+  const azurePreviewUrl = withAdminPreviewCacheBust(word.audioUrl, word.updatedAt);
+  const elevenLabsPreviewUrl = withAdminPreviewCacheBust(word.elevenLabsAudioUrl, word.elevenLabsGeneratedAt || word.updatedAt);
 
   return (
     <div className={`grid gap-2 ${className}`}>
       <div className="flex flex-wrap gap-2">
         <AdminButton onClick={() => {
-          logAudioPlaybackClick(`${source}-azure-preview`, word.audioUrl);
-          void playAudioUrl(word.audioUrl);
+          logAudioPlaybackClick(`${source}-azure-preview`, azurePreviewUrl);
+          void playAudioUrl(azurePreviewUrl);
         }} disabled={!hasAzureAudio}>
           <Play size={15} /> Azure
         </AdminButton>
@@ -31,8 +33,8 @@ export function AdminAudioControls({
         {hasElevenLabsAudio && (
           <>
             <AdminButton onClick={() => {
-              logAudioPlaybackClick(`${source}-elevenlabs-preview`, word.elevenLabsAudioUrl);
-              void playAudioUrl(word.elevenLabsAudioUrl);
+              logAudioPlaybackClick(`${source}-elevenlabs-preview`, elevenLabsPreviewUrl);
+              void playAudioUrl(elevenLabsPreviewUrl);
             }}>
               <Play size={15} /> ElevenLabs
             </AdminButton>
@@ -42,4 +44,11 @@ export function AdminAudioControls({
       </div>
     </div>
   );
+}
+
+function withAdminPreviewCacheBust(audioUrl: string, updatedAt?: string) {
+  const trimmed = audioUrl.trim();
+  if (!trimmed || !updatedAt) return trimmed;
+  const separator = trimmed.includes('?') ? '&' : '?';
+  return `${trimmed}${separator}updated=${encodeURIComponent(updatedAt)}`;
 }

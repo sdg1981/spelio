@@ -6,6 +6,11 @@ export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
+export const ELEVENLABS_DIRECT_TTS_MODEL_ID = 'eleven_v3';
+export const ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID = 'eleven_multilingual_sts_v2';
+export const ELEVENLABS_WELSH_LANGUAGE_OVERRIDE = 'Welsh';
+export const ELEVENLABS_NOT_APPLICABLE = 'not_applicable';
+export const ELEVENLABS_DIRECT_TTS_PROMPT = 'Speak clearly and naturally in Welsh.';
 
 export type AudioQueueCounts = Record<AudioStatus, number>;
 
@@ -18,6 +23,18 @@ export interface AudioGenerationResult {
   word: AdminWord;
   ok: boolean;
   error?: string;
+}
+
+export interface ElevenLabsAudioDiagnostics {
+  model: string;
+  voiceId: string;
+  languageOverride: string;
+  prompt: string;
+}
+
+export interface ElevenLabsAudioBlob {
+  blob: Blob;
+  diagnostics: ElevenLabsAudioDiagnostics;
 }
 
 type AudioRouteErrorPayload = {
@@ -89,15 +106,15 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
   return new Blob([audioBuffer], { type: 'audio/mpeg' });
 }
 
-export async function synthesizeElevenLabsWelshMp3(text: string): Promise<Blob> {
+export async function synthesizeElevenLabsWelshMp3(text: string): Promise<ElevenLabsAudioBlob> {
   return requestElevenLabsMp3({ mode: 'direct', text });
 }
 
-export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<Blob> {
+export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<ElevenLabsAudioBlob> {
   return requestElevenLabsMp3({ mode: 'azure_transform', audioUrl });
 }
 
-async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string }): Promise<Blob> {
+async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string }): Promise<ElevenLabsAudioBlob> {
   const response = await fetch('/api/elevenlabs-transform', {
     method: 'POST',
     headers: {
@@ -121,7 +138,15 @@ async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; t
     throw new Error('ElevenLabs route returned an invalid MP3 payload.');
   }
 
-  return new Blob([audioBuffer], { type: 'audio/mpeg' });
+  return {
+    blob: new Blob([audioBuffer], { type: 'audio/mpeg' }),
+    diagnostics: {
+      model: response.headers.get('x-spelio-elevenlabs-model') || (payload.mode === 'direct' ? ELEVENLABS_DIRECT_TTS_MODEL_ID : ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID),
+      voiceId: response.headers.get('x-spelio-elevenlabs-voice-id') || FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID,
+      languageOverride: response.headers.get('x-spelio-elevenlabs-language-override') || (payload.mode === 'direct' ? ELEVENLABS_WELSH_LANGUAGE_OVERRIDE : ELEVENLABS_NOT_APPLICABLE),
+      prompt: response.headers.get('x-spelio-elevenlabs-prompt') || (payload.mode === 'direct' ? ELEVENLABS_DIRECT_TTS_PROMPT : ELEVENLABS_NOT_APPLICABLE)
+    }
+  };
 }
 
 function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload | null) {

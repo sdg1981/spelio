@@ -74,6 +74,11 @@ type WordRow = {
   elevenlabs_audio_url?: string | null;
   elevenlabs_audio_status?: string | null;
   elevenlabs_generation_mode?: string | null;
+  elevenlabs_generated_at?: string | null;
+  elevenlabs_model?: string | null;
+  elevenlabs_voice_id?: string | null;
+  elevenlabs_language_override?: string | null;
+  elevenlabs_prompt?: string | null;
   audio_review_status?: string | null;
   notes: string;
   usage_note: string;
@@ -292,10 +297,21 @@ export const supabaseAdminRepository: AdminRepository = {
       const audio = mode === 'azure_transform'
         ? await transformAzureMp3WithElevenLabs(word.audioUrl)
         : await synthesizeElevenLabsWelshMp3(word.welshAnswer);
-      const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio).catch(error => {
+      const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio.blob).catch(error => {
         throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
       });
-      const readyWord = await this.saveWord({ ...word, elevenLabsAudioUrl, elevenLabsAudioStatus: 'generated', elevenLabsGenerationMode: mode, audioReviewStatus: 'unchecked' }).catch(error => {
+      const readyWord = await this.saveWord({
+        ...word,
+        elevenLabsAudioUrl,
+        elevenLabsAudioStatus: 'generated',
+        elevenLabsGenerationMode: mode,
+        elevenLabsGeneratedAt: new Date().toISOString(),
+        elevenLabsModel: audio.diagnostics.model,
+        elevenLabsVoiceId: audio.diagnostics.voiceId,
+        elevenLabsLanguageOverride: audio.diagnostics.languageOverride,
+        elevenLabsPrompt: audio.diagnostics.prompt,
+        audioReviewStatus: 'unchecked'
+      }).catch(error => {
         throw new Error(`Supabase save failed after ElevenLabs audio upload: ${readErrorMessage(error)}`);
       });
       return { word: readyWord, ok: true };
@@ -567,6 +583,11 @@ function mapWordRow(row: WordRow): AdminWord {
     elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status) as ElevenLabsAudioStatus,
     elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode) as ElevenLabsGenerationMode,
+    elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
+    elevenLabsModel: row.elevenlabs_model ?? '',
+    elevenLabsVoiceId: row.elevenlabs_voice_id ?? '',
+    elevenLabsLanguageOverride: row.elevenlabs_language_override ?? '',
+    elevenLabsPrompt: row.elevenlabs_prompt ?? '',
     audioReviewStatus: normalizeAudioReviewStatus(row.audio_review_status) as AudioReviewStatus,
     notes: row.notes,
     usageNote: row.usage_note,
@@ -652,6 +673,11 @@ function toWordRow(word: AdminWord) {
     elevenlabs_audio_url: word.elevenLabsAudioUrl,
     elevenlabs_audio_status: word.elevenLabsAudioStatus,
     elevenlabs_generation_mode: word.elevenLabsGenerationMode,
+    elevenlabs_generated_at: word.elevenLabsGeneratedAt || null,
+    elevenlabs_model: word.elevenLabsModel || null,
+    elevenlabs_voice_id: word.elevenLabsVoiceId || null,
+    elevenlabs_language_override: word.elevenLabsLanguageOverride || null,
+    elevenlabs_prompt: word.elevenLabsPrompt || null,
     audio_review_status: word.audioReviewStatus,
     notes: word.notes,
     usage_note: word.usageNote,

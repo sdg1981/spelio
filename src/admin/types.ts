@@ -38,6 +38,11 @@ export interface AdminWord {
   elevenLabsAudioUrl: string;
   elevenLabsAudioStatus: ElevenLabsAudioStatus;
   elevenLabsGenerationMode: ElevenLabsGenerationMode;
+  elevenLabsGeneratedAt: string;
+  elevenLabsModel: string;
+  elevenLabsVoiceId: string;
+  elevenLabsLanguageOverride: string;
+  elevenLabsPrompt: string;
   audioReviewStatus: AudioReviewStatus;
   notes: string;
   order: number;

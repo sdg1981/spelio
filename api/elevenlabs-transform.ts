@@ -5,7 +5,10 @@ declare const process: {
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
 export const ELEVENLABS_DIRECT_TTS_MODEL_ID = 'eleven_v3';
+export const ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID = 'eleven_multilingual_sts_v2';
 export const ELEVENLABS_WELSH_LANGUAGE_CODE = 'cy';
+export const ELEVENLABS_WELSH_LANGUAGE_OVERRIDE_LABEL = 'Welsh';
+export const ELEVENLABS_NOT_APPLICABLE = 'not_applicable';
 export const ELEVENLABS_DIRECT_TTS_PROMPT = 'Speak clearly and naturally in Welsh.';
 
 export type ElevenLabsTransformConfig = {
@@ -72,6 +75,10 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
 
     response.setHeader('Content-Type', 'audio/mpeg');
     response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Spelio-ElevenLabs-Model', mode === 'direct' ? ELEVENLABS_DIRECT_TTS_MODEL_ID : ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID);
+    response.setHeader('X-Spelio-ElevenLabs-Voice-Id', config.defaultVoiceId);
+    response.setHeader('X-Spelio-ElevenLabs-Language-Override', mode === 'direct' ? ELEVENLABS_WELSH_LANGUAGE_OVERRIDE_LABEL : ELEVENLABS_NOT_APPLICABLE);
+    response.setHeader('X-Spelio-ElevenLabs-Prompt', mode === 'direct' ? ELEVENLABS_DIRECT_TTS_PROMPT : ELEVENLABS_NOT_APPLICABLE);
     return response.status(200).send(Buffer.from(transformedAudio));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ElevenLabs transformation failed.';
@@ -138,7 +145,7 @@ export async function transformAzureMp3WithElevenLabs(
   new Uint8Array(audioBuffer).set(azureMp3);
   const form = new FormData();
   form.append('audio', new Blob([audioBuffer], { type: 'audio/mpeg' }), 'azure-source.mp3');
-  form.append('model_id', 'eleven_multilingual_sts_v2');
+  form.append('model_id', ELEVENLABS_SPEECH_TO_SPEECH_MODEL_ID);
   form.append('remove_background_noise', 'false');
   form.append('voice_settings', JSON.stringify({
     stability: 0.62,
