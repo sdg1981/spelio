@@ -1,11 +1,11 @@
-import { ExternalLink, Flag, Play, Search } from 'lucide-react';
+import { Check, ExternalLink, Flag, Play, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminButton, AdminCard, AdminInput, AdminSpinner } from '../components/primitives';
 import { AudioStatusPill } from '../components/audioStatus';
+import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
-import type { DefaultAudioProvider } from '../types';
-import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl } from '../../lib/audioProvider';
+import type { AudioReviewStatus } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import type { FormEvent, KeyboardEvent } from 'react';
 
@@ -17,8 +17,7 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
   const [activeSearch, setActiveSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isLoading, setIsLoading] = useState(true);
-  const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
-  const [flaggingWordIds, setFlaggingWordIds] = useState<Set<string>>(() => new Set());
+  const [reviewingWordIds, setReviewingWordIds] = useState<Set<string>>(() => new Set());
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -27,14 +26,10 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
     setIsLoading(true);
     setErrorMessage('');
 
-    Promise.all([
-      repository.listWords(),
-      repository.getAudioSettings().catch(() => ({ defaultAudioProvider: DEFAULT_AUDIO_PROVIDER }))
-    ])
-      .then(([items, audioSettings]) => {
+    repository.listWords()
+      .then(items => {
         if (!isMounted) return;
         setWords(items);
-        setDefaultAudioProvider(audioSettings.defaultAudioProvider);
       })
       .catch(error => {
         if (!isMounted) return;
@@ -102,18 +97,18 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
     openWord(wordId);
   }
 
-  async function flagNeedsAudioCheck(word: AdminWordWithListName) {
-    setFlaggingWordIds(current => new Set(current).add(word.id));
+  async function updateAudioReviewStatus(word: AdminWordWithListName, audioReviewStatus: AudioReviewStatus) {
+    setReviewingWordIds(current => new Set(current).add(word.id));
     setErrorMessage('');
     setStatusMessage('');
     try {
-      const saved = await repository.saveWord({ ...word, audioReviewStatus: 'needs_review' });
+      const saved = await repository.saveWord({ ...word, audioReviewStatus });
       setWords(current => current.map(item => item.id === saved.id ? { ...saved, listName: word.listName } : item));
-      setStatusMessage(`Marked "${word.welshAnswer}" for audio review.`);
+      setStatusMessage(audioReviewStatus === 'approved' ? `Approved "${word.welshAnswer}" audio.` : `Marked "${word.welshAnswer}" as needing review.`);
     } catch (error) {
-      setErrorMessage(readError(error, 'Could not flag audio for review.'));
+      setErrorMessage(readError(error, 'Could not update audio review status.'));
     } finally {
-      setFlaggingWordIds(current => {
+      setReviewingWordIds(current => {
         const next = new Set(current);
         next.delete(word.id);
         return next;
@@ -169,9 +164,9 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
             </div>
           )}
           {!isLoading && visibleWords.map(word => {
-            const resolvedAudioUrl = getResolvedPracticeAudioUrl(word, defaultAudioProvider);
-            const canPreviewAudio = hasPlayableAudioUrl(resolvedAudioUrl);
-            const flagging = flaggingWordIds.has(word.id);
+            const canPreviewAzureAudio = hasPlayableAudioUrl(word.audioUrl);
+            const canPreviewElevenLabsAudio = hasPlayableAudioUrl(word.elevenLabsAudioUrl);
+            const reviewing = reviewingWordIds.has(word.id);
 
             return (
               <div
@@ -190,33 +185,61 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
                   <div className="font-medium text-slate-700">{word.welshAnswer}</div>
                   <div className="mt-1 text-xs font-medium text-slate-500">List: {word.listName || word.listId}</div>
                 </div>
-                <div className="text-sm text-slate-500">{word.dialect}</div>
+                <div className="grid gap-2 text-sm text-slate-500">
+                  <span>{word.dialect}</span>
+                  <ReviewStatusPill status={word.audioReviewStatus} />
+                </div>
                 <AudioStatusPill status={word.audioStatus} />
                 <div className="flex flex-wrap gap-2 lg:justify-end">
                   <AdminButton
                     className="min-h-9 whitespace-nowrap px-3"
                     onClick={event => {
                       event.stopPropagation();
-                      logAudioPlaybackClick('admin-words-resolved-preview', resolvedAudioUrl);
-                      void playAudioUrl(resolvedAudioUrl);
+                      logAudioPlaybackClick('admin-words-azure-preview', word.audioUrl);
+                      void playAudioUrl(word.audioUrl);
                     }}
-                    disabled={!canPreviewAudio}
-                    aria-disabled={!canPreviewAudio}
-                    title={`Preview ${defaultAudioProvider === 'elevenlabs' && word.elevenLabsAudioStatus === 'generated' ? 'ElevenLabs' : 'Azure'} audio`}
+                    disabled={!canPreviewAzureAudio}
+                    aria-disabled={!canPreviewAzureAudio}
+                    title="Preview Azure audio"
                   >
-                    <Play size={15} /> Audio
+                    <Play size={15} /> Azure
                   </AdminButton>
                   <AdminButton
                     className="min-h-9 whitespace-nowrap px-3"
                     onClick={event => {
                       event.stopPropagation();
-                      void flagNeedsAudioCheck(word);
+                      logAudioPlaybackClick('admin-words-elevenlabs-preview', word.elevenLabsAudioUrl);
+                      void playAudioUrl(word.elevenLabsAudioUrl);
                     }}
-                    disabled={flagging || word.audioReviewStatus === 'needs_review'}
-                    aria-disabled={flagging || word.audioReviewStatus === 'needs_review'}
-                    title="Needs audio check"
+                    disabled={!canPreviewElevenLabsAudio}
+                    aria-disabled={!canPreviewElevenLabsAudio}
+                    title="Preview ElevenLabs audio"
                   >
-                    <Flag size={15} /> {word.audioReviewStatus === 'needs_review' ? 'Flagged' : 'Check'}
+                    <Play size={15} /> ElevenLabs
+                  </AdminButton>
+                  <AdminButton
+                    className="min-h-9 whitespace-nowrap px-3"
+                    onClick={event => {
+                      event.stopPropagation();
+                      void updateAudioReviewStatus(word, 'approved');
+                    }}
+                    disabled={reviewing || word.audioReviewStatus === 'approved'}
+                    aria-disabled={reviewing || word.audioReviewStatus === 'approved'}
+                    title="Approve ElevenLabs audio"
+                  >
+                    <Check size={15} /> Approve
+                  </AdminButton>
+                  <AdminButton
+                    className="min-h-9 whitespace-nowrap px-3"
+                    onClick={event => {
+                      event.stopPropagation();
+                      void updateAudioReviewStatus(word, 'needs_review');
+                    }}
+                    disabled={reviewing || word.audioReviewStatus === 'needs_review'}
+                    aria-disabled={reviewing || word.audioReviewStatus === 'needs_review'}
+                    title="Mark audio as needing review"
+                  >
+                    <Flag size={15} /> Needs review
                   </AdminButton>
                   <AdminButton
                     className="min-h-9 justify-self-start whitespace-nowrap px-3"
@@ -247,4 +270,10 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
 
 function readError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function ReviewStatusPill({ status }: { status: AudioReviewStatus }) {
+  if (status === 'approved') return <StatusPill tone="green">Approved</StatusPill>;
+  if (status === 'needs_review' || status === 'needs_regeneration') return <StatusPill tone="amber">Needs review</StatusPill>;
+  return <StatusPill tone="slate">Unchecked</StatusPill>;
 }
