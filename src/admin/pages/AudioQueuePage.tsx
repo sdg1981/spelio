@@ -10,6 +10,8 @@ import type { AudioStatus, ElevenLabsAudioStatus } from '../types';
 import {
   getBulkAudioActionLabel,
   getBulkAudioRunningLabel,
+  getElevenLabsBatchGenerationLabel,
+  getElevenLabsBatchGenerationMode,
   getSelectedVisibleBulkAudioIds,
   getSelectedVisibleBulkElevenLabsAudioIds,
   summarizeBulkAudioGeneration,
@@ -175,14 +177,15 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
 
       for (const [index, wordId] of wordIds.entries()) {
         const word = allWords.find(item => item.id === wordId);
-        const preferredMode = word?.preferredElevenLabsGenerationMode === 'azure_transform' ? 'azure_transform' : 'direct';
-        setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length} (${preferredMode === 'azure_transform' ? 'Azure pronunciation' : 'direct'})...`);
+        const mode = word ? getElevenLabsBatchGenerationMode(word) : 'direct';
+        const routeLabel = word ? getElevenLabsBatchGenerationLabel(word) : 'direct';
+        setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length} (${routeLabel})...`);
         try {
-          if (preferredMode === 'azure_transform' && word && (word.audioStatus !== 'ready' || !word.audioUrl.trim())) {
+          if (mode === 'azure_transform' && word && (word.audioStatus !== 'ready' || !word.audioUrl.trim())) {
             results.push({ word, ok: false, error: 'Azure audio is required for Azure-pronunciation ElevenLabs generation.' });
             continue;
           }
-          results.push(await repository.generateElevenLabsAudioForWord(wordId, preferredMode));
+          results.push(await repository.generateElevenLabsAudioForWord(wordId, mode));
         } catch (error) {
           if (word) results.push({ word, ok: false, error: readError(error, 'ElevenLabs audio generation failed.') });
         }
@@ -400,7 +403,7 @@ function getElevenLabsSelectionHelper(selectedVisibleIds: string[], eligibleIds:
   const selectedWords = visibleWords.filter(word => selectedVisibleIds.includes(word.id));
   if (selectedWords.some(word => !word.welshAnswer.trim())) return 'Selected rows need Welsh answers.';
   if (selectedWords.some(word => word.elevenLabsAudioStatus === 'pending')) return 'Selected rows already have pending ElevenLabs generation.';
-  if (selectedWords.some(word => word.preferredElevenLabsGenerationMode === 'azure_transform' && (word.audioStatus !== 'ready' || !word.audioUrl.trim()))) {
+  if (selectedWords.some(word => getElevenLabsBatchGenerationMode(word) === 'azure_transform' && (word.audioStatus !== 'ready' || !word.audioUrl.trim()))) {
     return 'Azure-pronunciation rows need existing Azure audio.';
   }
   return 'Selected rows are not eligible for ElevenLabs generation.';

@@ -2,7 +2,7 @@ import type { PracticeWord } from '../data/wordLists';
 
 export type DefaultAudioProvider = 'azure' | 'elevenlabs';
 export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
-export type ElevenLabsGenerationMode = 'direct' | 'azure_transform' | 'context_extract';
+export type ElevenLabsGenerationMode = 'direct' | 'direct_with_hint' | 'azure_transform' | 'context_extract';
 export type AudioReviewStatus = 'unchecked' | 'approved' | 'needs_review' | 'needs_regeneration';
 
 export const DEFAULT_AUDIO_PROVIDER: DefaultAudioProvider = 'azure';
@@ -24,6 +24,7 @@ export function normalizeElevenLabsAudioStatus(value: unknown): ElevenLabsAudioS
 }
 
 export function normalizeElevenLabsGenerationMode(value: unknown): ElevenLabsGenerationMode {
+  if (value === 'direct_with_hint') return 'direct_with_hint';
   if (value === 'context_extract') return 'context_extract';
   return value === 'azure_transform' ? 'azure_transform' : 'direct';
 }

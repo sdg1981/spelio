@@ -293,21 +293,26 @@ export const supabaseAdminRepository: AdminRepository = {
   async generateElevenLabsAudioForWord(wordId: string, mode: ElevenLabsGenerationMode = 'direct') {
     const word = await this.getWord(wordId);
     if (!word) throw new Error('Word not found.');
+    const pronunciationHint = word.elevenLabsPronunciationHint.trim();
+    const contextPhrase = word.elevenLabsContextPhrase.trim();
+    const actualMode: ElevenLabsGenerationMode = mode === 'direct' && pronunciationHint
+      ? 'direct_with_hint'
+      : mode === 'direct_with_hint' && !pronunciationHint
+        ? 'direct'
+        : mode;
     if (mode === 'azure_transform' && (!word.audioUrl.trim() || word.audioStatus !== 'ready')) {
       throw new Error('Generate Azure audio before creating an ElevenLabs version.');
     }
-    if (mode === 'context_extract' && !word.elevenLabsContextPhrase.trim()) {
+    if (mode === 'context_extract' && !contextPhrase) {
       throw new Error('Add a context phrase before generating context-extracted ElevenLabs audio.');
     }
     const previousElevenLabsAudioUrl = word.elevenLabsAudioUrl;
 
     try {
-      await this.saveWord({ ...word, elevenLabsGenerationMode: mode, elevenLabsAudioStatus: 'pending' }).catch(error => {
+      await this.saveWord({ ...word, elevenLabsGenerationMode: actualMode, elevenLabsAudioStatus: 'pending' }).catch(error => {
         throw new Error(`Supabase save failed while marking ElevenLabs audio as pending: ${readErrorMessage(error)}`);
       });
-      const pronunciationHint = word.elevenLabsPronunciationHint.trim();
       const directText = pronunciationHint || word.welshAnswer;
-      const contextPhrase = word.elevenLabsContextPhrase.trim();
       const audio = mode === 'azure_transform'
         ? await transformAzureMp3WithElevenLabs(word.audioUrl)
         : mode === 'context_extract'
@@ -320,25 +325,24 @@ export const supabaseAdminRepository: AdminRepository = {
         ...word,
         elevenLabsAudioUrl,
         elevenLabsAudioStatus: 'generated',
-        elevenLabsGenerationMode: mode,
-        elevenLabsPronunciationHintUsed: mode === 'direct' && Boolean(pronunciationHint),
-        elevenLabsPronunciationHintText: mode === 'direct' ? pronunciationHint : '',
-        elevenLabsContextPhraseUsed: mode === 'context_extract' ? contextPhrase : '',
+        elevenLabsGenerationMode: actualMode,
+        elevenLabsPronunciationHintUsed: actualMode === 'direct_with_hint',
+        elevenLabsPronunciationHintText: actualMode === 'direct_with_hint' ? pronunciationHint : '',
+        elevenLabsContextPhraseUsed: actualMode === 'context_extract' ? contextPhrase : '',
         elevenLabsExtractionUsed: audio.diagnostics.extractionUsed,
-        elevenLabsExtractMode: audio.diagnostics.extractMode,
+        elevenLabsExtractMode: actualMode === 'context_extract' ? audio.diagnostics.extractMode : word.elevenLabsExtractMode,
         elevenLabsGeneratedAt: new Date().toISOString(),
         elevenLabsModel: audio.diagnostics.model,
         elevenLabsVoiceId: audio.diagnostics.voiceId,
         elevenLabsLanguageOverride: audio.diagnostics.languageOverride,
-        elevenLabsPrompt: audio.diagnostics.prompt,
-        audioReviewStatus: 'unchecked'
+        elevenLabsPrompt: audio.diagnostics.prompt
       }).catch(error => {
         throw new Error(`Supabase save failed after ElevenLabs audio upload: ${readErrorMessage(error)}`);
       });
       return { word: readyWord, ok: true };
     } catch (error) {
       const generationError = error instanceof Error ? error.message : 'ElevenLabs audio generation failed.';
-      const failedWord = await this.saveWord({ ...word, elevenLabsAudioUrl: previousElevenLabsAudioUrl, elevenLabsAudioStatus: 'failed', elevenLabsGenerationMode: mode }).catch(saveError => {
+      const failedWord = await this.saveWord({ ...word, elevenLabsAudioUrl: previousElevenLabsAudioUrl, elevenLabsAudioStatus: 'failed', elevenLabsGenerationMode: actualMode }).catch(saveError => {
         throw new Error(`${generationError}; Supabase save failed while marking ElevenLabs audio as failed: ${readErrorMessage(saveError)}`);
       });
       return { word: failedWord, ok: false, error: generationError };

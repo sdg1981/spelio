@@ -179,6 +179,7 @@ export function WordEditorPanel({
                 <Field label="ElevenLabs mode">
                   <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
                     <option value="direct">direct</option>
+                    <option value="direct_with_hint">direct_with_hint</option>
                     <option value="azure_transform">azure_transform</option>
                     <option value="context_extract">context_extract</option>
                   </AdminSelect>
@@ -316,6 +317,7 @@ export function WordEditorPanel({
           <Field label="ElevenLabs mode">
             <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
               <option value="direct">direct</option>
+              <option value="direct_with_hint">direct_with_hint</option>
               <option value="azure_transform">azure_transform</option>
               <option value="context_extract">context_extract</option>
             </AdminSelect>

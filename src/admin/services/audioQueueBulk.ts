@@ -2,7 +2,7 @@ import type { AdminWord } from '../types';
 import type { AudioGenerationResult } from './audioGeneration';
 
 type BulkAudioWord = Pick<AdminWord, 'id' | 'audioStatus'>;
-type BulkElevenLabsAudioWord = Pick<AdminWord, 'id' | 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode'>;
+type BulkElevenLabsAudioWord = Pick<AdminWord, 'id' | 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode' | 'elevenLabsPronunciationHint' | 'elevenLabsContextPhrase' | 'elevenLabsExtractMode'>;
 
 export function canBulkGenerateAudio(word: BulkAudioWord) {
   return word.audioStatus === 'missing' || word.audioStatus === 'failed' || word.audioStatus === 'ready';
@@ -15,10 +15,23 @@ export function getSelectedVisibleBulkAudioIds(selectedIds: string[], visibleWor
 
 export function canBulkGenerateElevenLabsAudio(word: BulkElevenLabsAudioWord) {
   if (!word.welshAnswer.trim() || word.elevenLabsAudioStatus === 'pending') return false;
-  if (word.preferredElevenLabsGenerationMode === 'azure_transform') {
+  if (getElevenLabsBatchGenerationMode(word) === 'azure_transform') {
     return word.audioStatus === 'ready' && Boolean(word.audioUrl.trim());
   }
   return true;
+}
+
+export function getElevenLabsBatchGenerationMode(word: BulkElevenLabsAudioWord) {
+  if (word.preferredElevenLabsGenerationMode === 'azure_transform') return 'azure_transform';
+  if (word.elevenLabsContextPhrase.trim() && word.elevenLabsExtractMode === 'final_chunk') return 'context_extract';
+  return 'direct';
+}
+
+export function getElevenLabsBatchGenerationLabel(word: BulkElevenLabsAudioWord) {
+  const mode = getElevenLabsBatchGenerationMode(word);
+  if (mode === 'azure_transform') return 'Azure pronunciation';
+  if (mode === 'context_extract') return 'context extraction';
+  return word.elevenLabsPronunciationHint.trim() ? 'direct with hint' : 'direct';
 }
 
 export function getSelectedVisibleBulkElevenLabsAudioIds(selectedIds: string[], visibleWords: BulkElevenLabsAudioWord[]) {

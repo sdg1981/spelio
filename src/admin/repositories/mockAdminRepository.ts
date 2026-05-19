@@ -161,25 +161,30 @@ export const mockAdminRepository: AdminRepository = {
     if (mode === 'context_extract' && !word.elevenLabsContextPhrase.trim()) {
       throw new Error('Add a context phrase before generating context-extracted ElevenLabs audio.');
     }
-    const normalizedMode = mode === 'azure_transform' ? 'azure_transform' as const : mode === 'context_extract' ? 'context_extract' as const : 'direct' as const;
-    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: normalizedMode };
-    await this.saveWord(pendingWord);
     const pronunciationHint = word.elevenLabsPronunciationHint.trim();
     const contextPhrase = word.elevenLabsContextPhrase.trim();
+    const normalizedMode = mode === 'azure_transform'
+      ? 'azure_transform' as const
+      : mode === 'context_extract'
+        ? 'context_extract' as const
+        : pronunciationHint
+          ? 'direct_with_hint' as const
+          : 'direct' as const;
+    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const, elevenLabsGenerationMode: normalizedMode };
+    await this.saveWord(pendingWord);
     const readyWord = {
       ...pendingWord,
       elevenLabsAudioStatus: 'generated' as const,
-      elevenLabsPronunciationHintUsed: normalizedMode === 'direct' && Boolean(pronunciationHint),
-      elevenLabsPronunciationHintText: normalizedMode === 'direct' ? pronunciationHint : '',
+      elevenLabsPronunciationHintUsed: normalizedMode === 'direct_with_hint',
+      elevenLabsPronunciationHintText: normalizedMode === 'direct_with_hint' ? pronunciationHint : '',
       elevenLabsContextPhraseUsed: normalizedMode === 'context_extract' ? contextPhrase : '',
       elevenLabsExtractionUsed: normalizedMode === 'context_extract',
-      elevenLabsExtractMode: normalizedMode === 'context_extract' ? 'final_chunk' as const : 'none' as const,
+      elevenLabsExtractMode: normalizedMode === 'context_extract' ? 'final_chunk' as const : word.elevenLabsExtractMode,
       elevenLabsGeneratedAt: new Date().toISOString(),
       elevenLabsModel: mode === 'azure_transform' ? 'eleven_multilingual_sts_v2' : 'eleven_v3',
       elevenLabsVoiceId: 'DikmR0aoFXAp1A3NcovW',
       elevenLabsLanguageOverride: mode === 'azure_transform' ? 'not_applicable' : 'Welsh',
       elevenLabsPrompt: mode === 'azure_transform' ? 'not_applicable' : 'none - Welsh answer only',
-      audioReviewStatus: 'unchecked' as const,
       elevenLabsAudioUrl: `${createMockAudioUrl(word)}-elevenlabs`
     };
     await this.saveWord(readyWord);

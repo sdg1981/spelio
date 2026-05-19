@@ -3,6 +3,7 @@ import {
   canBulkGenerateElevenLabsAudio,
   getBulkAudioActionLabel,
   getBulkAudioRunningLabel,
+  getElevenLabsBatchGenerationMode,
   getSelectedVisibleBulkAudioIds,
   getSelectedVisibleBulkElevenLabsAudioIds,
   summarizeBulkAudioGeneration,
@@ -36,8 +37,8 @@ function word(id: string, audioStatus: AudioStatus): Pick<AdminWord, 'id' | 'aud
 
 function elevenLabsWord(
   id: string,
-  overrides: Partial<Pick<AdminWord, 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode'>> = {}
-): Pick<AdminWord, 'id' | 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode'> {
+  overrides: Partial<Pick<AdminWord, 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode' | 'elevenLabsPronunciationHint' | 'elevenLabsContextPhrase' | 'elevenLabsExtractMode'>> = {}
+): Pick<AdminWord, 'id' | 'welshAnswer' | 'audioUrl' | 'audioStatus' | 'elevenLabsAudioStatus' | 'preferredElevenLabsGenerationMode' | 'elevenLabsPronunciationHint' | 'elevenLabsContextPhrase' | 'elevenLabsExtractMode'> {
   return {
     id,
     welshAnswer: 'gwaith',
@@ -45,6 +46,9 @@ function elevenLabsWord(
     audioStatus: 'missing',
     elevenLabsAudioStatus: 'missing',
     preferredElevenLabsGenerationMode: 'direct',
+    elevenLabsPronunciationHint: '',
+    elevenLabsContextPhrase: '',
+    elevenLabsExtractMode: 'none',
     ...overrides
   };
 }
@@ -133,6 +137,10 @@ assert(!canBulkGenerateElevenLabsAudio(elevenLabsWord('el-no-text', { welshAnswe
 assert(canBulkGenerateElevenLabsAudio(elevenLabsWord('el-direct-no-azure', { audioStatus: 'missing', audioUrl: '' })), 'Direct ElevenLabs batch generation should not require Azure audio.');
 assert(!canBulkGenerateElevenLabsAudio(elevenLabsWord('el-azure-transform-no-azure', { preferredElevenLabsGenerationMode: 'azure_transform', audioStatus: 'missing', audioUrl: '' })), 'Azure-transform ElevenLabs batch generation should require existing Azure audio.');
 assert(canBulkGenerateElevenLabsAudio(elevenLabsWord('el-azure-transform-ready', { preferredElevenLabsGenerationMode: 'azure_transform', audioStatus: 'ready', audioUrl: '/audio/source.mp3' })), 'Azure-transform ElevenLabs batch generation should be eligible when Azure audio exists.');
+assertEqual(getElevenLabsBatchGenerationMode(elevenLabsWord('el-normal')), 'direct', 'Batch generation should use direct ElevenLabs for normal words.');
+assertEqual(getElevenLabsBatchGenerationMode(elevenLabsWord('el-hint', { elevenLabsPronunciationHint: 'penwythnos (pen-oi-th-nos)' })), 'direct', 'Batch generation should route hinted words through direct generation so the repository can use the hint.');
+assertEqual(getElevenLabsBatchGenerationMode(elevenLabsWord('el-context', { elevenLabsContextPhrase: 'dych chi', elevenLabsExtractMode: 'final_chunk' })), 'context_extract', 'Batch generation should preserve context-extraction corrections.');
+assertEqual(getElevenLabsBatchGenerationMode(elevenLabsWord('el-context-with-azure-preferred', { preferredElevenLabsGenerationMode: 'azure_transform', elevenLabsContextPhrase: 'dych chi', elevenLabsExtractMode: 'final_chunk' })), 'azure_transform', 'Explicit Azure pronunciation preference should override context extraction.');
 
 assertArrayEqual(
   getSelectedVisibleBulkElevenLabsAudioIds(

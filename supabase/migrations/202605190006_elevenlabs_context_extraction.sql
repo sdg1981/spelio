@@ -1,3 +1,4 @@
+alter type public.elevenlabs_generation_mode add value if not exists 'direct_with_hint';
 alter type public.elevenlabs_generation_mode add value if not exists 'context_extract';
 
 alter table public.words
