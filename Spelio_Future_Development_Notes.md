@@ -93,13 +93,17 @@ Experimental ElevenLabs audio direction:
 - Direct ElevenLabs Welsh TTS is often preferred for naturalness, warmth, and voice quality.
 - Azure remains valuable as a pronunciation fallback and rescue route, especially when direct generation struggles.
 - The current preferred workflow is direct ElevenLabs generation from Welsh text, followed by review or spot-checking.
-- Problematic words may be regenerated directly, improved later with pronunciation hints, or regenerated using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+- Problematic words may be regenerated directly, improved with a per-word `elevenLabsPronunciationHint`, or regenerated using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+- Pronunciation hints should be used for specific problem words before falling back to Azure transform where appropriate.
+- WY words should be flagged or visually highlighted for careful audio review, but should not automatically be forced to Azure transform.
 - Azure should not be assumed as the default source for every ElevenLabs file.
-- Per-word metadata may track `elevenLabsGenerationMode`, `preferredElevenLabsGenerationMode`, and audio review status.
+- Per-word metadata may track `elevenLabsGenerationMode`, `preferredElevenLabsGenerationMode`, `elevenLabsPronunciationHint`, and audio review status.
 - Current generation modes are `direct` and `azure_transform`.
 - Direct generation should use Eleven v3, Welsh language override, a configured voice ID, and stable conservative settings.
-- The current preferred experimental voice ID is `G7ILShrCNLfmS0A37SXS`; the previous tested Welsh-ish voice ID was `DikmR0aoFXAp1A3NcovW`.
+- Final ElevenLabs MP3s should pass through the same gentle loudness-normalisation and post-processing approach where practical, so direct and Azure-transform files have similar perceived volume.
+- The current preferred experimental voice ID is `aHCytOTnUOgfGPn5n89j`; previous tested reference IDs are `G7ILShrCNLfmS0A37SXS` and `DikmR0aoFXAp1A3NcovW`.
 - Voice IDs should remain configurable rather than hardcoded throughout the app.
+- The workflow should remain admin-only and should not add learner-facing audio complexity.
 - This should remain a pragmatic hybrid experiment and should not imply that ElevenLabs replaces trusted human recordings or makes Azure obsolete.
 
 ## 2. Future educational systems
