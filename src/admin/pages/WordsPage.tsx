@@ -245,10 +245,10 @@ export function WordsPage({ navigate, repository }: { navigate: (path: string) =
                     className="min-h-9 justify-self-start whitespace-nowrap px-3"
                     onClick={event => {
                       event.stopPropagation();
-                      navigate(`/admin/word-lists/${word.listId}`);
+                      navigate(`/admin/words/${word.id}`);
                     }}
                   >
-                    Open list <ExternalLink size={15} />
+                    Open word <ExternalLink size={15} />
                   </AdminButton>
                 </div>
               </div>
