@@ -89,6 +89,33 @@ export async function synthesizeWelshMp3(text: string): Promise<Blob> {
   return new Blob([audioBuffer], { type: 'audio/mpeg' });
 }
 
+export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise<Blob> {
+  const response = await fetch('/api/elevenlabs-transform', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ audioUrl })
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as AudioRouteErrorPayload | null;
+    throw new Error(payload?.error ?? `ElevenLabs route failed (${response.status}).`);
+  }
+
+  const audioBuffer = await response.arrayBuffer();
+  const audioBytes = new Uint8Array(audioBuffer);
+  const looksLikeMp3 =
+    (audioBytes[0] === 0x49 && audioBytes[1] === 0x44 && audioBytes[2] === 0x33) ||
+    (audioBytes[0] === 0xff && (audioBytes[1] & 0xe0) === 0xe0);
+
+  if (audioBytes.byteLength < 100 || !looksLikeMp3) {
+    throw new Error('ElevenLabs route returned an invalid MP3 payload.');
+  }
+
+  return new Blob([audioBuffer], { type: 'audio/mpeg' });
+}
+
 function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload | null) {
   if (!payload) return status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}) before returning diagnostic details.`;
 

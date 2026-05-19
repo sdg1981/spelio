@@ -13,8 +13,10 @@ export function WordEditorPanel({
   onClose,
   onChange,
   onGenerateAudio,
+  onGenerateElevenLabsAudio,
   onRetryAudio,
   audioBusy,
+  elevenLabsAudioBusy,
   variant = 'panel'
 }: {
   word: AdminWord;
@@ -23,8 +25,10 @@ export function WordEditorPanel({
   onClose: () => void;
   onChange: (patch: Partial<AdminWord>) => void;
   onGenerateAudio: (word: AdminWord) => void;
+  onGenerateElevenLabsAudio: (word: AdminWord) => void;
   onRetryAudio: (word: AdminWord) => void;
   audioBusy?: boolean;
+  elevenLabsAudioBusy?: boolean;
   variant?: 'panel' | 'page';
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
@@ -33,6 +37,7 @@ export function WordEditorPanel({
   const isRegenerating = word.audioStatus === 'ready';
   const generateAudioLabel = isRegenerating ? 'Regenerate audio' : 'Generate audio';
   const generatingAudioLabel = isRegenerating ? 'Regenerating...' : 'Generating...';
+  const canGenerateElevenLabsAudio = word.audioStatus === 'ready' && Boolean(word.audioUrl.trim());
 
   if (variant === 'page') {
     return (
@@ -102,6 +107,10 @@ export function WordEditorPanel({
             <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
               {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {audioBusy ? generatingAudioLabel : generateAudioLabel}
+            </AdminButton>
+            <AdminButton onClick={() => onGenerateElevenLabsAudio(word)} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+              {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+              {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Generate ElevenLabs version'}
             </AdminButton>
             {word.audioStatus === 'failed' && (
               <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
@@ -230,6 +239,10 @@ export function WordEditorPanel({
           <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
             {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {audioBusy ? generatingAudioLabel : generateAudioLabel}
+          </AdminButton>
+          <AdminButton onClick={() => onGenerateElevenLabsAudio(word)} disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio} aria-disabled={elevenLabsAudioBusy || !canGenerateElevenLabsAudio}>
+            {elevenLabsAudioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
+            {elevenLabsAudioBusy ? 'Generating ElevenLabs...' : 'Generate ElevenLabs version'}
           </AdminButton>
           {word.audioStatus === 'failed' && (
             <AdminButton onClick={() => onRetryAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>

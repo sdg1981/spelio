@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
-import { createAudioQueueSnapshot, createAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3 } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeLegacyAudioStatus, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus } from '../../lib/audioProvider';
 
 type CustomWordListRow = {
@@ -275,6 +275,35 @@ export const supabaseAdminRepository: AdminRepository = {
     }
   },
 
+  async generateElevenLabsAudioForWord(wordId: string) {
+    const word = await this.getWord(wordId);
+    if (!word) throw new Error('Word not found.');
+    if (!word.audioUrl.trim() || word.audioStatus !== 'ready') {
+      throw new Error('Generate Azure audio before creating an ElevenLabs version.');
+    }
+    const previousElevenLabsAudioUrl = word.elevenLabsAudioUrl;
+
+    try {
+      await this.saveWord({ ...word, elevenLabsAudioStatus: 'pending' }).catch(error => {
+        throw new Error(`Supabase save failed while marking ElevenLabs audio as pending: ${readErrorMessage(error)}`);
+      });
+      const audio = await transformAzureMp3WithElevenLabs(word.audioUrl);
+      const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio).catch(error => {
+        throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
+      });
+      const readyWord = await this.saveWord({ ...word, elevenLabsAudioUrl, elevenLabsAudioStatus: 'generated' }).catch(error => {
+        throw new Error(`Supabase save failed after ElevenLabs audio upload: ${readErrorMessage(error)}`);
+      });
+      return { word: readyWord, ok: true };
+    } catch (error) {
+      const generationError = error instanceof Error ? error.message : 'ElevenLabs audio generation failed.';
+      const failedWord = await this.saveWord({ ...word, elevenLabsAudioUrl: previousElevenLabsAudioUrl, elevenLabsAudioStatus: 'failed' }).catch(saveError => {
+        throw new Error(`${generationError}; Supabase save failed while marking ElevenLabs audio as failed: ${readErrorMessage(saveError)}`);
+      });
+      return { word: failedWord, ok: false, error: generationError };
+    }
+  },
+
   async generateAudioBatch(wordIds: string[]) {
     // TODO: Move batch synthesis to a server-side job queue before production-scale generation.
     const results = [];
@@ -300,6 +329,21 @@ export const supabaseAdminRepository: AdminRepository = {
     if (error) throw error;
     const { data } = client.storage.from('audio').getPublicUrl(path);
     if (!data.publicUrl) throw new Error('Audio upload did not return a public URL.');
+    return data.publicUrl;
+  },
+
+  async uploadElevenLabsAudioFile(word: AdminWord, file: Blob) {
+    const client = requireSupabase();
+    const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
+    if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    if (file.size < 100) throw new Error('ElevenLabs upload was blocked because the generated file was unexpectedly small.');
+    const path = createElevenLabsAudioStoragePath(word);
+    const { error } = await client.storage
+      .from('audio')
+      .upload(path, file, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
+    if (error) throw error;
+    const { data } = client.storage.from('audio').getPublicUrl(path);
+    if (!data.publicUrl) throw new Error('ElevenLabs upload did not return a public URL.');
     return data.publicUrl;
   },
 

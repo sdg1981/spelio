@@ -15,7 +15,9 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
+  const [elevenLabsAudioBusy, setElevenLabsAudioBusy] = useState(false);
   const audioBusyRef = useRef(false);
+  const elevenLabsAudioBusyRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -116,6 +118,30 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
     }
   }
 
+  async function generateElevenLabsAudio(target: AdminWord) {
+    if (elevenLabsAudioBusyRef.current) return;
+    if (dirty) {
+      setErrorMessage('Save word changes before generating ElevenLabs audio.');
+      return;
+    }
+
+    try {
+      elevenLabsAudioBusyRef.current = true;
+      setElevenLabsAudioBusy(true);
+      setErrorMessage('');
+      setStatusMessage('');
+      const result = await repository.generateElevenLabsAudioForWord(target.id);
+      await refreshWord(target.id);
+      if (result.ok) setStatusMessage('ElevenLabs audio generated.');
+      else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));
+    } finally {
+      elevenLabsAudioBusyRef.current = false;
+      setElevenLabsAudioBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -171,8 +197,10 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
           onClose={() => navigate('/admin/words')}
           onChange={updateWord}
           onGenerateAudio={generateWordAudio}
+          onGenerateElevenLabsAudio={generateElevenLabsAudio}
           onRetryAudio={generateWordAudio}
           audioBusy={audioBusy}
+          elevenLabsAudioBusy={elevenLabsAudioBusy}
           variant="page"
         />
         <aside className="grid gap-4 xl:sticky xl:top-8">

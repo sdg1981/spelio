@@ -45,9 +45,11 @@ export interface AdminRepository {
   getAudioQueue(): Promise<AudioQueueSnapshot<AdminWordWithListName>>;
   queueAudioGeneration(wordIds: string[]): Promise<AdminWordWithListName[]>;
   generateAudioForWord(wordId: string): Promise<AudioGenerationResult>;
+  generateElevenLabsAudioForWord(wordId: string): Promise<AudioGenerationResult>;
   generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
   retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
   uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;
+  uploadElevenLabsAudioFile(word: AdminWord, file: Blob): Promise<string>;
   getAudioSettings(): Promise<AdminAudioSettings>;
   saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;

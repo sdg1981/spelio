@@ -152,6 +152,23 @@ export const mockAdminRepository: AdminRepository = {
     return { word: readyWord, ok: true };
   },
 
+  async generateElevenLabsAudioForWord(wordId: string) {
+    const word = await this.getWord(wordId);
+    if (!word) throw new Error('Word not found.');
+    if (!word.audioUrl.trim() || word.audioStatus !== 'ready') {
+      throw new Error('Generate Azure audio before creating an ElevenLabs version.');
+    }
+    const pendingWord = { ...word, elevenLabsAudioStatus: 'pending' as const };
+    await this.saveWord(pendingWord);
+    const readyWord = {
+      ...pendingWord,
+      elevenLabsAudioStatus: 'generated' as const,
+      elevenLabsAudioUrl: `${createMockAudioUrl(word)}-elevenlabs`
+    };
+    await this.saveWord(readyWord);
+    return { word: readyWord, ok: true };
+  },
+
   async generateAudioBatch(wordIds: string[]) {
     // TODO: Replace this sequential browser loop with a protected background worker queue.
     const results = [];
@@ -175,6 +192,10 @@ export const mockAdminRepository: AdminRepository = {
 
   async uploadAudioFile(word: AdminWord) {
     return createMockAudioUrl(word);
+  },
+
+  async uploadElevenLabsAudioFile(word: AdminWord) {
+    return `${createMockAudioUrl(word)}-elevenlabs`;
   },
 
   async getAudioSettings() {

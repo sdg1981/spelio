@@ -25,8 +25,10 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingAudioWordIds, setGeneratingAudioWordIds] = useState<Set<string>>(() => new Set());
+  const [generatingElevenLabsAudioWordIds, setGeneratingElevenLabsAudioWordIds] = useState<Set<string>>(() => new Set());
   const [batchAudioBusy, setBatchAudioBusy] = useState(false);
   const generatingAudioWordIdsRef = useRef<Set<string>>(new Set());
+  const generatingElevenLabsAudioWordIdsRef = useRef<Set<string>>(new Set());
   const batchAudioBusyRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -212,6 +214,31 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     }
   }
 
+  async function generateElevenLabsAudio(word: AdminWord) {
+    if (generatingElevenLabsAudioWordIdsRef.current.has(word.id)) return;
+    if (dirty) {
+      setErrorMessage('Save word changes before generating ElevenLabs audio.');
+      return;
+    }
+    try {
+      generatingElevenLabsAudioWordIdsRef.current = new Set(generatingElevenLabsAudioWordIdsRef.current).add(word.id);
+      setGeneratingElevenLabsAudioWordIds(new Set(generatingElevenLabsAudioWordIdsRef.current));
+      setErrorMessage('');
+      setStatusMessage('');
+      const result = await repository.generateElevenLabsAudioForWord(word.id);
+      await refreshCurrentList(word.listId);
+      if (result.ok) setStatusMessage('ElevenLabs audio generated.');
+      else setErrorMessage(result.error ?? 'ElevenLabs audio generation failed.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'ElevenLabs audio generation failed.'));
+    } finally {
+      const next = new Set(generatingElevenLabsAudioWordIdsRef.current);
+      next.delete(word.id);
+      generatingElevenLabsAudioWordIdsRef.current = next;
+      setGeneratingElevenLabsAudioWordIds(next);
+    }
+  }
+
   async function generateMissingAudioForList() {
     if (!list) return;
     if (batchAudioBusyRef.current) return;
@@ -390,8 +417,10 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
             onClose={() => setSelectedWordId(list.words[0]?.id)}
             onChange={updateWord}
             onGenerateAudio={generateWordAudio}
+            onGenerateElevenLabsAudio={generateElevenLabsAudio}
             onRetryAudio={generateWordAudio}
             audioBusy={generatingAudioWordIds.has(selectedWord.id)}
+            elevenLabsAudioBusy={generatingElevenLabsAudioWordIds.has(selectedWord.id)}
           />
         )}
       </div>
