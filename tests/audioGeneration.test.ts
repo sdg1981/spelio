@@ -16,8 +16,12 @@ import {
   AUDIO_FADE_OUT_SECONDS,
   AUDIO_TRAILING_SILENCE_SAMPLES,
   AUDIO_TRAILING_SILENCE_SECONDS,
+  AZURE_TRANSFORM_GAIN_DB,
+  AZURE_TRANSFORM_LOUDNESS_TARGET,
   createContextFinalChunkExtractionArgs,
   createAudioPostProcessingFilter,
+  createAzureTransformPostProcessingArgs,
+  createAzureTransformPostProcessingFilter,
   createFfmpegPostProcessingArgs,
   getContextExtractionFallbackSeconds,
   resolveFfmpegPath
@@ -139,6 +143,14 @@ assert(filter.includes(`apad=pad_len=${AUDIO_TRAILING_SILENCE_SAMPLES}`), 'Post-
 const args = createFfmpegPostProcessingArgs('/tmp/input.wav', '/tmp/output.mp3');
 assert(args.includes('libmp3lame'), 'FFmpeg should encode the final output as MP3.');
 assert(args.includes('32k'), 'FFmpeg should preserve the existing 32k MP3 bitrate expectation.');
+const azureTransformFilter = createAzureTransformPostProcessingFilter();
+assert(azureTransformFilter.includes(`loudnorm=${AZURE_TRANSFORM_LOUDNESS_TARGET}`), 'Azure-transform post-processing should use the stronger speech loudness target.');
+assert(azureTransformFilter.includes(`volume=${AZURE_TRANSFORM_GAIN_DB}dB`), 'Azure-transform post-processing should apply the configured small gain lift.');
+assert(azureTransformFilter.includes('alimiter=limit=0.95'), 'Azure-transform post-processing should include a conservative limiter after gain.');
+assert(
+  createAzureTransformPostProcessingArgs('/tmp/sts.mp3', '/tmp/matched.mp3').includes(createAzureTransformPostProcessingFilter()),
+  'Azure-transform FFmpeg args should use the dedicated matched-loudness filter.'
+);
 assertEqual(getContextExtractionFallbackSeconds(1), 1.1, 'Context extraction should keep last-word fallback timing as the default.');
 assertEqual(getContextExtractionFallbackSeconds(2), 1.8, 'Context extraction should support a wider fallback window for two final chunks.');
 assertEqual(getContextExtractionFallbackSeconds(3), 2.5, 'Context extraction should support a wider fallback window for three final chunks.');
