@@ -137,7 +137,9 @@ Preferred current experimental workflow:
 
 1. Generate ElevenLabs audio directly from Welsh text by default.
 2. Review or spot-check the generated audio.
-3. For problematic words, either regenerate directly, add future pronunciation hints, or regenerate using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+3. For problematic words, either regenerate directly, add a per-word `elevenLabsPronunciationHint`, or regenerate using Azure pronunciation via Azure -> ElevenLabs speech-to-speech.
+4. Use pronunciation hints for specific problem words before falling back to Azure transform where appropriate.
+5. Flag or visually highlight WY words for careful audio review, without automatically forcing them to Azure transform.
 
 Direct ElevenLabs generation should currently use:
 
@@ -146,12 +148,17 @@ Direct ElevenLabs generation should currently use:
 - configured voice ID
 - stable, conservative settings
 
+Final ElevenLabs MP3s should pass through the same gentle loudness-normalisation and post-processing approach where practical, so direct and Azure-transform files have similar perceived volume.
+
 Current experimental voice configuration:
 
-- Preferred experimental voice ID: `G7ILShrCNLfmS0A37SXS`
-- Previous tested Welsh-ish voice ID: `DikmR0aoFXAp1A3NcovW`
+- Current preferred experimental voice ID: `aHCytOTnUOgfGPn5n89j`
+- Previous tested reference voice ID: `G7ILShrCNLfmS0A37SXS`
+- Previous tested Welsh-ish reference voice ID: `DikmR0aoFXAp1A3NcovW`
 
 Voice IDs should remain configurable and should not be hardcoded throughout the app.
+
+This workflow should remain admin-only and should not add learner-facing audio complexity.
 
 ---
 
@@ -447,6 +454,7 @@ Suggested fields:
 
 - `elevenLabsGenerationMode`
 - `preferredElevenLabsGenerationMode`
+- `elevenLabsPronunciationHint`
 - audio review status metadata
 
 `elevenLabsGenerationMode` records how the current ElevenLabs file was made.
@@ -459,6 +467,8 @@ Current generation modes:
 - `azure_transform`
 
 This distinction matters because the best current file and the best future regeneration route may differ. A word may currently use an Azure-transformed rescue file while still being marked for future direct ElevenLabs regeneration once pronunciation hints, voice choice, or model behaviour improves.
+
+`elevenLabsPronunciationHint` may be used for specific problem words where direct generation is close but needs guidance. Hints should be tried before Azure transform where appropriate, while still allowing Azure -> ElevenLabs as a rescue route for words that remain unreliable.
 
 ---
 
