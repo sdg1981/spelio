@@ -106,6 +106,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
   const selectedVisibleGeneratableIds = getSelectedVisibleBulkAudioIds(selectedIds, visibleWords);
   const selectedVisibleGeneratableWords = visibleWords.filter(word => selectedVisibleGeneratableIds.includes(word.id));
   const selectedVisibleElevenLabsGeneratableIds = getSelectedVisibleBulkElevenLabsAudioIds(selectedIds, visibleWords);
+  const elevenLabsSelectionHelper = getElevenLabsSelectionHelper(selectedVisibleIds, selectedVisibleElevenLabsGeneratableIds, visibleWords);
   const visibleMissingIds = visibleWords.filter(word => word.audioStatus === 'missing').map(word => word.id);
   const selectedMissingIds = selectedIds.filter(id => effectiveWords.some(word => word.id === id && word.audioStatus === 'missing'));
   const allVisibleSelected = visibleWords.length > 0 && visibleWords.every(word => selectedIds.includes(word.id));
@@ -178,11 +179,8 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
         setStatusMessage(`Generating ElevenLabs audio ${index + 1} of ${wordIds.length} (${preferredMode === 'azure_transform' ? 'Azure pronunciation' : 'direct'})...`);
         try {
           if (preferredMode === 'azure_transform' && word && (word.audioStatus !== 'ready' || !word.audioUrl.trim())) {
-            const azureResult = await repository.generateAudioForWord(wordId);
-            if (!azureResult.ok) {
-              results.push({ word: azureResult.word, ok: false, error: azureResult.error ?? 'Azure audio generation failed.' });
-              continue;
-            }
+            results.push({ word, ok: false, error: 'Azure audio is required for Azure-pronunciation ElevenLabs generation.' });
+            continue;
           }
           results.push(await repository.generateElevenLabsAudioForWord(wordId, preferredMode));
         } catch (error) {
@@ -252,14 +250,20 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
               </AdminButton>
               <div className="mt-1 text-xs font-medium leading-5 text-slate-500">Find words without generated audio and add them to the queue.</div>
             </div>
-            <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedVisibleGeneratableIds)} disabled={selectedBatchBusy || selectedVisibleGeneratableIds.length === 0} aria-disabled={selectedBatchBusy}>
-              {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
-              {selectedBatchBusy ? getBulkAudioRunningLabel(selectedBatchIncludesGenerated, batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length) : getBulkAudioActionLabel(selectedVisibleGeneratableWords)}
-            </AdminButton>
-            <AdminButton onClick={() => generateSelectedElevenLabsAudio(selectedVisibleElevenLabsGeneratableIds)} disabled={selectedElevenLabsBatchBusy || selectedVisibleElevenLabsGeneratableIds.length === 0} aria-disabled={selectedElevenLabsBatchBusy}>
-              {selectedElevenLabsBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
-              {selectedElevenLabsBatchBusy ? `Generating ElevenLabs ${batchGeneratingElevenLabsWordIds.size || selectedVisibleElevenLabsGeneratableIds.length}...` : 'Generate ElevenLabs selected'}
-            </AdminButton>
+            <div className="max-w-xs">
+              <AdminButton variant="primary" onClick={() => generateSelectedAudio(selectedVisibleGeneratableIds)} disabled={selectedBatchBusy || selectedVisibleGeneratableIds.length === 0} aria-disabled={selectedBatchBusy}>
+                {selectedBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
+                {selectedBatchBusy ? getBulkAudioRunningLabel(selectedBatchIncludesGenerated, batchGeneratingWordIds.size || selectedVisibleGeneratableIds.length) : getBulkAudioActionLabel(selectedVisibleGeneratableWords)}
+              </AdminButton>
+              <div className="mt-1 text-xs font-medium leading-5 text-slate-500">Azure audio only.</div>
+            </div>
+            <div className="max-w-xs">
+              <AdminButton onClick={() => generateSelectedElevenLabsAudio(selectedVisibleElevenLabsGeneratableIds)} disabled={selectedElevenLabsBatchBusy || selectedVisibleElevenLabsGeneratableIds.length === 0} aria-disabled={selectedElevenLabsBatchBusy}>
+                {selectedElevenLabsBatchBusy ? <AdminSpinner /> : <Wand2 size={16} />}
+                {selectedElevenLabsBatchBusy ? `Generating ElevenLabs ${batchGeneratingElevenLabsWordIds.size || selectedVisibleElevenLabsGeneratableIds.length}...` : 'Regenerate ElevenLabs selected'}
+              </AdminButton>
+              <div className="mt-1 text-xs font-medium leading-5 text-slate-500">{elevenLabsSelectionHelper}</div>
+            </div>
           </div>
         }
       />
@@ -310,7 +314,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
             {statusFilter !== 'all' && <> {statusFilters.find(filter => filter.value === statusFilter)?.label.toLowerCase()} item(s)</>}
           </div>
           <div className="font-medium">
-            Generate selected uses visible selected Azure rows. Generate ElevenLabs selected uses each word's preferred ElevenLabs generation mode for visible selected rows with missing/failed ElevenLabs audio.
+            Generate Azure selected uses visible selected Azure rows. Regenerate ElevenLabs selected uses each word's preferred ElevenLabs generation mode and overwrites ElevenLabs audio only.
             {selectedVisibleIds.length > 0 && selectedVisibleElevenLabsGeneratableIds.length !== selectedVisibleIds.length && statusFilter.toString().startsWith('elevenlabs') && <> {selectedVisibleIds.length - selectedVisibleElevenLabsGeneratableIds.length} ElevenLabs-ineligible item(s) will be skipped.</>}
           </div>
         </div>
@@ -387,6 +391,19 @@ function formatElevenLabsStatus(status: ElevenLabsAudioStatus) {
   if (status === 'pending') return 'pending';
   if (status === 'failed') return 'failed';
   return 'missing';
+}
+
+function getElevenLabsSelectionHelper(selectedVisibleIds: string[], eligibleIds: string[], visibleWords: AdminWordWithListName[]) {
+  if (!selectedVisibleIds.length) return 'Select rows to generate ElevenLabs audio.';
+  if (eligibleIds.length) return `${eligibleIds.length} selected row(s) eligible for ElevenLabs generation.`;
+
+  const selectedWords = visibleWords.filter(word => selectedVisibleIds.includes(word.id));
+  if (selectedWords.some(word => !word.welshAnswer.trim())) return 'Selected rows need Welsh answers.';
+  if (selectedWords.some(word => word.elevenLabsAudioStatus === 'pending')) return 'Selected rows already have pending ElevenLabs generation.';
+  if (selectedWords.some(word => word.preferredElevenLabsGenerationMode === 'azure_transform' && (word.audioStatus !== 'ready' || !word.audioUrl.trim()))) {
+    return 'Azure-pronunciation rows need existing Azure audio.';
+  }
+  return 'Selected rows are not eligible for ElevenLabs generation.';
 }
 
 function canGenerateAudio(word: AdminWordWithListName) {
