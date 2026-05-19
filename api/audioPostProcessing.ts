@@ -44,6 +44,9 @@ export const AZURE_TRANSFORM_LOUDNESS_TARGET = 'I=-16:TP=-1.5:LRA=9:linear=true'
 export const AZURE_TRANSFORM_GAIN_DB = 2;
 export const FINAL_MP3_BITRATE = '32k';
 export const FINAL_MP3_SAMPLE_RATE = '16000';
+export const DEFAULT_CONTEXT_EXTRACT_START_OFFSET_MS = 80;
+export const CONTEXT_EXTRACT_FADE_IN_SECONDS = 0.012;
+export const MIN_CONTEXT_EXTRACTION_SECONDS = 0.35;
 export const CONTEXT_EXTRACTION_FALLBACK_SECONDS_BY_CHUNK_COUNT: Record<1 | 2 | 3, number> = {
   1: 1.1,
   2: 1.8,
@@ -56,6 +59,17 @@ export function normalizeContextExtractChunkCount(value: unknown): 1 | 2 | 3 {
 
 export function getContextExtractionFallbackSeconds(chunkCount: unknown) {
   return CONTEXT_EXTRACTION_FALLBACK_SECONDS_BY_CHUNK_COUNT[normalizeContextExtractChunkCount(chunkCount)];
+}
+
+export function normalizeContextExtractStartOffsetMs(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_CONTEXT_EXTRACT_START_OFFSET_MS;
+  return Math.min(300, Math.max(0, Math.round(numeric)));
+}
+
+export function getContextExtractionWindowSeconds(chunkCount: unknown, startOffsetMs: unknown = DEFAULT_CONTEXT_EXTRACT_START_OFFSET_MS) {
+  const offsetSeconds = normalizeContextExtractStartOffsetMs(startOffsetMs) / 1000;
+  return Math.max(MIN_CONTEXT_EXTRACTION_SECONDS, getContextExtractionFallbackSeconds(chunkCount) - offsetSeconds);
 }
 
 export function createAudioPostProcessingFilter() {
@@ -124,8 +138,8 @@ export function createAzureTransformPostProcessingArgs(inputPath: string, output
   ];
 }
 
-export function createContextFinalChunkExtractionArgs(inputPath: string, outputPath: string, chunkCount: unknown = 1) {
-  const fallbackSeconds = getContextExtractionFallbackSeconds(chunkCount);
+export function createContextFinalChunkExtractionArgs(inputPath: string, outputPath: string, chunkCount: unknown = 1, startOffsetMs: unknown = DEFAULT_CONTEXT_EXTRACT_START_OFFSET_MS) {
+  const fallbackSeconds = getContextExtractionWindowSeconds(chunkCount, startOffsetMs);
   return [
     '-y',
     '-hide_banner',
@@ -141,6 +155,7 @@ export function createContextFinalChunkExtractionArgs(inputPath: string, outputP
       'areverse',
       'silenceremove=start_periods=1:start_duration=0.03:start_threshold=-45dB',
       'areverse',
+      `afade=t=in:d=${CONTEXT_EXTRACT_FADE_IN_SECONDS}`,
       createAudioPostProcessingFilter()
     ].join(','),
     '-codec:a',
@@ -211,7 +226,7 @@ export async function postProcessAzureTransformMp3(mp3Audio: ArrayBuffer | Uint8
   }
 }
 
-export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Array, chunkCount: unknown = 1) {
+export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Array, chunkCount: unknown = 1, startOffsetMs: unknown = DEFAULT_CONTEXT_EXTRACT_START_OFFSET_MS) {
   const tools = await loadNodeAudioTools();
   const tempDir = await tools.fs.mkdtemp(tools.path.join(tools.os.tmpdir(), 'spelio-context-audio-'));
   const inputPath = tools.path.join(tempDir, 'context.mp3');
@@ -219,7 +234,7 @@ export async function extractFinalChunkFromMp3(mp3Audio: ArrayBuffer | Uint8Arra
 
   try {
     await tools.fs.writeFile(inputPath, toUint8Array(mp3Audio));
-    await runFfmpeg(tools.spawn, tools.ffmpegPath, createContextFinalChunkExtractionArgs(inputPath, outputPath, chunkCount));
+    await runFfmpeg(tools.spawn, tools.ffmpegPath, createContextFinalChunkExtractionArgs(inputPath, outputPath, chunkCount, startOffsetMs));
 
     const processedAudio = await tools.fs.readFile(outputPath);
     if (processedAudio.byteLength < AUDIO_POST_PROCESSING_MIN_BYTES) {

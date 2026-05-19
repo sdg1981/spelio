@@ -7,5 +7,7 @@ alter table public.words
     check (elevenlabs_extract_mode in ('none', 'final_chunk')),
   add column if not exists elevenlabs_extract_chunk_count integer not null default 1
     check (elevenlabs_extract_chunk_count in (1, 2, 3)),
+  add column if not exists elevenlabs_extract_start_offset_ms integer not null default 80
+    check (elevenlabs_extract_start_offset_ms in (80, 140, 220)),
   add column if not exists elevenlabs_extraction_used boolean not null default false,
   add column if not exists elevenlabs_context_phrase_used text;

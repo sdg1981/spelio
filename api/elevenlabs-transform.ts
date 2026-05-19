@@ -7,6 +7,7 @@ import {
   AZURE_TRANSFORM_LOUDNESS_TARGET,
   extractFinalChunkFromMp3,
   normalizeContextExtractChunkCount,
+  normalizeContextExtractStartOffsetMs,
   postProcessAzureTransformMp3
 } from './audioPostProcessing.js';
 
@@ -70,6 +71,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
   const audioUrl = typeof body?.audioUrl === 'string' ? body.audioUrl.trim() : '';
   const text = typeof body?.text === 'string' ? body.text.trim() : '';
   const extractChunkCount = normalizeContextExtractChunkCount(body?.extractChunkCount);
+  const extractStartOffsetMs = normalizeContextExtractStartOffsetMs(body?.extractStartOffsetMs ?? (dependencies.env ?? process.env).ELEVENLABS_CONTEXT_EXTRACT_START_OFFSET_MS);
   if (mode === 'azure_transform' && !audioUrl) return response.status(400).json({ ok: false, error: 'Azure audio URL is required.' });
   if ((mode === 'direct' || mode === 'context_extract') && !text) return response.status(400).json({ ok: false, error: 'Welsh text is required.' });
 
@@ -81,7 +83,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
     const transformedAudio = mode === 'azure_transform'
       ? await postProcessAzureTransformMp3(await transformAzureMp3WithElevenLabs(await fetchExistingAzureMp3(audioUrl, fetchImpl), config, fetchImpl))
       : mode === 'context_extract'
-        ? await extractFinalChunkFromMp3(await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl), extractChunkCount)
+        ? await extractFinalChunkFromMp3(await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl), extractChunkCount, extractStartOffsetMs)
         : await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl);
 
     response.setHeader('Content-Type', 'audio/mpeg');
@@ -93,6 +95,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
     response.setHeader('X-Spelio-ElevenLabs-Extraction-Used', mode === 'context_extract' ? 'true' : 'false');
     response.setHeader('X-Spelio-ElevenLabs-Extract-Mode', mode === 'context_extract' ? 'final_chunk' : 'none');
     response.setHeader('X-Spelio-ElevenLabs-Extract-Chunk-Count', mode === 'context_extract' ? String(extractChunkCount) : '1');
+    response.setHeader('X-Spelio-ElevenLabs-Extract-Start-Offset-Ms', mode === 'context_extract' ? String(extractStartOffsetMs) : '0');
     response.setHeader('X-Spelio-Audio-Loudness-Target', mode === 'azure_transform' ? AZURE_TRANSFORM_LOUDNESS_TARGET : 'not_applicable');
     response.setHeader('X-Spelio-Audio-Gain-Db', mode === 'azure_transform' ? String(AZURE_TRANSFORM_GAIN_DB) : '0');
     return response.status(200).send(Buffer.from(transformedAudio));

@@ -152,6 +152,9 @@ export function WordEditorPanel({
           <div className="mt-5 max-w-xs">
             <ElevenLabsContextExtractCountField word={word} onChange={onChange} />
           </div>
+          <div className="mt-5 max-w-xs">
+            <ElevenLabsContextExtractStartOffsetField word={word} onChange={onChange} />
+          </div>
           <ElevenLabsDiagnostics word={word} />
         </div>
         <div className="p-5">
@@ -318,6 +321,7 @@ export function WordEditorPanel({
           <ElevenLabsPronunciationHintField word={word} onChange={onChange} />
           <ElevenLabsContextPhraseField word={word} onChange={onChange} />
           <ElevenLabsContextExtractCountField word={word} onChange={onChange} />
+          <ElevenLabsContextExtractStartOffsetField word={word} onChange={onChange} />
           <Field label="ElevenLabs mode">
             <AdminSelect value={word.elevenLabsGenerationMode} onChange={event => onChange({ elevenLabsGenerationMode: event.target.value as AdminWord['elevenLabsGenerationMode'] })}>
               <option value="direct">direct</option>
@@ -423,6 +427,24 @@ function ElevenLabsContextExtractCountField({ word, onChange }: { word: AdminWor
   );
 }
 
+function ElevenLabsContextExtractStartOffsetField({ word, onChange }: { word: AdminWord; onChange: (patch: Partial<AdminWord>) => void }) {
+  const enabled = Boolean(word.elevenLabsContextPhrase.trim()) || word.elevenLabsExtractMode === 'final_chunk';
+
+  return (
+    <Field label="Extraction start trim" helper="If the previous word bleeds into the clip, increase Extraction start trim.">
+      <AdminSelect
+        value={String(word.elevenLabsExtractStartOffsetMs)}
+        disabled={!enabled}
+        onChange={event => onChange({ elevenLabsExtractStartOffsetMs: Number(event.target.value) as AdminWord['elevenLabsExtractStartOffsetMs'] })}
+      >
+        <option value="80">Normal</option>
+        <option value="140">Tighter</option>
+        <option value="220">Very tight</option>
+      </AdminSelect>
+    </Field>
+  );
+}
+
 function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
   const hasElevenLabsMetadata =
     word.elevenLabsAudioStatus !== 'missing' ||
@@ -448,6 +470,7 @@ function ElevenLabsDiagnostics({ word }: { word: AdminWord }) {
         <DiagnosticItem label="Extraction used" value={word.elevenLabsExtractionUsed ? 'yes' : 'no'} />
         <DiagnosticItem label="Extract mode" value={word.elevenLabsExtractMode} />
         <DiagnosticItem label="Extract count" value={String(word.elevenLabsExtractChunkCount)} />
+        <DiagnosticItem label="Start trim" value={`${word.elevenLabsExtractStartOffsetMs}ms`} />
         <DiagnosticItem label="Context phrase used" value={word.elevenLabsContextPhraseUsed} wide />
       </dl>
     </div>

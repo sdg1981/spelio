@@ -310,6 +310,7 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     elevenLabsContextPhrase: stringValue(word.elevenLabsContextPhrase),
     elevenLabsExtractMode: word.elevenLabsExtractMode === 'final_chunk' ? 'final_chunk' : 'none',
     elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(word.elevenLabsExtractChunkCount),
+    elevenLabsExtractStartOffsetMs: normalizeElevenLabsExtractStartOffsetMs(word.elevenLabsExtractStartOffsetMs),
     elevenLabsExtractionUsed: word.elevenLabsExtractionUsed === true,
     elevenLabsContextPhraseUsed: stringValue(word.elevenLabsContextPhraseUsed),
     elevenLabsGeneratedAt: stringValue(word.elevenLabsGeneratedAt),
@@ -334,6 +335,10 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
 
 function normalizeElevenLabsExtractChunkCount(value: unknown): 1 | 2 | 3 {
   return value === 2 || value === 3 ? value : 1;
+}
+
+function normalizeElevenLabsExtractStartOffsetMs(value: unknown): 80 | 140 | 220 {
+  return value === 140 || value === 220 ? value : 80;
 }
 
 function validateCollection(collection: RawCollection, id: string, errors: string[], warnings: string[]) {

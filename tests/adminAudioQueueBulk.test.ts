@@ -75,6 +75,7 @@ function result(id: string, ok: boolean): AudioGenerationResult {
       elevenLabsContextPhrase: '',
       elevenLabsExtractMode: 'none',
       elevenLabsExtractChunkCount: 1,
+      elevenLabsExtractStartOffsetMs: 80,
       elevenLabsExtractionUsed: false,
       elevenLabsContextPhraseUsed: '',
       elevenLabsGeneratedAt: '',

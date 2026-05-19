@@ -67,6 +67,7 @@ export interface PracticeWord {
   elevenLabsContextPhrase?: string;
   elevenLabsExtractMode?: 'none' | 'final_chunk';
   elevenLabsExtractChunkCount?: 1 | 2 | 3;
+  elevenLabsExtractStartOffsetMs?: 80 | 140 | 220;
   elevenLabsExtractionUsed?: boolean;
   elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
@@ -130,6 +131,7 @@ type DatasetWord = {
   elevenLabsContextPhrase?: string;
   elevenLabsExtractMode?: 'none' | 'final_chunk';
   elevenLabsExtractChunkCount?: 1 | 2 | 3;
+  elevenLabsExtractStartOffsetMs?: 80 | 140 | 220;
   elevenLabsExtractionUsed?: boolean;
   elevenLabsContextPhraseUsed?: string;
   elevenLabsGeneratedAt?: string;
@@ -236,6 +238,7 @@ const baseWordLists: WordList[] = rawLists
         elevenLabsContextPhrase: word.elevenLabsContextPhrase ?? '',
         elevenLabsExtractMode: word.elevenLabsExtractMode ?? 'none',
         elevenLabsExtractChunkCount: word.elevenLabsExtractChunkCount ?? 1,
+        elevenLabsExtractStartOffsetMs: word.elevenLabsExtractStartOffsetMs ?? 80,
         elevenLabsExtractionUsed: word.elevenLabsExtractionUsed ?? false,
         elevenLabsContextPhraseUsed: word.elevenLabsContextPhraseUsed ?? '',
         elevenLabsGeneratedAt: word.elevenLabsGeneratedAt ?? '',

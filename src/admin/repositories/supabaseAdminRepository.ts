@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 
 type CustomWordListRow = {
@@ -81,6 +81,7 @@ type WordRow = {
   elevenlabs_context_phrase?: string | null;
   elevenlabs_extract_mode?: string | null;
   elevenlabs_extract_chunk_count?: number | null;
+  elevenlabs_extract_start_offset_ms?: number | null;
   elevenlabs_extraction_used?: boolean | null;
   elevenlabs_context_phrase_used?: string | null;
   elevenlabs_generated_at?: string | null;
@@ -317,7 +318,7 @@ export const supabaseAdminRepository: AdminRepository = {
       const audio = mode === 'azure_transform'
         ? await transformAzureMp3WithElevenLabs(word.audioUrl)
         : mode === 'context_extract'
-          ? await synthesizeElevenLabsContextExtractMp3(contextPhrase, word.elevenLabsExtractChunkCount)
+          ? await synthesizeElevenLabsContextExtractMp3(contextPhrase, word.elevenLabsExtractChunkCount, word.elevenLabsExtractStartOffsetMs)
           : await synthesizeElevenLabsWelshMp3(directText);
       const elevenLabsAudioUrl = await this.uploadElevenLabsAudioFile(word, audio.blob).catch(error => {
         throw new Error(`Supabase upload failed: ${readErrorMessage(error)}`);
@@ -333,6 +334,7 @@ export const supabaseAdminRepository: AdminRepository = {
         elevenLabsExtractionUsed: audio.diagnostics.extractionUsed,
         elevenLabsExtractMode: actualMode === 'context_extract' ? audio.diagnostics.extractMode : word.elevenLabsExtractMode,
         elevenLabsExtractChunkCount: actualMode === 'context_extract' ? audio.diagnostics.extractChunkCount : word.elevenLabsExtractChunkCount,
+        elevenLabsExtractStartOffsetMs: actualMode === 'context_extract' ? audio.diagnostics.extractStartOffsetMs : word.elevenLabsExtractStartOffsetMs,
         elevenLabsGeneratedAt: new Date().toISOString(),
         elevenLabsModel: audio.diagnostics.model,
         elevenLabsVoiceId: audio.diagnostics.voiceId,
@@ -617,6 +619,7 @@ function mapWordRow(row: WordRow): AdminWord {
     elevenLabsContextPhrase: row.elevenlabs_context_phrase ?? '',
     elevenLabsExtractMode: row.elevenlabs_extract_mode === 'final_chunk' ? 'final_chunk' : 'none',
     elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(row.elevenlabs_extract_chunk_count),
+    elevenLabsExtractStartOffsetMs: normalizeElevenLabsExtractStartOffsetMs(row.elevenlabs_extract_start_offset_ms),
     elevenLabsExtractionUsed: row.elevenlabs_extraction_used === true,
     elevenLabsContextPhraseUsed: row.elevenlabs_context_phrase_used ?? '',
     elevenLabsGeneratedAt: row.elevenlabs_generated_at ?? '',
@@ -716,6 +719,7 @@ function toWordRow(word: AdminWord) {
     elevenlabs_context_phrase: word.elevenLabsContextPhrase || null,
     elevenlabs_extract_mode: word.elevenLabsExtractMode,
     elevenlabs_extract_chunk_count: word.elevenLabsExtractChunkCount,
+    elevenlabs_extract_start_offset_ms: word.elevenLabsExtractStartOffsetMs,
     elevenlabs_extraction_used: word.elevenLabsExtractionUsed,
     elevenlabs_context_phrase_used: word.elevenLabsContextPhraseUsed || null,
     elevenlabs_generated_at: word.elevenLabsGeneratedAt || null,

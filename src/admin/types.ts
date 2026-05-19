@@ -45,6 +45,7 @@ export interface AdminWord {
   elevenLabsContextPhrase: string;
   elevenLabsExtractMode: 'none' | 'final_chunk';
   elevenLabsExtractChunkCount: 1 | 2 | 3;
+  elevenLabsExtractStartOffsetMs: 80 | 140 | 220;
   elevenLabsExtractionUsed: boolean;
   elevenLabsContextPhraseUsed: string;
   elevenLabsGeneratedAt: string;

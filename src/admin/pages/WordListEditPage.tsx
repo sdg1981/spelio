@@ -458,6 +458,7 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     elevenLabsContextPhrase: '',
     elevenLabsExtractMode: 'none',
     elevenLabsExtractChunkCount: 1,
+    elevenLabsExtractStartOffsetMs: 80,
     elevenLabsExtractionUsed: false,
     elevenLabsContextPhraseUsed: '',
     elevenLabsGeneratedAt: '',

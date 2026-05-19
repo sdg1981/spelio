@@ -18,12 +18,14 @@ import {
   AUDIO_TRAILING_SILENCE_SECONDS,
   AZURE_TRANSFORM_GAIN_DB,
   AZURE_TRANSFORM_LOUDNESS_TARGET,
+  CONTEXT_EXTRACT_FADE_IN_SECONDS,
   createContextFinalChunkExtractionArgs,
   createAudioPostProcessingFilter,
   createAzureTransformPostProcessingArgs,
   createAzureTransformPostProcessingFilter,
   createFfmpegPostProcessingArgs,
   getContextExtractionFallbackSeconds,
+  getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
 import { createAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
@@ -155,8 +157,18 @@ assertEqual(getContextExtractionFallbackSeconds(1), 1.1, 'Context extraction sho
 assertEqual(getContextExtractionFallbackSeconds(2), 1.8, 'Context extraction should support a wider fallback window for two final chunks.');
 assertEqual(getContextExtractionFallbackSeconds(3), 2.5, 'Context extraction should support a wider fallback window for three final chunks.');
 assert(
-  createContextFinalChunkExtractionArgs('/tmp/context.mp3', '/tmp/final.mp3', 2).includes('-1.8'),
-  'Context extraction FFmpeg args should respect the selected final chunk count.'
+  createContextFinalChunkExtractionArgs('/tmp/context.mp3', '/tmp/final.mp3', 2).includes('-1.72'),
+  'Context extraction FFmpeg args should respect the selected final chunk count and default start trim.'
+);
+assertEqual(getContextExtractionWindowSeconds(1, 80), 1.02, 'Context extraction should trim the extraction start by the default offset.');
+assertEqual(getContextExtractionWindowSeconds(1, 140), 0.9600000000000001, 'Context extraction should support a tighter start offset.');
+assert(
+  createContextFinalChunkExtractionArgs('/tmp/context.mp3', '/tmp/final.mp3', 1, 220).includes('-0.8800000000000001'),
+  'Context extraction FFmpeg args should apply the selected start trim offset.'
+);
+assert(
+  createContextFinalChunkExtractionArgs('/tmp/context.mp3', '/tmp/final.mp3', 1, 80).some(arg => arg.includes(`afade=t=in:d=${CONTEXT_EXTRACT_FADE_IN_SECONDS}`)),
+  'Context extraction should add a tiny fade-in after the tighter start cut.'
 );
 
 void runAsyncAssertions();
