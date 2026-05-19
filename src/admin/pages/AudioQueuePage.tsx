@@ -1,6 +1,7 @@
 import { Play, RefreshCw, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
+import { AudioDownloadLink } from '../components/AudioDownloadLink';
 import { AudioStatusPill } from '../components/audioStatus';
 import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import type { AdminRepository, AdminWordWithListName } from '../repositories';
@@ -265,6 +266,7 @@ export function AudioQueuePage({ repository }: { repository: AdminRepository }) 
                   }} disabled={!hasPlayableAudioUrl(word.audioUrl)}>
                     <Play size={15} /> Preview
                   </AdminButton>
+                  <AudioDownloadLink word={word} className="min-h-10" />
                   <AdminButton onClick={() => generateAudioForQueueWord(word)} disabled={wordBusy || isGenerated || isGenerating} aria-disabled={wordBusy || isGenerated || isGenerating}>
                     {wordBusy ? <AdminSpinner /> : <RefreshCw size={15} />}
                     {wordBusy ? runningLabel : isGenerated ? 'Generated' : isGenerating ? 'Generating...' : word.audioStatus === 'failed' ? 'Retry' : 'Generate'}

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { AdminWord } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AdminTimestamp } from './AdminTimestamp';
+import { AudioDownloadLink } from './AudioDownloadLink';
 import { AudioStatusPill } from './audioStatus';
 import { AdminButton, AdminInput, AdminSelect, AdminSpinner, AdminTextarea, Field } from './primitives';
 
@@ -106,6 +107,7 @@ export function WordEditorPanel({
                 <Play size={15} /> Preview
               </AdminButton>
             )}
+            <AudioDownloadLink word={word} />
             <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
               {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {audioBusy ? generatingAudioLabel : generateAudioLabel}
@@ -230,6 +232,7 @@ export function WordEditorPanel({
               <Play size={15} /> Preview
             </AdminButton>
           )}
+          <AudioDownloadLink word={word} />
           <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
             {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {audioBusy ? generatingAudioLabel : generateAudioLabel}

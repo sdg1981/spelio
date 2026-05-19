@@ -2,6 +2,7 @@ import { Copy, GripVertical, Pencil, Play, Trash2, Wand2, ArrowUp, ArrowDown } f
 import type { AdminWord } from '../types';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 import { AdminButton, AdminSpinner } from './primitives';
+import { AudioDownloadLink } from './AudioDownloadLink';
 import { AudioStatusPill } from './audioStatus';
 
 const filters = ['All', 'Missing audio', 'Missing notes', 'North Wales', 'South Wales', 'Has variants'];
@@ -84,13 +85,16 @@ export function WordRowsTable({
                 <td className="px-4 py-3 font-medium text-slate-950">{word.welshAnswer}</td>
                 <td className="px-4 py-3 text-slate-700">{word.dialect}</td>
                 <td className="px-4 py-3">
-                  <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={!hasPlayableAudioUrl(word.audioUrl)} onClick={event => {
-                    event.stopPropagation();
-                    logAudioPlaybackClick('admin-word-row-preview', word.audioUrl);
-                    void playAudioUrl(word.audioUrl);
-                  }} aria-label="Preview audio">
-                    <Play size={14} fill="currentColor" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={!hasPlayableAudioUrl(word.audioUrl)} onClick={event => {
+                      event.stopPropagation();
+                      logAudioPlaybackClick('admin-word-row-preview', word.audioUrl);
+                      void playAudioUrl(word.audioUrl);
+                    }} aria-label="Preview audio">
+                      <Play size={14} fill="currentColor" />
+                    </button>
+                    <AudioDownloadLink word={word} className="min-h-8 px-2 text-xs" label="Download MP3" />
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <AudioStatusPill status={word.audioStatus} />
