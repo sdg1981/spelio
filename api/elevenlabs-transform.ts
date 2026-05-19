@@ -2,7 +2,13 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
-import { extractFinalChunkFromMp3, normalizeContextExtractChunkCount } from './audioPostProcessing.js';
+import {
+  AZURE_TRANSFORM_GAIN_DB,
+  AZURE_TRANSFORM_LOUDNESS_TARGET,
+  extractFinalChunkFromMp3,
+  normalizeContextExtractChunkCount,
+  postProcessAzureTransformMp3
+} from './audioPostProcessing.js';
 
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
@@ -73,7 +79,7 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
   try {
     const fetchImpl = dependencies.fetchImpl ?? fetch;
     const transformedAudio = mode === 'azure_transform'
-      ? await transformAzureMp3WithElevenLabs(await fetchExistingAzureMp3(audioUrl, fetchImpl), config, fetchImpl)
+      ? await postProcessAzureTransformMp3(await transformAzureMp3WithElevenLabs(await fetchExistingAzureMp3(audioUrl, fetchImpl), config, fetchImpl))
       : mode === 'context_extract'
         ? await extractFinalChunkFromMp3(await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl), extractChunkCount)
         : await synthesizeWelshTextWithElevenLabs(text, config, fetchImpl);
@@ -87,6 +93,8 @@ export async function handleElevenLabsTransformRequest(request: ApiRequest, resp
     response.setHeader('X-Spelio-ElevenLabs-Extraction-Used', mode === 'context_extract' ? 'true' : 'false');
     response.setHeader('X-Spelio-ElevenLabs-Extract-Mode', mode === 'context_extract' ? 'final_chunk' : 'none');
     response.setHeader('X-Spelio-ElevenLabs-Extract-Chunk-Count', mode === 'context_extract' ? String(extractChunkCount) : '1');
+    response.setHeader('X-Spelio-Audio-Loudness-Target', mode === 'azure_transform' ? AZURE_TRANSFORM_LOUDNESS_TARGET : 'not_applicable');
+    response.setHeader('X-Spelio-Audio-Gain-Db', mode === 'azure_transform' ? String(AZURE_TRANSFORM_GAIN_DB) : '0');
     return response.status(200).send(Buffer.from(transformedAudio));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ElevenLabs transformation failed.';

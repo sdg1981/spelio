@@ -40,6 +40,8 @@ export const AUDIO_FADE_OUT_SECONDS = 0.03;
 export const AUDIO_TRAILING_SILENCE_SECONDS = 0.15;
 export const AUDIO_TRAILING_SILENCE_SAMPLES = 2400;
 export const AUDIO_LOUDNESS_FILTER = 'loudnorm=I=-20:TP=-3:LRA=13:linear=true';
+export const AZURE_TRANSFORM_LOUDNESS_TARGET = 'I=-16:TP=-1.5:LRA=9:linear=true';
+export const AZURE_TRANSFORM_GAIN_DB = 2;
 export const FINAL_MP3_BITRATE = '32k';
 export const FINAL_MP3_SAMPLE_RATE = '16000';
 export const CONTEXT_EXTRACTION_FALLBACK_SECONDS_BY_CHUNK_COUNT: Record<1 | 2 | 3, number> = {
@@ -76,6 +78,40 @@ export function createFfmpegPostProcessingArgs(inputPath: string, outputPath: st
     inputPath,
     '-af',
     createAudioPostProcessingFilter(),
+    '-codec:a',
+    'libmp3lame',
+    '-b:a',
+    FINAL_MP3_BITRATE,
+    '-ar',
+    FINAL_MP3_SAMPLE_RATE,
+    '-ac',
+    '1',
+    outputPath
+  ];
+}
+
+export function createAzureTransformPostProcessingFilter() {
+  return [
+    `loudnorm=${AZURE_TRANSFORM_LOUDNESS_TARGET}`,
+    `volume=${AZURE_TRANSFORM_GAIN_DB}dB`,
+    'alimiter=limit=0.95',
+    'areverse',
+    `afade=t=in:d=${AUDIO_FADE_OUT_SECONDS}`,
+    'areverse',
+    `apad=pad_len=${AUDIO_TRAILING_SILENCE_SAMPLES}`
+  ].join(',');
+}
+
+export function createAzureTransformPostProcessingArgs(inputPath: string, outputPath: string) {
+  return [
+    '-y',
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-i',
+    inputPath,
+    '-af',
+    createAzureTransformPostProcessingFilter(),
     '-codec:a',
     'libmp3lame',
     '-b:a',
@@ -143,6 +179,34 @@ export async function postProcessAzureWavToMp3(wavAudio: ArrayBuffer | Uint8Arra
     await tools.fs.rm(tempDir, { recursive: true, force: true }).catch(error => {
       const message = error instanceof Error ? error.message : String(error);
       console.error('Audio temp cleanup failed', { error: message });
+    });
+  }
+}
+
+export async function postProcessAzureTransformMp3(mp3Audio: ArrayBuffer | Uint8Array) {
+  const tools = await loadNodeAudioTools();
+  const tempDir = await tools.fs.mkdtemp(tools.path.join(tools.os.tmpdir(), 'spelio-azure-transform-audio-'));
+  const inputPath = tools.path.join(tempDir, 'azure-transform-source.mp3');
+  const outputPath = tools.path.join(tempDir, 'matched-loudness.mp3');
+
+  try {
+    await tools.fs.writeFile(inputPath, toUint8Array(mp3Audio));
+    await runFfmpeg(tools.spawn, tools.ffmpegPath, createAzureTransformPostProcessingArgs(inputPath, outputPath));
+
+    const processedAudio = await tools.fs.readFile(outputPath);
+    if (processedAudio.byteLength < AUDIO_POST_PROCESSING_MIN_BYTES) {
+      throw new Error('Azure-transform post-processed audio payload was unexpectedly small.');
+    }
+
+    return processedAudio;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown Azure-transform audio processing error.';
+    console.error('Azure-transform audio post-processing failed', { error: message });
+    throw new Error(`Azure-transform audio post-processing failed: ${message}`);
+  } finally {
+    await tools.fs.rm(tempDir, { recursive: true, force: true }).catch(error => {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Azure-transform audio temp cleanup failed', { error: message });
     });
   }
 }
