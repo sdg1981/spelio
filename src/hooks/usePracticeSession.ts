@@ -128,13 +128,16 @@ export function usePracticeSession({
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   t?: Translate;
 }) {
+  // A practice run must keep the word queue it started with. Storage and content can
+  // update while the learner is on the final word; rebuilding here can replace the
+  // completed queue with an empty one before the end-screen transition runs.
   const session = useMemo(
     () => createPracticeSession(lists, sessionStorage, reviewDifficult, includeRecapDue),
-    [lists, sessionKey, sessionStorage, reviewDifficult, includeRecapDue]
+    [sessionKey]
   );
   const recapWord = useMemo(
     () => disableQuickRecap ? null : selectPreSessionRecapWord(sessionStorage, lists, session.words, reviewDifficult || includeRecapDue),
-    [disableQuickRecap, lists, sessionKey, reviewDifficult, includeRecapDue, session.words, sessionStorage]
+    [sessionKey]
   );
   const sessionIdentity = `${recapWord?.id ?? ''}:${session.words.map(word => word.id).join('|')}`;
   const [currentIndex, setCurrentIndex] = useState(0);
