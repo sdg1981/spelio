@@ -7,16 +7,24 @@ import { AdminButton } from './primitives';
 export function AdminAudioControls({
   word,
   source,
-  className = ''
+  className = '',
+  azurePreviewCacheKey,
+  elevenLabsPreviewCacheKey,
+  showDiagnostics = false
 }: {
   word: AdminWord;
   source: string;
   className?: string;
+  azurePreviewCacheKey?: string;
+  elevenLabsPreviewCacheKey?: string;
+  showDiagnostics?: boolean;
 }) {
   const hasAzureAudio = hasPlayableAudioUrl(word.audioUrl);
   const hasElevenLabsAudio = hasPlayableAudioUrl(word.elevenLabsAudioUrl);
-  const azurePreviewUrl = withAdminPreviewCacheBust(word.audioUrl, word.updatedAt);
-  const elevenLabsPreviewUrl = withAdminPreviewCacheBust(word.elevenLabsAudioUrl, word.elevenLabsGeneratedAt || word.updatedAt);
+  const azureCacheKey = azurePreviewCacheKey || word.updatedAt;
+  const elevenLabsCacheKey = elevenLabsPreviewCacheKey || word.elevenLabsGeneratedAt || word.updatedAt;
+  const azurePreviewUrl = withAdminPreviewCacheBust(word.audioUrl, azureCacheKey);
+  const elevenLabsPreviewUrl = withAdminPreviewCacheBust(word.elevenLabsAudioUrl, elevenLabsCacheKey);
 
   return (
     <div className={`grid gap-2 ${className}`}>
@@ -42,6 +50,12 @@ export function AdminAudioControls({
           </>
         )}
       </div>
+      {showDiagnostics && (
+        <div className="max-w-xl text-xs leading-5 text-slate-500">
+          <div><span className="font-bold text-slate-600">Azure preview:</span> {hasAzureAudio ? 'available' : 'missing'} · cache {azureCacheKey || 'none'}</div>
+          <div><span className="font-bold text-slate-600">ElevenLabs preview:</span> {hasElevenLabsAudio ? word.elevenLabsGenerationMode : 'missing'} · cache {elevenLabsCacheKey || 'none'}</div>
+        </div>
+      )}
     </div>
   );
 }

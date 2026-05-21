@@ -18,6 +18,8 @@ export function WordEditorPanel({
   onRetryAudio,
   audioBusy,
   elevenLabsAudioBusy,
+  azurePreviewCacheKey,
+  elevenLabsPreviewCacheKey,
   variant = 'panel'
 }: {
   word: AdminWord;
@@ -30,6 +32,8 @@ export function WordEditorPanel({
   onRetryAudio: (word: AdminWord) => void;
   audioBusy?: boolean;
   elevenLabsAudioBusy?: boolean;
+  azurePreviewCacheKey?: string;
+  elevenLabsPreviewCacheKey?: string;
   variant?: 'panel' | 'page';
 }) {
   const [basicOpen, setBasicOpen] = useState(true);
@@ -105,7 +109,7 @@ export function WordEditorPanel({
           </div>
           <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
           <div className="flex flex-wrap gap-2">
-            <AdminAudioControls word={word} source="admin-word-editor" />
+            <AdminAudioControls word={word} source="admin-word-editor" azurePreviewCacheKey={azurePreviewCacheKey} elevenLabsPreviewCacheKey={elevenLabsPreviewCacheKey} showDiagnostics={variant === 'page'} />
             <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
               {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
               {audioBusy ? generatingAudioLabel : generateAudioLabel}
@@ -277,7 +281,7 @@ export function WordEditorPanel({
         </div>
         <p className="mb-4 text-sm text-slate-500">{hasAudioPreview ? 'Audio file is linked for this word.' : 'No playable audio file for this word yet.'}</p>
         <div className="flex flex-wrap gap-2">
-          <AdminAudioControls word={word} source="admin-word-editor" />
+          <AdminAudioControls word={word} source="admin-word-editor" azurePreviewCacheKey={azurePreviewCacheKey} elevenLabsPreviewCacheKey={elevenLabsPreviewCacheKey} />
           <AdminButton variant="primary" onClick={() => onGenerateAudio(word)} disabled={audioBusy} aria-disabled={audioBusy}>
             {audioBusy ? <AdminSpinner /> : <Wand2 size={15} />}
             {audioBusy ? generatingAudioLabel : generateAudioLabel}

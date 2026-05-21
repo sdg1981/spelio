@@ -16,6 +16,8 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
   const [saving, setSaving] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
   const [elevenLabsAudioBusy, setElevenLabsAudioBusy] = useState(false);
+  const [azurePreviewCacheKey, setAzurePreviewCacheKey] = useState('');
+  const [elevenLabsPreviewCacheKey, setElevenLabsPreviewCacheKey] = useState('');
   const audioBusyRef = useRef(false);
   const elevenLabsAudioBusyRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -30,6 +32,8 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
     setWord(null);
     setSource(null);
     setList(null);
+    setAzurePreviewCacheKey('');
+    setElevenLabsPreviewCacheKey('');
 
     repository.getWord(id)
       .then(async nextWord => {
@@ -109,6 +113,7 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
       setStatusMessage('');
       const result = await repository.generateAudioForWord(target.id);
       await refreshWord(target.id);
+      if (result.ok) setAzurePreviewCacheKey(createPreviewCacheKey('azure'));
       setStatusMessage(result.ok ? 'Audio generated.' : result.error ?? 'Audio generation failed.');
     } catch (error) {
       setErrorMessage(readError(error, 'Audio generation failed.'));
@@ -133,6 +138,7 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
       const result = await repository.generateElevenLabsAudioForWord(target.id, mode);
       await refreshWord(target.id);
       if (result.ok) {
+        setElevenLabsPreviewCacheKey(createPreviewCacheKey(mode));
         setStatusMessage(
           mode === 'azure_transform'
             ? 'ElevenLabs audio generated using Azure pronunciation.'
@@ -209,6 +215,8 @@ export function WordEditPage({ id, navigate, repository }: { id: string; navigat
           onRetryAudio={generateWordAudio}
           audioBusy={audioBusy}
           elevenLabsAudioBusy={elevenLabsAudioBusy}
+          azurePreviewCacheKey={azurePreviewCacheKey}
+          elevenLabsPreviewCacheKey={elevenLabsPreviewCacheKey}
           variant="page"
         />
         <aside className="grid gap-4 xl:sticky xl:top-8">
@@ -256,4 +264,8 @@ function ContextItem({ label, value }: { label: string; value: string }) {
 
 function readError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function createPreviewCacheKey(source: string) {
+  return `${source}-${Date.now()}`;
 }
