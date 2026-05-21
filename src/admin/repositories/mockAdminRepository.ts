@@ -3,6 +3,7 @@ import type { AdminFocusFilters } from './filters';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
+import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
 
@@ -315,6 +316,23 @@ export const mockAdminRepository: AdminRepository = {
 
   async validateImport(payload: unknown): Promise<ImportValidationResult> {
     return this.previewImport(payload);
+  },
+
+  async exportContent() {
+    const [exportCollections, exportLists, stages, focusCategories, dialects] = await Promise.all([
+      this.listCollections(),
+      this.listWordLists(),
+      this.listStages(),
+      this.listFocusCategories(),
+      this.listDialects()
+    ]);
+    return buildAdminContentExportPayload({
+      collections: exportCollections,
+      lists: exportLists,
+      stages,
+      focusCategories,
+      dialects
+    });
   },
 
   async listStages() {

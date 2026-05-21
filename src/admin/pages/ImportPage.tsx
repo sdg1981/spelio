@@ -1,10 +1,11 @@
-import { AlertTriangle, CheckCircle2, FileJson } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Download, FileJson } from 'lucide-react';
 import { useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { ImportDropzone } from '../components/ImportDropzone';
 import { AdminButton, AdminCard, AdminTextarea } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
+import { createAdminContentExportFilename } from '../repositories/contentExport';
 import type { ImportContentResult, ImportValidationResult } from '../types';
 
 const sampleJson = `{
@@ -43,6 +44,8 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
 
   async function validate() {
     // TODO: Call a protected server/API route for production import validation and import writes.
@@ -71,6 +74,22 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
     }
   }
 
+  async function exportContent() {
+    try {
+      setIsExporting(true);
+      setErrorMessage('');
+      setExportMessage('');
+      const payload = await repository.exportContent();
+      const filename = createAdminContentExportFilename(payload.exportedAt);
+      downloadJson(filename, JSON.stringify(payload, null, 2));
+      setExportMessage(`Downloaded ${filename}`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Export failed.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   function handleFileText(text: string) {
     setJson(text);
     setValidated(false);
@@ -81,8 +100,8 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
   return (
     <>
       <AdminPageHeader
-        title="Import"
-        description="Validate Spelio word-list JSON, preview the dry run, then explicitly import create/update-only content."
+        title="Import / Export"
+        description="Validate Spelio word-list JSON for imports, or export the current live database content as a canonical dataset snapshot."
         actions={<AdminButton variant="primary" onClick={validate} disabled={isValidating}>{isValidating ? 'Validating...' : 'Validate / Preview'}</AdminButton>}
       />
       {errorMessage && <div className="mb-5 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errorMessage}</div>}
@@ -109,6 +128,19 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
           </AdminCard>
         </div>
         <div className="grid gap-6 self-start">
+          <AdminCard className="p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <Download size={20} className="text-slate-700" />
+              <h2 className="text-lg font-black tracking-[-0.02em]">Export live content</h2>
+            </div>
+            <p className="mb-4 text-sm leading-6 text-slate-500">
+              Downloads collections, lists, words, ordering, dialect metadata, notes, slugs, active flags, structure metadata, and lightweight audio URL/status fields from the current admin database.
+            </p>
+            <AdminButton className="w-full" variant="secondary" onClick={exportContent} disabled={isExporting}>
+              {isExporting ? 'Exporting...' : 'Download live JSON export'}
+            </AdminButton>
+            {exportMessage && <div className="mt-4 rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">{exportMessage}</div>}
+          </AdminCard>
           <AdminCard className="p-5">
             <h2 className="text-lg font-black tracking-[-0.02em]">Validation preview</h2>
             {validated && (
@@ -176,6 +208,18 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
       </div>
     </>
   );
+}
+
+function downloadJson(filename: string, json: string) {
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function PreviewRow({ label, value, tone = 'slate' }: { label: string; value: number; tone?: 'red' | 'amber' | 'slate' }) {

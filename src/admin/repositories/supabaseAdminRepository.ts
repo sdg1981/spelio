@@ -4,6 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
+import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 
@@ -523,6 +524,17 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async validateImport(payload: unknown): Promise<ImportValidationResult> {
     return this.previewImport(payload);
+  },
+
+  async exportContent() {
+    const [collections, lists, stages, focusCategories, dialects] = await Promise.all([
+      this.listCollections(),
+      this.listWordLists(),
+      this.listStages(),
+      this.listFocusCategories(),
+      this.listDialects()
+    ]);
+    return buildAdminContentExportPayload({ collections, lists, stages, focusCategories, dialects });
   },
 
   async listStages() {

@@ -1,6 +1,7 @@
 import type { AdminFocusFilters } from './filters';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
 import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
+import type { AdminContentExportPayload } from './contentExport';
 
 export interface AdminWordWithListName extends AdminWord {
   listName: string;
@@ -57,6 +58,7 @@ export interface AdminRepository {
   previewImport(payload: unknown): Promise<ImportValidationResult>;
   importContent(payload: unknown): Promise<ImportContentResult>;
   validateImport(payload: unknown): Promise<ImportValidationResult>;
+  exportContent(): Promise<AdminContentExportPayload>;
   listStages(): Promise<AdminStructureOption[]>;
   listFocusCategories(): Promise<AdminStructureOption[]>;
   listDialects(): Promise<AdminStructureOption[]>;
