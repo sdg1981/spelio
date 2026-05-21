@@ -1,5 +1,6 @@
 import type { AdminFocusFilters } from './filters';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
+import type { InterfaceAudioClip } from '../../lib/interfaceAudio';
 import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
 
 export interface AdminWordWithListName extends AdminWord {
@@ -21,6 +22,7 @@ export interface AdminCustomWordListSummary {
 
 export interface AdminAudioSettings {
   defaultAudioProvider: DefaultAudioProvider;
+  interfaceAudioClips: InterfaceAudioClip[];
 }
 
 export interface AdminRepository {

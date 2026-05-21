@@ -292,6 +292,10 @@
   display:none;
 }
 
+.keyboard-shortcut-hint-shell{
+  display:none;
+}
+
 .keyboard-shortcut-item{
   display:inline-flex;
   align-items:center;
@@ -315,6 +319,36 @@
   .keyboard-shortcut-hint svg{
     flex:0 0 auto;
     color:#a2abb4;
+  }
+
+  .keyboard-shortcut-hint-shell{
+    display:flex;
+    justify-content:center;
+    min-height:28px;
+    margin-top:8px;
+  }
+
+  .keyboard-shortcut-hint.contextual-assist-hint{
+    margin-top:0;
+    opacity:0;
+    color:#9aa3ad;
+    font-size:12px;
+    font-weight:500;
+    transform:translateY(2px);
+    transition:opacity .28s ease-out,transform .28s ease-out;
+    pointer-events:none;
+  }
+
+  .keyboard-shortcut-hint.contextual-assist-hint.visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .keyboard-shortcut-hint.contextual-assist-hint{
+    transition:none;
+    transform:none;
   }
 }
 

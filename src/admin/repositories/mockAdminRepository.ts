@@ -5,10 +5,14 @@ import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListColle
 import { validateImportPayload } from './importValidation';
 import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
+import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips } from '../../lib/interfaceAudio';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
-let audioSettings: AdminAudioSettings = { defaultAudioProvider: 'azure' };
+let audioSettings: AdminAudioSettings = {
+  defaultAudioProvider: 'azure',
+  interfaceAudioClips: createDefaultInterfaceAudioClips()
+};
 
 function cloneList(list: AdminWordList): AdminWordList {
   return { ...list, words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] })) };
@@ -227,7 +231,10 @@ export const mockAdminRepository: AdminRepository = {
   },
 
   async saveAudioSettings(settings: AdminAudioSettings) {
-    audioSettings = { defaultAudioProvider: settings.defaultAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'azure' };
+    audioSettings = {
+      defaultAudioProvider: settings.defaultAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'azure',
+      interfaceAudioClips: normalizeInterfaceAudioClips(settings.interfaceAudioClips)
+    };
     return { ...audioSettings };
   },
 

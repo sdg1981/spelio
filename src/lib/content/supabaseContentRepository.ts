@@ -11,6 +11,7 @@ import {
 } from '../../data/wordLists';
 import type { PublicContent } from './staticContentRepository';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../audioProvider';
+import { createInterfaceAudioRegistry, normalizeInterfaceAudioClips } from '../interfaceAudio';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -252,7 +253,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
 export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const client = requireSupabase();
 
-  const [collectionsResult, initialListsResult, wordsResult, audioProviderResult] = await Promise.all([
+  const [collectionsResult, initialListsResult, wordsResult, audioProviderResult, interfaceAudioResult] = await Promise.all([
     client
       .from('word_list_collections')
       .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
@@ -271,12 +272,18 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .from('admin_settings')
       .select('value')
       .eq('key', 'default_audio_provider')
+      .maybeSingle(),
+    client
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'interface_audio_clips')
       .maybeSingle()
   ]);
 
   if (collectionsResult.error) throw collectionsResult.error;
   if (wordsResult.error) throw wordsResult.error;
   if (audioProviderResult.error) throw audioProviderResult.error;
+  if (interfaceAudioResult.error) throw interfaceAudioResult.error;
 
   let listsData: unknown[] | null = initialListsResult.data;
   if (initialListsResult.error) {
@@ -318,7 +325,8 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
   return {
     lists,
     source: 'supabase',
-    defaultAudioProvider: readDefaultAudioProvider(audioProviderResult.data?.value)
+    defaultAudioProvider: readDefaultAudioProvider(audioProviderResult.data?.value),
+    interfaceAudioClips: createInterfaceAudioRegistry(normalizeInterfaceAudioClips(interfaceAudioResult.data?.value))
   };
 }
 

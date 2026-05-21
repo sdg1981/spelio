@@ -77,6 +77,7 @@ Lightweight behavioural guidance:
 - If a learner repeatedly uses Reveal quickly, the app may gently encourage another listen first.
 - Guidance should be non-intrusive and should use existing quiet UI areas where possible.
 - Do not add modal warnings, punitive systems, forced listening gates, or friction-heavy anti-reveal behaviour.
+- The same contextual audio-guidance pattern may later support carefully throttled sound-pattern guidance, such as CH/K confusion, but this should require stronger evidence than a single mobile typo and should remain audio-first, rare, and non-intrusive.
 
 Future AI / TTS direction:
 

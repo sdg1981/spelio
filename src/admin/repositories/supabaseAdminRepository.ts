@@ -6,6 +6,7 @@ import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
+import { normalizeInterfaceAudioClips } from '../../lib/interfaceAudio';
 
 type CustomWordListRow = {
   id: string;
@@ -398,21 +399,40 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async getAudioSettings() {
     const client = requireSupabase();
-    const { data, error } = await client.from('admin_settings').select('value').eq('key', 'default_audio_provider').maybeSingle();
-    if (error) throw error;
-    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+    const [providerResult, interfaceAudioResult] = await Promise.all([
+      client.from('admin_settings').select('value').eq('key', 'default_audio_provider').maybeSingle(),
+      client.from('admin_settings').select('value').eq('key', 'interface_audio_clips').maybeSingle()
+    ]);
+    if (providerResult.error) throw providerResult.error;
+    if (interfaceAudioResult.error) throw interfaceAudioResult.error;
+    return {
+      defaultAudioProvider: readDefaultAudioProvider(providerResult.data?.value),
+      interfaceAudioClips: normalizeInterfaceAudioClips(interfaceAudioResult.data?.value)
+    };
   },
 
   async saveAudioSettings(settings) {
     const client = requireSupabase();
     const defaultAudioProvider = normalizeDefaultAudioProvider(settings.defaultAudioProvider);
-    const { data, error } = await client
-      .from('admin_settings')
-      .upsert({ key: 'default_audio_provider', value: { provider: defaultAudioProvider } }, { onConflict: 'key' })
-      .select('value')
-      .single();
-    if (error) throw error;
-    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+    const interfaceAudioClips = normalizeInterfaceAudioClips(settings.interfaceAudioClips);
+    const [providerResult, interfaceAudioResult] = await Promise.all([
+      client
+        .from('admin_settings')
+        .upsert({ key: 'default_audio_provider', value: { provider: defaultAudioProvider } }, { onConflict: 'key' })
+        .select('value')
+        .single(),
+      client
+        .from('admin_settings')
+        .upsert({ key: 'interface_audio_clips', value: { clips: interfaceAudioClips } }, { onConflict: 'key' })
+        .select('value')
+        .single()
+    ]);
+    if (providerResult.error) throw providerResult.error;
+    if (interfaceAudioResult.error) throw interfaceAudioResult.error;
+    return {
+      defaultAudioProvider: readDefaultAudioProvider(providerResult.data?.value),
+      interfaceAudioClips: normalizeInterfaceAudioClips(interfaceAudioResult.data?.value)
+    };
   },
 
   async listCustomWordLists() {
