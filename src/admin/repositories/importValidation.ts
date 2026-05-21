@@ -67,7 +67,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
         errors.push(`Collection ${index + 1} must be an object.`);
         return;
       }
-      const id = stringValue(collection.id);
+      const id = stringField(collection, 'id');
       if (!id) {
         errors.push(`Collection ${index + 1} is missing id.`);
         return;
@@ -86,7 +86,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       return;
     }
 
-    const listId = stringValue(list.id);
+    const listId = stringField(list, 'id');
     if (!listId) errors.push(`List ${listIndex + 1} is missing id.`);
     else if (listIds.has(listId)) duplicateListIds.add(listId);
     else listIds.add(listId);
@@ -94,37 +94,37 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
 
   rawLists.forEach((list, listIndex) => {
     if (!isRecord(list)) return;
-    const listLabel = stringValue(list.id) || `#${listIndex + 1}`;
-    const listId = stringValue(list.id);
+    const listLabel = stringField(list, 'id') || `#${listIndex + 1}`;
+    const listId = stringField(list, 'id');
     const listDifficulty = normalizeDifficulty(list.difficulty, 1);
-    const sourceLanguage = stringValue(list.sourceLanguage) || 'en';
-    const targetLanguage = stringValue(list.targetLanguage) || 'cy';
-    const language = stringValue(list.language) || targetLanguage || 'cy';
-    const rawCollectionId = stringValue(list.collectionId);
+    const sourceLanguage = stringField(list, 'sourceLanguage', 'source_language') || 'en';
+    const targetLanguage = stringField(list, 'targetLanguage', 'target_language') || 'cy';
+    const language = stringField(list, 'language') || targetLanguage || 'cy';
+    const rawCollectionId = stringField(list, 'collectionId', 'collection_id');
     const collectionId = rawCollectionId || DEFAULT_COLLECTION_ID;
-    const listDialect = stringValue(list.dialect) || 'Mixed';
+    const listDialect = stringField(list, 'dialect') || 'Mixed';
 
     if (!listId) return;
-    if (!stringValue(list.name)) errors.push(`List ${listLabel} is missing name.`);
-    if (stringValue(list.slug) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stringValue(list.slug))) {
-      errors.push(`List ${listLabel} has invalid slug "${stringValue(list.slug)}".`);
+    if (!stringField(list, 'name')) errors.push(`List ${listLabel} is missing name.`);
+    if (stringField(list, 'slug') && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(stringField(list, 'slug'))) {
+      errors.push(`List ${listLabel} has invalid slug "${stringField(list, 'slug')}".`);
     }
     if (list.difficulty !== undefined && !validDifficulty(list.difficulty)) errors.push(`List ${listLabel} has invalid difficulty.`);
-    if (list.order !== undefined && !validOrder(list.order)) errors.push(`List ${listLabel} has invalid order.`);
-    if (list.isActive !== undefined && typeof list.isActive !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
-    if (list.hiddenFromMainCatalogue !== undefined && typeof list.hiddenFromMainCatalogue !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
-    if (stringValue(list.listType) && !validListTypes.has(stringValue(list.listType))) errors.push(`List ${listLabel} has invalid listType "${stringValue(list.listType)}".`);
+    if (hasField(list, 'order', 'order_index') && !validOrder(fieldValue(list, 'order', 'order_index'))) errors.push(`List ${listLabel} has invalid order.`);
+    if (hasField(list, 'isActive', 'is_active') && typeof fieldValue(list, 'isActive', 'is_active') !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
+    if (hasField(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') && typeof fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
+    if (stringField(list, 'listType', 'list_type') && !validListTypes.has(stringField(list, 'listType', 'list_type'))) errors.push(`List ${listLabel} has invalid listType "${stringField(list, 'listType', 'list_type')}".`);
     if (!validLanguage(sourceLanguage)) errors.push(`List ${listLabel} has malformed sourceLanguage "${sourceLanguage}".`);
     if (!validLanguage(targetLanguage)) errors.push(`List ${listLabel} has malformed targetLanguage "${targetLanguage}".`);
     if (!validLanguage(language)) warnings.push(`List ${listLabel} has unusual language "${language}".`);
-    if (stringValue(list.dialect) && !validDialects.has(listDialect)) errors.push(`List ${listLabel} has invalid dialect "${listDialect}".`);
+    if (stringField(list, 'dialect') && !validDialects.has(listDialect)) errors.push(`List ${listLabel} has invalid dialect "${listDialect}".`);
     if (rawCollectionId && !collectionIds.has(rawCollectionId)) {
       errors.push(`List ${listLabel} references collectionId "${rawCollectionId}", but that collection does not exist in the admin store or this import.`);
     }
     if (!rawCollectionId) importCollectionIds.add(DEFAULT_COLLECTION_ID);
     else importCollectionIds.add(rawCollectionId);
 
-    const nextListId = stringValue(list.nextListId);
+    const nextListId = stringField(list, 'nextListId', 'next_list_id');
     if (nextListId && !listIds.has(nextListId) && !existingListIds.has(nextListId)) {
       warnings.push(`List ${listLabel} nextListId "${nextListId}" does not match an imported or existing list.`);
     }
@@ -137,28 +137,28 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     const pairKeys = new Set<string>();
     const normalizedList: AdminWordList = {
       id: listId,
-      slug: stringValue(list.slug) || slug(stringValue(list.name) || listId),
+      slug: stringField(list, 'slug') || slug(stringField(list, 'name') || listId),
       collectionId,
       collectionName: collectionName(collectionInputs.get(collectionId), collectionId),
-      name: stringValue(list.name),
-      nameCy: stringValue(list.nameCy),
-      description: stringValue(list.description),
-      descriptionCy: stringValue(list.descriptionCy),
+      name: stringField(list, 'name'),
+      nameCy: stringField(list, 'nameCy', 'name_cy'),
+      description: stringField(list, 'description'),
+      descriptionCy: stringField(list, 'descriptionCy', 'description_cy'),
       language,
       sourceLanguage,
       targetLanguage,
       dialect: listDialect as AdminWordList['dialect'],
-      stageId: slug(stringValue(list.stage)),
-      stage: stringValue(list.stage),
-      focusCategoryId: slug(stringValue(list.focus)),
-      focus: stringValue(list.focus),
+      stageId: stringField(list, 'stageId', 'stage_id') || slug(stringField(list, 'stage')),
+      stage: stringField(list, 'stage') || stringField(list, 'stageId', 'stage_id'),
+      focusCategoryId: stringField(list, 'focusCategoryId', 'focus_category_id') || slug(stringField(list, 'focus')),
+      focus: stringField(list, 'focus') || stringField(list, 'focusCategoryId', 'focus_category_id'),
       difficulty: listDifficulty as AdminWordList['difficulty'],
-      order: numberValue(list.order, listIndex + 1),
+      order: numberField(list, listIndex + 1, 'order', 'order_index'),
       nextListId: nextListId || null,
-      isActive: typeof list.isActive === 'boolean' ? list.isActive : true,
-      isSupportList: stringValue(list.listType) === 'support' || list.isSupportList === true || list.hiddenFromMainCatalogue === true,
-      listType: stringValue(list.listType) === 'support' || list.isSupportList === true ? 'support' : 'main',
-      hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || stringValue(list.listType) === 'support' || list.isSupportList === true,
+      isActive: typeof fieldValue(list, 'isActive', 'is_active') === 'boolean' ? fieldValue(list, 'isActive', 'is_active') as boolean : true,
+      isSupportList: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true || fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true,
+      listType: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true ? 'support' : 'main',
+      hiddenFromMainCatalogue: fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true || stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true,
       createdAt: now,
       updatedAt: now,
       words: []
@@ -228,7 +228,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
 
   return {
     collections: content.collections.length,
-    defaultedCollections: rawLists.filter(list => isRecord(list) && !stringValue(list.collectionId)).length ? 1 : 0,
+    defaultedCollections: rawLists.filter(list => isRecord(list) && !stringField(list, 'collectionId', 'collection_id')).length ? 1 : 0,
     totalLists: content.lists.length,
     newLists: uniqueListIds.filter(id => !existingListIds.has(id)).length,
     updatedLists: uniqueListIds.filter(id => existingListIds.has(id)).length,
@@ -244,17 +244,17 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
 }
 
 function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, errors: string[], warnings: string[], now: string): AdminWord | null {
-  const wordId = stringValue(word.id);
+  const wordId = stringField(word, 'id');
   const label = wordId || `#${wordIndex + 1} in list ${list.id}`;
-  const englishPrompt = stringValue(word.englishPrompt) || stringValue(word.prompt);
-  const welshAnswer = stringValue(word.welshAnswer) || stringValue(word.answer);
-  const audioStatus = stringValue(word.audioStatus) || 'missing';
-  const elevenLabsAudioStatus = stringValue(word.elevenLabsAudioStatus) || 'missing';
-  const elevenLabsGenerationMode = stringValue(word.elevenLabsGenerationMode) || 'direct';
-  const preferredElevenLabsGenerationMode = stringValue(word.preferredElevenLabsGenerationMode) || 'direct';
-  const audioReviewStatus = stringValue(word.audioReviewStatus) || 'unchecked';
-  const dialect = stringValue(word.dialect) || 'Both';
-  const listId = stringValue(word.listId);
+  const englishPrompt = stringField(word, 'englishPrompt', 'english_prompt') || stringField(word, 'prompt');
+  const welshAnswer = stringField(word, 'welshAnswer', 'welsh_answer') || stringField(word, 'answer');
+  const audioStatus = stringField(word, 'audioStatus', 'audio_status') || 'missing';
+  const elevenLabsAudioStatus = stringField(word, 'elevenLabsAudioStatus', 'elevenlabs_audio_status') || 'missing';
+  const elevenLabsGenerationMode = stringField(word, 'elevenLabsGenerationMode', 'elevenlabs_generation_mode') || 'direct';
+  const preferredElevenLabsGenerationMode = stringField(word, 'preferredElevenLabsGenerationMode', 'preferred_elevenlabs_generation_mode') || 'direct';
+  const audioReviewStatus = stringField(word, 'audioReviewStatus', 'audio_review_status') || 'unchecked';
+  const dialect = stringField(word, 'dialect') || 'Both';
+  const listId = stringField(word, 'listId', 'list_id');
 
   if (!wordId) errors.push(`Word ${wordIndex + 1} in list ${list.id} is missing id.`);
   if (!englishPrompt) errors.push(`Word ${label} is missing prompt/englishPrompt.`);
@@ -266,25 +266,26 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
   if (!validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode)) errors.push(`Word ${label} has invalid elevenLabsGenerationMode "${elevenLabsGenerationMode}".`);
   if (!validPreferredElevenLabsGenerationModes.has(preferredElevenLabsGenerationMode as ElevenLabsGenerationMode)) errors.push(`Word ${label} has invalid preferredElevenLabsGenerationMode "${preferredElevenLabsGenerationMode}".`);
   if (!validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) errors.push(`Word ${label} has invalid audioReviewStatus "${audioReviewStatus}".`);
-  if (stringValue(word.dialect) && !validWordDialects.has(dialect)) errors.push(`Word ${label} has invalid dialect "${dialect}".`);
+  if (stringField(word, 'dialect') && !validWordDialects.has(dialect)) errors.push(`Word ${label} has invalid dialect "${dialect}".`);
   if (word.difficulty !== undefined && !validDifficulty(word.difficulty)) errors.push(`Word ${label} has invalid difficulty.`);
-  if (word.order !== undefined && !validOrder(word.order)) errors.push(`Word ${label} has invalid order.`);
-  if (word.variantGroupId !== undefined && word.variantGroupId !== null && typeof word.variantGroupId !== 'string') {
+  if (hasField(word, 'order', 'order_index') && !validOrder(fieldValue(word, 'order', 'order_index'))) errors.push(`Word ${label} has invalid order.`);
+  if (hasField(word, 'variantGroupId', 'variant_group_id') && fieldValue(word, 'variantGroupId', 'variant_group_id') !== null && typeof fieldValue(word, 'variantGroupId', 'variant_group_id') !== 'string') {
     errors.push(`Word ${label} variantGroupId must be a string, empty, or null.`);
   }
-  if (word.spellingHintId !== undefined && word.spellingHintId !== null && typeof word.spellingHintId !== 'string') {
+  if (hasField(word, 'spellingHintId', 'spelling_hint_id') && fieldValue(word, 'spellingHintId', 'spelling_hint_id') !== null && typeof fieldValue(word, 'spellingHintId', 'spelling_hint_id') !== 'string') {
     errors.push(`Word ${label} spellingHintId must be a string, empty, or null.`);
   }
-  if (word.disablePatternHints !== undefined && typeof word.disablePatternHints !== 'boolean') {
+  if (hasField(word, 'disablePatternHints', 'disable_pattern_hints') && typeof fieldValue(word, 'disablePatternHints', 'disable_pattern_hints') !== 'boolean') {
     errors.push(`Word ${label} disablePatternHints must be a boolean when provided.`);
   }
   if (!wordId || !englishPrompt || !welshAnswer || !validAudioStatuses.has(audioStatus as AudioStatus) || !validElevenLabsAudioStatuses.has(elevenLabsAudioStatus as ElevenLabsAudioStatus) || !validElevenLabsGenerationModes.has(elevenLabsGenerationMode as ElevenLabsGenerationMode) || !validPreferredElevenLabsGenerationModes.has(preferredElevenLabsGenerationMode as ElevenLabsGenerationMode) || !validAudioReviewStatuses.has(audioReviewStatus as AudioReviewStatus)) return null;
 
-  const acceptedAlternatives = Array.isArray(word.acceptedAlternatives) ? word.acceptedAlternatives.map(String) : [];
-  const usageNote = stringValue(word.usageNote);
-  const dialectNote = stringValue(word.dialectNote);
+  const rawAcceptedAlternatives = fieldValue(word, 'acceptedAlternatives', 'accepted_alternatives');
+  const acceptedAlternatives = Array.isArray(rawAcceptedAlternatives) ? rawAcceptedAlternatives.map(String) : [];
+  const usageNote = stringField(word, 'usageNote', 'usage_note');
+  const dialectNote = stringField(word, 'dialectNote', 'dialect_note');
 
-  if (!stringValue(word.audioUrl) || audioStatus === 'missing') warnings.push(`Word ${label} is missing audio.`);
+  if (!stringField(word, 'audioUrl', 'audio_url') || audioStatus === 'missing') warnings.push(`Word ${label} is missing audio.`);
   if (noteContainsAnswer(usageNote, welshAnswer)) warnings.push(`Word ${label} usageNote contains the exact target answer.`);
   if (noteContainsAnswer(dialectNote, welshAnswer)) warnings.push(`Word ${label} dialectNote contains the exact target answer.`);
   if (acceptedAlternatives.some(value => Math.abs(value.length - welshAnswer.length) > 4)) {
@@ -298,36 +299,36 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     englishPrompt,
     welshAnswer,
     acceptedAlternatives,
-    audioUrl: stringValue(word.audioUrl),
+    audioUrl: stringField(word, 'audioUrl', 'audio_url'),
     audioStatus: audioStatus as AudioStatus,
-    elevenLabsAudioUrl: stringValue(word.elevenLabsAudioUrl),
+    elevenLabsAudioUrl: stringField(word, 'elevenLabsAudioUrl', 'elevenlabs_audio_url'),
     elevenLabsAudioStatus: elevenLabsAudioStatus as ElevenLabsAudioStatus,
     elevenLabsGenerationMode: elevenLabsGenerationMode as ElevenLabsGenerationMode,
     preferredElevenLabsGenerationMode: preferredElevenLabsGenerationMode as ElevenLabsGenerationMode,
-    elevenLabsPronunciationHint: stringValue(word.elevenLabsPronunciationHint),
-    elevenLabsPronunciationHintUsed: word.elevenLabsPronunciationHintUsed === true,
-    elevenLabsPronunciationHintText: stringValue(word.elevenLabsPronunciationHintText),
-    elevenLabsContextPhrase: stringValue(word.elevenLabsContextPhrase),
-    elevenLabsExtractMode: word.elevenLabsExtractMode === 'final_chunk' ? 'final_chunk' : 'none',
-    elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(word.elevenLabsExtractChunkCount),
-    elevenLabsExtractStartOffsetMs: normalizeElevenLabsExtractStartOffsetMs(word.elevenLabsExtractStartOffsetMs),
-    elevenLabsExtractionUsed: word.elevenLabsExtractionUsed === true,
-    elevenLabsContextPhraseUsed: stringValue(word.elevenLabsContextPhraseUsed),
-    elevenLabsGeneratedAt: stringValue(word.elevenLabsGeneratedAt),
-    elevenLabsModel: stringValue(word.elevenLabsModel),
-    elevenLabsVoiceId: stringValue(word.elevenLabsVoiceId),
-    elevenLabsLanguageOverride: stringValue(word.elevenLabsLanguageOverride),
-    elevenLabsPrompt: stringValue(word.elevenLabsPrompt),
+    elevenLabsPronunciationHint: stringField(word, 'elevenLabsPronunciationHint', 'elevenlabs_pronunciation_hint'),
+    elevenLabsPronunciationHintUsed: fieldValue(word, 'elevenLabsPronunciationHintUsed', 'elevenlabs_pronunciation_hint_used') === true,
+    elevenLabsPronunciationHintText: stringField(word, 'elevenLabsPronunciationHintText', 'elevenlabs_pronunciation_hint_text'),
+    elevenLabsContextPhrase: stringField(word, 'elevenLabsContextPhrase', 'elevenlabs_context_phrase'),
+    elevenLabsExtractMode: fieldValue(word, 'elevenLabsExtractMode', 'elevenlabs_extract_mode') === 'final_chunk' ? 'final_chunk' : 'none',
+    elevenLabsExtractChunkCount: normalizeElevenLabsExtractChunkCount(fieldValue(word, 'elevenLabsExtractChunkCount', 'elevenlabs_extract_chunk_count')),
+    elevenLabsExtractStartOffsetMs: normalizeElevenLabsExtractStartOffsetMs(fieldValue(word, 'elevenLabsExtractStartOffsetMs', 'elevenlabs_extract_start_offset_ms')),
+    elevenLabsExtractionUsed: fieldValue(word, 'elevenLabsExtractionUsed', 'elevenlabs_extraction_used') === true,
+    elevenLabsContextPhraseUsed: stringField(word, 'elevenLabsContextPhraseUsed', 'elevenlabs_context_phrase_used'),
+    elevenLabsGeneratedAt: stringField(word, 'elevenLabsGeneratedAt', 'elevenlabs_generated_at'),
+    elevenLabsModel: stringField(word, 'elevenLabsModel', 'elevenlabs_model'),
+    elevenLabsVoiceId: stringField(word, 'elevenLabsVoiceId', 'elevenlabs_voice_id'),
+    elevenLabsLanguageOverride: stringField(word, 'elevenLabsLanguageOverride', 'elevenlabs_language_override'),
+    elevenLabsPrompt: stringField(word, 'elevenLabsPrompt', 'elevenlabs_prompt'),
     audioReviewStatus: audioReviewStatus as AudioReviewStatus,
-    notes: stringValue(word.notes),
-    order: numberValue(word.order, wordIndex + 1),
+    notes: stringField(word, 'notes'),
+    order: numberField(word, wordIndex + 1, 'order', 'order_index'),
     difficulty: normalizeDifficulty(word.difficulty, list.difficulty),
     dialect: dialect as AdminWord['dialect'],
     dialectNote,
     usageNote,
-    spellingHintId: stringValue(word.spellingHintId),
-    disablePatternHints: word.disablePatternHints === true,
-    variantGroupId: stringValue(word.variantGroupId),
+    spellingHintId: stringField(word, 'spellingHintId', 'spelling_hint_id'),
+    disablePatternHints: fieldValue(word, 'disablePatternHints', 'disable_pattern_hints') === true,
+    variantGroupId: stringField(word, 'variantGroupId', 'variant_group_id'),
     createdAt: now,
     updatedAt: now
   };
@@ -342,35 +343,35 @@ function normalizeElevenLabsExtractStartOffsetMs(value: unknown): 80 | 140 | 220
 }
 
 function validateCollection(collection: RawCollection, id: string, errors: string[], warnings: string[]) {
-  if (!stringValue(collection.name)) errors.push(`Collection ${id} is missing name.`);
-  const type = stringValue(collection.type);
+  if (!stringField(collection, 'name')) errors.push(`Collection ${id} is missing name.`);
+  const type = stringField(collection, 'type');
   if (type && !validCollectionTypes.has(type)) errors.push(`Collection ${id} has invalid type "${type}".`);
-  const ownerType = collection.ownerType === null ? '' : stringValue(collection.ownerType);
+  const ownerType = fieldValue(collection, 'ownerType', 'owner_type') === null ? '' : stringField(collection, 'ownerType', 'owner_type');
   if (ownerType && !validOwnerTypes.has(ownerType)) errors.push(`Collection ${id} has invalid ownerType "${ownerType}".`);
-  if (collection.order !== undefined && !validOrder(collection.order)) errors.push(`Collection ${id} has invalid order.`);
-  if (collection.isActive !== undefined && typeof collection.isActive !== 'boolean') errors.push(`Collection ${id} has invalid isActive.`);
-  if (collection.sourceLanguage !== undefined && !validLanguage(stringValue(collection.sourceLanguage))) warnings.push(`Collection ${id} has unusual sourceLanguage.`);
-  if (collection.targetLanguage !== undefined && !validLanguage(stringValue(collection.targetLanguage))) warnings.push(`Collection ${id} has unusual targetLanguage.`);
+  if (hasField(collection, 'order', 'order_index') && !validOrder(fieldValue(collection, 'order', 'order_index'))) errors.push(`Collection ${id} has invalid order.`);
+  if (hasField(collection, 'isActive', 'is_active') && typeof fieldValue(collection, 'isActive', 'is_active') !== 'boolean') errors.push(`Collection ${id} has invalid isActive.`);
+  if (hasField(collection, 'sourceLanguage', 'source_language') && !validLanguage(stringField(collection, 'sourceLanguage', 'source_language'))) warnings.push(`Collection ${id} has unusual sourceLanguage.`);
+  if (hasField(collection, 'targetLanguage', 'target_language') && !validLanguage(stringField(collection, 'targetLanguage', 'target_language'))) warnings.push(`Collection ${id} has unusual targetLanguage.`);
 }
 
 function normalizeCollection(collection: RawCollection | undefined, id: string, now: string): AdminWordListCollection {
-  const sourceLanguage = stringValue(collection?.sourceLanguage) || 'en';
-  const targetLanguage = stringValue(collection?.targetLanguage) || 'cy';
+  const sourceLanguage = stringField(collection, 'sourceLanguage', 'source_language') || 'en';
+  const targetLanguage = stringField(collection, 'targetLanguage', 'target_language') || 'cy';
   const isDefault = id === DEFAULT_COLLECTION_ID;
   return {
     id,
-    slug: stringValue(collection?.slug) || slug(id),
-    name: stringValue(collection?.name) || (isDefault ? 'Spelio Core Welsh' : id),
-    description: stringValue(collection?.description) || (isDefault ? 'Core Welsh spelling practice lists for the Spelio MVP.' : ''),
-    type: (stringValue(collection?.type) || (isDefault ? 'spelio_core' : 'custom')) as AdminWordListCollection['type'],
+    slug: stringField(collection, 'slug') || slug(id),
+    name: stringField(collection, 'name') || (isDefault ? 'Spelio Core Welsh' : id),
+    description: stringField(collection, 'description') || (isDefault ? 'Core Welsh spelling practice lists for the Spelio MVP.' : ''),
+    type: (stringField(collection, 'type') || (isDefault ? 'spelio_core' : 'custom')) as AdminWordListCollection['type'],
     sourceLanguage,
     targetLanguage,
-    curriculumKeyStage: nullableString(collection?.curriculumKeyStage),
-    curriculumArea: nullableString(collection?.curriculumArea),
-    ownerType: (collection?.ownerType === null ? null : stringValue(collection?.ownerType) || (isDefault ? 'spelio' : null)) as AdminWordListCollection['ownerType'],
-    ownerId: nullableString(collection?.ownerId),
-    order: numberValue(collection?.order, isDefault ? 1 : 0),
-    isActive: typeof collection?.isActive === 'boolean' ? collection.isActive : true,
+    curriculumKeyStage: nullableString(fieldValue(collection, 'curriculumKeyStage', 'curriculum_key_stage')),
+    curriculumArea: nullableString(fieldValue(collection, 'curriculumArea', 'curriculum_area')),
+    ownerType: (fieldValue(collection, 'ownerType', 'owner_type') === null ? null : stringField(collection, 'ownerType', 'owner_type') || (isDefault ? 'spelio' : null)) as AdminWordListCollection['ownerType'],
+    ownerId: nullableString(fieldValue(collection, 'ownerId', 'owner_id')),
+    order: numberField(collection, isDefault ? 1 : 0, 'order', 'order_index'),
+    isActive: typeof fieldValue(collection, 'isActive', 'is_active') === 'boolean' ? fieldValue(collection, 'isActive', 'is_active') as boolean : true,
     createdAt: now,
     updatedAt: now
   };
@@ -410,6 +411,23 @@ function stringValue(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function fieldValue(record: RawCollection | RawList | RawWord | undefined, ...keys: string[]) {
+  if (!record) return undefined;
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(record, key)) return record[key];
+  }
+  return undefined;
+}
+
+function hasField(record: RawCollection | RawList | RawWord | undefined, ...keys: string[]) {
+  if (!record) return false;
+  return keys.some(key => Object.prototype.hasOwnProperty.call(record, key));
+}
+
+function stringField(record: RawCollection | RawList | RawWord | undefined, ...keys: string[]) {
+  return stringValue(fieldValue(record, ...keys));
+}
+
 function nullableString(value: unknown) {
   const normalized = stringValue(value);
   return normalized || null;
@@ -417,6 +435,10 @@ function nullableString(value: unknown) {
 
 function numberValue(value: unknown, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function numberField(record: RawCollection | RawList | RawWord | undefined, fallback: number, ...keys: string[]) {
+  return numberValue(fieldValue(record, ...keys), fallback);
 }
 
 function normalizeDifficulty(value: unknown, fallback: number): number {
@@ -440,7 +462,7 @@ function slug(value: string) {
 }
 
 function collectionName(collection: RawCollection | undefined, id: string) {
-  return stringValue(collection?.name) || (id === DEFAULT_COLLECTION_ID ? 'Spelio Core Welsh' : id);
+  return stringField(collection, 'name') || (id === DEFAULT_COLLECTION_ID ? 'Spelio Core Welsh' : id);
 }
 
 function noteContainsAnswer(note: string, answer: string) {

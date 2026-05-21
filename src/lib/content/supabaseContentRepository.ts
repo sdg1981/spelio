@@ -246,7 +246,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     words: words
       .map(word => mapWord(word, { ...row, source_language: sourceLanguage, target_language: targetLanguage }))
       .filter((word): word is PracticeWord => Boolean(word))
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
   };
 }
 
@@ -258,16 +258,19 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .from('word_list_collections')
       .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
       .eq('is_active', true)
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('word_lists')
       .select(WORD_LIST_SELECT_WITH_SLUG)
       .eq('is_active', true)
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('words')
       .select('*')
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('admin_settings')
       .select('value')
@@ -293,7 +296,8 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .from('word_lists')
       .select(WORD_LIST_SELECT_WITHOUT_SLUG)
       .eq('is_active', true)
-      .order('order_index', { ascending: true });
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true });
 
     if (retryListsResult.error) throw retryListsResult.error;
     listsData = retryListsResult.data;
@@ -316,7 +320,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       return mapList(list, collection, wordsByListId.get(list.id) ?? []);
     })
     .filter(list => list.words.length > 0)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 
   if (!lists.length) {
     throw new Error('Supabase returned no active public word lists.');

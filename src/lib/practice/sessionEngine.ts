@@ -311,13 +311,13 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
 
 export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
   const recapOnly = includeRecapDue && !reviewDifficult;
-  const activeListIds = new Set(lists.filter(list => list.isActive).map(list => list.id));
+  const activeListIds = new Set(lists.filter(list => list.isActive && list.words.length > 0).map(list => list.id));
   const selectedSupportListId = storage.selectedListIds.find(id => {
     const list = lists.find(item => item.id === id && activeListIds.has(id));
     return list ? isSupportWordList(list) : false;
   });
   const selectedSupportList = selectedSupportListId
-    ? lists.find(list => list.id === selectedSupportListId && list.isActive && isSupportWordList(list))
+    ? lists.find(list => list.id === selectedSupportListId && list.isActive && list.words.length > 0 && isSupportWordList(list))
     : undefined;
   const reviewLists = reviewDifficult && selectedSupportList
     ? [selectedSupportList]
@@ -326,8 +326,8 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
     ? [selectedSupportListId]
     : normalizeSingleSelectedListIds(storage.selectedListIds, reviewLists);
   const eligibleLists = reviewDifficult || recapOnly
-    ? reviewLists.filter(list => list.isActive)
-    : lists.filter(list => normalSelectedIds.includes(list.id) && list.isActive);
+    ? reviewLists.filter(list => list.isActive && list.words.length > 0)
+    : lists.filter(list => normalSelectedIds.includes(list.id) && list.isActive && list.words.length > 0);
   const allCandidates = eligibleLists.flatMap(list => list.words);
   const dialectResolvedCandidates = filterDialectVariants(
     allCandidates,

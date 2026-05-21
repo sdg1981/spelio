@@ -23,6 +23,10 @@ function asListRecommendation(list: WordList, t?: Translate, interfaceLanguage?:
   return { kind: 'list', listId: list.id, title: t ? t('home.continueLearning') : 'Continue learning', subtitle: getListDisplayName(list, interfaceLanguage) };
 }
 
+function isPracticeEligibleList(list: WordList) {
+  return list.isActive && list.words.length > 0;
+}
+
 function wasJustPractised(storage: SpelioStorage, listId: string) {
   return storage.lastSessionResult?.listIds.includes(listId) === true;
 }
@@ -49,7 +53,7 @@ export function isListFullyCompletedForRecommendation(storage: SpelioStorage, li
 }
 
 export function findNextSequentialRecommendationList(storage: SpelioStorage, lists: WordList[], current: WordList) {
-  const activeLists = mainWordLists(lists).filter(list => list.isActive);
+  const activeLists = mainWordLists(lists).filter(isPracticeEligibleList);
   const visited = new Set([current.id]);
   let nextListId = current.nextListId;
 
@@ -68,7 +72,7 @@ export function findNextSequentialRecommendationList(storage: SpelioStorage, lis
 }
 
 function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], current: WordList) {
-  const activeLists = mainWordLists(lists).filter(list => list.isActive);
+  const activeLists = mainWordLists(lists).filter(isPracticeEligibleList);
   const sequentialNext = findNextSequentialRecommendationList(storage, activeLists, current);
   if (sequentialNext) return sequentialNext;
 
@@ -111,7 +115,7 @@ export function getNormalContinuationRecommendation(storage: SpelioStorage, list
     return asListRecommendation(current, t, interfaceLanguage);
   }
 
-  const fallback = recommendationLists.find(list => list.isActive) ?? recommendationLists[0];
+  const fallback = recommendationLists.find(isPracticeEligibleList) ?? recommendationLists[0];
   return {
     kind: 'list',
     listId: fallback?.id,
