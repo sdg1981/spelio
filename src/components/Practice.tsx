@@ -28,18 +28,22 @@ import {
   createStruggleAssistAudioPlan,
   createStruggleAssistEmphasisPlan,
   createStruggleAssistPreAssistPlan,
+  createRepeatedIncorrectReplayState,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
   PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS,
   PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS,
   PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS,
   PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
+  registerRepeatedIncorrectReplayAttempt,
   registerStruggleAssistIncorrectAttempt,
+  resetRepeatedIncorrectReplayForWord,
   resetStruggleAssistForWord,
   shouldShowStruggleAssistMobileHint,
   shouldShowStruggleAssistShortcutHint,
   shouldStartStruggleAssistHelperInGesture,
   shouldWaitForStruggleAssistHelperAudio,
+  type RepeatedIncorrectReplayState,
   type StruggleAssistEmphasisTarget,
   type StruggleAssistState
 } from '../lib/practice/struggleAssist';
@@ -286,6 +290,7 @@ export function Practice({
   const struggleAssistEmphasisTimerRefs = useRef<number[]>([]);
   const struggleAssistHelperAudioRef = useRef<HTMLAudioElement | null>(null);
   const struggleAssistStateRef = useRef<StruggleAssistState>(createStruggleAssistState(null));
+  const repeatedIncorrectReplayStateRef = useRef<RepeatedIncorrectReplayState>(createRepeatedIncorrectReplayState(null));
   const struggleAssistSeenRef = useRef(hasSeenPracticeStruggleAssist(typeof window === 'undefined' ? null : window.localStorage));
   const struggleAssistFallbackShownWordIdRef = useRef<string | null>(null);
   const pendingStruggleAssistHelperWordIdRef = useRef<string | null>(null);
@@ -536,6 +541,21 @@ export function Practice({
     });
     struggleAssistStateRef.current = assistResult.state;
     const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
+    const struggleAssistClip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
+    const struggleAssistHelperAudioAvailable = Boolean(getPlayableInterfaceAudioUrl(struggleAssistClip));
+    const suppressReplayForHelperAudio =
+      assistResult.shouldTrigger &&
+      storage.settings.audioPrompts &&
+      struggleAssistHelperAudioAvailable;
+    const replayResult = registerRepeatedIncorrectReplayAttempt({
+      state: repeatedIncorrectReplayStateRef.current,
+      wordId: currentWord.id,
+      audioPrompts: storage.settings.audioPrompts,
+      audioAvailable: !currentWordAudioUnavailable,
+      practiceTestMode,
+      suppressForHelperAudio: suppressReplayForHelperAudio
+    });
+    repeatedIncorrectReplayStateRef.current = replayResult.state;
     const preAssistPlan = createStruggleAssistPreAssistPlan({
       incorrectAttempts: assistResult.state.incorrectAttempts,
       audioPrompts: storage.settings.audioPrompts,
@@ -544,8 +564,8 @@ export function Practice({
       practiceTestMode,
       alreadySeen: struggleAssistSeenRef.current
     });
-    const didPlayPreAssistReplay = preAssistPlan.includes('replay-word');
-    if (didPlayPreAssistReplay) {
+    const didPlayAutomaticReplay = replayResult.shouldReplay || preAssistPlan.includes('replay-word');
+    if (didPlayAutomaticReplay) {
       clearScheduledSpellingHintAudioReplay();
       void playAudio({ recordInteraction: false, showUnavailableStatus: false });
     }
@@ -586,7 +606,7 @@ export function Practice({
       spellingHintTimerRef.current = null;
     }, 4000);
 
-    if (storage.settings.audioPrompts && !currentWordAudioUnavailable && !didPlayPreAssistReplay) {
+    if (storage.settings.audioPrompts && !currentWordAudioUnavailable && !didPlayAutomaticReplay) {
       clearScheduledSpellingHintAudioReplay();
       spellingHintAudioReplayTimerRef.current = window.setTimeout(() => {
         spellingHintAudioReplayTimerRef.current = null;
@@ -875,6 +895,7 @@ export function Practice({
     clearStruggleAssistTimers();
     clearSpellingHint();
     struggleAssistStateRef.current = resetStruggleAssistForWord(struggleAssistStateRef.current, currentWord?.id ?? null);
+    repeatedIncorrectReplayStateRef.current = resetRepeatedIncorrectReplayForWord(repeatedIncorrectReplayStateRef.current, currentWord?.id ?? null);
     struggleAssistFallbackShownWordIdRef.current = null;
     setRecallPauseVisibility({ wordId: currentWord?.id ?? null, visible: false });
     shownSpellingHintsRef.current = new Set();

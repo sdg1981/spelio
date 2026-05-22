@@ -11,6 +11,7 @@ export const PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS =
 export const PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS = 1560;
 export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS = 1760;
 export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS = 1560;
+export const PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT = 2;
 
 export type StruggleAssistEmphasisTarget = 'audio' | 'reveal';
 export type StruggleAssistPreAssistAction = 'replay-word' | 'show-shortcut-hint' | 'show-mobile-guidance' | 'emphasize-controls';
@@ -33,6 +34,26 @@ export interface StruggleAssistResult {
   shouldTrigger: boolean;
 }
 
+export interface RepeatedIncorrectReplayState {
+  wordId: string | null;
+  incorrectAttempts: number;
+  replayedForWord: boolean;
+}
+
+export interface RepeatedIncorrectReplayInput {
+  state: RepeatedIncorrectReplayState;
+  wordId: string | null;
+  audioPrompts: boolean;
+  audioAvailable: boolean;
+  practiceTestMode: boolean;
+  suppressForHelperAudio: boolean;
+}
+
+export interface RepeatedIncorrectReplayResult {
+  state: RepeatedIncorrectReplayState;
+  shouldReplay: boolean;
+}
+
 export function createStruggleAssistState(wordId: string | null = null): StruggleAssistState {
   return {
     wordId,
@@ -44,6 +65,22 @@ export function createStruggleAssistState(wordId: string | null = null): Struggl
 export function resetStruggleAssistForWord(previous: StruggleAssistState, wordId: string | null): StruggleAssistState {
   if (previous.wordId === wordId) return previous;
   return createStruggleAssistState(wordId);
+}
+
+export function createRepeatedIncorrectReplayState(wordId: string | null = null): RepeatedIncorrectReplayState {
+  return {
+    wordId,
+    incorrectAttempts: 0,
+    replayedForWord: false
+  };
+}
+
+export function resetRepeatedIncorrectReplayForWord(
+  previous: RepeatedIncorrectReplayState,
+  wordId: string | null
+): RepeatedIncorrectReplayState {
+  if (previous.wordId === wordId) return previous;
+  return createRepeatedIncorrectReplayState(wordId);
 }
 
 export function registerStruggleAssistIncorrectAttempt({
@@ -66,6 +103,35 @@ export function registerStruggleAssistIncorrectAttempt({
   return {
     state: shouldTrigger ? { ...next, triggeredForWord: true } : next,
     shouldTrigger
+  };
+}
+
+export function registerRepeatedIncorrectReplayAttempt({
+  state,
+  wordId,
+  audioPrompts,
+  audioAvailable,
+  practiceTestMode,
+  suppressForHelperAudio
+}: RepeatedIncorrectReplayInput): RepeatedIncorrectReplayResult {
+  const base = resetRepeatedIncorrectReplayForWord(state, wordId);
+  if (!wordId) return { state: base, shouldReplay: false };
+
+  const next = {
+    ...base,
+    incorrectAttempts: base.incorrectAttempts + 1
+  };
+  const shouldReplay =
+    next.incorrectAttempts === PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT &&
+    audioPrompts &&
+    audioAvailable &&
+    !practiceTestMode &&
+    !base.replayedForWord &&
+    !suppressForHelperAudio;
+
+  return {
+    state: shouldReplay ? { ...next, replayedForWord: true } : next,
+    shouldReplay
   };
 }
 
@@ -152,11 +218,11 @@ export function shouldStartStruggleAssistHelperInGesture({
 }
 
 export function shouldReplayStruggleAssistPreAssist({
-  incorrectAttempts,
-  audioPrompts,
-  audioAvailable,
-  practiceTestMode,
-  alreadySeen
+  incorrectAttempts: _incorrectAttempts,
+  audioPrompts: _audioPrompts,
+  audioAvailable: _audioAvailable,
+  practiceTestMode: _practiceTestMode,
+  alreadySeen: _alreadySeen
 }: {
   incorrectAttempts: number;
   audioPrompts: boolean;
@@ -164,11 +230,7 @@ export function shouldReplayStruggleAssistPreAssist({
   practiceTestMode: boolean;
   alreadySeen: boolean;
 }) {
-  return incorrectAttempts === PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT &&
-    audioPrompts &&
-    audioAvailable &&
-    !practiceTestMode &&
-    !alreadySeen;
+  return false;
 }
 
 export function createStruggleAssistPreAssistPlan({
@@ -187,7 +249,7 @@ export function createStruggleAssistPreAssistPlan({
   alreadySeen: boolean;
 }): StruggleAssistPreAssistAction[] {
   if (incorrectAttempts !== PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT || practiceTestMode || alreadySeen) return [];
-  if (audioPrompts) return audioAvailable ? ['replay-word'] : [];
+  if (audioPrompts && audioAvailable) return [];
   return [];
 }
 

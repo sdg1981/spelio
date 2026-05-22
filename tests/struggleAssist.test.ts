@@ -3,9 +3,11 @@ import {
   createStruggleAssistAudioPlan,
   createStruggleAssistEmphasisPlan,
   createStruggleAssistPreAssistPlan,
+  createRepeatedIncorrectReplayState,
   createStruggleAssistState,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
+  PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT,
   PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
   PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD,
   PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS,
@@ -14,7 +16,9 @@ import {
   PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS,
   PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
+  registerRepeatedIncorrectReplayAttempt,
   registerStruggleAssistIncorrectAttempt,
+  resetRepeatedIncorrectReplayForWord,
   resetStruggleAssistForWord,
   shouldShowStruggleAssistMobileHint,
   shouldReplayStruggleAssistPreAssist,
@@ -301,8 +305,8 @@ function createMemoryStorage(): Storage {
       practiceTestMode: false,
       alreadySeen: false
     }),
-    ['replay-word'],
-    'Audio-on first attempt should schedule replay only.'
+    [],
+    'Audio-on first attempt should leave ordinary incorrect feedback alone.'
   );
   assertArrayEqual(
     createStruggleAssistPreAssistPlan({
@@ -348,8 +352,8 @@ function createMemoryStorage(): Storage {
       practiceTestMode: false,
       alreadySeen: false
     }),
-    true,
-    'First incorrect attempt should schedule a replay-only pre-assist nudge when audio prompts are on.'
+    false,
+    'First incorrect attempt should not schedule the permanent replay nudge.'
   );
   assertEqual(
     shouldReplayStruggleAssistPreAssist({
@@ -376,8 +380,140 @@ function createMemoryStorage(): Storage {
   const storage = createMemoryStorage();
   let state = createStruggleAssistState('word-1');
   state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: hasSeenPracticeStruggleAssist(storage) }).state;
-  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'First-attempt replay nudge should not mark struggle assist as seen.');
-  assertEqual(state.incorrectAttempts, PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT, 'First-attempt replay nudge should not change the main assist threshold.');
+  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'First-attempt handling should not mark struggle assist as seen.');
+  assertEqual(state.incorrectAttempts, PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT, 'First-attempt handling should not change the main assist threshold.');
+}
+
+{
+  let state = createRepeatedIncorrectReplayState('word-1');
+  let result = registerRepeatedIncorrectReplayAttempt({
+    state,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  });
+  state = result.state;
+  assertEqual(result.shouldReplay, false, 'Audio-on first wrong attempt should not replay the word.');
+
+  result = registerRepeatedIncorrectReplayAttempt({
+    state,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  });
+  state = result.state;
+  assertEqual(result.shouldReplay, true, 'Audio-on second wrong attempt should replay the current word.');
+  assertEqual(state.incorrectAttempts, PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT, 'Replay should use the current word attempt count.');
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    result = registerRepeatedIncorrectReplayAttempt({
+      state,
+      wordId: 'word-1',
+      audioPrompts: true,
+      audioAvailable: true,
+      practiceTestMode: false,
+      suppressForHelperAudio: false
+    });
+    state = result.state;
+    assertEqual(result.shouldReplay, false, 'Permanent replay should only happen once per word.');
+  }
+
+  state = resetRepeatedIncorrectReplayForWord(state, 'word-2');
+  result = registerRepeatedIncorrectReplayAttempt({
+    state,
+    wordId: 'word-2',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  });
+  assertEqual(result.shouldReplay, false, 'Replay state should reset on word change, so the new first wrong attempt does not replay.');
+  assertEqual(result.state.incorrectAttempts, 1, 'New word should start a fresh repeated-replay attempt count.');
+}
+
+{
+  let state = createRepeatedIncorrectReplayState('word-1');
+  for (let attempt = 0; attempt < PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT; attempt += 1) {
+    const result = registerRepeatedIncorrectReplayAttempt({
+      state,
+      wordId: 'word-1',
+      audioPrompts: false,
+      audioAvailable: true,
+      practiceTestMode: false,
+      suppressForHelperAudio: false
+    });
+    state = result.state;
+    assertEqual(result.shouldReplay, false, 'Audio prompts off should suppress automatic repeated-wrong replay.');
+  }
+}
+
+{
+  let state = createRepeatedIncorrectReplayState('word-1');
+  for (let attempt = 0; attempt < PRACTICE_REPEATED_INCORRECT_REPLAY_ATTEMPT; attempt += 1) {
+    const result = registerRepeatedIncorrectReplayAttempt({
+      state,
+      wordId: 'word-1',
+      audioPrompts: true,
+      audioAvailable: true,
+      practiceTestMode: true,
+      suppressForHelperAudio: false
+    });
+    state = result.state;
+    assertEqual(result.shouldReplay, false, 'Practice-test mode should suppress automatic repeated-wrong replay.');
+  }
+}
+
+{
+  const storage = createMemoryStorage();
+  let state = createRepeatedIncorrectReplayState('word-1');
+  state = registerRepeatedIncorrectReplayAttempt({
+    state,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  }).state;
+  const result = registerRepeatedIncorrectReplayAttempt({
+    state,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  });
+  assertEqual(result.shouldReplay, true, 'Permanent replay should fire independently of struggle-assist seen storage.');
+  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'Permanent replay should not mark the one-time struggle assist as seen.');
+}
+
+{
+  let replayState = createRepeatedIncorrectReplayState('word-1');
+  let assistState = createStruggleAssistState('word-1');
+  assistState = registerStruggleAssistIncorrectAttempt({ state: assistState, wordId: 'word-1', practiceTestMode: false, alreadySeen: false }).state;
+  replayState = registerRepeatedIncorrectReplayAttempt({
+    state: replayState,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: false
+  }).state;
+
+  const assistResult = registerStruggleAssistIncorrectAttempt({ state: assistState, wordId: 'word-1', practiceTestMode: false, alreadySeen: false });
+  const replayResult = registerRepeatedIncorrectReplayAttempt({
+    state: replayState,
+    wordId: 'word-1',
+    audioPrompts: true,
+    audioAvailable: true,
+    practiceTestMode: false,
+    suppressForHelperAudio: assistResult.shouldTrigger
+  });
+  assertEqual(assistResult.shouldTrigger, true, 'Second wrong attempt should still trigger the one-time struggle assist.');
+  assertEqual(replayResult.shouldReplay, false, 'Permanent replay should suppress itself when spoken helper audio is also starting.');
 }
 
 {
