@@ -1061,11 +1061,6 @@ export function Practice({
       return;
     }
 
-    if (!storage.settings.audioPrompts && !practiceTestMode) {
-      restoreFocusAfterClick();
-      return;
-    }
-
     playAudio();
     if (shouldUseMobileKeyboard()) {
       window.setTimeout(focusMobileInput, 40);
@@ -1129,7 +1124,7 @@ export function Practice({
   const promptVisible = promptDisplay.visible;
   const promptDelayed = promptDisplay.reserved;
   const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
-  const wordPillAudioIconVisible = storage.settings.audioPrompts || practiceTestMode;
+  const wordPillAudioIconVisible = !currentWordAudioUnavailable;
   const wordInsights = !practiceTestMode && interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -1210,7 +1205,14 @@ export function Practice({
         <AnimatedStatusLine status={displayStatus} secondaryStatus={displayStatusSecondary} tone={displayTone} />
         <div className={`keyboard-shortcut-hint-shell ${struggleAssistGuidance === 'mobile' ? 'mobile-visible' : ''}`.trim()} aria-live="polite">
           <div className={`keyboard-shortcut-hint contextual-assist-hint ${struggleAssistGuidance === 'mobile' ? 'mobile-assist-hint' : ''} ${struggleAssistGuidance && !practiceTestMode ? 'visible' : ''}`.trim()}>
-            <span>{t(struggleAssistGuidance === 'mobile' ? 'practice.struggleAssistMobileHint' : 'practice.struggleAssistShortcutHint')}</span>
+            {struggleAssistGuidance === 'mobile' ? (
+              <span>{t('practice.struggleAssistMobileHint')}</span>
+            ) : (
+              <>
+                <span>{t('practice.struggleAssistDesktopHint')}</span>
+                <span className="contextual-assist-shortcut-line">{t('practice.struggleAssistShortcutHint')}</span>
+              </>
+            )}
           </div>
         </div>
 

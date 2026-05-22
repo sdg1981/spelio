@@ -331,12 +331,20 @@
   .keyboard-shortcut-hint.contextual-assist-hint{
     margin-top:0;
     opacity:0;
+    flex-direction:column;
     color:#9aa3ad;
     font-size:12px;
     font-weight:500;
+    gap:2px;
     transform:translateY(2px);
     transition:opacity .28s ease-out,transform .28s ease-out;
     pointer-events:none;
+  }
+
+  .keyboard-shortcut-hint.contextual-assist-hint .contextual-assist-shortcut-line{
+    color:#aeb6bd;
+    font-size:11px;
+    font-weight:500;
   }
 
   .keyboard-shortcut-hint.contextual-assist-hint.visible{
@@ -363,6 +371,7 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  flex-direction:row;
   margin-top:0;
   color:#9aa3ad;
   font-size:12px;

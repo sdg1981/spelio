@@ -98,14 +98,14 @@ assertEqual(
 
 assertEqual(
   shouldAllowAudioPlayback(false, false),
-  false,
-  'Normal sessions should still respect the audio prompts setting.'
+  true,
+  'Normal sessions should keep manual audio playback available when audio prompts are off.'
 );
 
 assertEqual(
   shouldAllowAudioPlayback(false, true),
   true,
-  'Practice test sessions should keep manual audio playback available even when prompts are off.'
+  'Practice test sessions should keep manual audio playback available when prompts are off.'
 );
 
 assertEqual(

@@ -17,7 +17,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
-import { isAudioUnavailableForPrompt, shouldAllowAudioPlayback } from '../lib/practice/audioAvailability';
+import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
@@ -222,7 +222,6 @@ export function usePracticeSession({
     recordInteraction?: boolean;
     showUnavailableStatus?: boolean;
   } = {}) => {
-    if (!shouldAllowAudioPlayback(storageRef.current.settings.audioPrompts, forceAudioAvailable)) return false;
     if (recordInteraction) recordPracticeInteraction();
 
     const wordForPlayback = currentWord;
