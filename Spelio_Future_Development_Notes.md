@@ -40,6 +40,35 @@ Spelio should remain:
 
 Future educational systems should support the spelling practice loop rather than turning the app into a full grammar or phonics course.
 
+### Per-word contextual hints
+
+Spelio may eventually support rare optional per-word contextual hints for unusually confusing spellings. These should be editorial overrides rather than the primary hint system.
+
+Most learner support should still come from generic pattern-aware systems, such as `dd`, `ff`, accents, `w` / `y`, English spelling transfer, and other recurring spelling patterns.
+
+Per-word hints are intended only for edge cases where learners consistently miss a specific hidden, softened, swallowed, or unexpected letter or chunk within a particular word.
+
+Example concept:
+
+- Welsh word `diolch`
+- Learners may miss the `l`
+- A lightweight contextual hint could quietly suggest: "Listen for the final -olch."
+
+These hints should remain:
+
+- Subtle
+- Calm
+- Audio-first where possible
+- Rare
+- Non-intrusive
+- Adult-oriented
+
+They should trigger only after clear struggle signals, such as repeated incorrect attempts on the same position, hesitation or a long pause, or repeated replay usage.
+
+Avoid turning the system into handcrafted tutoring, popup-heavy teaching, explanation-heavy phonics instruction, or verbose educational overlays.
+
+The long-term goal is for Spelio to feel intelligently supportive underneath while remaining visually simple on the surface.
+
 ## Adaptive replay and assisted listening
 
 Spelio should explore assisted listening as a future direction for replay audio and reveal behaviour.
