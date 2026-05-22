@@ -6,7 +6,9 @@ import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
+import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
 type CustomWordListRow = {
   id: string;
@@ -111,6 +113,15 @@ function requireSupabase() {
   return supabase;
 }
 
+async function requireAdminSupabase() {
+  const client = requireSupabase();
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user) {
+    throw new Error('Admin Supabase session required. Sign in again before managing content.');
+  }
+  return client;
+}
+
 function assertDestructiveContentImportAllowed() {
   if (import.meta.env.VITE_ALLOW_ADMIN_CONTENT_IMPORT === 'true') return;
   throw new Error('Content import is disabled. Set VITE_ALLOW_ADMIN_CONTENT_IMPORT=true only for an intentional, reviewed import.');
@@ -130,41 +141,41 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async listCollections() {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_list_collections').select('*').order('order_index', { ascending: true });
     if (error) throw error;
     return (data ?? []).map(mapCollectionRow);
   },
 
   async getCollection(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_list_collections').select('*').eq('id', id).maybeSingle();
     if (error) throw error;
     return data ? mapCollectionRow(data) : null;
   },
 
   async createCollection(collection: AdminWordListCollection) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_list_collections').insert(toCollectionRow(collection)).select('*').single();
     if (error) throw error;
     return mapCollectionRow(data);
   },
 
   async saveCollection(collection: AdminWordListCollection) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_list_collections').update(toCollectionRow(collection)).eq('id', collection.id).select('*').single();
     if (error) throw error;
     return mapCollectionRow(data);
   },
 
   async deleteCollection(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { error } = await client.from('word_list_collections').delete().eq('id', id);
     if (error) throw error;
   },
 
   async listWordLists() {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client
       .from('word_lists')
       .select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)')
@@ -174,7 +185,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async getWordList(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client
       .from('word_lists')
       .select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)')
@@ -185,27 +196,27 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async saveWordList(list: AdminWordList) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_lists').update(toWordListRow(list)).eq('id', list.id).select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)').single();
     if (error) throw error;
     return mapWordListRow(data);
   },
 
   async createWordList(list: AdminWordList) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('word_lists').insert(toWordListRow(list)).select('*, stages(name), focus_categories(name), word_list_collections(name), words(*)').single();
     if (error) throw error;
     return mapWordListRow(data);
   },
 
   async deleteWordList(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { error } = await client.from('word_lists').delete().eq('id', id);
     if (error) throw error;
   },
 
   async listWords(filters?: AdminFocusFilters) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     let query = client.from('words').select('*, word_lists(name)').order('order_index', { ascending: true });
     if (filters?.listId) query = query.eq('list_id', filters.listId);
     if (filters?.audioStatus) query = query.eq('audio_status', filters.audioStatus);
@@ -216,34 +227,34 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async getWord(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('words').select('*').eq('id', id).maybeSingle();
     if (error) throw error;
     return data ? mapWordRow(data) : null;
   },
 
   async saveWord(word: AdminWord) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('words').update(toWordRow(word)).eq('id', word.id).select('*').single();
     if (error) throw error;
     return mapWordRow(data);
   },
 
   async createWord(word: AdminWord) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('words').insert(toWordRow(word)).select('*').single();
     if (error) throw error;
     return mapWordRow(data);
   },
 
   async deleteWord(id: string) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { error } = await client.from('words').delete().eq('id', id);
     if (error) throw error;
   },
 
   async reorderWords(listId: string, orderedWordIds: string[]) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     // TODO: Move reordering behind a protected RPC/API endpoint so it can be atomic.
     const results = await Promise.all(orderedWordIds.map((id, index) => client.from('words').update({ order_index: index + 1 }).eq('id', id).eq('list_id', listId)));
     const failure = results.find(result => result.error);
@@ -255,7 +266,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async queueAudioGeneration(wordIds: string[]) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     if (!wordIds.length) return [];
     const { error } = await client
       .from('words')
@@ -368,7 +379,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async uploadAudioFile(word: AdminWord, file: Blob) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
     if (file.size < 100) throw new Error('Audio upload was blocked because the generated file was unexpectedly small.');
@@ -383,7 +394,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async uploadElevenLabsAudioFile(word: AdminWord, file: Blob) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
     if (file.size < 100) throw new Error('ElevenLabs upload was blocked because the generated file was unexpectedly small.');
@@ -398,26 +409,89 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async getAudioSettings() {
-    const client = requireSupabase();
-    const { data, error } = await client.from('admin_settings').select('value').eq('key', 'default_audio_provider').maybeSingle();
-    if (error) throw error;
-    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+    const client = await requireAdminSupabase();
+    const [providerResult, interfaceAudioResult] = await Promise.all([
+      client.from('admin_settings').select('value').eq('key', 'default_audio_provider').maybeSingle(),
+      client.from('admin_settings').select('value').eq('key', 'interface_audio_clips').maybeSingle()
+    ]);
+    if (providerResult.error) throw providerResult.error;
+    if (interfaceAudioResult.error) throw interfaceAudioResult.error;
+    return {
+      defaultAudioProvider: readDefaultAudioProvider(providerResult.data?.value),
+      interfaceAudioClips: normalizeInterfaceAudioClips(interfaceAudioResult.data?.value)
+    };
   },
 
   async saveAudioSettings(settings) {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const defaultAudioProvider = normalizeDefaultAudioProvider(settings.defaultAudioProvider);
-    const { data, error } = await client
-      .from('admin_settings')
-      .upsert({ key: 'default_audio_provider', value: { provider: defaultAudioProvider } }, { onConflict: 'key' })
-      .select('value')
-      .single();
-    if (error) throw error;
-    return { defaultAudioProvider: readDefaultAudioProvider(data?.value) };
+    const interfaceAudioClips = normalizeInterfaceAudioClips(settings.interfaceAudioClips);
+    const [providerResult, interfaceAudioResult] = await Promise.all([
+      client
+        .from('admin_settings')
+        .upsert({ key: 'default_audio_provider', value: { provider: defaultAudioProvider } }, { onConflict: 'key' })
+        .select('value')
+        .single(),
+      client
+        .from('admin_settings')
+        .upsert({ key: 'interface_audio_clips', value: { clips: interfaceAudioClips } }, { onConflict: 'key' })
+        .select('value')
+        .single()
+    ]);
+    if (providerResult.error) throw providerResult.error;
+    if (interfaceAudioResult.error) throw interfaceAudioResult.error;
+    return {
+      defaultAudioProvider: readDefaultAudioProvider(providerResult.data?.value),
+      interfaceAudioClips: normalizeInterfaceAudioClips(interfaceAudioResult.data?.value)
+    };
+  },
+
+  async generateInterfaceAudioClip(clip: InterfaceAudioClip) {
+    const client = await requireAdminSupabase();
+    const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
+    if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    if (!clip.text.trim()) throw new Error('Helper audio script is empty.');
+
+    const previousCacheBustedUrl = withInterfaceAudioCacheBust(clip.audioUrl, clip.updatedAt);
+    const audio = await synthesizeInterfaceAudioMp3(clip.text, clip.language);
+    if (audio.blob.size < 100) throw new Error('Helper audio upload was blocked because the generated file was unexpectedly small.');
+
+    const path = createInterfaceAudioStoragePath(clip);
+    const { error: uploadError } = await client.storage
+      .from('audio')
+      .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data } = client.storage.from('audio').getPublicUrl(path);
+    if (!data.publicUrl) throw new Error('Helper audio upload did not return a public URL.');
+
+    const updatedAt = new Date().toISOString();
+    const generatedCacheBustedUrl = withInterfaceAudioCacheBust(data.publicUrl, updatedAt);
+    const generatedClip: InterfaceAudioClip = {
+      ...clip,
+      audioUrl: data.publicUrl,
+      audioStatus: 'ready',
+      provider: 'azure',
+      updatedAt,
+      generationLanguage: audio.diagnostics.requestedLanguage,
+      generationLocale: audio.diagnostics.requestedLocale,
+      generationVoice: audio.diagnostics.requestedVoice,
+      storagePath: path,
+      cacheBustedUrlChanged: generatedCacheBustedUrl !== previousCacheBustedUrl
+    };
+    const current = await this.getAudioSettings();
+    const nextClips = normalizeInterfaceAudioClips(current.interfaceAudioClips).map(item => (
+      item.key === generatedClip.key && item.language === generatedClip.language ? generatedClip : item
+    ));
+    const saved = await this.saveAudioSettings({
+      defaultAudioProvider: current.defaultAudioProvider,
+      interfaceAudioClips: nextClips
+    });
+    return saved.interfaceAudioClips.find(item => item.key === generatedClip.key && item.language === generatedClip.language) ?? generatedClip;
   },
 
   async listCustomWordLists() {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client
       .from('custom_word_lists')
       .select('id,public_id,created_at,expires_at,status,moderation_status,custom_words(audio_status)')
@@ -428,7 +502,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async cleanupExpiredCustomWordLists() {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.rpc('cleanup_expired_custom_word_lists');
     if (error) throw error;
     return typeof data === 'number' ? data : 0;
@@ -436,7 +510,7 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
     assertDestructiveContentImportAllowed();
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const [collectionsResult, listsResult, wordsResult] = await Promise.all([
       client.from('word_list_collections').select('id'),
       client.from('word_lists').select('id'),
@@ -454,7 +528,7 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async importContent(payload: unknown): Promise<ImportContentResult> {
     assertDestructiveContentImportAllowed();
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     // TODO: Move production imports behind a protected server/API route with transaction-like behaviour.
     const preview = await this.previewImport(payload) as ImportPreview;
     if (preview.errors.length) {
@@ -546,7 +620,7 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async listDialects() {
-    const client = requireSupabase();
+    const client = await requireAdminSupabase();
     const { data, error } = await client.from('dialect_options').select('id,label,order_index,is_active').order('order_index', { ascending: true });
     if (error) throw error;
     return (data ?? []).map(row => ({ id: row.id, name: row.label, order: row.order_index, active: row.is_active }));
@@ -554,7 +628,7 @@ export const supabaseAdminRepository: AdminRepository = {
 };
 
 async function listStructure(table: 'stages' | 'focus_categories'): Promise<AdminStructureOption[]> {
-  const client = requireSupabase();
+  const client = await requireAdminSupabase();
   const { data, error } = await client.from(table).select('id,name,order_index,is_active').order('order_index', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(row => ({ id: row.id, name: row.name, order: row.order_index, active: row.is_active }));

@@ -29,6 +29,7 @@ import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
+import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, type InterfaceAudioClipRegistry } from './lib/interfaceAudio';
 
 type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
 
@@ -157,10 +158,10 @@ export default function App() {
   const [lastResult, setLastResult] = useState<SessionResult | null>(storage.lastSessionResult);
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
-  const [showFirstSessionKeyboardHint, setShowFirstSessionKeyboardHint] = useState(false);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
+  const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClipRegistry>(() => createInterfaceAudioRegistry(createDefaultInterfaceAudioClips()));
   const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
   const [sharedContext, setSharedContext] = useState<SharedWordListContext | null>(initialAppState.sharedContext);
   const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
@@ -270,6 +271,7 @@ export default function App() {
       if (cancelled) return;
       setPublicWordLists(content.lists);
       setDefaultAudioProvider(content.defaultAudioProvider);
+      setInterfaceAudioClips(content.interfaceAudioClips);
       setStorage(previous => {
         const normalized = normalizeStorageWordListSelection(previous, content.lists);
         setSharedContext(createSharedContextFromRoute(normalized, content.lists));
@@ -360,7 +362,6 @@ export default function App() {
       start.storage.selectedListIds.length === 1 &&
       start.storage.selectedListIds[0] === detachedContext?.listId;
 
-    setShowFirstSessionKeyboardHint(!start.review && !start.recap && (storage.completedNormalSessionCount ?? 0) >= 5);
     if (isDetachedSharedStart && detachedContext) {
       setActiveSharedContext(detachedContext);
       setActiveSupportPractice(null);
@@ -695,7 +696,6 @@ export default function App() {
     setPracticeStartStorage(null);
     setWordListReturnScreen(null);
     setLastResult(null);
-    setShowFirstSessionKeyboardHint(false);
     setScreen('home');
     setResetStatusVisible(true);
 
@@ -786,9 +786,9 @@ export default function App() {
       reviewDifficult={reviewMode}
       includeRecapDue={recapMode}
       sessionKey={practiceSessionKey}
-      showKeyboardHint={showFirstSessionKeyboardHint}
       practiceTestMode={practiceTestMode}
       defaultAudioProvider={defaultAudioProvider}
+      interfaceAudioClips={interfaceAudioClips}
       disableQuickRecap={Boolean(activeSharedContext) || Boolean(activeSupportPractice) || practiceTestMode}
       detached={Boolean(activeSupportPractice)}
       onStorageChange={updatePracticeSessionStorage}

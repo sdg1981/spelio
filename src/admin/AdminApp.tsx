@@ -5,6 +5,7 @@ import { CollectionsPage } from './pages/CollectionsPage';
 import { CustomListsPage } from './pages/CustomListsPage';
 import { FocusCategoriesPage, DialectsPage, StagesPage } from './pages/StructurePages';
 import { ImportPage } from './pages/ImportPage';
+import { InterfaceAudioPage } from './pages/InterfaceAudioPage';
 import { LoginPage } from './pages/LoginPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -36,11 +37,12 @@ function AdminRoute({ path, navigate, repository }: { path: string; navigate: (p
   if (path.startsWith('/admin/words/')) return <WordEditPage id={decodeURIComponent(path.replace('/admin/words/', ''))} navigate={navigate} repository={repository} />;
   if (path === '/admin/words') return <WordsPage navigate={navigate} repository={repository} />;
   if (path === '/admin/audio') return <AudioQueuePage repository={repository} />;
+  if (path === '/admin/interface-audio') return <InterfaceAudioPage repository={repository} />;
   if (path === '/admin/import') return <ImportPage repository={repository} />;
   if (path === '/admin/stages') return <StagesPage repository={repository} />;
   if (path === '/admin/focus-categories') return <FocusCategoriesPage repository={repository} />;
   if (path === '/admin/dialects') return <DialectsPage repository={repository} />;
-  if (path === '/admin/settings') return <SettingsPage repository={repository} />;
+  if (path === '/admin/settings') return <SettingsPage navigate={navigate} repository={repository} />;
 
   return <OverviewPage navigate={navigate} repository={repository} />;
 }

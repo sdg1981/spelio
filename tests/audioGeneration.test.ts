@@ -1,8 +1,11 @@
 import {
   AUDIO_PIPELINE_VERSION,
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
   AZURE_SPEECH_PROSODY_RATE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
   AzureSynthesisError,
+  createEnglishSsml,
   createWelshSsml,
   handleAzureTtsRequest,
   synthesizeAzureWelshMp3BytesWithDiagnostics
@@ -28,13 +31,16 @@ import {
   getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createInterfaceAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
   error?: string;
   errorStage?: string;
   audioPipelineVersion?: string;
+  requestedLanguage?: string;
+  requestedLocale?: string;
+  requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
 } | null;
@@ -44,7 +50,7 @@ type TestResponse = {
   headers: Record<string, string | string[]>;
   body: TestResponseBody;
   status: (code: number) => TestResponse;
-  json: (body: { ok: boolean; error?: string }) => void;
+  json: (body: Exclude<TestResponseBody, Uint8Array | null>) => void;
   setHeader: (name: string, value: string | string[]) => void;
   send: (body: unknown) => void;
 };
@@ -115,6 +121,11 @@ assert(
   createAdminWelshSsml('cân').includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">cân</prosody>`),
   'Admin SSML helper should expose the same subtle prosody rate.'
 );
+const englishSsml = createEnglishSsml('You can replay the word.');
+assert(
+  englishSsml.includes(`xml:lang="${AZURE_ENGLISH_SPEECH_LOCALE}"`) && englishSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
+  'English helper audio should use the configured English Azure voice and locale.'
+);
 assertEqual(
   createAudioStoragePath({ listId: 'support_ff', id: 'support_ff_006' }),
   'cy/support/support-ff/support-ff-006.mp3',
@@ -134,6 +145,11 @@ assertEqual(
   createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
   'cy/foundations-first-words/foundations-first-words-001.mp3',
   'Normal list audio should keep the existing list-scoped path.'
+);
+assertEqual(
+  createInterfaceAudioStoragePath({ key: 'practice_struggle_assist', language: 'en' }),
+  'interface/practice-struggle-assist/en.mp3',
+  'Interface helper audio should use a stable non-word queue storage path.'
 );
 
 const filter = createAudioPostProcessingFilter();
@@ -229,11 +245,52 @@ async function runAsyncAssertions() {
 
   assertEqual(response.statusCode, 200, 'Successful audio generation should return HTTP 200.');
   assertEqual(response.headers['Content-Type'], 'audio/mpeg', 'Processed audio response should remain MP3.');
+  assertEqual(response.headers['X-Spelio-Azure-Language'], 'cy', 'Welsh route responses should expose the selected language diagnostic.');
+  assertEqual(response.headers['X-Spelio-Azure-Locale'], 'cy-GB', 'Welsh route responses should expose the selected Azure locale.');
+  assertEqual(response.headers['X-Spelio-Azure-Voice'], 'cy-GB-NiaNeural', 'Welsh route responses should expose the selected Azure voice.');
   assertEqual(requestedOutputFormat, AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT, 'Azure should be asked for WAV intermediate audio.');
   assertEqual(requestedOutputFormat, 'riff-24khz-16bit-mono-pcm', 'Azure should use a supported RIFF/WAV intermediate output format.');
   assert(requestedSsml.includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">gwaith</prosody>`), 'Azure request should include subtle prosody rate SSML.');
   assert(postProcessCalled, 'The route should post-process Azure audio before returning it for upload.');
   assert(response.body instanceof Uint8Array && response.body[0] === 0x49, 'The route should send the processed MP3 bytes.');
+
+  let englishRequestedSsml = '';
+  const englishResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: 'You can replay the word.', language: 'en' } },
+    englishResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async (_url, options) => {
+        englishRequestedSsml = options.body;
+        return {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => makeAudioBuffer()
+        };
+      },
+      postProcess: async () => {
+        const mp3Bytes = new Uint8Array(128);
+        mp3Bytes[0] = 0x49;
+        mp3Bytes[1] = 0x44;
+        mp3Bytes[2] = 0x33;
+        return mp3Bytes;
+      },
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Language'], 'en', 'English helper route responses should expose the selected language diagnostic.');
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Locale'], AZURE_ENGLISH_SPEECH_LOCALE, 'English helper route responses should expose the English Azure locale.');
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Voice'], AZURE_ENGLISH_VOICE, 'English helper route responses should expose the English Azure voice.');
+  assert(
+    englishRequestedSsml.includes(`xml:lang="${AZURE_ENGLISH_SPEECH_LOCALE}"`) &&
+      englishRequestedSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
+    'English helper generation should send English SSML to Azure.'
+  );
 
   const pipelineLogs: Array<Record<string, unknown>> = [];
   const versionResponse = createResponse();

@@ -6,10 +6,14 @@ import { validateImportPayload } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
+import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
-let audioSettings: AdminAudioSettings = { defaultAudioProvider: 'azure' };
+let audioSettings: AdminAudioSettings = {
+  defaultAudioProvider: 'azure',
+  interfaceAudioClips: createDefaultInterfaceAudioClips()
+};
 
 function cloneList(list: AdminWordList): AdminWordList {
   return { ...list, words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] })) };
@@ -228,8 +232,33 @@ export const mockAdminRepository: AdminRepository = {
   },
 
   async saveAudioSettings(settings: AdminAudioSettings) {
-    audioSettings = { defaultAudioProvider: settings.defaultAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'azure' };
+    audioSettings = {
+      defaultAudioProvider: settings.defaultAudioProvider === 'elevenlabs' ? 'elevenlabs' : 'azure',
+      interfaceAudioClips: normalizeInterfaceAudioClips(settings.interfaceAudioClips)
+    };
     return { ...audioSettings };
+  },
+
+  async generateInterfaceAudioClip(clip: InterfaceAudioClip) {
+    const generatedClip: InterfaceAudioClip = {
+      ...clip,
+      audioUrl: `/audio/interface/${encodeURIComponent(clip.key)}/${encodeURIComponent(clip.language)}.mp3`,
+      audioStatus: 'ready',
+      provider: 'azure',
+      updatedAt: new Date().toISOString(),
+      generationLanguage: clip.language,
+      generationLocale: clip.language === 'cy' ? 'cy-GB' : 'en-GB',
+      generationVoice: clip.language === 'cy' ? 'cy-GB-NiaNeural' : 'en-GB-SoniaNeural',
+      storagePath: `interface/${clip.key.replace(/_/g, '-')}/${clip.language}.mp3`,
+      cacheBustedUrlChanged: true
+    };
+    audioSettings = {
+      ...audioSettings,
+      interfaceAudioClips: normalizeInterfaceAudioClips(audioSettings.interfaceAudioClips).map(item => (
+        item.key === generatedClip.key && item.language === generatedClip.language ? generatedClip : item
+      ))
+    };
+    return generatedClip;
   },
 
   async listCustomWordLists() {

@@ -6,9 +6,9 @@ import { getListDisplayName } from './wordListDisplay';
 
 export function getSingleSelectedListId(selectedListIds: string[], lists: WordList[]) {
   const eligibleLists = mainWordLists(lists);
-  const activeById = new Map(eligibleLists.filter(list => list.isActive).map(list => [list.id, list]));
+  const activeById = new Map(eligibleLists.filter(list => list.isActive && list.words.length > 0).map(list => [list.id, list]));
   const selected = selectedListIds.find(id => activeById.has(id));
-  return selected ?? eligibleLists.find(list => list.isActive)?.id ?? eligibleLists[0]?.id;
+  return selected ?? eligibleLists.find(list => list.isActive && list.words.length > 0)?.id ?? eligibleLists[0]?.id;
 }
 
 export function normalizeSingleSelectedListIds(selectedListIds: string[], lists: WordList[]) {
@@ -22,7 +22,7 @@ export function selectSingleWordList(listId: string) {
 
 export function normalizeStorageWordListSelection(storage: SpelioStorage, lists: WordList[]): SpelioStorage {
   const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, lists);
-  const activeIds = new Set(mainWordLists(lists).filter(list => list.isActive).map(list => list.id));
+  const activeIds = new Set(mainWordLists(lists).filter(list => list.isActive && list.words.length > 0).map(list => list.id));
   const alreadySingleSelection =
     storage.selectedListIds.length === selectedListIds.length &&
     storage.selectedListIds.every((id, index) => id === selectedListIds[index]);

@@ -11,6 +11,7 @@ import {
 } from '../../data/wordLists';
 import type { PublicContent } from './staticContentRepository';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../audioProvider';
+import { createInterfaceAudioRegistry, normalizeInterfaceAudioClips } from '../interfaceAudio';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -245,38 +246,47 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     words: words
       .map(word => mapWord(word, { ...row, source_language: sourceLanguage, target_language: targetLanguage }))
       .filter((word): word is PracticeWord => Boolean(word))
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
   };
 }
 
 export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const client = requireSupabase();
 
-  const [collectionsResult, initialListsResult, wordsResult, audioProviderResult] = await Promise.all([
+  const [collectionsResult, initialListsResult, wordsResult, audioProviderResult, interfaceAudioResult] = await Promise.all([
     client
       .from('word_list_collections')
       .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
       .eq('is_active', true)
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('word_lists')
       .select(WORD_LIST_SELECT_WITH_SLUG)
       .eq('is_active', true)
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('words')
       .select('*')
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true }),
     client
       .from('admin_settings')
       .select('value')
       .eq('key', 'default_audio_provider')
+      .maybeSingle(),
+    client
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'interface_audio_clips')
       .maybeSingle()
   ]);
 
   if (collectionsResult.error) throw collectionsResult.error;
   if (wordsResult.error) throw wordsResult.error;
   if (audioProviderResult.error) throw audioProviderResult.error;
+  if (interfaceAudioResult.error) throw interfaceAudioResult.error;
 
   let listsData: unknown[] | null = initialListsResult.data;
   if (initialListsResult.error) {
@@ -286,7 +296,8 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       .from('word_lists')
       .select(WORD_LIST_SELECT_WITHOUT_SLUG)
       .eq('is_active', true)
-      .order('order_index', { ascending: true });
+      .order('order_index', { ascending: true })
+      .order('id', { ascending: true });
 
     if (retryListsResult.error) throw retryListsResult.error;
     listsData = retryListsResult.data;
@@ -309,7 +320,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
       return mapList(list, collection, wordsByListId.get(list.id) ?? []);
     })
     .filter(list => list.words.length > 0)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 
   if (!lists.length) {
     throw new Error('Supabase returned no active public word lists.');
@@ -318,7 +329,8 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
   return {
     lists,
     source: 'supabase',
-    defaultAudioProvider: readDefaultAudioProvider(audioProviderResult.data?.value)
+    defaultAudioProvider: readDefaultAudioProvider(audioProviderResult.data?.value),
+    interfaceAudioClips: createInterfaceAudioRegistry(normalizeInterfaceAudioClips(interfaceAudioResult.data?.value))
   };
 }
 

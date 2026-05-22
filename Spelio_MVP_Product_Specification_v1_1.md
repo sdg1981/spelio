@@ -2070,8 +2070,9 @@ Audio is part of the core learning loop, not a decorative prompt. Spelio should 
 If audio exists:
 
 - Load quickly.
-- Replay from word pill.
-- Respect audio prompts setting.
+- Replay from the word pill or replay shortcut where available.
+- Respect the audio prompts setting for automatic playback.
+- In normal practice, turning audio prompts off should stop automatic audio only; it should not disable learner-controlled manual replay.
 
 Future-capable replay guidance:
 
@@ -2079,6 +2080,24 @@ Future-capable replay guidance:
 - Assistance should remain natural and lightweight, such as subtle slowing, chunk emphasis, small pauses, or clearer rhythmic separation where technically practical.
 - Preserve natural Welsh rhythm and avoid robotic slowed-down teaching audio.
 - Do not expose complex replay controls in the MVP learner interface.
+
+Contextual struggling assist:
+
+- Spelio may provide a one-time contextual struggling assist when a learner appears genuinely stuck on a word, such as after repeated incorrect attempts on the same current word.
+- The assist should remain calm, subtle, temporary, and audio-first.
+- Where audio prompts are enabled, the app may use a lighter automatic replay nudge before later playing a short managed helper-audio clip if the learner continues to struggle.
+- When audio prompts are off, the app should not auto-replay the word or play helper guidance audio, but it may still show tiny temporary written replay/reveal guidance and gently indicate the controls.
+- On desktop or keyboard-capable layouts, written fallback guidance may include a small lower-contrast shortcut hint such as replay/reveal.
+- This replaces generic timed shortcut-tip onboarding where applicable. Do not duplicate this with separate first-session or session-count-based shortcut tips.
+- The assist must not use modals, coach marks, persistent banners, popovers, or tutorial-style overlays.
+- If sound effects are off, the assist may still work because spoken helper guidance is learning/support audio, not a UI sound effect.
+- If helper audio is unavailable, degrade gracefully by using the appropriate written/visual fallback guidance rather than failing or blocking practice.
+- Do not trigger in practice-test mode.
+- Trigger at most once per learner/device initially.
+- Do not affect scoring, progress, difficult-word logic, recap, completion, recommendations, or reveal tracking.
+- Do not mark a word as revealed or difficult merely because the assist plays.
+- Do not block typing, manual replay, reveal, or focus.
+- Clean up timers and helper audio on word change, route change, session end, relevant modal opening, or unmount.
 
 If audio is missing:
 
@@ -2402,13 +2421,12 @@ If the completed word had no incorrect attempts and no revealed letters during t
 
 Desktop:
 
-- Spacebar tap/release: replay audio.
-- Spacebar press and hold: peek at the full answer.
+- Up arrow: replay audio.
 - Right arrow: reveal next letter.
 
-The practice screen may show a subtle inline keyboard shortcut hint on desktop/tablet layouts only. The hint must include a small keyboard icon, must not appear on mobile, and should say: “Space to replay audio • → to reveal next letter”.
+The practice screen should not show a generic timed or first-session keyboard shortcut onboarding hint.
 
-The keyboard shortcut hint is first-session-only. Track whether the user has already started a practice session in local storage. Show the hint during that first practice session, then hide it entirely for all later sessions. Reset Progress clears this flag with the rest of progress storage.
+Shortcut discovery should primarily come from the contextual struggling assist described in the audio/replay section. If shown, shortcut text should be desktop-only, quiet, temporary, and contextual, for example “↑ replay · → reveal”.
 
 Typed spaces should be ignored silently during practice. Multi-word answers should work whether the user types the word boundary space or continues with the next letter.
 

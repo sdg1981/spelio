@@ -1,5 +1,6 @@
 import type { AdminFocusFilters } from './filters';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, DefaultAudioProvider, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
+import type { InterfaceAudioClip } from '../../lib/interfaceAudio';
 import type { AudioGenerationResult, AudioQueueSnapshot } from '../services/audioGeneration';
 import type { AdminContentExportPayload } from './contentExport';
 
@@ -22,6 +23,7 @@ export interface AdminCustomWordListSummary {
 
 export interface AdminAudioSettings {
   defaultAudioProvider: DefaultAudioProvider;
+  interfaceAudioClips: InterfaceAudioClip[];
 }
 
 export interface AdminRepository {
@@ -53,6 +55,7 @@ export interface AdminRepository {
   uploadElevenLabsAudioFile(word: AdminWord, file: Blob): Promise<string>;
   getAudioSettings(): Promise<AdminAudioSettings>;
   saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
+  generateInterfaceAudioClip(clip: InterfaceAudioClip): Promise<InterfaceAudioClip>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
   cleanupExpiredCustomWordLists(): Promise<number>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;

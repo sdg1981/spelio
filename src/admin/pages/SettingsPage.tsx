@@ -6,14 +6,16 @@ import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
 import type { DefaultAudioProvider } from '../types';
 
-export function SettingsPage({ repository }: { repository: AdminRepository }) {
+export function SettingsPage({ repository, navigate }: { repository: AdminRepository; navigate: (path: string) => void }) {
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>('azure');
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     repository.getAudioSettings()
-      .then(settings => setDefaultAudioProvider(settings.defaultAudioProvider))
+      .then(settings => {
+        setDefaultAudioProvider(settings.defaultAudioProvider);
+      })
       .catch(error => setErrorMessage(readError(error, 'Could not load audio settings.')));
   }, [repository]);
 
@@ -21,7 +23,8 @@ export function SettingsPage({ repository }: { repository: AdminRepository }) {
     try {
       setErrorMessage('');
       setStatusMessage('');
-      const saved = await repository.saveAudioSettings({ defaultAudioProvider: provider });
+      const settings = await repository.getAudioSettings();
+      const saved = await repository.saveAudioSettings({ ...settings, defaultAudioProvider: provider });
       setDefaultAudioProvider(saved.defaultAudioProvider);
       setStatusMessage('Audio setting saved.');
     } catch (error) {
@@ -54,6 +57,11 @@ export function SettingsPage({ repository }: { repository: AdminRepository }) {
               <option value="elevenlabs">ElevenLabs</option>
             </AdminSelect>
           </Field>
+        </AdminCard>
+        <AdminCard className="p-5">
+          <h2 className="mb-2 text-lg font-black tracking-[-0.02em]">Helper audio</h2>
+          <p className="mb-5 text-sm leading-6 text-slate-500">Interface and coaching clips are managed in their own section.</p>
+          <AdminButton onClick={() => navigate('/admin/interface-audio')}>Open Helper Audio</AdminButton>
         </AdminCard>
         <AdminCard className="p-5">
           <h2 className="mb-5 text-lg font-black tracking-[-0.02em]">Export and import</h2>

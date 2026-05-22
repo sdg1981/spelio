@@ -7,4 +7,4 @@ import './styles.css';
 
 const Root = browserLooksOkay() ? App : BrowserUnsupportedFallback;
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><Root /></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<Root />);

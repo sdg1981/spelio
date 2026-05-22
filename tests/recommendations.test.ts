@@ -20,6 +20,7 @@ import {
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
+import { validateImportPayload } from '../src/admin/repositories/importValidation';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -592,6 +593,97 @@ test('completing foundations_numbers cleanly recommends foundations_mixed_01', (
   assertEqual(recommendation.subtitle, 'Mixed Practice — Foundations', 'Primary action should show the next list name');
 });
 
+test('import validation accepts live export database field names for order and progression', () => {
+  const preview = validateImportPayload({
+    collections: [{
+      id: 'spelio_core_welsh',
+      slug: 'spelio-core-welsh',
+      name: 'Spelio Core Welsh',
+      type: 'spelio_core',
+      source_language: 'en',
+      target_language: 'cy',
+      owner_type: 'spelio',
+      order_index: 1,
+      is_active: true
+    }],
+    lists: [{
+      id: 'import_first',
+      slug: 'import-first',
+      collection_id: 'spelio_core_welsh',
+      name: 'Import First',
+      name_cy: 'Mewnforio Cyntaf',
+      description: 'First imported list',
+      description_cy: 'Rhestr gyntaf',
+      language: 'cy',
+      source_language: 'en',
+      target_language: 'cy',
+      dialect: 'Both',
+      stage_id: 'foundations',
+      focus_category_id: 'core-vocabulary',
+      difficulty: 1,
+      order_index: 7,
+      next_list_id: 'import_second',
+      is_active: true,
+      list_type: 'main',
+      hidden_from_main_catalogue: false,
+      words: [{
+        id: 'import_first_001',
+        list_id: 'import_first',
+        english_prompt: 'yes',
+        welsh_answer: 'ie',
+        accepted_alternatives: [],
+        audio_url: 'https://example.com/ie.mp3',
+        audio_status: 'ready',
+        dialect: 'Both',
+        order_index: 3,
+        difficulty: 1,
+        usage_note: 'General yes.',
+        dialect_note: '',
+        variant_group_id: '',
+        spelling_hint_id: 'ie',
+        disable_pattern_hints: true
+      }]
+    }, {
+      id: 'import_second',
+      slug: 'import-second',
+      collection_id: 'spelio_core_welsh',
+      name: 'Import Second',
+      language: 'cy',
+      source_language: 'en',
+      target_language: 'cy',
+      dialect: 'Both',
+      stage_id: 'foundations',
+      focus_category_id: 'core-vocabulary',
+      difficulty: 1,
+      order_index: 8,
+      next_list_id: null,
+      is_active: true,
+      words: [{
+        id: 'import_second_001',
+        list_id: 'import_second',
+        english_prompt: 'no',
+        welsh_answer: 'na',
+        accepted_alternatives: [],
+        audio_url: 'https://example.com/na.mp3',
+        audio_status: 'ready',
+        dialect: 'Both',
+        order_index: 4,
+        difficulty: 1
+      }]
+    }]
+  });
+
+  assertEqual(preview.errors.length, 0, 'Snake-case live export shape should import without blocking errors');
+  assertEqual(preview.content.collections[0]?.order, 1, 'Collection order_index should become order');
+  assertEqual(preview.content.lists[0]?.order, 7, 'List order_index should become order');
+  assertEqual(preview.content.lists[0]?.nextListId, 'import_second', 'next_list_id should become nextListId');
+  assertEqual(preview.content.lists[0]?.stageId, 'foundations', 'stage_id should become stageId');
+  assertEqual(preview.content.lists[0]?.focusCategoryId, 'core-vocabulary', 'focus_category_id should become focusCategoryId');
+  assertEqual(preview.content.words[0]?.order, 3, 'Word order_index should become order');
+  assertEqual(preview.content.words[0]?.spellingHintId, 'ie', 'spelling_hint_id should become spellingHintId');
+  assertEqual(preview.content.words[0]?.disablePatternHints, true, 'disable_pattern_hints should become disablePatternHints');
+});
+
 test('support-only lists are present but hidden from the main word-list catalogue', () => {
   const support = findSupportWordList(wordLists, 'support_dd');
   const supportW = findSupportWordList(wordLists, 'support_w');
@@ -604,6 +696,36 @@ test('support-only lists are present but hidden from the main word-list catalogu
   assertEqual(mainWordLists(wordLists).some(list => list.id === 'support_dd'), false, 'Main catalogue filter should exclude support lists');
   assertEqual(mainWordLists(wordLists).some(list => list.id === 'support_w' || list.id === 'support_y'), false, 'Split W/Y support lists should be excluded from the main catalogue');
   assertEqual(normalizeSingleSelectedListIds(['support_dd'], wordLists)[0], 'foundations_first_words', 'Normal list selection should not select a support list');
+});
+
+test('stored selected list falls back when the list has no usable imported words', () => {
+  const emptyImportedList: WordList = {
+    id: 'empty_imported',
+    collectionId: 'test',
+    name: 'Empty imported',
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Both',
+    stage: 'Test',
+    difficulty: 1,
+    order: 1,
+    nextListId: 'usable_imported',
+    isActive: true,
+    words: []
+  };
+  const usableImportedList = makeLargeList('usable_imported', 2, 3);
+  const normalized = normalizeStorageWordListSelection({
+    ...createDefaultStorage(),
+    selectedListIds: ['empty_imported'],
+    currentPathPosition: 'empty_imported'
+  }, [emptyImportedList, usableImportedList]);
+  const session = createPracticeSession([emptyImportedList, usableImportedList], normalized);
+
+  assertEqual(normalized.selectedListIds[0], 'usable_imported', 'Empty imported list should not remain selected for practice');
+  assertEqual(normalized.currentPathPosition, 'usable_imported', 'Current path should move to the usable fallback list');
+  assertEqual(session.words.length > 0, true, 'Fallback selection should produce practice words');
 });
 
 test('support-only lists are excluded from normal recommendations', () => {

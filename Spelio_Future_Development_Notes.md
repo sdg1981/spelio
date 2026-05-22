@@ -77,6 +77,7 @@ Lightweight behavioural guidance:
 - If a learner repeatedly uses Reveal quickly, the app may gently encourage another listen first.
 - Guidance should be non-intrusive and should use existing quiet UI areas where possible.
 - Do not add modal warnings, punitive systems, forced listening gates, or friction-heavy anti-reveal behaviour.
+- The same contextual audio-guidance pattern may later support carefully throttled sound-pattern guidance, such as CH/K confusion, but this should require stronger evidence than a single mobile typo and should remain audio-first, rare, and non-intrusive.
 
 Future AI / TTS direction:
 
@@ -301,10 +302,13 @@ Teacher-created lists may eventually need optional advanced settings, such as:
 - Audio prompt availability
 - Reveal enabled/disabled
 - Audio replay allowed/disabled
+- Separate assessment controls such as allowManualReplay, allowReveal, allowEnglishReveal or allowPromptReveal, and audioPromptsOnStart
 - Randomise order
 - Require audio
 - Assessment/test-style mode
 - Possibly time limits later
+
+For normal practice, audio prompts off should mean no automatic audio, not no manual replay. Stricter replay/reveal limits should belong to future assessment or teacher-shared modes rather than changing the normal learner setting.
 
 These controls should be hidden behind progressive disclosure such as "Advanced settings". They should not clutter the normal learner experience or make Spelio Core feel configurable for its own sake.
 

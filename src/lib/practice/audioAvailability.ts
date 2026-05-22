@@ -31,8 +31,8 @@ export function hasPlayableAudioUrl(audioUrl?: string | null) {
   return getPlayableAudioUrl(audioUrl) !== null;
 }
 
-export function shouldAllowAudioPlayback(audioPrompts: boolean, forceAudioAvailable = false) {
-  return audioPrompts || forceAudioAvailable;
+export function shouldAllowAudioPlayback(_audioPrompts: boolean, _forceAudioAvailable = false) {
+  return true;
 }
 
 export function isAudioUnavailableForPrompt(word: AudioAvailabilityInput, playbackFailed = false, provider?: DefaultAudioProvider) {

@@ -17,7 +17,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
-import { isAudioUnavailableForPrompt, shouldAllowAudioPlayback } from '../lib/practice/audioAvailability';
+import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
@@ -128,13 +128,16 @@ export function usePracticeSession({
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   t?: Translate;
 }) {
+  // A practice run must keep the word queue it started with. Storage and content can
+  // update while the learner is on the final word; rebuilding here can replace the
+  // completed queue with an empty one before the end-screen transition runs.
   const session = useMemo(
     () => createPracticeSession(lists, sessionStorage, reviewDifficult, includeRecapDue),
-    [lists, sessionKey, sessionStorage, reviewDifficult, includeRecapDue]
+    [sessionKey]
   );
   const recapWord = useMemo(
     () => disableQuickRecap ? null : selectPreSessionRecapWord(sessionStorage, lists, session.words, reviewDifficult || includeRecapDue),
-    [disableQuickRecap, lists, sessionKey, reviewDifficult, includeRecapDue, session.words, sessionStorage]
+    [sessionKey]
   );
   const sessionIdentity = `${recapWord?.id ?? ''}:${session.words.map(word => word.id).join('|')}`;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -219,7 +222,6 @@ export function usePracticeSession({
     recordInteraction?: boolean;
     showUnavailableStatus?: boolean;
   } = {}) => {
-    if (!shouldAllowAudioPlayback(storageRef.current.settings.audioPrompts, forceAudioAvailable)) return false;
     if (recordInteraction) recordPracticeInteraction();
 
     const wordForPlayback = currentWord;
