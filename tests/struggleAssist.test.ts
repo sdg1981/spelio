@@ -7,8 +7,10 @@ import {
   markPracticeStruggleAssistSeen,
   PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD,
   PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS,
+  PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS,
   PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS,
   PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS,
+  PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
@@ -198,12 +200,22 @@ function createMemoryStorage(): Storage {
     'Audio prompts off should suppress both word replay and helper guidance audio.'
   );
   assertEqual(
-    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false }),
-    true,
-    'Audio prompts off should not suppress the separate desktop shortcut hint.'
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false, audioPrompts: true, helperAudioAvailable: true }),
+    false,
+    'Audio prompts on should not show desktop shortcut text when spoken helper guidance is available.'
   );
   assertEqual(
-    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: true }),
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false, audioPrompts: false, helperAudioAvailable: true }),
+    true,
+    'Audio prompts off should show the shortcut text fallback even when helper audio metadata exists.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false, audioPrompts: true, helperAudioAvailable: false }),
+    true,
+    'Missing helper audio should allow the shortcut text fallback.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: true, audioPrompts: false, helperAudioAvailable: true }),
     false,
     'Practice-test mode should still suppress the shortcut hint.'
   );
@@ -219,6 +231,21 @@ function createMemoryStorage(): Storage {
       { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
     ],
     'Assist trigger should schedule audio emphasis first, then reveal emphasis, then clear both.'
+  );
+  assertArrayEqual(
+    createStruggleAssistEmphasisPlan({ practiceTestMode: false, startDelayMs: PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS }),
+    [
+      { target: 'audio', delayMs: PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS },
+      { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS + PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS },
+      { target: 'reveal', delayMs: PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS },
+      { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
+    ],
+    'Spoken helper fallback timing should delay visual emphasis until after the helper guidance window.'
+  );
+  assertEqual(
+    createStruggleAssistEmphasisPlan({ practiceTestMode: false, startDelayMs: PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS })[0]?.delayMs,
+    PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
+    'Text fallback timing should allow the shortcut hint to appear before visual emphasis.'
   );
   assertArrayEqual(
     createStruggleAssistEmphasisPlan({ practiceTestMode: true }),

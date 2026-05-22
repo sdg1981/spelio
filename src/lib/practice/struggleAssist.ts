@@ -2,10 +2,12 @@ export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 3;
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY = 'spelio.practiceStruggleAssistSeen.v1';
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_PREFIX = 'spelio.practiceStruggleAssist';
 export const PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS = 900;
+export const PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS = 4200;
 export const PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS = 3600;
-export const PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS = 880;
-export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS = 1040;
-export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS = 880;
+export const PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS = 650;
+export const PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS = 980;
+export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS = 1160;
+export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS = 980;
 
 export type StruggleAssistEmphasisTarget = 'audio' | 'reveal';
 
@@ -123,24 +125,30 @@ export function createStruggleAssistAudioPlan({
 
 export function shouldShowStruggleAssistShortcutHint({
   keyboardCapable,
-  practiceTestMode
+  practiceTestMode,
+  audioPrompts,
+  helperAudioAvailable
 }: {
   keyboardCapable: boolean;
   practiceTestMode: boolean;
+  audioPrompts: boolean;
+  helperAudioAvailable: boolean;
 }) {
-  return keyboardCapable && !practiceTestMode;
+  return keyboardCapable && !practiceTestMode && !(audioPrompts && helperAudioAvailable);
 }
 
 export function createStruggleAssistEmphasisPlan({
-  practiceTestMode
+  practiceTestMode,
+  startDelayMs = 0
 }: {
   practiceTestMode: boolean;
+  startDelayMs?: number;
 }): Array<{ target: StruggleAssistEmphasisTarget | null; delayMs: number }> {
   if (practiceTestMode) return [];
   return [
-    { target: 'audio', delayMs: 0 },
-    { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS },
-    { target: 'reveal', delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS },
-    { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
+    { target: 'audio', delayMs: startDelayMs },
+    { target: null, delayMs: startDelayMs + PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS },
+    { target: 'reveal', delayMs: startDelayMs + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS },
+    { target: null, delayMs: startDelayMs + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
   ];
 }
