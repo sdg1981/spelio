@@ -1184,7 +1184,7 @@ export function Practice({
             event.target.value = '';
           }}
           inputMode="text"
-          autoCapitalize="none"
+          autoCapitalize="off"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
