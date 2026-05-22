@@ -38,6 +38,9 @@ type TestResponseBody = Uint8Array | {
   error?: string;
   errorStage?: string;
   audioPipelineVersion?: string;
+  requestedLanguage?: string;
+  requestedLocale?: string;
+  requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
 } | null;
@@ -47,7 +50,7 @@ type TestResponse = {
   headers: Record<string, string | string[]>;
   body: TestResponseBody;
   status: (code: number) => TestResponse;
-  json: (body: { ok: boolean; error?: string }) => void;
+  json: (body: Exclude<TestResponseBody, Uint8Array | null>) => void;
   setHeader: (name: string, value: string | string[]) => void;
   send: (body: unknown) => void;
 };
@@ -242,11 +245,52 @@ async function runAsyncAssertions() {
 
   assertEqual(response.statusCode, 200, 'Successful audio generation should return HTTP 200.');
   assertEqual(response.headers['Content-Type'], 'audio/mpeg', 'Processed audio response should remain MP3.');
+  assertEqual(response.headers['X-Spelio-Azure-Language'], 'cy', 'Welsh route responses should expose the selected language diagnostic.');
+  assertEqual(response.headers['X-Spelio-Azure-Locale'], 'cy-GB', 'Welsh route responses should expose the selected Azure locale.');
+  assertEqual(response.headers['X-Spelio-Azure-Voice'], 'cy-GB-NiaNeural', 'Welsh route responses should expose the selected Azure voice.');
   assertEqual(requestedOutputFormat, AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT, 'Azure should be asked for WAV intermediate audio.');
   assertEqual(requestedOutputFormat, 'riff-24khz-16bit-mono-pcm', 'Azure should use a supported RIFF/WAV intermediate output format.');
   assert(requestedSsml.includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">gwaith</prosody>`), 'Azure request should include subtle prosody rate SSML.');
   assert(postProcessCalled, 'The route should post-process Azure audio before returning it for upload.');
   assert(response.body instanceof Uint8Array && response.body[0] === 0x49, 'The route should send the processed MP3 bytes.');
+
+  let englishRequestedSsml = '';
+  const englishResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: 'You can replay the word.', language: 'en' } },
+    englishResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async (_url, options) => {
+        englishRequestedSsml = options.body;
+        return {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => makeAudioBuffer()
+        };
+      },
+      postProcess: async () => {
+        const mp3Bytes = new Uint8Array(128);
+        mp3Bytes[0] = 0x49;
+        mp3Bytes[1] = 0x44;
+        mp3Bytes[2] = 0x33;
+        return mp3Bytes;
+      },
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Language'], 'en', 'English helper route responses should expose the selected language diagnostic.');
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Locale'], AZURE_ENGLISH_SPEECH_LOCALE, 'English helper route responses should expose the English Azure locale.');
+  assertEqual(englishResponse.headers['X-Spelio-Azure-Voice'], AZURE_ENGLISH_VOICE, 'English helper route responses should expose the English Azure voice.');
+  assert(
+    englishRequestedSsml.includes(`xml:lang="${AZURE_ENGLISH_SPEECH_LOCALE}"`) &&
+      englishRequestedSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
+    'English helper generation should send English SSML to Azure.'
+  );
 
   const pipelineLogs: Array<Record<string, unknown>> = [];
   const versionResponse = createResponse();

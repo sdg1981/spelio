@@ -13,6 +13,11 @@ export interface InterfaceAudioClip {
   audioStatus: InterfaceAudioStatus;
   provider: InterfaceAudioProvider;
   updatedAt: string;
+  generationLanguage?: InterfaceLanguage;
+  generationLocale?: string;
+  generationVoice?: string;
+  storagePath?: string;
+  cacheBustedUrlChanged?: boolean;
 }
 
 export type InterfaceAudioClipRegistry = Partial<Record<InterfaceAudioClipKey, Partial<Record<InterfaceLanguage, InterfaceAudioClip>>>>;
@@ -80,7 +85,16 @@ export function normalizeInterfaceAudioClips(value: unknown): InterfaceAudioClip
       audioUrl,
       audioStatus: normalizeInterfaceAudioStatus(source.audioStatus ?? source.audio_status),
       provider: normalizeInterfaceAudioProvider(source.provider),
-      updatedAt
+      updatedAt,
+      generationLanguage: normalizeInterfaceLanguage(source.generationLanguage ?? source.generation_language),
+      generationLocale: readOptionalString(source.generationLocale ?? source.generation_locale),
+      generationVoice: readOptionalString(source.generationVoice ?? source.generation_voice),
+      storagePath: readOptionalString(source.storagePath ?? source.storage_path),
+      cacheBustedUrlChanged: typeof source.cacheBustedUrlChanged === 'boolean'
+        ? source.cacheBustedUrlChanged
+        : typeof source.cache_busted_url_changed === 'boolean'
+          ? source.cache_busted_url_changed
+          : undefined
     });
   }
 
@@ -122,4 +136,12 @@ function mergeInterfaceAudioClipsWithDefaults(clips: InterfaceAudioClip[]) {
     if (!byLanguage.has(fallback.language)) byLanguage.set(fallback.language, fallback);
   }
   return Array.from(byLanguage.values());
+}
+
+function normalizeInterfaceLanguage(value: unknown): InterfaceLanguage | undefined {
+  return value === 'en' || value === 'cy' ? value : undefined;
+}
+
+function readOptionalString(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value : undefined;
 }

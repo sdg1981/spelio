@@ -59,7 +59,7 @@ export function InterfaceAudioPage({ repository }: { repository: AdminRepository
       setInterfaceAudioClips(current => normalizeInterfaceAudioClips(current).map(item => (
         item.key === generatedClip.key && item.language === generatedClip.language ? generatedClip : item
       )));
-      setStatusMessage(`${clip.language === 'cy' ? 'Welsh' : 'English'} helper audio generated.`);
+      setStatusMessage(formatGenerationStatus(generatedClip));
     } catch (error) {
       setErrorMessage(readError(error, 'Could not generate helper audio.'));
     } finally {
@@ -119,7 +119,8 @@ export function InterfaceAudioPage({ repository }: { repository: AdminRepository
                   </AdminButton>
                 </div>
                 <div className="mt-2 text-xs leading-5 text-slate-500">
-                  Provider: {clip.provider} · Updated: {clip.updatedAt || 'not generated'}
+                  Provider: {clip.provider} · Voice: {clip.generationVoice || 'not generated'} · Locale: {clip.generationLocale || 'not generated'} · Updated: {clip.updatedAt || 'not generated'}
+                  {clip.storagePath ? <><br />Storage: {clip.storagePath}</> : null}
                 </div>
               </div>
             );
@@ -132,4 +133,15 @@ export function InterfaceAudioPage({ repository }: { repository: AdminRepository
 
 function readError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function formatGenerationStatus(clip: InterfaceAudioClip) {
+  const language = clip.language === 'cy' ? 'Welsh' : 'English';
+  const diagnostics = clip.generationVoice && clip.generationLocale
+    ? ` Voice: ${clip.generationVoice} / ${clip.generationLocale}.`
+    : '';
+  const cacheStatus = clip.cacheBustedUrlChanged === undefined
+    ? ''
+    : ` Cache-busted URL changed: ${clip.cacheBustedUrlChanged ? 'yes' : 'no'}.`;
+  return `${language} helper audio generated.${diagnostics}${cacheStatus}`;
 }

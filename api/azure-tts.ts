@@ -50,6 +50,9 @@ type AudioRouteJsonResponse = {
   error?: string;
   errorStage?: AudioErrorStage;
   audioPipelineVersion?: string;
+  requestedLanguage?: AzureSpeechLanguage;
+  requestedLocale?: string;
+  requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
 };
@@ -248,7 +251,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
         inputBytes: wavBuffer.byteLength
       });
-      mp3Audio = await processAzureWelshAudio(wavBuffer, dependencies.postProcess);
+      mp3Audio = await processAzureAudio(wavBuffer, dependencies.postProcess);
       logInfo('Audio post-processing finished', {
         stage: 'mp3_returned',
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
@@ -266,6 +269,9 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
 
     response.setHeader('Content-Type', 'audio/mpeg');
     response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Spelio-Azure-Language', voiceConfig.language);
+    response.setHeader('X-Spelio-Azure-Locale', voiceConfig.locale);
+    response.setHeader('X-Spelio-Azure-Voice', voiceConfig.voice);
     return response.status(200).send(Buffer.from(mp3Audio));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown route failure.';
@@ -334,7 +340,7 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
   }
 
   try {
-    const mp3Bytes = await processAzureWelshAudio(wavBuffer, dependencies.postProcess);
+    const mp3Bytes = await processAzureAudio(wavBuffer, dependencies.postProcess);
     return {
       mp3Bytes,
       azureStatus: azureResponse.status,
@@ -370,7 +376,7 @@ function requestAzureAudio(text: string, options: {
   });
 }
 
-function processAzureWelshAudio(wavBuffer: ArrayBuffer, postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>) {
+function processAzureAudio(wavBuffer: ArrayBuffer, postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>) {
   return (postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
 }
 

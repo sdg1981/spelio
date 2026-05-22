@@ -2,6 +2,8 @@ import type { AdminWord, AudioStatus, ElevenLabsGenerationMode } from '../types'
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
+export const AZURE_ENGLISH_VOICE = 'en-GB-SoniaNeural';
+export const AZURE_ENGLISH_SPEECH_LOCALE = 'en-GB';
 export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
@@ -41,10 +43,24 @@ export interface ElevenLabsAudioBlob {
   diagnostics: ElevenLabsAudioDiagnostics;
 }
 
+export interface InterfaceAudioDiagnostics {
+  requestedLanguage: 'en' | 'cy';
+  requestedLocale: string;
+  requestedVoice: string;
+}
+
+export interface InterfaceAudioBlob {
+  blob: Blob;
+  diagnostics: InterfaceAudioDiagnostics;
+}
+
 type AudioRouteErrorPayload = {
   error?: string;
   errorStage?: string;
   audioPipelineVersion?: string;
+  requestedLanguage?: 'en' | 'cy';
+  requestedLocale?: string;
+  requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
 };
@@ -74,14 +90,14 @@ export function normalizeLegacyAudioStatus(status: unknown): AudioStatus {
 }
 
 export async function synthesizeWelshMp3(text: string): Promise<Blob> {
-  return synthesizeAzureMp3(text, 'cy');
+  return (await synthesizeAzureMp3(text, 'cy')).blob;
 }
 
-export async function synthesizeInterfaceAudioMp3(text: string, language: 'en' | 'cy'): Promise<Blob> {
+export async function synthesizeInterfaceAudioMp3(text: string, language: 'en' | 'cy'): Promise<InterfaceAudioBlob> {
   return synthesizeAzureMp3(text, language);
 }
 
-async function synthesizeAzureMp3(text: string, language: 'en' | 'cy'): Promise<Blob> {
+async function synthesizeAzureMp3(text: string, language: 'en' | 'cy'): Promise<InterfaceAudioBlob> {
   const response = await fetch('/api/azure-tts', {
     method: 'POST',
     headers: {
@@ -115,7 +131,14 @@ async function synthesizeAzureMp3(text: string, language: 'en' | 'cy'): Promise<
     throw new Error(`Azure synthesis returned a non-MP3 payload${contentType ? ` (${contentType})` : ''}.`);
   }
 
-  return new Blob([audioBuffer], { type: 'audio/mpeg' });
+  return {
+    blob: new Blob([audioBuffer], { type: 'audio/mpeg' }),
+    diagnostics: {
+      requestedLanguage: readAzureLanguageHeader(response.headers.get('x-spelio-azure-language'), language),
+      requestedLocale: response.headers.get('x-spelio-azure-locale') || getFallbackAzureLocale(language),
+      requestedVoice: response.headers.get('x-spelio-azure-voice') || getFallbackAzureVoice(language)
+    }
+  };
 }
 
 export async function synthesizeElevenLabsWelshMp3(text: string): Promise<ElevenLabsAudioBlob> {
@@ -181,13 +204,28 @@ export function normalizeElevenLabsExtractStartOffsetMs(value: unknown): 80 | 14
 }
 
 function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload | null) {
-  if (!payload) return status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}) before returning diagnostic details.`;
+  if (!payload) {
+    if (status === 404) return 'Audio route /api/azure-tts was not found. Local Vite dev does not serve Vercel API routes; use the deployed dev admin or run the app through Vercel dev for local generation.';
+    return status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}) before returning diagnostic details.`;
+  }
 
   const message = payload.error ?? (status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}).`);
   const stage = payload.errorStage ? `stage: ${payload.errorStage}` : '';
   const version = payload.audioPipelineVersion ? `pipeline: ${payload.audioPipelineVersion}` : '';
   const details = [stage, version].filter(Boolean).join(', ');
   return details ? `${message} (${details})` : message;
+}
+
+function readAzureLanguageHeader(value: string | null, fallback: 'en' | 'cy') {
+  return value === 'en' || value === 'cy' ? value : fallback;
+}
+
+function getFallbackAzureLocale(language: 'en' | 'cy') {
+  return language === 'en' ? AZURE_ENGLISH_SPEECH_LOCALE : AZURE_SPEECH_LOCALE;
+}
+
+function getFallbackAzureVoice(language: 'en' | 'cy') {
+  return language === 'en' ? AZURE_ENGLISH_VOICE : AZURE_WELSH_VOICE;
 }
 
 export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {

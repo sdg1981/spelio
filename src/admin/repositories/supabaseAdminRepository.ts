@@ -6,7 +6,7 @@ import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
-import { normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
+import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
 type CustomWordListRow = {
   id: string;
@@ -450,24 +450,32 @@ export const supabaseAdminRepository: AdminRepository = {
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
     if (!clip.text.trim()) throw new Error('Helper audio script is empty.');
 
+    const previousCacheBustedUrl = withInterfaceAudioCacheBust(clip.audioUrl, clip.updatedAt);
     const audio = await synthesizeInterfaceAudioMp3(clip.text, clip.language);
-    if (audio.size < 100) throw new Error('Helper audio upload was blocked because the generated file was unexpectedly small.');
+    if (audio.blob.size < 100) throw new Error('Helper audio upload was blocked because the generated file was unexpectedly small.');
 
     const path = createInterfaceAudioStoragePath(clip);
     const { error: uploadError } = await client.storage
       .from('audio')
-      .upload(path, audio, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
+      .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
     if (uploadError) throw uploadError;
 
     const { data } = client.storage.from('audio').getPublicUrl(path);
     if (!data.publicUrl) throw new Error('Helper audio upload did not return a public URL.');
 
+    const updatedAt = new Date().toISOString();
+    const generatedCacheBustedUrl = withInterfaceAudioCacheBust(data.publicUrl, updatedAt);
     const generatedClip: InterfaceAudioClip = {
       ...clip,
       audioUrl: data.publicUrl,
       audioStatus: 'ready',
       provider: 'azure',
-      updatedAt: new Date().toISOString()
+      updatedAt,
+      generationLanguage: audio.diagnostics.requestedLanguage,
+      generationLocale: audio.diagnostics.requestedLocale,
+      generationVoice: audio.diagnostics.requestedVoice,
+      storagePath: path,
+      cacheBustedUrlChanged: generatedCacheBustedUrl !== previousCacheBustedUrl
     };
     const current = await this.getAudioSettings();
     const nextClips = normalizeInterfaceAudioClips(current.interfaceAudioClips).map(item => (

@@ -244,7 +244,12 @@ export const mockAdminRepository: AdminRepository = {
       audioUrl: `/audio/interface/${encodeURIComponent(clip.key)}/${encodeURIComponent(clip.language)}.mp3`,
       audioStatus: 'ready',
       provider: 'azure',
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      generationLanguage: clip.language,
+      generationLocale: clip.language === 'cy' ? 'cy-GB' : 'en-GB',
+      generationVoice: clip.language === 'cy' ? 'cy-GB-NiaNeural' : 'en-GB-SoniaNeural',
+      storagePath: `interface/${clip.key.replace(/_/g, '-')}/${clip.language}.mp3`,
+      cacheBustedUrlChanged: true
     };
     audioSettings = {
       ...audioSettings,
