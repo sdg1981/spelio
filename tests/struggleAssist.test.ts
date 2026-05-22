@@ -367,7 +367,7 @@ function createMemoryStorage(): Storage {
   assertEqual(
     createStruggleAssistEmphasisPlan({ practiceTestMode: false, startDelayMs: PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS })[0]?.delayMs,
     PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
-    'Text fallback timing should allow the shortcut hint to appear before visual emphasis.'
+    'Text fallback timing should wait for the written guidance to finish before visual emphasis.'
   );
   assertArrayEqual(
     createStruggleAssistEmphasisPlan({ practiceTestMode: true }),

@@ -1125,6 +1125,7 @@ export function Practice({
   const promptDelayed = promptDisplay.reserved;
   const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
   const wordPillAudioIconVisible = !currentWordAudioUnavailable;
+  const WordPillAudioIcon = storage.settings.audioPrompts ? Repeat : Volume2;
   const wordInsights = !practiceTestMode && interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -1139,7 +1140,7 @@ export function Practice({
 
       <section className="page-shell practice-shell">
         <button className={`word-pill ${struggleAssistEmphasis === 'audio' ? 'assist-emphasis assist-emphasis-audio' : ''}`.trim()} onClick={handleWordPillClick}>
-          {wordPillAudioIconVisible && <Repeat className="prompt-audio-icon" size={23} />}
+          {wordPillAudioIconVisible && <WordPillAudioIcon className="prompt-audio-icon" size={23} />}
           {promptUsesRecallPauseShell ? (
             <span key={currentWord.id} className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
               <span className="prompt-text-reserve" style={HIDDEN_PROMPT_STYLE} aria-hidden="true">{prompt}</span>
