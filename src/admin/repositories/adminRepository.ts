@@ -54,6 +54,7 @@ export interface AdminRepository {
   uploadElevenLabsAudioFile(word: AdminWord, file: Blob): Promise<string>;
   getAudioSettings(): Promise<AdminAudioSettings>;
   saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
+  generateInterfaceAudioClip(clip: InterfaceAudioClip): Promise<InterfaceAudioClip>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
   cleanupExpiredCustomWordLists(): Promise<number>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;

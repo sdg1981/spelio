@@ -28,7 +28,7 @@ import {
   getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createInterfaceAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
@@ -134,6 +134,11 @@ assertEqual(
   createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
   'cy/foundations-first-words/foundations-first-words-001.mp3',
   'Normal list audio should keep the existing list-scoped path.'
+);
+assertEqual(
+  createInterfaceAudioStoragePath({ key: 'practice_struggle_assist', language: 'en' }),
+  'interface/practice-struggle-assist/en.mp3',
+  'Interface helper audio should use a stable non-word queue storage path.'
 );
 
 const filter = createAudioPostProcessingFilter();

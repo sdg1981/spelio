@@ -7,6 +7,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldShowStruggleAssistShortcutHint,
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
@@ -139,6 +140,16 @@ function createMemoryStorage(): Storage {
     createStruggleAssistAudioPlan({ audioPrompts: false, helperAudioAvailable: true }),
     [],
     'Audio prompts off should suppress both word replay and helper guidance audio.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false }),
+    true,
+    'Audio prompts off should not suppress the separate desktop shortcut hint.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: true }),
+    false,
+    'Practice-test mode should still suppress the shortcut hint.'
   );
 }
 

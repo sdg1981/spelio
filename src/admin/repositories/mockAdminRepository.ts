@@ -5,7 +5,7 @@ import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListColle
 import { validateImportPayload } from './importValidation';
 import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
-import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips } from '../../lib/interfaceAudio';
+import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
@@ -236,6 +236,23 @@ export const mockAdminRepository: AdminRepository = {
       interfaceAudioClips: normalizeInterfaceAudioClips(settings.interfaceAudioClips)
     };
     return { ...audioSettings };
+  },
+
+  async generateInterfaceAudioClip(clip: InterfaceAudioClip) {
+    const generatedClip: InterfaceAudioClip = {
+      ...clip,
+      audioUrl: `/audio/interface/${encodeURIComponent(clip.key)}/${encodeURIComponent(clip.language)}.mp3`,
+      audioStatus: 'ready',
+      provider: 'azure',
+      updatedAt: new Date().toISOString()
+    };
+    audioSettings = {
+      ...audioSettings,
+      interfaceAudioClips: normalizeInterfaceAudioClips(audioSettings.interfaceAudioClips).map(item => (
+        item.key === generatedClip.key && item.language === generatedClip.language ? generatedClip : item
+      ))
+    };
+    return generatedClip;
   },
 
   async listCustomWordLists() {

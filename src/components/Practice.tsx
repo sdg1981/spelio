@@ -32,6 +32,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldShowStruggleAssistShortcutHint,
   type StruggleAssistState
 } from '../lib/practice/struggleAssist';
 
@@ -512,7 +513,10 @@ export function Practice({
   }
 
   function showStruggleAssistHint() {
-    if (!isKeyboardShortcutHintCapable()) return;
+    if (!shouldShowStruggleAssistShortcutHint({
+      keyboardCapable: isKeyboardShortcutHintCapable(),
+      practiceTestMode
+    })) return;
 
     setStruggleAssistHintVisible(true);
     if (struggleAssistHintTimerRef.current) window.clearTimeout(struggleAssistHintTimerRef.current);

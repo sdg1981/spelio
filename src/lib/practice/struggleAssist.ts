@@ -91,3 +91,13 @@ export function createStruggleAssistAudioPlan({
     ? ['replay-word', 'play-helper']
     : ['replay-word'];
 }
+
+export function shouldShowStruggleAssistShortcutHint({
+  keyboardCapable,
+  practiceTestMode
+}: {
+  keyboardCapable: boolean;
+  practiceTestMode: boolean;
+}) {
+  return keyboardCapable && !practiceTestMode;
+}

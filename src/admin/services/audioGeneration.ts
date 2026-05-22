@@ -196,6 +196,10 @@ export function createElevenLabsAudioStoragePath(word: Pick<AdminWord, 'id' | 'l
   return `cy-elevenlabs/${slugify(word.listId)}/${slugify(word.id)}.mp3`;
 }
 
+export function createInterfaceAudioStoragePath(clip: { key: string; language: string }) {
+  return `interface/${slugify(clip.key)}/${slugify(clip.language)}.mp3`;
+}
+
 export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {
   return `/audio/gweithio.m4a#${encodeURIComponent(word.id)}`;
 }

@@ -1,4 +1,4 @@
-import { Download, Play, Upload } from 'lucide-react';
+import { Download, Play, Upload, Wand2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminButton, AdminCard, AdminInput, AdminSelect, Field } from '../components/primitives';
@@ -11,6 +11,7 @@ import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, PRACTIC
 export function SettingsPage({ repository }: { repository: AdminRepository }) {
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>('azure');
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClip[]>(() => createDefaultInterfaceAudioClips());
+  const [generatingClipId, setGeneratingClipId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -63,6 +64,24 @@ export function SettingsPage({ repository }: { repository: AdminRepository }) {
     )));
   }
 
+  async function generateInterfaceAudioClip(clip: InterfaceAudioClip) {
+    const clipId = `${clip.key}:${clip.language}`;
+    try {
+      setErrorMessage('');
+      setStatusMessage('');
+      setGeneratingClipId(clipId);
+      const generatedClip = await repository.generateInterfaceAudioClip(clip);
+      setInterfaceAudioClips(current => normalizeInterfaceAudioClips(current).map(item => (
+        item.key === generatedClip.key && item.language === generatedClip.language ? generatedClip : item
+      )));
+      setStatusMessage(`${clip.language === 'cy' ? 'Welsh' : 'English'} helper audio generated.`);
+    } catch (error) {
+      setErrorMessage(readError(error, 'Could not generate helper audio.'));
+    } finally {
+      setGeneratingClipId(null);
+    }
+  }
+
   return (
     <>
       <AdminPageHeader title="Settings" description="Founder settings and integration readiness. No backend secrets are stored in the frontend." />
@@ -95,6 +114,11 @@ export function SettingsPage({ repository }: { repository: AdminRepository }) {
           <div className="grid gap-4">
             {normalizeInterfaceAudioClips(interfaceAudioClips).map(clip => (
               <div key={`${clip.key}-${clip.language}`} className="rounded-md border border-slate-100 p-4">
+                {(() => {
+                  const clipId = `${clip.key}:${clip.language}`;
+                  const isGenerating = generatingClipId === clipId;
+                  return (
+                    <>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-black text-slate-900">{clip.language === 'cy' ? 'Welsh' : 'English'} struggle assist</div>
@@ -109,10 +133,16 @@ export function SettingsPage({ repository }: { repository: AdminRepository }) {
                     placeholder="https://.../practice-struggle-assist.mp3"
                     aria-label={`${clip.language} helper audio URL`}
                   />
+                  <AdminButton onClick={() => generateInterfaceAudioClip(clip)} disabled={Boolean(generatingClipId)} aria-disabled={Boolean(generatingClipId)}>
+                    <Wand2 size={15} /> {isGenerating ? 'Generating...' : clip.audioStatus === 'ready' ? 'Regenerate' : 'Generate'}
+                  </AdminButton>
                   <AdminButton onClick={() => playAudioUrl(clip.audioUrl)} disabled={!hasPlayableAudioUrl(clip.audioUrl)} aria-label={`Preview ${clip.language} helper audio`}>
                     <Play size={15} /> Preview
                   </AdminButton>
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
             <div>
