@@ -1198,7 +1198,6 @@ export function Practice({
           )}
 
           <button
-            className={struggleAssistEmphasis === 'audio' ? 'assist-emphasis assist-emphasis-audio' : undefined}
             onClick={handleAudioToggle}
             onPointerDown={handleAudioPointerDown}
             onPointerUp={handleAudioPointerUp}
