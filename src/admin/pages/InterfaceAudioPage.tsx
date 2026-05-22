@@ -5,7 +5,7 @@ import { AdminButton, AdminCard, AdminInput } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
 import { hasPlayableAudioUrl, playAudioUrl } from '../../lib/audioPlayback';
-import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, type InterfaceAudioClip } from '../../lib/interfaceAudio';
+import { createDefaultInterfaceAudioClips, getPlayableInterfaceAudioUrl, normalizeInterfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
 export function InterfaceAudioPage({ repository }: { repository: AdminRepository }) {
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClip[]>(() => createDefaultInterfaceAudioClips());
@@ -114,7 +114,7 @@ export function InterfaceAudioPage({ repository }: { repository: AdminRepository
                   <AdminButton onClick={() => generateInterfaceAudioClip(clip)} disabled={Boolean(generatingClipId)} aria-disabled={Boolean(generatingClipId)}>
                     <Wand2 size={15} /> {isGenerating ? 'Generating...' : clip.audioStatus === 'ready' ? 'Regenerate' : 'Generate'}
                   </AdminButton>
-                  <AdminButton onClick={() => playAudioUrl(clip.audioUrl)} disabled={!hasPlayableAudioUrl(clip.audioUrl)} aria-label={`Preview ${clip.language} helper audio`}>
+                  <AdminButton onClick={() => playAudioUrl(getPlayableInterfaceAudioUrl(clip) ?? clip.audioUrl)} disabled={!hasPlayableAudioUrl(clip.audioUrl)} aria-label={`Preview ${clip.language} helper audio`}>
                     <Play size={15} /> Preview
                   </AdminButton>
                 </div>

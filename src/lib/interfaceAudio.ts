@@ -106,7 +106,14 @@ export function resolveInterfaceAudioClip(
 
 export function getPlayableInterfaceAudioUrl(clip: InterfaceAudioClip | null | undefined) {
   if (!clip || clip.audioStatus !== 'ready') return null;
-  return getPlayableAudioUrl(clip.audioUrl);
+  return getPlayableAudioUrl(withInterfaceAudioCacheBust(clip.audioUrl, clip.updatedAt));
+}
+
+export function withInterfaceAudioCacheBust(audioUrl: string, updatedAt?: string) {
+  const trimmed = audioUrl.trim();
+  if (!trimmed || !updatedAt?.trim()) return trimmed;
+  const separator = trimmed.includes('?') ? '&' : '?';
+  return `${trimmed}${separator}updated=${encodeURIComponent(updatedAt)}`;
 }
 
 function mergeInterfaceAudioClipsWithDefaults(clips: InterfaceAudioClip[]) {

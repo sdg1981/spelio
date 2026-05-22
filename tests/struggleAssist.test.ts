@@ -156,8 +156,18 @@ function createMemoryStorage(): Storage {
 {
   const registry = createInterfaceAudioRegistry(createDefaultInterfaceAudioClips());
   const clip = resolveInterfaceAudioClip(registry, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, 'cy');
-  assert(clip !== null, 'Default helper clip metadata should exist for Welsh.');
+  if (!clip) throw new Error('Default helper clip metadata should exist for Welsh.');
   assertEqual(getPlayableInterfaceAudioUrl(clip), null, 'Missing helper audio should resolve to no playable URL without breaking metadata lookup.');
+  assertEqual(
+    getPlayableInterfaceAudioUrl({
+      ...clip,
+      audioUrl: 'https://example.com/interface/practice-struggle-assist/cy.mp3',
+      audioStatus: 'ready',
+      updatedAt: '2026-05-22T10:15:00.000Z'
+    }),
+    'https://example.com/interface/practice-struggle-assist/cy.mp3?updated=2026-05-22T10%3A15%3A00.000Z',
+    'Playable helper audio URLs should include updatedAt as a cache buster after regeneration.'
+  );
 }
 
 assertEqual(shouldShowLegacyShortcutHint(), false, 'Older timed shortcut hints should not duplicate the contextual assist.');
