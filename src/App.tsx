@@ -160,6 +160,7 @@ export default function App() {
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
+  const [publicContentLoaded, setPublicContentLoaded] = useState(false);
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClipRegistry>(() => createInterfaceAudioRegistry(createDefaultInterfaceAudioClips()));
   const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
@@ -272,6 +273,7 @@ export default function App() {
       setPublicWordLists(content.lists);
       setDefaultAudioProvider(content.defaultAudioProvider);
       setInterfaceAudioClips(content.interfaceAudioClips);
+      setPublicContentLoaded(true);
       setStorage(previous => {
         const normalized = normalizeStorageWordListSelection(previous, content.lists);
         setSharedContext(createSharedContextFromRoute(normalized, content.lists));
@@ -789,6 +791,7 @@ export default function App() {
       practiceTestMode={practiceTestMode}
       defaultAudioProvider={defaultAudioProvider}
       interfaceAudioClips={interfaceAudioClips}
+      interfaceAudioReady={publicContentLoaded}
       disableQuickRecap={Boolean(activeSharedContext) || Boolean(activeSupportPractice) || practiceTestMode}
       detached={Boolean(activeSupportPractice)}
       onStorageChange={updatePracticeSessionStorage}

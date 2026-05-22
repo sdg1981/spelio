@@ -125,6 +125,18 @@ export function createStruggleAssistAudioPlan({
   return helperAudioAvailable ? ['play-helper'] : [];
 }
 
+export function shouldWaitForStruggleAssistHelperAudio({
+  audioPrompts,
+  interfaceAudioReady,
+  practiceTestMode
+}: {
+  audioPrompts: boolean;
+  interfaceAudioReady: boolean;
+  practiceTestMode: boolean;
+}) {
+  return audioPrompts && !interfaceAudioReady && !practiceTestMode;
+}
+
 export function shouldReplayStruggleAssistPreAssist({
   incorrectAttempts,
   audioPrompts,

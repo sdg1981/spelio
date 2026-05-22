@@ -19,6 +19,7 @@ import {
   shouldShowStruggleAssistMobileHint,
   shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
+  shouldWaitForStruggleAssistHelperAudio,
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
@@ -221,6 +222,26 @@ function createMemoryStorage(): Storage {
     shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: true, audioPrompts: false, helperAudioAvailable: true }),
     false,
     'Practice-test mode should still suppress the shortcut hint.'
+  );
+  assertArrayEqual(
+    createStruggleAssistAudioPlan({ audioPrompts: true, helperAudioAvailable: true }),
+    ['play-helper'],
+    'Mobile audio-on second attempt should use the same spoken helper plan as desktop when helper audio is available.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistMobileHint({ practiceTestMode: false, audioPrompts: true, helperAudioAvailable: true }),
+    false,
+    'Mobile audio-on second attempt should not show written fallback when helper audio is available.'
+  );
+  assertEqual(
+    shouldWaitForStruggleAssistHelperAudio({ audioPrompts: true, interfaceAudioReady: false, practiceTestMode: false }),
+    true,
+    'Audio-on struggle assist should wait for interface audio metadata before falling back.'
+  );
+  assertEqual(
+    shouldWaitForStruggleAssistHelperAudio({ audioPrompts: false, interfaceAudioReady: false, practiceTestMode: false }),
+    false,
+    'Audio-off struggle assist should not wait for helper audio metadata.'
   );
 
   let state = createStruggleAssistState('word-1');
