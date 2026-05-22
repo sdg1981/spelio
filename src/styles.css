@@ -4026,53 +4026,6 @@
   stroke-width:2.45;
 }
 
-.struggle-audio-debug-panel{
-  position:fixed;
-  left:10px;
-  right:10px;
-  bottom:10px;
-  z-index:80;
-  max-height:42vh;
-  overflow:auto;
-  border:1px solid rgba(13,32,45,.18);
-  border-radius:8px;
-  background:rgba(255,255,255,.94);
-  box-shadow:0 18px 50px rgba(7,21,34,.18);
-  color:#20303d;
-  font-size:11px;
-  line-height:1.25;
-  padding:10px;
-  text-align:left;
-  backdrop-filter:blur(10px);
-}
-
-.struggle-audio-debug-title{
-  margin-bottom:6px;
-  color:#8f1111;
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-}
-
-.struggle-audio-debug-row{
-  display:grid;
-  grid-template-columns:minmax(88px,.9fr) minmax(0,1.4fr);
-  gap:8px;
-  padding:2px 0;
-}
-
-.struggle-audio-debug-row span{
-  color:#66717b;
-}
-
-.struggle-audio-debug-row b{
-  min-width:0;
-  overflow-wrap:anywhere;
-  color:#20303d;
-  font-weight:650;
-}
-
 .practice-app .utility-bar svg{
   width:21px;
   height:21px;
