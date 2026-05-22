@@ -349,6 +349,9 @@ Behaviour:
 - Clicking/tapping replays the current word audio.
 - If audio prompts are on, the pill may use a replay-style icon because the word audio has normally already played automatically.
 - If audio prompts are off, the pill may use a speaker/play-style icon to communicate learner-controlled manual playback.
+- In ordinary practice with audio prompts on, a second incorrect attempt on the same current word should automatically replay the current word audio once as a quiet listening nudge.
+- This repeated-error replay should happen at most once per word and should not show helper guidance text, play helper guidance audio, run replay/reveal visual emphasis, or mark contextual struggle assist as seen.
+- With audio prompts off, do not automatically replay on repeated wrong attempts; manual replay remains available from the pill and replay shortcut where supported.
 - The pill should be subtle, compact, and not over-designed.
 - Do not show persistent text such as “Tap to hear” if it makes the design feel too instructional.
 - If subtitles are off, the pill may show only the speaker icon, but still remains tappable.
@@ -891,6 +894,7 @@ Rules:
 - Once the learner explicitly starts practice from that link, Practice test applies for that shared-link session.
 - Practice test hides English prompts/subtitles and hides or disables reveal tools.
 - Audio remains available. Practice test must not disable manual audio replay, even though it hides English prompts and reveal tools.
+- Practice test must not automatically replay audio after repeated wrong attempts. Manual audio replay remains available unless future assessment controls intentionally restrict it.
 - Contextual struggle assist must not trigger in Practice test mode.
 - Practice test is link/session-scoped and must not permanently overwrite learner settings.
 - Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or normal learner progression.
@@ -2088,13 +2092,21 @@ Future-capable replay guidance:
 - Preserve natural Welsh rhythm and avoid robotic slowed-down teaching audio.
 - Do not expose complex replay controls in the MVP learner interface.
 
+Repeated-error replay:
+
+- In ordinary practice with audio prompts on, the second incorrect attempt on the same current word should automatically replay the current word audio once.
+- This is general lightweight listening support and should be treated as a quiet permanent replay nudge, not as the one-time contextual struggling assist.
+- It should happen at most once per word.
+- It should not show helper guidance text, play helper guidance audio, run replay/reveal visual emphasis, or mark the contextual struggling assist as seen.
+- With audio prompts off, do not automatically replay audio; manual replay remains available from the word/audio pill and replay shortcut where supported.
+- Do not trigger repeated-error replay in Practice test mode.
+
 Contextual struggling assist:
 
 - Spelio may provide a one-time contextual struggling assist when a learner appears genuinely stuck on a word, such as after repeated incorrect attempts on the same current word.
 - The assist should remain calm, subtle, temporary, and audio-first.
 - Audio prompts off means no automatic word audio and no helper guidance audio; it must not disable manual audio replay from the word/audio pill or replay shortcut where supported.
-- With audio prompts on, the first incorrect attempt on the same word may automatically replay the word only.
-- With audio prompts on, the second incorrect attempt may play helper guidance audio if available, without replaying the word again immediately first.
+- With audio prompts on, the one-time assist may play helper guidance audio if available, without also replaying the word immediately first.
 - When helper guidance audio plays, visual emphasis should happen after the helper audio finishes: replay pill/icon first, then Reveal.
 - When helper guidance audio is available, do not also show desktop shortcut text.
 - With audio prompts off on desktop/keyboard-capable layouts, the first incorrect attempt should show no assist guidance. The second incorrect attempt may show written replay/reveal guidance with an optional smaller, lower-contrast shortcut line.
