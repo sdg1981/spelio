@@ -19,6 +19,7 @@ import {
   shouldShowStruggleAssistMobileHint,
   shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
+  shouldStartStruggleAssistHelperInGesture,
   shouldWaitForStruggleAssistHelperAudio,
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
@@ -242,6 +243,21 @@ function createMemoryStorage(): Storage {
     shouldWaitForStruggleAssistHelperAudio({ audioPrompts: false, interfaceAudioReady: false, practiceTestMode: false }),
     false,
     'Audio-off struggle assist should not wait for helper audio metadata.'
+  );
+  assertEqual(
+    shouldStartStruggleAssistHelperInGesture({ audioPrompts: true, helperAudioAvailable: true, mobileLayout: true, practiceTestMode: false }),
+    true,
+    'Mobile audio-on second attempt with helper audio should start helper playback in the input gesture path.'
+  );
+  assertEqual(
+    shouldStartStruggleAssistHelperInGesture({ audioPrompts: true, helperAudioAvailable: true, mobileLayout: false, practiceTestMode: false }),
+    false,
+    'Desktop audio-on second attempt should keep the calmer delayed helper timing.'
+  );
+  assertEqual(
+    shouldStartStruggleAssistHelperInGesture({ audioPrompts: false, helperAudioAvailable: true, mobileLayout: true, practiceTestMode: false }),
+    false,
+    'Audio-off mobile fallback should not attempt helper playback.'
   );
 
   let state = createStruggleAssistState('word-1');

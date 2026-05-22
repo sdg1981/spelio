@@ -137,6 +137,20 @@ export function shouldWaitForStruggleAssistHelperAudio({
   return audioPrompts && !interfaceAudioReady && !practiceTestMode;
 }
 
+export function shouldStartStruggleAssistHelperInGesture({
+  audioPrompts,
+  helperAudioAvailable,
+  mobileLayout,
+  practiceTestMode
+}: {
+  audioPrompts: boolean;
+  helperAudioAvailable: boolean;
+  mobileLayout: boolean;
+  practiceTestMode: boolean;
+}) {
+  return audioPrompts && helperAudioAvailable && mobileLayout && !practiceTestMode;
+}
+
 export function shouldReplayStruggleAssistPreAssist({
   incorrectAttempts,
   audioPrompts,

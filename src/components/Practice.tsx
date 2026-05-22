@@ -38,6 +38,7 @@ import {
   resetStruggleAssistForWord,
   shouldShowStruggleAssistMobileHint,
   shouldShowStruggleAssistShortcutHint,
+  shouldStartStruggleAssistHelperInGesture,
   shouldWaitForStruggleAssistHelperAudio,
   type StruggleAssistEmphasisTarget,
   type StruggleAssistState
@@ -45,6 +46,7 @@ import {
 
 const SPELLING_HINT_AUDIO_REPLAY_DELAY_MS = 900;
 const COPY_STATUS_VISIBLE_MS = 1600;
+const STRUGGLE_ASSIST_AUDIO_DEBUG_KEY = 'spelio.debugStruggleAssistAudio';
 
 type RecallPauseVisibility = {
   wordId: string | null;
@@ -564,6 +566,16 @@ export function Practice({
     return window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 521px)').matches;
   }
 
+  function logStruggleAssistAudioDebug(event: string, details: Record<string, unknown>) {
+    if (typeof window === 'undefined') return;
+    try {
+      if (window.localStorage.getItem(STRUGGLE_ASSIST_AUDIO_DEBUG_KEY) !== 'true') return;
+    } catch {
+      return;
+    }
+    console.debug('[Spelio struggle assist audio]', event, details);
+  }
+
   function showStruggleAssistFallbackGuidance(wordId: string, kind?: StruggleAssistGuidanceKind, options: { force?: boolean } = {}) {
     const guidanceKind = kind ?? (isKeyboardShortcutHintCapable() ? 'shortcut' : 'mobile');
     const clip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
@@ -597,6 +609,14 @@ export function Practice({
   function playStruggleAssistHelperAudio(onGuidanceFinished: (played: boolean) => void) {
     const clip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
     const playableUrl = getPlayableInterfaceAudioUrl(clip);
+    logStruggleAssistAudioDebug('helper-resolved', {
+      audioPrompts: storage.settings.audioPrompts,
+      mobileLayout: shouldUseMobileKeyboard(),
+      helperClipResolved: Boolean(clip),
+      helperUrlPresent: Boolean(playableUrl),
+      helperStatus: clip?.audioStatus ?? null,
+      interfaceLanguage
+    });
     if (!playableUrl) {
       onGuidanceFinished(false);
       return;
@@ -622,11 +642,27 @@ export function Practice({
       audio.onended = () => finishGuidance(true);
       audio.onerror = () => finishGuidance(false);
       struggleAssistHelperFallbackTimerRef.current = window.setTimeout(() => finishGuidance(true), PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS);
-      void audio.play().catch(() => {
+      logStruggleAssistAudioDebug('helper-play-attempted', {
+        mobileLayout: shouldUseMobileKeyboard(),
+        helperUrlPresent: true
+      });
+      void audio.play().then(() => {
+        logStruggleAssistAudioDebug('helper-play-started', {
+          mobileLayout: shouldUseMobileKeyboard()
+        });
+      }).catch(error => {
+        logStruggleAssistAudioDebug('helper-play-rejected', {
+          mobileLayout: shouldUseMobileKeyboard(),
+          errorName: error instanceof Error ? error.name : 'unknown',
+          errorMessage: error instanceof Error ? error.message : String(error)
+        });
         finishGuidance(false);
       });
     } catch {
       struggleAssistHelperAudioRef.current = null;
+      logStruggleAssistAudioDebug('helper-play-threw', {
+        mobileLayout: shouldUseMobileKeyboard()
+      });
       onGuidanceFinished(false);
     }
   }
@@ -644,11 +680,22 @@ export function Practice({
 
   function startStruggleAssistGuidance(wordId: string) {
     const clip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
+    const helperAudioAvailable = Boolean(getPlayableInterfaceAudioUrl(clip));
     const audioPlan = createStruggleAssistAudioPlan({
       audioPrompts: storage.settings.audioPrompts,
-      helperAudioAvailable: Boolean(getPlayableInterfaceAudioUrl(clip))
+      helperAudioAvailable
     });
     const hasSpokenHelper = audioPlan.includes('play-helper');
+    const mobileLayout = shouldUseMobileKeyboard();
+    logStruggleAssistAudioDebug('guidance-plan', {
+      audioPrompts: storage.settings.audioPrompts,
+      mobileLayout,
+      helperClipResolved: Boolean(clip),
+      helperUrlPresent: helperAudioAvailable,
+      hasSpokenHelper,
+      practiceTestMode,
+      interfaceAudioReady
+    });
 
     if (!hasSpokenHelper && struggleAssistFallbackShownWordIdRef.current !== wordId) {
       showStruggleAssistFallbackGuidance(wordId);
@@ -659,8 +706,7 @@ export function Practice({
 
     if (!audioPlan.includes('play-helper')) return;
 
-    struggleAssistHelperTimerRef.current = window.setTimeout(() => {
-      struggleAssistHelperTimerRef.current = null;
+    const playHelper = () => {
       if (!currentWord || currentWord.id !== wordId || modal || settingsModalOpenRef.current || isComplete) return;
       if (!storage.settings.audioPrompts) return;
       playStruggleAssistHelperAudio(played => {
@@ -678,6 +724,25 @@ export function Practice({
           scheduleStruggleAssistEmphasis();
         }
       });
+    };
+
+    if (shouldStartStruggleAssistHelperInGesture({
+      audioPrompts: storage.settings.audioPrompts,
+      helperAudioAvailable,
+      mobileLayout,
+      practiceTestMode
+    })) {
+      logStruggleAssistAudioDebug('helper-start-immediate', {
+        mobileLayout,
+        reason: 'mobile-gesture-safe'
+      });
+      playHelper();
+      return;
+    }
+
+    struggleAssistHelperTimerRef.current = window.setTimeout(() => {
+      struggleAssistHelperTimerRef.current = null;
+      playHelper();
     }, PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS);
   }
 
