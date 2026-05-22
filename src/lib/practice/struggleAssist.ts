@@ -1,5 +1,6 @@
 export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 3;
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY = 'spelio.practiceStruggleAssistSeen.v1';
+export const PRACTICE_STRUGGLE_ASSIST_STORAGE_PREFIX = 'spelio.practiceStruggleAssist';
 export const PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS = 900;
 export const PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS = 3600;
 export const PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS = 880;
@@ -75,6 +76,29 @@ export function markPracticeStruggleAssistSeen(storage: Pick<Storage, 'setItem'>
   if (!storage) return;
   try {
     storage.setItem(PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY, 'true');
+  } catch {
+    // Local discovery state is best-effort only.
+  }
+}
+
+export function isPracticeStruggleAssistStorageKey(key: string) {
+  return key.startsWith(PRACTICE_STRUGGLE_ASSIST_STORAGE_PREFIX);
+}
+
+export function clearPracticeStruggleAssistStorage(storage: Pick<Storage, 'length' | 'key' | 'removeItem'> | null | undefined) {
+  if (!storage) return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key && isPracticeStruggleAssistStorageKey(key)) {
+        keysToRemove.push(key);
+      }
+    }
+
+    for (const key of keysToRemove) {
+      storage.removeItem(key);
+    }
   } catch {
     // Local discovery state is best-effort only.
   }

@@ -1,4 +1,5 @@
 import {
+  clearPracticeStruggleAssistStorage,
   createStruggleAssistAudioPlan,
   createStruggleAssistEmphasisPlan,
   createStruggleAssistState,
@@ -15,6 +16,7 @@ import {
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
+import { clearSpelioStorageData } from '../src/lib/practice/storage';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -127,6 +129,56 @@ function createMemoryStorage(): Storage {
     alreadySeen: true
   });
   assertEqual(result.shouldTrigger, false, 'Seen local storage state should suppress the assist.');
+}
+
+{
+  const storage = createMemoryStorage();
+  markPracticeStruggleAssistSeen(storage);
+  storage.setItem('spelio.practiceStruggleAssistCooldown.v1', 'active');
+  storage.setItem('spelio.practiceStruggleAssistHelperAudio.v1', 'played');
+  storage.setItem('spelio.practiceOtherFeature.v1', 'keep');
+
+  clearPracticeStruggleAssistStorage(storage);
+
+  assertEqual(storage.getItem(PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY), null, 'Clearing assist state should remove the seen key.');
+  assertEqual(storage.getItem('spelio.practiceStruggleAssistCooldown.v1'), null, 'Clearing assist state should remove future trigger cooldown state.');
+  assertEqual(storage.getItem('spelio.practiceStruggleAssistHelperAudio.v1'), null, 'Clearing assist state should remove related helper-audio state.');
+  assertEqual(storage.getItem('spelio.practiceOtherFeature.v1'), 'keep', 'Clearing assist state should not remove unrelated practice keys.');
+}
+
+{
+  const storage = createMemoryStorage();
+  storage.setItem('spelio-storage-v1', '{"settings":{"theme":"dark"}}');
+  storage.setItem('spelio-recent-custom-lists', '["recent-list"]');
+  storage.setItem('selectedListIds', '["legacy-list"]');
+  storage.setItem('settings', '{"soundEffects":false}');
+  storage.setItem('spelio-custom-list-client-id', 'client-id');
+  markPracticeStruggleAssistSeen(storage);
+  storage.setItem('spelio.practiceStruggleAssistCooldown.v1', 'active');
+
+  clearSpelioStorageData(storage);
+
+  assertEqual(storage.getItem('spelio-storage-v1'), null, 'Reset progress should remove primary progress storage.');
+  assertEqual(storage.getItem('spelio-recent-custom-lists'), null, 'Reset progress should remove recent custom-list references.');
+  assertEqual(storage.getItem('selectedListIds'), null, 'Reset progress should remove legacy progress storage.');
+  assertEqual(storage.getItem('settings'), null, 'Reset progress should preserve existing legacy reset behaviour.');
+  assertEqual(storage.getItem(PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY), null, 'Reset progress should clear struggle-assist seen state.');
+  assertEqual(storage.getItem('spelio.practiceStruggleAssistCooldown.v1'), null, 'Reset progress should clear future struggle-assist trigger state.');
+  assertEqual(storage.getItem('spelio-custom-list-client-id'), 'client-id', 'Reset progress should not clear unrelated local app data.');
+
+  let state = createStruggleAssistState('word-1');
+  let triggered = false;
+  for (let attempt = 0; attempt < PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD; attempt += 1) {
+    const result = registerStruggleAssistIncorrectAttempt({
+      state,
+      wordId: 'word-1',
+      practiceTestMode: false,
+      alreadySeen: hasSeenPracticeStruggleAssist(storage)
+    });
+    state = result.state;
+    triggered = triggered || result.shouldTrigger;
+  }
+  assertEqual(triggered, true, 'Assist should be able to trigger again after reset clears local seen state.');
 }
 
 {

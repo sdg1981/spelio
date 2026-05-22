@@ -3,6 +3,7 @@ import type { InterfaceLanguage } from '../../i18n';
 import { normaliseInterfaceLanguage } from '../../i18n';
 import { groupLearningItems, isLearningItemSeen } from './learningItems';
 import { hasEligibleDifficultWordsInList } from './sessionEngine';
+import { clearPracticeStruggleAssistStorage } from './struggleAssist';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 export type SpelioTheme = 'light' | 'dark';
@@ -323,15 +324,16 @@ export function applyManualWordListSelection(storage: SpelioStorage, selectedLis
   };
 }
 
-export function clearSpelioStorageData() {
-  if (typeof window === 'undefined') return;
+export function clearSpelioStorageData(storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage) {
+  if (!storage) return;
 
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.localStorage.removeItem(RECENT_CUSTOM_LISTS_STORAGE_KEY);
+    storage.removeItem(STORAGE_KEY);
+    storage.removeItem(RECENT_CUSTOM_LISTS_STORAGE_KEY);
     for (const key of LEGACY_STORAGE_KEYS) {
-      window.localStorage.removeItem(key);
+      storage.removeItem(key);
     }
+    clearPracticeStruggleAssistStorage(storage);
   } catch {
     // Local storage should never block resetting in-memory progress.
   }
