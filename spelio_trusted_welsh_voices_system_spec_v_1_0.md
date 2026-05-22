@@ -285,6 +285,19 @@ Potential future variants:
 
 These are future-facing only.
 
+Future premium audio should also allow a small library of interface, helper, and coaching clips that are separate from word-list audio. These clips should remain calm, rare, contextual, non-intrusive, and audio-first rather than tutorial-heavy or phonics-drill-like.
+
+Possible future helper/coaching clips include:
+
+- struggle assist guidance
+- replay/reveal guidance
+- CH/K confusion prompt
+- LL listening prompt
+- DD/TH spelling-pattern prompt
+- W/Y or WY listening prompt
+
+These clips are not an MVP blocker, but the long-term system may need human-recorded versions, Azure fallback, ElevenLabs experimentation, language/locale-aware generation, admin review and approval, stable storage paths, and cache-busted preview/playback.
+
 ---
 
 # 4. Voice Profiles
