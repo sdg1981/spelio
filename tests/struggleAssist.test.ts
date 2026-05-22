@@ -27,7 +27,7 @@ import {
   shouldWaitForStruggleAssistHelperAudio,
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
-import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
+import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, normalizeInterfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
 import { clearSpelioStorageData } from '../src/lib/practice/storage';
 
 function assert(condition: boolean, message: string) {
@@ -563,6 +563,33 @@ function createMemoryStorage(): Storage {
     }),
     'https://example.com/interface/practice-struggle-assist/cy.mp3?updated=2026-05-22T10%3A15%3A00.000Z',
     'Playable helper audio URLs should include updatedAt as a cache buster after regeneration.'
+  );
+  const normalized = normalizeInterfaceAudioClips({
+    clips: [{
+      key: 'practice_struggle_assist',
+      language: 'en',
+      text: 'You can replay the word, or reveal a letter if you need a little help.',
+      audioUrl: 'https://example.com/storage/v1/object/public/audio/interface/practice-struggle-assist/en.mp3',
+      audioStatus: 'ready',
+      provider: 'azure',
+      updatedAt: '2026-05-22T12:00:00.000Z',
+      generationLanguage: 'en',
+      generationLocale: 'en-GB',
+      generationVoice: 'en-GB-SoniaNeural',
+      storagePath: 'interface/practice-struggle-assist/en.mp3'
+    }]
+  });
+  const normalizedRegistry = createInterfaceAudioRegistry(normalized);
+  const normalizedClip = resolveInterfaceAudioClip(normalizedRegistry, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, 'en');
+  assertEqual(
+    normalizedClip?.audioUrl,
+    'https://example.com/storage/v1/object/public/audio/interface/practice-struggle-assist/en.mp3',
+    'Current admin_settings helper-audio shape should preserve camelCase audioUrl.'
+  );
+  assertEqual(
+    getPlayableInterfaceAudioUrl(normalizedClip),
+    'https://example.com/storage/v1/object/public/audio/interface/practice-struggle-assist/en.mp3?updated=2026-05-22T12%3A00%3A00.000Z',
+    'Current admin_settings helper-audio shape should resolve to a playable cache-busted URL.'
   );
 }
 
