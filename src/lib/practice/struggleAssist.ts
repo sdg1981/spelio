@@ -2,6 +2,11 @@ export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 3;
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY = 'spelio.practiceStruggleAssistSeen.v1';
 export const PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS = 900;
 export const PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS = 3600;
+export const PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS = 880;
+export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS = 1040;
+export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS = 880;
+
+export type StruggleAssistEmphasisTarget = 'audio' | 'reveal';
 
 export interface StruggleAssistState {
   wordId: string | null;
@@ -100,4 +105,18 @@ export function shouldShowStruggleAssistShortcutHint({
   practiceTestMode: boolean;
 }) {
   return keyboardCapable && !practiceTestMode;
+}
+
+export function createStruggleAssistEmphasisPlan({
+  practiceTestMode
+}: {
+  practiceTestMode: boolean;
+}): Array<{ target: StruggleAssistEmphasisTarget | null; delayMs: number }> {
+  if (practiceTestMode) return [];
+  return [
+    { target: 'audio', delayMs: 0 },
+    { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS },
+    { target: 'reveal', delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS },
+    { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
+  ];
 }

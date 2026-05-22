@@ -1,9 +1,13 @@
 import {
   createStruggleAssistAudioPlan,
+  createStruggleAssistEmphasisPlan,
   createStruggleAssistState,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
   PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD,
+  PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS,
+  PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS,
+  PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS,
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
@@ -150,6 +154,24 @@ function createMemoryStorage(): Storage {
     shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: true }),
     false,
     'Practice-test mode should still suppress the shortcut hint.'
+  );
+}
+
+{
+  assertArrayEqual(
+    createStruggleAssistEmphasisPlan({ practiceTestMode: false }),
+    [
+      { target: 'audio', delayMs: 0 },
+      { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS },
+      { target: 'reveal', delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS },
+      { target: null, delayMs: PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS + PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS }
+    ],
+    'Assist trigger should schedule audio emphasis first, then reveal emphasis, then clear both.'
+  );
+  assertArrayEqual(
+    createStruggleAssistEmphasisPlan({ practiceTestMode: true }),
+    [],
+    'Practice-test mode should not schedule visual assist emphasis.'
   );
 }
 

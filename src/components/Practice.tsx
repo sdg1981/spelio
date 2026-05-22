@@ -26,6 +26,7 @@ import { getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resol
 import {
   createStruggleAssistState,
   createStruggleAssistAudioPlan,
+  createStruggleAssistEmphasisPlan,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
   PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS,
@@ -33,6 +34,7 @@ import {
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
   shouldShowStruggleAssistShortcutHint,
+  type StruggleAssistEmphasisTarget,
   type StruggleAssistState
 } from '../lib/practice/struggleAssist';
 
@@ -221,12 +223,14 @@ export function Practice({
   const recallPauseTimerRef = useRef<number | null>(null);
   const struggleAssistHelperTimerRef = useRef<number | null>(null);
   const struggleAssistHintTimerRef = useRef<number | null>(null);
+  const struggleAssistEmphasisTimerRefs = useRef<number[]>([]);
   const struggleAssistHelperAudioRef = useRef<HTMLAudioElement | null>(null);
   const struggleAssistStateRef = useRef<StruggleAssistState>(createStruggleAssistState(null));
   const struggleAssistSeenRef = useRef(hasSeenPracticeStruggleAssist(typeof window === 'undefined' ? null : window.localStorage));
   const recallPauseScheduledWordIdRef = useRef<string | null>(null);
   const [recallPauseVisibility, setRecallPauseVisibility] = useState<RecallPauseVisibility>({ wordId: null, visible: false });
   const [struggleAssistHintVisible, setStruggleAssistHintVisible] = useState(false);
+  const [struggleAssistEmphasis, setStruggleAssistEmphasis] = useState<StruggleAssistEmphasisTarget | null>(null);
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
   const revealShortcutHeldRef = useRef(false);
@@ -325,6 +329,14 @@ export function Practice({
     struggleAssistHelperAudioRef.current = null;
   }, []);
 
+  const clearStruggleAssistEmphasis = useCallback(() => {
+    for (const timer of struggleAssistEmphasisTimerRefs.current) {
+      window.clearTimeout(timer);
+    }
+    struggleAssistEmphasisTimerRefs.current = [];
+    setStruggleAssistEmphasis(null);
+  }, []);
+
   const clearStruggleAssistTimers = useCallback(() => {
     if (struggleAssistHelperTimerRef.current) {
       window.clearTimeout(struggleAssistHelperTimerRef.current);
@@ -335,8 +347,9 @@ export function Practice({
       struggleAssistHintTimerRef.current = null;
     }
     setStruggleAssistHintVisible(false);
+    clearStruggleAssistEmphasis();
     stopStruggleAssistHelperAudio();
-  }, [stopStruggleAssistHelperAudio]);
+  }, [clearStruggleAssistEmphasis, stopStruggleAssistHelperAudio]);
 
   const restorePracticeInputFocus = useCallback(() => {
     if (shouldUseMobileKeyboard()) {
@@ -548,11 +561,23 @@ export function Practice({
     }
   }
 
+  function scheduleStruggleAssistEmphasis() {
+    clearStruggleAssistEmphasis();
+    const emphasisPlan = createStruggleAssistEmphasisPlan({ practiceTestMode });
+    for (const step of emphasisPlan) {
+      const timer = window.setTimeout(() => {
+        setStruggleAssistEmphasis(step.target);
+      }, step.delayMs);
+      struggleAssistEmphasisTimerRefs.current.push(timer);
+    }
+  }
+
   function triggerStruggleAssist(wordId: string) {
     struggleAssistSeenRef.current = true;
     markPracticeStruggleAssistSeen(typeof window === 'undefined' ? null : window.localStorage);
     clearStruggleAssistTimers();
     showStruggleAssistHint();
+    scheduleStruggleAssistEmphasis();
 
     const clip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
     const audioPlan = createStruggleAssistAudioPlan({
@@ -1134,6 +1159,7 @@ export function Practice({
           )}
 
           <button
+            className={struggleAssistEmphasis === 'audio' ? 'assist-emphasis assist-emphasis-audio' : undefined}
             onClick={handleAudioToggle}
             onPointerDown={handleAudioPointerDown}
             onPointerUp={handleAudioPointerUp}
@@ -1146,7 +1172,7 @@ export function Practice({
 
           {!practiceTestMode && (
             <button
-              className="reveal-button"
+              className={`reveal-button ${struggleAssistEmphasis === 'reveal' ? 'assist-emphasis assist-emphasis-reveal' : ''}`.trim()}
               aria-label={t('practice.revealNext')}
               onPointerDown={handleRevealPointerDown}
               onPointerUp={handleRevealPointerUp}
