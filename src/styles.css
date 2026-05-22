@@ -5402,6 +5402,218 @@
   transform:translateX(2px);
 }
 
+.homepage-bg{
+  position:relative;
+  isolation:isolate;
+  overflow-x:clip;
+  background:#f6f5f2;
+}
+
+.home-background-scene{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  user-select:none;
+}
+
+.home-background-texture{
+  position:absolute;
+  inset:0;
+  background-image:url('/background-texture.webp');
+  background-repeat:no-repeat;
+  background-position:center top;
+  background-size:max(1492px, 100vw) auto;
+  opacity:.34;
+}
+
+.home-background-glow{
+  position:absolute;
+  top:260px;
+  left:50%;
+  width:min(760px, 78vw);
+  height:520px;
+  transform:translateX(-50%);
+  background:radial-gradient(
+    ellipse at center,
+    rgba(225,0,0,.10),
+    rgba(225,0,0,.035) 38%,
+    transparent 72%
+  );
+  opacity:.82;
+}
+
+.home-letter-stage{
+  position:absolute;
+  top:0;
+  left:50%;
+  width:min(100vw, 1600px);
+  min-height:max(100vh, 900px);
+  overflow:visible;
+  transform:translateX(-50%);
+}
+
+.home-letter-image{
+  position:absolute;
+  display:block;
+  max-width:none;
+  height:auto;
+  pointer-events:none;
+  user-select:none;
+}
+
+.home-letter-image-left{
+  width:clamp(560px, 38vw, 780px);
+  left:clamp(-40px, 3vw, 90px);
+  top:clamp(40px, 6vh, 90px);
+}
+
+.home-letter-image-right{
+  width:clamp(560px, 40vw, 820px);
+  right:clamp(-40px, 3vw, 90px);
+  top:clamp(50px, 7vh, 105px);
+}
+
+.homepage-bg > :not(.home-background-scene){
+  z-index:1;
+}
+
+.homepage-bg .home-shell{
+  position:relative;
+  z-index:1;
+}
+
+.homepage-bg .homepage-menu,
+.homepage-bg .homepage-utility{
+  z-index:12;
+}
+
+@media (max-width:1200px){
+  .home-letter-image-left{
+    width:clamp(520px, 46vw, 640px);
+    left:clamp(-112px, -6vw, -44px);
+    top:clamp(54px, 7vh, 96px);
+  }
+
+  .home-letter-image-right{
+    width:clamp(540px, 48vw, 680px);
+    right:clamp(-128px, -7vw, -52px);
+    top:clamp(66px, 8vh, 112px);
+  }
+}
+
+@media (max-width:899px){
+  .home-background-glow{
+    top:300px;
+    width:min(660px, 92vw);
+    height:480px;
+    opacity:.68;
+  }
+
+  .home-letter-stage{
+    min-height:820px;
+  }
+
+  .home-letter-image-left{
+    width:clamp(360px, 58vw, 520px);
+    left:clamp(-140px, -13vw, -80px);
+    top:88px;
+    opacity:.9;
+  }
+
+  .home-letter-image-right{
+    width:clamp(380px, 62vw, 560px);
+    right:clamp(-160px, -14vw, -100px);
+    top:138px;
+    opacity:.86;
+  }
+}
+
+@media (max-width:640px){
+  .home-background-glow{
+    top:330px;
+    width:min(580px, 110vw);
+    height:420px;
+    opacity:.6;
+  }
+
+  .home-letter-image-left{
+    width:clamp(300px, 82vw, 420px);
+    left:clamp(-150px, -24vw, -90px);
+    top:78px;
+    opacity:.82;
+  }
+
+  .home-letter-image-right{
+    width:clamp(320px, 86vw, 450px);
+    right:clamp(-170px, -26vw, -110px);
+    top:90px;
+    opacity:.68;
+  }
+}
+
+@media (max-width:520px){
+  .homepage-bg{
+    overflow-x:hidden;
+  }
+
+  .home-background-texture{
+    opacity:.3;
+  }
+
+  .home-background-glow{
+    top:360px;
+    width:520px;
+    height:360px;
+    opacity:.5;
+  }
+
+  .home-letter-stage{
+    display:none;
+  }
+
+  .home-letter-image-left{
+    width:390px;
+    left:-122px;
+    top:72px;
+    opacity:.78;
+  }
+
+  .home-letter-image-right{
+    width:420px;
+    right:-162px;
+    top:58px;
+    opacity:.58;
+  }
+}
+
+@media (max-width:390px){
+  .home-letter-image-left{
+    width:370px;
+    left:-128px;
+    top:72px;
+  }
+
+  .home-letter-image-right{
+    width:400px;
+    right:-168px;
+    top:50px;
+  }
+}
+
+@media (max-width:380px){
+  .home-letter-image-left{
+    left:-158px;
+    opacity:.68;
+  }
+
+  .home-letter-image-right{
+    right:-198px;
+    opacity:.5;
+  }
+}
+
 .prompt-audio-icon{
   color:var(--accent);
 }
@@ -5586,6 +5798,10 @@
   background:
     radial-gradient(circle at 50% 18%, var(--accent-red-haze), transparent 28%),
     var(--bg-app);
+}
+
+.public-app[data-theme="dark"] .home-background-scene{
+  display:none;
 }
 
 .public-app[data-theme="dark"] .modal,

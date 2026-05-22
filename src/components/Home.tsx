@@ -90,6 +90,26 @@ export function Home({
 
   return (
     <main className="homepage-bg">
+      <div className="home-background-scene" aria-hidden="true">
+        <div className="home-background-texture" />
+        <div className="home-background-glow" />
+        <div className="home-letter-stage">
+          <img
+            className="home-letter-image home-letter-image-left"
+            src="/bg-3d-letters-left.webp"
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+          />
+          <img
+            className="home-letter-image home-letter-image-right"
+            src="/bg-3d-letters-right.webp"
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+          />
+        </div>
+      </div>
       <HomepageMenu
         t={t}
         onHowSpelioWorks={onHowSpelioWorks}
