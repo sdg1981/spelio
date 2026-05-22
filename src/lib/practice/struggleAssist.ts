@@ -1,5 +1,5 @@
-export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 3;
-export const PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT = 2;
+export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 2;
+export const PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT = 1;
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY = 'spelio.practiceStruggleAssistSeen.v1';
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_PREFIX = 'spelio.practiceStruggleAssist';
 export const PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS = 900;
@@ -160,9 +160,7 @@ export function createStruggleAssistPreAssistPlan({
 }): StruggleAssistPreAssistAction[] {
   if (incorrectAttempts !== PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT || practiceTestMode || alreadySeen) return [];
   if (audioPrompts) return audioAvailable ? ['replay-word'] : [];
-  return keyboardCapable
-    ? ['show-shortcut-hint', 'emphasize-controls']
-    : ['show-mobile-guidance', 'emphasize-controls'];
+  return [];
 }
 
 export function shouldShowStruggleAssistShortcutHint({
@@ -177,6 +175,18 @@ export function shouldShowStruggleAssistShortcutHint({
   helperAudioAvailable: boolean;
 }) {
   return keyboardCapable && !practiceTestMode && !(audioPrompts && helperAudioAvailable);
+}
+
+export function shouldShowStruggleAssistMobileHint({
+  practiceTestMode,
+  audioPrompts,
+  helperAudioAvailable
+}: {
+  practiceTestMode: boolean;
+  audioPrompts: boolean;
+  helperAudioAvailable: boolean;
+}) {
+  return !practiceTestMode && !(audioPrompts && helperAudioAvailable);
 }
 
 export function createStruggleAssistEmphasisPlan({

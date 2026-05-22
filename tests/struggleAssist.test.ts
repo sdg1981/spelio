@@ -16,6 +16,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldShowStruggleAssistMobileHint,
   shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
   shouldShowLegacyShortcutHint
@@ -76,7 +77,7 @@ function createMemoryStorage(): Storage {
     practiceTestMode: false,
     alreadySeen: false
   });
-  assertEqual(result.shouldTrigger, true, 'Assist should trigger on the third incorrect attempt for the same word.');
+  assertEqual(result.shouldTrigger, true, 'Assist should trigger on the second incorrect attempt for the same word.');
   assertEqual(result.state.triggeredForWord, true, 'Triggered word should be marked to avoid repeated firing.');
 }
 
@@ -98,7 +99,6 @@ function createMemoryStorage(): Storage {
 
 {
   let state = createStruggleAssistState('word-1');
-  state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: false }).state;
   state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: false }).state;
   state = resetStruggleAssistForWord(state, 'word-2');
   const result = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-2', practiceTestMode: false, alreadySeen: false });
@@ -222,6 +222,36 @@ function createMemoryStorage(): Storage {
     false,
     'Practice-test mode should still suppress the shortcut hint.'
   );
+
+  let state = createStruggleAssistState('word-1');
+  state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: false }).state;
+  const secondAttempt = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: false });
+  assertEqual(secondAttempt.shouldTrigger, true, 'Second incorrect attempt should fire the main struggle assist guidance.');
+  assertArrayEqual(
+    createStruggleAssistAudioPlan({ audioPrompts: false, helperAudioAvailable: true }),
+    [],
+    'Audio-off second attempt should not schedule replay or helper audio.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: true, practiceTestMode: false, audioPrompts: false, helperAudioAvailable: true }),
+    true,
+    'Audio-off desktop second attempt should use shortcut text fallback.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistShortcutHint({ keyboardCapable: false, practiceTestMode: false, audioPrompts: false, helperAudioAvailable: true }),
+    false,
+    'Audio-off mobile second attempt should not show keyboard shortcut text.'
+  );
+  assertEqual(
+    shouldShowStruggleAssistMobileHint({ practiceTestMode: false, audioPrompts: false, helperAudioAvailable: true }),
+    true,
+    'Audio-off mobile second attempt should show written fallback guidance.'
+  );
+  assertArrayEqual(
+    createStruggleAssistEmphasisPlan({ practiceTestMode: false, startDelayMs: PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS }).map(step => step.target),
+    ['audio', null, 'reveal', null],
+    'Audio-off second attempt should schedule replay then reveal visual emphasis.'
+  );
 }
 
 {
@@ -235,7 +265,7 @@ function createMemoryStorage(): Storage {
       alreadySeen: false
     }),
     ['replay-word'],
-    'Audio-on second attempt should schedule replay only.'
+    'Audio-on first attempt should schedule replay only.'
   );
   assertArrayEqual(
     createStruggleAssistPreAssistPlan({
@@ -246,8 +276,8 @@ function createMemoryStorage(): Storage {
       practiceTestMode: false,
       alreadySeen: false
     }),
-    ['show-shortcut-hint', 'emphasize-controls'],
-    'Audio-off desktop second attempt should show shortcut text and visual emphasis without audio.'
+    [],
+    'Audio-off desktop first attempt should show no guidance.'
   );
   assertArrayEqual(
     createStruggleAssistPreAssistPlan({
@@ -258,8 +288,8 @@ function createMemoryStorage(): Storage {
       practiceTestMode: false,
       alreadySeen: false
     }),
-    ['show-mobile-guidance', 'emphasize-controls'],
-    'Audio-off mobile second attempt should show written guidance and visual emphasis without keyboard shortcut text.'
+    [],
+    'Audio-off mobile first attempt should show no guidance.'
   );
   assertArrayEqual(
     createStruggleAssistPreAssistPlan({
@@ -282,7 +312,7 @@ function createMemoryStorage(): Storage {
       alreadySeen: false
     }),
     true,
-    'Second incorrect attempt should schedule a replay-only pre-assist nudge when audio prompts are on.'
+    'First incorrect attempt should schedule a replay-only pre-assist nudge when audio prompts are on.'
   );
   assertEqual(
     shouldReplayStruggleAssistPreAssist({
@@ -293,7 +323,7 @@ function createMemoryStorage(): Storage {
       alreadySeen: false
     }),
     false,
-    'Audio prompts off should suppress the second-attempt replay nudge.'
+    'Audio prompts off should suppress the first-attempt replay nudge.'
   );
   assertEqual(
     shouldReplayStruggleAssistPreAssist({
@@ -304,13 +334,12 @@ function createMemoryStorage(): Storage {
       alreadySeen: false
     }),
     false,
-    'Practice-test mode should suppress the second-attempt replay nudge.'
+    'Practice-test mode should suppress the first-attempt replay nudge.'
   );
   const storage = createMemoryStorage();
   let state = createStruggleAssistState('word-1');
   state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: hasSeenPracticeStruggleAssist(storage) }).state;
-  state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: hasSeenPracticeStruggleAssist(storage) }).state;
-  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'Second-attempt replay nudge should not mark struggle assist as seen.');
+  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'First-attempt replay nudge should not mark struggle assist as seen.');
   assertEqual(state.incorrectAttempts, PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT, 'Second-attempt replay nudge should not change the main assist threshold.');
 }
 

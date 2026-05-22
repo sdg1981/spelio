@@ -36,6 +36,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldShowStruggleAssistMobileHint,
   shouldShowStruggleAssistShortcutHint,
   type StruggleAssistEmphasisTarget,
   type StruggleAssistState
@@ -568,8 +569,12 @@ export function Practice({
         audioPrompts: storage.settings.audioPrompts,
         helperAudioAvailable: Boolean(getPlayableInterfaceAudioUrl(clip))
       })) return;
-    } else if (practiceTestMode || (storage.settings.audioPrompts && Boolean(getPlayableInterfaceAudioUrl(clip)))) {
-      return;
+    } else {
+      if (!shouldShowStruggleAssistMobileHint({
+        practiceTestMode,
+        audioPrompts: storage.settings.audioPrompts,
+        helperAudioAvailable: Boolean(getPlayableInterfaceAudioUrl(clip))
+      })) return;
     }
 
     struggleAssistFallbackShownWordIdRef.current = wordId;
