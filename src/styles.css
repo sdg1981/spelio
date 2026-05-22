@@ -352,6 +352,41 @@
   }
 }
 
+.keyboard-shortcut-hint-shell.mobile-visible{
+  display:flex;
+  justify-content:center;
+  min-height:28px;
+  margin-top:8px;
+}
+
+.keyboard-shortcut-hint.contextual-assist-hint.mobile-assist-hint{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:0;
+  color:#9aa3ad;
+  font-size:12px;
+  font-weight:500;
+  line-height:1.35;
+  text-align:center;
+  opacity:0;
+  transform:translateY(2px);
+  transition:opacity .28s ease-out,transform .28s ease-out;
+  pointer-events:none;
+}
+
+.keyboard-shortcut-hint.contextual-assist-hint.mobile-assist-hint.visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .keyboard-shortcut-hint.contextual-assist-hint.mobile-assist-hint{
+    transition:none;
+    transform:none;
+  }
+}
+
 /* Consolidated practice-screen stability fixes
    - keeps practice logo small on mobile
    - keeps mobile keyboard input available without visible UI

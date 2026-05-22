@@ -197,6 +197,7 @@ export const en = {
     selectListToBegin: 'Select a word list to begin',
     typeAnswer: 'Type answer',
     struggleAssistShortcutHint: '↑ replay · → reveal',
+    struggleAssistMobileHint: 'Use replay or reveal for help.',
     togglePrompt: 'Toggle prompt',
     toggleAudio: 'Toggle audio prompts',
     revealNext: 'Reveal next letter',

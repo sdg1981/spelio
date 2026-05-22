@@ -27,6 +27,7 @@ import {
   createStruggleAssistState,
   createStruggleAssistAudioPlan,
   createStruggleAssistEmphasisPlan,
+  createStruggleAssistPreAssistPlan,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
   PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS,
@@ -35,7 +36,6 @@ import {
   PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
-  shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
   type StruggleAssistEmphasisTarget,
   type StruggleAssistState
@@ -48,6 +48,8 @@ type RecallPauseVisibility = {
   wordId: string | null;
   visible: boolean;
 };
+
+type StruggleAssistGuidanceKind = 'shortcut' | 'mobile';
 
 type ShareDataNavigator = Navigator & {
   share?: (data: ShareData) => Promise<void>;
@@ -231,9 +233,10 @@ export function Practice({
   const struggleAssistHelperAudioRef = useRef<HTMLAudioElement | null>(null);
   const struggleAssistStateRef = useRef<StruggleAssistState>(createStruggleAssistState(null));
   const struggleAssistSeenRef = useRef(hasSeenPracticeStruggleAssist(typeof window === 'undefined' ? null : window.localStorage));
+  const struggleAssistFallbackShownWordIdRef = useRef<string | null>(null);
   const recallPauseScheduledWordIdRef = useRef<string | null>(null);
   const [recallPauseVisibility, setRecallPauseVisibility] = useState<RecallPauseVisibility>({ wordId: null, visible: false });
-  const [struggleAssistHintVisible, setStruggleAssistHintVisible] = useState(false);
+  const [struggleAssistGuidance, setStruggleAssistGuidance] = useState<StruggleAssistGuidanceKind | null>(null);
   const [struggleAssistEmphasis, setStruggleAssistEmphasis] = useState<StruggleAssistEmphasisTarget | null>(null);
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
@@ -356,7 +359,7 @@ export function Practice({
       window.clearTimeout(struggleAssistHintTimerRef.current);
       struggleAssistHintTimerRef.current = null;
     }
-    setStruggleAssistHintVisible(false);
+    setStruggleAssistGuidance(null);
     clearStruggleAssistEmphasis();
     stopStruggleAssistHelperAudio();
   }, [clearStruggleAssistEmphasis, stopStruggleAssistHelperAudio]);
@@ -476,16 +479,24 @@ export function Practice({
     });
     struggleAssistStateRef.current = assistResult.state;
     const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
-    const didPlayPreAssistReplay = shouldReplayStruggleAssistPreAssist({
+    const preAssistPlan = createStruggleAssistPreAssistPlan({
       incorrectAttempts: assistResult.state.incorrectAttempts,
       audioPrompts: storage.settings.audioPrompts,
       audioAvailable: !currentWordAudioUnavailable,
+      keyboardCapable: isKeyboardShortcutHintCapable(),
       practiceTestMode,
       alreadySeen: struggleAssistSeenRef.current
     });
+    const didPlayPreAssistReplay = preAssistPlan.includes('replay-word');
     if (didPlayPreAssistReplay) {
       clearScheduledSpellingHintAudioReplay();
       void playAudio({ recordInteraction: false, showUnavailableStatus: false });
+    }
+    if (preAssistPlan.includes('show-shortcut-hint') || preAssistPlan.includes('show-mobile-guidance')) {
+      showStruggleAssistFallbackGuidance(currentWord.id, preAssistPlan.includes('show-shortcut-hint') ? 'shortcut' : 'mobile');
+    }
+    if (preAssistPlan.includes('emphasize-controls')) {
+      scheduleStruggleAssistEmphasis(PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS);
     }
 
     if (assistResult.shouldTrigger) {
@@ -547,19 +558,25 @@ export function Practice({
     return window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 521px)').matches;
   }
 
-  function showStruggleAssistHint() {
+  function showStruggleAssistFallbackGuidance(wordId: string, kind?: StruggleAssistGuidanceKind) {
+    const guidanceKind = kind ?? (isKeyboardShortcutHintCapable() ? 'shortcut' : 'mobile');
     const clip = resolveInterfaceAudioClip(interfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, interfaceLanguage);
-    if (!shouldShowStruggleAssistShortcutHint({
-      keyboardCapable: isKeyboardShortcutHintCapable(),
-      practiceTestMode,
-      audioPrompts: storage.settings.audioPrompts,
-      helperAudioAvailable: Boolean(getPlayableInterfaceAudioUrl(clip))
-    })) return;
+    if (guidanceKind === 'shortcut') {
+      if (!shouldShowStruggleAssistShortcutHint({
+        keyboardCapable: true,
+        practiceTestMode,
+        audioPrompts: storage.settings.audioPrompts,
+        helperAudioAvailable: Boolean(getPlayableInterfaceAudioUrl(clip))
+      })) return;
+    } else if (practiceTestMode || (storage.settings.audioPrompts && Boolean(getPlayableInterfaceAudioUrl(clip)))) {
+      return;
+    }
 
-    setStruggleAssistHintVisible(true);
+    struggleAssistFallbackShownWordIdRef.current = wordId;
+    setStruggleAssistGuidance(guidanceKind);
     if (struggleAssistHintTimerRef.current) window.clearTimeout(struggleAssistHintTimerRef.current);
     struggleAssistHintTimerRef.current = window.setTimeout(() => {
-      setStruggleAssistHintVisible(false);
+      setStruggleAssistGuidance(null);
       struggleAssistHintTimerRef.current = null;
     }, PRACTICE_STRUGGLE_ASSIST_HINT_VISIBLE_MS);
   }
@@ -624,8 +641,8 @@ export function Practice({
     });
     const hasSpokenHelper = audioPlan.includes('play-helper');
 
-    if (!hasSpokenHelper) {
-      showStruggleAssistHint();
+    if (!hasSpokenHelper && struggleAssistFallbackShownWordIdRef.current !== wordId) {
+      showStruggleAssistFallbackGuidance(wordId);
       scheduleStruggleAssistEmphasis(
         PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS
       );
@@ -672,6 +689,7 @@ export function Practice({
     clearStruggleAssistTimers();
     clearSpellingHint();
     struggleAssistStateRef.current = resetStruggleAssistForWord(struggleAssistStateRef.current, currentWord?.id ?? null);
+    struggleAssistFallbackShownWordIdRef.current = null;
     setRecallPauseVisibility({ wordId: currentWord?.id ?? null, visible: false });
     shownSpellingHintsRef.current = new Set();
     setPeekUsedForCurrentWord(false);
@@ -1185,9 +1203,9 @@ export function Practice({
         </div>
 
         <AnimatedStatusLine status={displayStatus} secondaryStatus={displayStatusSecondary} tone={displayTone} />
-        <div className="keyboard-shortcut-hint-shell" aria-live="polite">
-          <div className={`keyboard-shortcut-hint contextual-assist-hint ${struggleAssistHintVisible && !practiceTestMode ? 'visible' : ''}`.trim()}>
-            <span>{t('practice.struggleAssistShortcutHint')}</span>
+        <div className={`keyboard-shortcut-hint-shell ${struggleAssistGuidance === 'mobile' ? 'mobile-visible' : ''}`.trim()} aria-live="polite">
+          <div className={`keyboard-shortcut-hint contextual-assist-hint ${struggleAssistGuidance === 'mobile' ? 'mobile-assist-hint' : ''} ${struggleAssistGuidance && !practiceTestMode ? 'visible' : ''}`.trim()}>
+            <span>{t(struggleAssistGuidance === 'mobile' ? 'practice.struggleAssistMobileHint' : 'practice.struggleAssistShortcutHint')}</span>
           </div>
         </div>
 

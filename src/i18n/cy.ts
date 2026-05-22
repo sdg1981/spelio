@@ -197,6 +197,7 @@ export const cy = {
     selectListToBegin: 'Dewiswch restr eiriau i ddechrau',
     typeAnswer: 'Teipiwch yr ateb',
     struggleAssistShortcutHint: '↑ gwrando eto · → datgelu',
+    struggleAssistMobileHint: 'Defnyddiwch wrando eto neu ddatgelu am help.',
     togglePrompt: 'Dangos neu guddio’r awgrym',
     toggleAudio: 'Dangos neu guddio sain',
     revealNext: 'Dangos y llythyren nesaf',

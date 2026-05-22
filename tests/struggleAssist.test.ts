@@ -2,6 +2,7 @@ import {
   clearPracticeStruggleAssistStorage,
   createStruggleAssistAudioPlan,
   createStruggleAssistEmphasisPlan,
+  createStruggleAssistPreAssistPlan,
   createStruggleAssistState,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
@@ -224,6 +225,54 @@ function createMemoryStorage(): Storage {
 }
 
 {
+  assertArrayEqual(
+    createStruggleAssistPreAssistPlan({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: true,
+      audioAvailable: true,
+      keyboardCapable: true,
+      practiceTestMode: false,
+      alreadySeen: false
+    }),
+    ['replay-word'],
+    'Audio-on second attempt should schedule replay only.'
+  );
+  assertArrayEqual(
+    createStruggleAssistPreAssistPlan({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: false,
+      audioAvailable: true,
+      keyboardCapable: true,
+      practiceTestMode: false,
+      alreadySeen: false
+    }),
+    ['show-shortcut-hint', 'emphasize-controls'],
+    'Audio-off desktop second attempt should show shortcut text and visual emphasis without audio.'
+  );
+  assertArrayEqual(
+    createStruggleAssistPreAssistPlan({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: false,
+      audioAvailable: true,
+      keyboardCapable: false,
+      practiceTestMode: false,
+      alreadySeen: false
+    }),
+    ['show-mobile-guidance', 'emphasize-controls'],
+    'Audio-off mobile second attempt should show written guidance and visual emphasis without keyboard shortcut text.'
+  );
+  assertArrayEqual(
+    createStruggleAssistPreAssistPlan({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: false,
+      audioAvailable: true,
+      keyboardCapable: false,
+      practiceTestMode: true,
+      alreadySeen: false
+    }),
+    [],
+    'Practice-test mode should schedule no second-attempt replay, text guidance, or visual emphasis.'
+  );
   assertEqual(
     shouldReplayStruggleAssistPreAssist({
       incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,

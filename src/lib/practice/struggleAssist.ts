@@ -11,6 +11,7 @@ export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_DELAY_MS = 1760;
 export const PRACTICE_STRUGGLE_ASSIST_REVEAL_EMPHASIS_MS = 1560;
 
 export type StruggleAssistEmphasisTarget = 'audio' | 'reveal';
+export type StruggleAssistPreAssistAction = 'replay-word' | 'show-shortcut-hint' | 'show-mobile-guidance' | 'emphasize-controls';
 
 export interface StruggleAssistState {
   wordId: string | null;
@@ -140,6 +141,28 @@ export function shouldReplayStruggleAssistPreAssist({
     audioAvailable &&
     !practiceTestMode &&
     !alreadySeen;
+}
+
+export function createStruggleAssistPreAssistPlan({
+  incorrectAttempts,
+  audioPrompts,
+  audioAvailable,
+  keyboardCapable,
+  practiceTestMode,
+  alreadySeen
+}: {
+  incorrectAttempts: number;
+  audioPrompts: boolean;
+  audioAvailable: boolean;
+  keyboardCapable: boolean;
+  practiceTestMode: boolean;
+  alreadySeen: boolean;
+}): StruggleAssistPreAssistAction[] {
+  if (incorrectAttempts !== PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT || practiceTestMode || alreadySeen) return [];
+  if (audioPrompts) return audioAvailable ? ['replay-word'] : [];
+  return keyboardCapable
+    ? ['show-shortcut-hint', 'emphasize-controls']
+    : ['show-mobile-guidance', 'emphasize-controls'];
 }
 
 export function shouldShowStruggleAssistShortcutHint({
