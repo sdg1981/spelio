@@ -55,12 +55,60 @@ type RecallPauseVisibility = {
 
 type StruggleAssistGuidanceKind = 'shortcut' | 'mobile';
 
+type StruggleAssistAudioDebugState = {
+  enabled: boolean;
+  audioPrompts: boolean;
+  mobileLayout: boolean;
+  helperClipResolved: boolean;
+  helperUrlPresent: boolean;
+  playAttempted: boolean;
+  playStarted: boolean;
+  playRejected: boolean;
+  rejectionName: string;
+  rejectionMessage: string;
+  fallbackReason: string;
+  environment: string;
+  lastEvent: string;
+};
+
 type ShareDataNavigator = Navigator & {
   share?: (data: ShareData) => Promise<void>;
   canShare?: (data: ShareData) => boolean;
 };
 
 const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
+
+function getStruggleAssistDebugEnabled() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('debugStruggleAudio') === '1') {
+      window.localStorage.setItem(STRUGGLE_ASSIST_AUDIO_DEBUG_KEY, 'true');
+      return true;
+    }
+    return window.localStorage.getItem(STRUGGLE_ASSIST_AUDIO_DEBUG_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function createStruggleAssistAudioDebugState(enabled = false): StruggleAssistAudioDebugState {
+  return {
+    enabled,
+    audioPrompts: false,
+    mobileLayout: false,
+    helperClipResolved: false,
+    helperUrlPresent: false,
+    playAttempted: false,
+    playStarted: false,
+    playRejected: false,
+    rejectionName: '',
+    rejectionMessage: '',
+    fallbackReason: '',
+    environment: typeof window === 'undefined' ? '' : window.location.host,
+    lastEvent: ''
+  };
+}
 
 export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
   return (
@@ -245,6 +293,7 @@ export function Practice({
   const [recallPauseVisibility, setRecallPauseVisibility] = useState<RecallPauseVisibility>({ wordId: null, visible: false });
   const [struggleAssistGuidance, setStruggleAssistGuidance] = useState<StruggleAssistGuidanceKind | null>(null);
   const [struggleAssistEmphasis, setStruggleAssistEmphasis] = useState<StruggleAssistEmphasisTarget | null>(null);
+  const [struggleAssistAudioDebug, setStruggleAssistAudioDebug] = useState<StruggleAssistAudioDebugState>(() => createStruggleAssistAudioDebugState(getStruggleAssistDebugEnabled()));
   const peekActivatedRef = useRef(false);
   const isPeekingRef = useRef(false);
   const revealShortcutHeldRef = useRef(false);
@@ -573,6 +622,22 @@ export function Practice({
     } catch {
       return;
     }
+    setStruggleAssistAudioDebug(previous => ({
+      ...previous,
+      enabled: true,
+      audioPrompts: typeof details.audioPrompts === 'boolean' ? details.audioPrompts : previous.audioPrompts,
+      mobileLayout: typeof details.mobileLayout === 'boolean' ? details.mobileLayout : previous.mobileLayout,
+      helperClipResolved: typeof details.helperClipResolved === 'boolean' ? details.helperClipResolved : previous.helperClipResolved,
+      helperUrlPresent: typeof details.helperUrlPresent === 'boolean' ? details.helperUrlPresent : previous.helperUrlPresent,
+      playAttempted: event === 'helper-play-attempted' ? true : previous.playAttempted,
+      playStarted: event === 'helper-play-started' ? true : previous.playStarted,
+      playRejected: event === 'helper-play-rejected' || event === 'helper-play-threw' ? true : previous.playRejected,
+      rejectionName: typeof details.errorName === 'string' ? details.errorName : previous.rejectionName,
+      rejectionMessage: typeof details.errorMessage === 'string' ? details.errorMessage : previous.rejectionMessage,
+      fallbackReason: typeof details.fallbackReason === 'string' ? details.fallbackReason : previous.fallbackReason,
+      environment: window.location.host,
+      lastEvent: event
+    }));
     console.debug('[Spelio struggle assist audio]', event, details);
   }
 
@@ -615,6 +680,7 @@ export function Practice({
       helperClipResolved: Boolean(clip),
       helperUrlPresent: Boolean(playableUrl),
       helperStatus: clip?.audioStatus ?? null,
+      fallbackReason: playableUrl ? '' : 'helper-url-missing',
       interfaceLanguage
     });
     if (!playableUrl) {
@@ -644,6 +710,7 @@ export function Practice({
       struggleAssistHelperFallbackTimerRef.current = window.setTimeout(() => finishGuidance(true), PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS);
       logStruggleAssistAudioDebug('helper-play-attempted', {
         mobileLayout: shouldUseMobileKeyboard(),
+        audioPrompts: storage.settings.audioPrompts,
         helperUrlPresent: true
       });
       void audio.play().then(() => {
@@ -654,14 +721,16 @@ export function Practice({
         logStruggleAssistAudioDebug('helper-play-rejected', {
           mobileLayout: shouldUseMobileKeyboard(),
           errorName: error instanceof Error ? error.name : 'unknown',
-          errorMessage: error instanceof Error ? error.message : String(error)
+          errorMessage: error instanceof Error ? error.message : String(error),
+          fallbackReason: 'play-rejected'
         });
         finishGuidance(false);
       });
     } catch {
       struggleAssistHelperAudioRef.current = null;
       logStruggleAssistAudioDebug('helper-play-threw', {
-        mobileLayout: shouldUseMobileKeyboard()
+        mobileLayout: shouldUseMobileKeyboard(),
+        fallbackReason: 'play-threw'
       });
       onGuidanceFinished(false);
     }
@@ -694,7 +763,8 @@ export function Practice({
       helperUrlPresent: helperAudioAvailable,
       hasSpokenHelper,
       practiceTestMode,
-      interfaceAudioReady
+      interfaceAudioReady,
+      fallbackReason: hasSpokenHelper ? '' : (storage.settings.audioPrompts ? 'helper-unavailable' : 'audio-prompts-off')
     });
 
     if (!hasSpokenHelper && struggleAssistFallbackShownWordIdRef.current !== wordId) {
@@ -771,6 +841,11 @@ export function Practice({
     if (!currentWord || currentWord.id !== wordId || modal || settingsModalOpenRef.current || isComplete) return;
     startStruggleAssistGuidance(wordId);
   }, [currentWord?.id, interfaceAudioClips, interfaceAudioReady, interfaceLanguage, isComplete, modal, practiceTestMode, storage.settings.audioPrompts]);
+
+  useEffect(() => {
+    const enabled = getStruggleAssistDebugEnabled();
+    if (enabled) setStruggleAssistAudioDebug(previous => ({ ...previous, enabled, environment: window.location.host }));
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -1238,6 +1313,20 @@ export function Practice({
       .filter((note): note is string => Boolean(note))
     : [];
   const learnerNoteVisible = !practiceTestMode && Boolean(spellingHintText || dialectLabel || wordInsights.length);
+  const struggleAssistAudioDebugRows = [
+    ['audio prompts', storage.settings.audioPrompts ? 'yes' : 'no'],
+    ['mobile layout', struggleAssistAudioDebug.mobileLayout ? 'yes' : 'no'],
+    ['clip resolved', struggleAssistAudioDebug.helperClipResolved ? 'yes' : 'no'],
+    ['url present', struggleAssistAudioDebug.helperUrlPresent ? 'yes' : 'no'],
+    ['play attempted', struggleAssistAudioDebug.playAttempted ? 'yes' : 'no'],
+    ['play started', struggleAssistAudioDebug.playStarted ? 'yes' : 'no'],
+    ['play rejected', struggleAssistAudioDebug.playRejected ? 'yes' : 'no'],
+    ['reject name', struggleAssistAudioDebug.rejectionName || '-'],
+    ['reject msg', struggleAssistAudioDebug.rejectionMessage || '-'],
+    ['fallback', struggleAssistAudioDebug.fallbackReason || '-'],
+    ['domain', struggleAssistAudioDebug.environment || '-'],
+    ['last event', struggleAssistAudioDebug.lastEvent || '-']
+  ] as const;
 
   return (
     <main className="app-bg practice-app relative overflow-hidden">
@@ -1377,6 +1466,18 @@ export function Practice({
 
         <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
+
+      {struggleAssistAudioDebug.enabled && (
+        <div className="struggle-audio-debug-panel" aria-label="Struggle helper audio debug">
+          <div className="struggle-audio-debug-title">struggle audio debug</div>
+          {struggleAssistAudioDebugRows.map(([label, value]) => (
+            <div className="struggle-audio-debug-row" key={label}>
+              <span>{label}</span>
+              <b>{value}</b>
+            </div>
+          ))}
+        </div>
+      )}
 
       {modal === 'wordlist' && (
         <WordListModal
