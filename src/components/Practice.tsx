@@ -35,6 +35,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
   type StruggleAssistEmphasisTarget,
   type StruggleAssistState
@@ -474,6 +475,19 @@ export function Practice({
       alreadySeen: struggleAssistSeenRef.current
     });
     struggleAssistStateRef.current = assistResult.state;
+    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
+    const didPlayPreAssistReplay = shouldReplayStruggleAssistPreAssist({
+      incorrectAttempts: assistResult.state.incorrectAttempts,
+      audioPrompts: storage.settings.audioPrompts,
+      audioAvailable: !currentWordAudioUnavailable,
+      practiceTestMode,
+      alreadySeen: struggleAssistSeenRef.current
+    });
+    if (didPlayPreAssistReplay) {
+      clearScheduledSpellingHintAudioReplay();
+      void playAudio({ recordInteraction: false, showUnavailableStatus: false });
+    }
+
     if (assistResult.shouldTrigger) {
       triggerStruggleAssist(currentWord.id);
       return;
@@ -504,8 +518,7 @@ export function Practice({
       spellingHintTimerRef.current = null;
     }, 4000);
 
-    const currentWordAudioUnavailable = isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider);
-    if (storage.settings.audioPrompts && !currentWordAudioUnavailable) {
+    if (storage.settings.audioPrompts && !currentWordAudioUnavailable && !didPlayPreAssistReplay) {
       clearScheduledSpellingHintAudioReplay();
       spellingHintAudioReplayTimerRef.current = window.setTimeout(() => {
         spellingHintAudioReplayTimerRef.current = null;
@@ -614,15 +627,10 @@ export function Practice({
     if (!hasSpokenHelper) {
       showStruggleAssistHint();
       scheduleStruggleAssistEmphasis(
-        audioPlan.includes('replay-word')
-          ? PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS
-          : PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS
+        PRACTICE_STRUGGLE_ASSIST_TEXT_EMPHASIS_DELAY_MS
       );
     }
 
-    if (!audioPlan.includes('replay-word')) return;
-
-    void playAudio({ recordInteraction: false, showUnavailableStatus: false });
     if (!audioPlan.includes('play-helper')) return;
 
     struggleAssistHelperTimerRef.current = window.setTimeout(() => {

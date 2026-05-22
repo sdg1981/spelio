@@ -1,4 +1,5 @@
 export const PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD = 3;
+export const PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT = 2;
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY = 'spelio.practiceStruggleAssistSeen.v1';
 export const PRACTICE_STRUGGLE_ASSIST_STORAGE_PREFIX = 'spelio.practiceStruggleAssist';
 export const PRACTICE_STRUGGLE_ASSIST_HELPER_DELAY_MS = 900;
@@ -118,9 +119,27 @@ export function createStruggleAssistAudioPlan({
   helperAudioAvailable: boolean;
 }): Array<'replay-word' | 'play-helper'> {
   if (!audioPrompts) return [];
-  return helperAudioAvailable
-    ? ['replay-word', 'play-helper']
-    : ['replay-word'];
+  return helperAudioAvailable ? ['play-helper'] : [];
+}
+
+export function shouldReplayStruggleAssistPreAssist({
+  incorrectAttempts,
+  audioPrompts,
+  audioAvailable,
+  practiceTestMode,
+  alreadySeen
+}: {
+  incorrectAttempts: number;
+  audioPrompts: boolean;
+  audioAvailable: boolean;
+  practiceTestMode: boolean;
+  alreadySeen: boolean;
+}) {
+  return incorrectAttempts === PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT &&
+    audioPrompts &&
+    audioAvailable &&
+    !practiceTestMode &&
+    !alreadySeen;
 }
 
 export function shouldShowStruggleAssistShortcutHint({

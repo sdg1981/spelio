@@ -5,6 +5,7 @@ import {
   createStruggleAssistState,
   hasSeenPracticeStruggleAssist,
   markPracticeStruggleAssistSeen,
+  PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
   PRACTICE_STRUGGLE_ASSIST_INCORRECT_THRESHOLD,
   PRACTICE_STRUGGLE_ASSIST_AUDIO_EMPHASIS_MS,
   PRACTICE_STRUGGLE_ASSIST_HELPER_AUDIO_FALLBACK_MS,
@@ -14,6 +15,7 @@ import {
   PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY,
   registerStruggleAssistIncorrectAttempt,
   resetStruggleAssistForWord,
+  shouldReplayStruggleAssistPreAssist,
   shouldShowStruggleAssistShortcutHint,
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
@@ -186,13 +188,13 @@ function createMemoryStorage(): Storage {
 {
   assertArrayEqual(
     createStruggleAssistAudioPlan({ audioPrompts: true, helperAudioAvailable: true }),
-    ['replay-word', 'play-helper'],
-    'Audio plan should request word replay before helper guidance.'
+    ['play-helper'],
+    'Third-attempt helper guidance should not replay the word immediately before helper audio.'
   );
   assertArrayEqual(
     createStruggleAssistAudioPlan({ audioPrompts: true, helperAudioAvailable: false }),
-    ['replay-word'],
-    'Missing helper audio should still allow word replay.'
+    [],
+    'Missing helper audio should use text/visual fallback rather than replaying again on the third attempt.'
   );
   assertArrayEqual(
     createStruggleAssistAudioPlan({ audioPrompts: false, helperAudioAvailable: true }),
@@ -219,6 +221,48 @@ function createMemoryStorage(): Storage {
     false,
     'Practice-test mode should still suppress the shortcut hint.'
   );
+}
+
+{
+  assertEqual(
+    shouldReplayStruggleAssistPreAssist({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: true,
+      audioAvailable: true,
+      practiceTestMode: false,
+      alreadySeen: false
+    }),
+    true,
+    'Second incorrect attempt should schedule a replay-only pre-assist nudge when audio prompts are on.'
+  );
+  assertEqual(
+    shouldReplayStruggleAssistPreAssist({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: false,
+      audioAvailable: true,
+      practiceTestMode: false,
+      alreadySeen: false
+    }),
+    false,
+    'Audio prompts off should suppress the second-attempt replay nudge.'
+  );
+  assertEqual(
+    shouldReplayStruggleAssistPreAssist({
+      incorrectAttempts: PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT,
+      audioPrompts: true,
+      audioAvailable: true,
+      practiceTestMode: true,
+      alreadySeen: false
+    }),
+    false,
+    'Practice-test mode should suppress the second-attempt replay nudge.'
+  );
+  const storage = createMemoryStorage();
+  let state = createStruggleAssistState('word-1');
+  state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: hasSeenPracticeStruggleAssist(storage) }).state;
+  state = registerStruggleAssistIncorrectAttempt({ state, wordId: 'word-1', practiceTestMode: false, alreadySeen: hasSeenPracticeStruggleAssist(storage) }).state;
+  assertEqual(hasSeenPracticeStruggleAssist(storage), false, 'Second-attempt replay nudge should not mark struggle assist as seen.');
+  assertEqual(state.incorrectAttempts, PRACTICE_STRUGGLE_ASSIST_PRE_REPLAY_ATTEMPT, 'Second-attempt replay nudge should not change the main assist threshold.');
 }
 
 {
