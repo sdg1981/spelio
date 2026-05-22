@@ -347,6 +347,8 @@ Behaviour:
 
 - The entire pill is clickable/tappable.
 - Clicking/tapping replays the current word audio.
+- If audio prompts are on, the pill may use a replay-style icon because the word audio has normally already played automatically.
+- If audio prompts are off, the pill may use a speaker/play-style icon to communicate learner-controlled manual playback.
 - The pill should be subtle, compact, and not over-designed.
 - Do not show persistent text such as “Tap to hear” if it makes the design feel too instructional.
 - If subtitles are off, the pill may show only the speaker icon, but still remains tappable.
@@ -511,6 +513,7 @@ Fields:
 - Reset progress
   - Requires confirmation
   - Clears progress, settings, history, and locally stored recent custom-list references on the current device
+  - Clears local struggle-assist seen/cooldown state so reset progress gives a genuinely clean local learner/testing state
   - Reset copy should explain that local custom-list references are removed from this device, but already-created shared custom lists are not deleted from the server
   - Returns the user to the homepage
   - Shows a short confirmation toast
@@ -888,10 +891,12 @@ Rules:
 - Once the learner explicitly starts practice from that link, Practice test applies for that shared-link session.
 - Practice test hides English prompts/subtitles and hides or disables reveal tools.
 - Audio remains available. Practice test must not disable manual audio replay, even though it hides English prompts and reveal tools.
+- Contextual struggle assist must not trigger in Practice test mode.
 - Practice test is link/session-scoped and must not permanently overwrite learner settings.
 - Practice test must not alter scoring, progress, recommendations, difficult words, recap, dialect handling, completion rules, or normal learner progression.
 - Leaving or completing a Practice test link should restore normal behaviour and must not save Practice test as a setting.
 - Do not add timers, lockdown behaviour, reporting, teacher accounts, score submission, anti-cheating systems, configurable assessment builders, or additional checkboxes for MVP.
+- Future assessment modes may add stricter controls such as manual replay/reveal permissions, but those are not part of the MVP Practice test behaviour.
 
 ### 8.9 Temporary custom word lists
 
@@ -1893,6 +1898,8 @@ This should:
 
 Do not expose Azure API keys in the browser.
 
+Managed helper/interface audio should be administered separately from word audio. Helper clips such as the contextual struggle-assist guidance are not word-list items and should not appear in the word Audio Queue. MVP helper audio may use the existing secure Azure generation path with language-appropriate voices. Future versions may unify helper audio with richer ElevenLabs-style generation controls, but that is not required for MVP.
+
 Temporary custom word lists also use server-side Azure Welsh TTS before publication:
 
 - Generate audio for every custom Welsh spelling.
@@ -2085,9 +2092,16 @@ Contextual struggling assist:
 
 - Spelio may provide a one-time contextual struggling assist when a learner appears genuinely stuck on a word, such as after repeated incorrect attempts on the same current word.
 - The assist should remain calm, subtle, temporary, and audio-first.
-- Where audio prompts are enabled, the app may use a lighter automatic replay nudge before later playing a short managed helper-audio clip if the learner continues to struggle.
-- When audio prompts are off, the app should not auto-replay the word or play helper guidance audio, but it may still show tiny temporary written replay/reveal guidance and gently indicate the controls.
-- On desktop or keyboard-capable layouts, written fallback guidance may include a small lower-contrast shortcut hint such as replay/reveal.
+- Audio prompts off means no automatic word audio and no helper guidance audio; it must not disable manual audio replay from the word/audio pill or replay shortcut where supported.
+- With audio prompts on, the first incorrect attempt on the same word may automatically replay the word only.
+- With audio prompts on, the second incorrect attempt may play helper guidance audio if available, without replaying the word again immediately first.
+- When helper guidance audio plays, visual emphasis should happen after the helper audio finishes: replay pill/icon first, then Reveal.
+- When helper guidance audio is available, do not also show desktop shortcut text.
+- With audio prompts off on desktop/keyboard-capable layouts, the first incorrect attempt should show no assist guidance. The second incorrect attempt may show written replay/reveal guidance with an optional smaller, lower-contrast shortcut line.
+- With audio prompts off on mobile/non-keyboard layouts, do not show keyboard shortcut text. The second incorrect attempt may show only a tiny written replay/reveal guidance message.
+- For audio-prompts-off written fallback paths, visual emphasis should start only after the written text has finished its visible display/fade period.
+- Visual emphasis should target the replay pill/icon and the Reveal button, not the audio on/off setting toggle.
+- Visual emphasis should use restrained two-pulse emphasis, respect reduced motion, avoid layout shift, and avoid blocking typing.
 - This replaces generic timed shortcut-tip onboarding where applicable. Do not duplicate this with separate first-session or session-count-based shortcut tips.
 - The assist must not use modals, coach marks, persistent banners, popovers, or tutorial-style overlays.
 - If sound effects are off, the assist may still work because spoken helper guidance is learning/support audio, not a UI sound effect.
