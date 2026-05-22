@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_ID } from '../types';
 import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
@@ -450,7 +450,7 @@ export const supabaseAdminRepository: AdminRepository = {
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
     if (!clip.text.trim()) throw new Error('Helper audio script is empty.');
 
-    const audio = await synthesizeWelshMp3(clip.text);
+    const audio = await synthesizeInterfaceAudioMp3(clip.text, clip.language);
     if (audio.size < 100) throw new Error('Helper audio upload was blocked because the generated file was unexpectedly small.');
 
     const path = createInterfaceAudioStoragePath(clip);

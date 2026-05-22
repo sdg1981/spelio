@@ -1,8 +1,11 @@
 import {
   AUDIO_PIPELINE_VERSION,
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
   AZURE_SPEECH_PROSODY_RATE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
   AzureSynthesisError,
+  createEnglishSsml,
   createWelshSsml,
   handleAzureTtsRequest,
   synthesizeAzureWelshMp3BytesWithDiagnostics
@@ -114,6 +117,11 @@ assert(
 assert(
   createAdminWelshSsml('cân').includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">cân</prosody>`),
   'Admin SSML helper should expose the same subtle prosody rate.'
+);
+const englishSsml = createEnglishSsml('You can replay the word.');
+assert(
+  englishSsml.includes(`xml:lang="${AZURE_ENGLISH_SPEECH_LOCALE}"`) && englishSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
+  'English helper audio should use the configured English Azure voice and locale.'
 );
 assertEqual(
   createAudioStoragePath({ listId: 'support_ff', id: 'support_ff_006' }),

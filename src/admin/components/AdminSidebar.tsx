@@ -14,6 +14,7 @@ const navGroups = [
       { label: 'Custom Lists', path: '/admin/custom-lists', icon: FlaskConical, badge: 'Preview' },
       { label: 'Words', path: '/admin/words', icon: BookOpen },
       { label: 'Audio Queue', path: '/admin/audio', icon: Headphones },
+      { label: 'Helper Audio', path: '/admin/interface-audio', icon: Headphones },
       { label: 'Import', path: '/admin/import', icon: Import, badge: 'New' }
     ]
   },

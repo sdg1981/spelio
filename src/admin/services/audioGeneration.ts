@@ -74,12 +74,20 @@ export function normalizeLegacyAudioStatus(status: unknown): AudioStatus {
 }
 
 export async function synthesizeWelshMp3(text: string): Promise<Blob> {
+  return synthesizeAzureMp3(text, 'cy');
+}
+
+export async function synthesizeInterfaceAudioMp3(text: string, language: 'en' | 'cy'): Promise<Blob> {
+  return synthesizeAzureMp3(text, language);
+}
+
+async function synthesizeAzureMp3(text: string, language: 'en' | 'cy'): Promise<Blob> {
   const response = await fetch('/api/azure-tts', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ text, language })
   });
 
   if (!response.ok) {

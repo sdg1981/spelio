@@ -27,6 +27,8 @@ console.info('audioPostProcessing helper loaded successfully', {
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
+export const AZURE_ENGLISH_VOICE = 'en-GB-SoniaNeural';
+export const AZURE_ENGLISH_SPEECH_LOCALE = 'en-GB';
 export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-24khz-16bit-mono-pcm';
 export const AZURE_TTS_USER_AGENT = 'SpelioAudioGeneration';
@@ -108,6 +110,14 @@ type HandlerDependencies = {
   logInfo?: (message: string, details: Record<string, unknown>) => void;
 };
 
+type AzureSpeechLanguage = 'cy' | 'en';
+
+type AzureVoiceConfig = {
+  language: AzureSpeechLanguage;
+  locale: string;
+  voice: string;
+};
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   return handleAzureTtsRequest(request, response);
 }
@@ -129,8 +139,9 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
 
     const body = parseBody(request.body);
     const text = typeof body?.text === 'string' ? body.text.trim() : '';
-    if (!text) return sendJsonError(response, 400, 'Welsh text is required.', 'ssml_construction');
-    if (text.length > 500) return sendJsonError(response, 400, 'Welsh text is too long.', 'ssml_construction');
+    const voiceConfig = getAzureVoiceConfig(body?.language);
+    if (!text) return sendJsonError(response, 400, 'Text is required.', 'ssml_construction');
+    if (text.length > 500) return sendJsonError(response, 400, 'Text is too long.', 'ssml_construction');
 
     const env = dependencies.env ?? process.env;
     const config = getAzureSpeechConfig(env);
@@ -141,7 +152,8 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       keyConfigured: Boolean(key),
       regionConfigured: Boolean(region),
-      voice: AZURE_WELSH_VOICE,
+      voice: voiceConfig.voice,
+      locale: voiceConfig.locale,
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
     });
 
@@ -149,14 +161,14 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       return sendJsonError(response, 500, 'Azure Speech is not configured.', 'azure_configuration');
     }
 
-    const ssml = createWelshSsml(text);
+    const ssml = createAzureSsml(text, voiceConfig);
     logInfo('Azure TTS SSML constructed', {
       stage: 'ssml_construction',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       ssmlLength: ssml.length,
       textLength: text.length,
-      voice: AZURE_WELSH_VOICE,
-      locale: AZURE_SPEECH_LOCALE,
+      voice: voiceConfig.voice,
+      locale: voiceConfig.locale,
       prosodyRate: AZURE_SPEECH_PROSODY_RATE
     });
 
@@ -173,11 +185,11 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
       contentType: 'application/ssml+xml',
       userAgent: AZURE_TTS_USER_AGENT,
-      voice: AZURE_WELSH_VOICE,
+      voice: voiceConfig.voice,
       ssmlLength: ssml.length
     });
 
-    const azureResponse = await requestAzureWelshAudio(text, { key, region, fetchImpl });
+    const azureResponse = await requestAzureAudio(text, { key, region, fetchImpl, voiceConfig });
 
     logInfo('Azure TTS response received', {
       stage: 'azure_response',
@@ -185,7 +197,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       status: azureResponse.status,
       ok: azureResponse.ok,
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-      voice: AZURE_WELSH_VOICE
+      voice: voiceConfig.voice
     });
 
     if (!azureResponse.ok) {
@@ -195,7 +207,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
         status: azureResponse.status,
         outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
-        voice: AZURE_WELSH_VOICE,
+        voice: voiceConfig.voice,
         regionConfigured: true,
         ssmlLength: ssml.length,
         azureError
@@ -293,10 +305,11 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
 
   let azureResponse: AzureFetchResponse;
   try {
-    azureResponse = await requestAzureWelshAudio(text, {
+    azureResponse = await requestAzureAudio(text, {
       key,
       region,
-      fetchImpl: dependencies.fetchImpl ?? fetch
+      fetchImpl: dependencies.fetchImpl ?? fetch,
+      voiceConfig: getAzureVoiceConfig('cy')
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Azure Speech request failed.';
@@ -338,10 +351,11 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
   }
 }
 
-function requestAzureWelshAudio(text: string, options: {
+function requestAzureAudio(text: string, options: {
   key: string;
   region: string;
   fetchImpl: AzureFetch;
+  voiceConfig: AzureVoiceConfig;
 }) {
   const endpointUrl = `https://${options.region}.tts.speech.microsoft.com${AZURE_TTS_ENDPOINT_PATH}`;
   return options.fetchImpl(endpointUrl, {
@@ -352,7 +366,7 @@ function requestAzureWelshAudio(text: string, options: {
       'X-Microsoft-OutputFormat': AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
       'User-Agent': AZURE_TTS_USER_AGENT
     },
-    body: createWelshSsml(text)
+    body: createAzureSsml(text, options.voiceConfig)
   });
 }
 
@@ -360,22 +374,46 @@ function processAzureWelshAudio(wavBuffer: ArrayBuffer, postProcess?: (wavAudio:
   return (postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
 }
 
-function parseBody(body: unknown): { text?: unknown } | null {
+function parseBody(body: unknown): { text?: unknown; language?: unknown } | null {
   if (typeof body === 'string') {
     try {
-      return JSON.parse(body) as { text?: unknown };
+      return JSON.parse(body) as { text?: unknown; language?: unknown };
     } catch {
       return null;
     }
   }
 
-  if (body && typeof body === 'object') return body as { text?: unknown };
+  if (body && typeof body === 'object') return body as { text?: unknown; language?: unknown };
   return null;
 }
 
 export function createWelshSsml(text: string) {
   // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
-  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text.trim())}</prosody></voice></speak>`;
+  return createAzureSsml(text, getAzureVoiceConfig('cy'));
+}
+
+export function createEnglishSsml(text: string) {
+  return createAzureSsml(text, getAzureVoiceConfig('en'));
+}
+
+function createAzureSsml(text: string, voiceConfig: AzureVoiceConfig) {
+  return `<speak version="1.0" xml:lang="${voiceConfig.locale}"><voice xml:lang="${voiceConfig.locale}" name="${voiceConfig.voice}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text.trim())}</prosody></voice></speak>`;
+}
+
+function getAzureVoiceConfig(language: unknown): AzureVoiceConfig {
+  if (language === 'en') {
+    return {
+      language: 'en',
+      locale: AZURE_ENGLISH_SPEECH_LOCALE,
+      voice: AZURE_ENGLISH_VOICE
+    };
+  }
+
+  return {
+    language: 'cy',
+    locale: AZURE_SPEECH_LOCALE,
+    voice: AZURE_WELSH_VOICE
+  };
 }
 
 async function readAzureErrorBody(azureResponse: AzureFetchResponse) {
