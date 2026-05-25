@@ -375,6 +375,57 @@ Privacy and reporting principles:
 - Spelio should avoid storing raw typed answers, keystroke logs, or unnecessary long-term pupil histories.
 - Any future school reporting feature should be treated as a later, carefully scoped system requiring proper privacy, retention, access-control, and deletion design.
 
+## Future Welsh spelling challenges and events
+
+Spelio may eventually support event-based Welsh spelling experiences without changing the current MVP, normal learner flow, or calm product philosophy.
+
+The key product insight is that Spelio's simple audio-first loop may already be well suited to live shared contexts:
+
+> hear → recall → spell
+
+Because the interaction is focused, quick to understand, and spectator-friendly, future challenge formats could grow naturally from the existing practice system rather than requiring a separate game layer.
+
+Possible future directions:
+
+- The Spelio Challenge
+- classroom spelling-test events
+- live Welsh spelling challenges
+- school spelling challenges
+- regional school competitions
+- inter-school competitions
+- GCSE spelling competitions
+- learner spelling challenges
+- scheduled online challenge events
+- QR-code classroom competitions
+- public challenge booths
+- side-by-side spelling booths
+- spectator-friendly audio spelling
+- Welsh listening-and-spelling competitions
+
+These should remain exploratory and future-facing. They should not change MVP session generation, scoring, recommendations, difficult-word review, normal practice settings, or the default individual learner experience.
+
+Product principles:
+
+- Shared challenges should showcase genuine Welsh listening and spelling competence.
+- Competition should feel calm, elegant, focused, and skill-based.
+- Public or classroom events should use the existing spelling-practice grammar where possible.
+- Participation should be optional, not a mandatory social layer.
+- The emotional tone should remain premium, respectful, and adult-compatible.
+- School uses should support teacher practicality without forcing noisy classroom aesthetics.
+
+Avoid:
+
+- arcade quiz energy
+- loud gamification
+- leaderboard obsession
+- XP, streak, or loot mechanics
+- esports-style framing
+- childish educational-game presentation
+- dopamine-heavy competition systems
+- making Spelio multiplayer-first
+
+A good Spelio event should feel closer to a refined Welsh listening-and-spelling challenge than a game show. The pressure, if any, should come from the dignity of trying to spell carefully in a shared moment, not from manipulative reward systems.
+
 ## Future accessibility foundations
 
 Spelio should aim to become accessible by default rather than creating a separate “accessibility mode” as the main solution. The normal public app should remain calm, premium, minimal, and adult-focused while quietly improving technical accessibility underneath.
