@@ -89,6 +89,46 @@ The product should avoid feeling:
 The product should feel like:
 > a high-quality practice utility rather than a loud educational game.
 
+## Thoughtful Beauty
+
+Spelio should aim to be not only useful and calm, but genuinely beautiful in a restrained, thoughtful way.
+
+This does not mean:
+
+- decorative excess
+- visual noise
+- novelty
+- spectacle
+- “wow” effects
+
+Instead, beauty should emerge from:
+
+- care
+- consistency
+- spacing
+- typography
+- sound
+- motion
+- pacing
+- interaction feel
+- respectful presentation of Welsh
+
+Beauty can become part of learner attachment and repeat usage.
+
+A beautiful experience can make learners feel that Welsh spelling is worth attending to carefully.
+
+It can support:
+
+- trust
+- emotional safety
+- concentration
+- perceived quality
+- willingness to return
+
+Spelio should avoid shallow engagement mechanics where a more meaningful sense of craft, care, and quiet reward would be better.
+
+The ambition is for Spelio to feel like one of the most carefully crafted spelling-practice experiences available.
+
 ---
 
 # 3. Calmness Philosophy
