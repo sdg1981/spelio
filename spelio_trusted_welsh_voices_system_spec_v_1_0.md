@@ -67,6 +67,20 @@ The ideal emotional reaction is:
 
 > “This Welsh sounds clear, natural, trustworthy, and carefully done.”
 
+Voice quality should also contribute to the beauty of the product.
+
+Beautiful, warm, natural Welsh voices can create trust, calm, attachment, and a desire to return. Audio should feel carefully chosen and respectful of the Welsh language.
+
+The voice layer should make Spelio feel special without becoming theatrical, sentimental, celebrity-driven, or entertainment-led.
+
+The ideal reaction is not only:
+
+> “This is accurate.”
+
+It is also:
+
+> “This is beautiful to listen to.”
+
 ---
 
 ## 1.3 Why this matters
