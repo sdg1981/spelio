@@ -47,8 +47,8 @@ function shouldDelayPrompt(
 
 assertEqual(
   createDefaultStorage().settings.recallPause,
-  false,
-  'Recall pause should default to off.'
+  true,
+  'Recall pause should default to on.'
 );
 
 assertEqual(
@@ -60,8 +60,28 @@ assertEqual(
       welshSpelling: 'flexible'
     }
   }).settings.recallPause,
+  true,
+  'Older stored settings without recallPause should normalize to the current default.'
+);
+
+assertEqual(
+  normaliseStorage({
+    settings: {
+      recallPause: false
+    }
+  }).settings.recallPause,
   false,
-  'Older stored settings without recallPause should normalize to false.'
+  'Stored recallPause=false should be preserved for returning users.'
+);
+
+assertEqual(
+  normaliseStorage({
+    settings: {
+      recallPause: true
+    }
+  }).settings.recallPause,
+  true,
+  'Stored recallPause=true should be preserved for returning users.'
 );
 
 assertEqual(

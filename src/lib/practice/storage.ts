@@ -101,7 +101,7 @@ const LEGACY_STORAGE_KEYS = [
 export const defaultSettings: SpelioSettings = {
   englishVisible: true,
   audioPrompts: true,
-  recallPause: false,
+  recallPause: true,
   soundEffects: true,
   welshSpelling: 'flexible',
   dialectPreference: 'mixed',
