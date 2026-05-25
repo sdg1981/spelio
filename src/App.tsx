@@ -898,8 +898,11 @@ export default function App() {
     />
   );
 
+  const showSharedPublicBackground = activeScreen !== 'home';
+
   return (
-    <div className="public-app" data-theme={storage.settings.theme}>
+    <div className={`public-app ${showSharedPublicBackground ? 'public-app-with-shared-background' : ''}`} data-theme={storage.settings.theme}>
+      {showSharedPublicBackground && <PublicBackgroundTreatment />}
       <ScreenTransition screen={activeScreen}>
         {screenContent}
       </ScreenTransition>
@@ -914,6 +917,32 @@ export default function App() {
           learningMethodOptions={learningMethodOptions}
         />
       )}
+    </div>
+  );
+}
+
+function PublicBackgroundTreatment() {
+  return (
+    <div className="home-background-scene" aria-hidden="true">
+      <div className="home-background-texture" />
+      <div className="home-background-glow" />
+      <div className="home-mobile-letter-background" />
+      <div className="home-letter-stage">
+        <img
+          className="home-letter-image home-letter-image-left"
+          src="/bg-3d-letters-left.webp"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+        <img
+          className="home-letter-image home-letter-image-right"
+          src="/bg-3d-letters-right.webp"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      </div>
     </div>
   );
 }

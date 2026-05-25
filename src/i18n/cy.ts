@@ -4,8 +4,8 @@ export const cy = {
     switchToWelsh: 'Newid iaith y rhyngwyneb i Gymraeg'
   },
   home: {
-    firstHeadingLine1: 'Teipiwch beth rydych yn ei glywed.',
-    firstHeadingLine2: 'Dysgwch sillafu Cymraeg.',
+    firstHeadingLine1: 'Gwella sillafu Cymraeg.',
+    firstHeadingLine2: 'Gwrando. Cofio. Sillafu.',
     focusTricky: 'Canolbwyntiwch ar eiriau anodd',
     continueLearning: 'Parhau i ddysgu',
     startPractice: 'Dechrau ymarfer sillafu',

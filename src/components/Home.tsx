@@ -93,6 +93,7 @@ export function Home({
       <div className="home-background-scene" aria-hidden="true">
         <div className="home-background-texture" />
         <div className="home-background-glow" />
+        <div className="home-mobile-letter-background" />
         <div className="home-letter-stage">
           <img
             className="home-letter-image home-letter-image-left"
@@ -134,7 +135,10 @@ export function Home({
         <div className={`home-copy ${isFirst ? 'home-copy-first' : ''}`}>
           <h1 className={`home-heading ${isFirst ? 'home-heading-first' : ''}`}>
             {isFirst ? (
-              <><span>{t('home.firstHeadingLine1')}</span><br /><span>{t('home.firstHeadingLine2')}</span></>
+              <>
+                <span className="home-heading-primary-line">{t('home.firstHeadingLine1')}</span>
+                <span className="home-heading-method-line">{t('home.firstHeadingLine2')}</span>
+              </>
             ) : homeHeading}
           </h1>
 

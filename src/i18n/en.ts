@@ -4,8 +4,8 @@ export const en = {
     switchToWelsh: 'Switch interface language to Welsh'
   },
   home: {
-    firstHeadingLine1: 'Type what you hear.',
-    firstHeadingLine2: 'Learn Welsh spelling.',
+    firstHeadingLine1: 'Improve Welsh spelling.',
+    firstHeadingLine2: 'Listen. Recall. Spell.',
     focusTricky: 'Focus on tricky words',
     continueLearning: 'Continue learning',
     startPractice: 'Start spelling practice',
