@@ -359,6 +359,55 @@ over:
 - excessive stimulation
 - entertainment-first design
 
+## Future Welsh spelling challenges
+
+Spelio's unusually simple, audio-first interaction model may eventually make it naturally suited to calm shared spelling experiences.
+
+Possible future directions include:
+
+- The Spelio Challenge
+- classroom spelling-test events
+- live Welsh spelling challenges
+- school and regional competitions
+- inter-school spelling competitions
+- GCSE spelling competitions
+- learner spelling challenges
+- optional online scheduled spelling events
+- public challenge booths
+- side-by-side spelling booths
+- spectator-friendly audio spelling
+- Welsh listening-and-spelling competitions
+
+These should emerge from the existing practice loop rather than repositioning Spelio as a multiplayer-first or competition-first product.
+
+The core remains:
+
+> hear → recall → spell
+
+The interesting part of a Spelio challenge should be the visible demonstration of genuine listening and spelling competence. A learner hears Welsh, holds it in memory, recalls the spelling, and commits an answer. That is already simple enough to work in a classroom, public booth, side-by-side event, or scheduled online challenge without needing arcade quiz energy.
+
+Future shared challenge formats should feel:
+
+- calm
+- elegant
+- focused
+- skill-based
+- respectful
+- premium
+- emotionally safe
+
+They should avoid:
+
+- leaderboard obsession
+- noisy competitive theatrics
+- XP or streak mechanics
+- dopamine-heavy reward loops
+- esports-style framing
+- childish educational-game energy
+- mandatory social competition
+
+Competition may become valuable when it showcases competence, concentration, Welsh listening, and careful spelling under light pressure. It should not become a substitute for meaningful practice, learner confidence, or the product's quiet adult-oriented identity.
+
 ---
 
 # 9. GCSE Revision Direction
