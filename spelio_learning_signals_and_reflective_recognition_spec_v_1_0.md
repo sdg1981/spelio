@@ -818,6 +818,7 @@ Possible future directions:
 - intelligent hint adaptation
 - founder insight dashboards
 - anonymised spelling-pattern research
+- optional event-based competence reflection for future Welsh spelling challenges
 
 These should remain:
 
@@ -825,6 +826,10 @@ These should remain:
 - lightweight
 - respectful
 - genuinely useful
+
+If Spelio later supports classroom events, school competitions, The Spelio Challenge, public spelling booths, or scheduled online spelling challenges, reflective recognition should still focus on genuine competence rather than competitive status.
+
+Future event-related recognition should notice qualities such as careful listening, recovery after difficult words, consistency under light pressure, and improved spelling confidence. It should not become a leaderboard system, ranking engine, XP layer, or dopamine-heavy reward mechanic.
 
 ---
 
@@ -861,4 +866,3 @@ without compromising:
 - adult-oriented restraint
 - emotional safety
 - focused practice
-
