@@ -423,6 +423,91 @@ Answer layout rules:
 - Never allow horizontal scrolling.
 - The answer layout must remain usable on small mobile screens.
 
+### 6.3.1 Custom mobile/tablet keyboard
+
+On touch-first devices, Spelio may replace the native software keyboard during active practice with a calm custom keyboard docked to the bottom of the viewport.
+
+Purpose:
+
+- reduce mobile keyboard clutter
+- improve touch comfort
+- create a calmer practice experience
+- integrate visually with the Spelio practice surface
+- support Welsh spelling more naturally on phones and tablets
+
+The custom keyboard should preserve:
+
+- fast, confident typing
+- familiar QWERTY ordering
+- low friction
+- the normal hear → recall → spell flow
+
+It is not:
+
+- a predictive spelling engine
+- an adaptive educational keyboard
+- a contextual hint system
+- a replacement for recall
+- a phonics system
+
+Device scope:
+
+- Applies only where it improves the experience on touch-first devices, including phones and tablets/iPads.
+- Desktop, laptop, and hardware-keyboard users should continue using normal keyboard input.
+- External keyboard setups should not lose ordinary typing behaviour.
+
+Keyboard layout:
+
+- Stable Welsh digraph row:
+  - `CH DD FF NG LL PH RH TH`
+- Standard QWERTY rows:
+  - `Q W E R T Y U I O P`
+  - `A S D F G H J K L`
+  - `Z X C V B N M`
+- Include apostrophe access for Welsh phrase input.
+- Keep rows visually centred/staggered in a familiar keyboard rhythm.
+
+Do not include:
+
+- predictive suggestions
+- adaptive word-specific keys
+- emoji rows
+- GIF buttons
+- microphone buttons
+- utility clutter
+- a numbers row by default
+
+Accent support:
+
+- Support hold-to-accent interaction where practical, for example `W → Ŵ`, `Y → Ŷ`, `O → Ô`, and equivalent Welsh accented vowels.
+- If hold-to-accent is unreliable on a device/browser, provide a graceful fallback accent affordance.
+- A subtle one-time onboarding hint for accents is acceptable, for example “Press and hold a letter for accents.”
+- Do not show repeated tutorial popups.
+
+Interaction behaviour:
+
+- The keyboard should remain fixed or sticky to the bottom of the viewport while practising.
+- Practice content above the keyboard should remain readable and usable.
+- If content is taller than the remaining viewport, only the practice content area above the keyboard should scroll.
+- The keyboard should respect iOS safe-area insets.
+- Tapping keys must feed the existing letter-by-letter validation path.
+- Digraph keys should submit their letters in sequence and rely on the existing validation flow to stop safely at the first incorrect character.
+- Existing incorrect-input feedback, reveal behaviour, scoring, difficult-word handling, recap, progression, and session generation must remain unchanged.
+
+Visual philosophy:
+
+- The keyboard should feel calm, spacious, premium, visually integrated, low-clutter, and Welsh-aware.
+- Key surfaces should follow the public learner UI direction: warm neutral page background, white/ivory key surfaces, subtle borders, soft shadows, and generous spacing.
+- Avoid system-keyboard chrome, bright colours, gamified styling, visual noise, and predictive/adaptive keyboard behaviour.
+
+Accessibility and fallback:
+
+- Keys must use accessible button semantics.
+- Hardware keyboard support must be preserved.
+- Reduced-motion preferences must be respected.
+- Visible focus states must remain available.
+- A safe fallback to native keyboard behaviour should be available for compatibility or accessibility needs.
+
 ### 6.4 Bottom utility strip
 
 Bottom controls:
@@ -2507,16 +2592,24 @@ Optional later:
 
 **Critical implementation requirement:** This system must not be simplified. Incorrect handling will cause keyboard bugs, focus issues, and duplicate input problems.
 
-Mobile input must use a hidden input element to trigger the keyboard.
+Mobile/touch input has two supported paths:
+
+1. Custom Spelio touch keyboard on eligible touch-first devices.
+2. Native software keyboard fallback where the custom keyboard is disabled, unsuitable, unsupported, or required for accessibility/compatibility.
+
+The custom keyboard path should avoid focusing a visible text field and should not reintroduce the native software keyboard during normal practice input.
+
+The native fallback path may use a hidden input element to trigger the device keyboard.
 
 Rules:
 
-- Hidden input must always retain focus during practice.
+- When native fallback is active, the hidden input must retain focus during practice.
 - UI interactions, including reveal letter and word pill tap, must restore focus where appropriate.
 - Hidden input must not handle keydown events, to avoid desktop duplication.
 - Desktop input is handled separately through key events.
-- The mobile keyboard should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
-- Revealing a letter must not dismiss the keyboard.
+- The active touch input system should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
+- Revealing a letter must not dismiss the active touch input system.
+- Switching to native fallback must not change scoring, reveal logic, difficult-word handling, recap, progression, or session generation.
 
 ### 19.10 Desktop input handling
 
