@@ -222,7 +222,14 @@ export const cy = {
     southStandardForm: 'Ffurf De Cymru / Safonol',
     standardForm: 'Ffurf safonol',
     dialectSpecificForm: 'Ffurf dafodieithol',
-    wordInsight: 'Nodyn gair'
+    wordInsight: 'Nodyn gair',
+    touchKeyboardLabel: 'Bysellfwrdd cyffwrdd Spelio',
+    touchKeyboardTypeKey: 'Teipio',
+    touchKeyboardAccentKey: 'Agor dewisiadau acen',
+    touchKeyboardApostropheKey: 'Teipio collnod crwm',
+    touchKeyboardAccentChoices: 'Dewisiadau acen',
+    touchKeyboardAccentHint: 'Pwyswch a dal llythyren am acenion.',
+    useNativeKeyboard: 'Defnyddio bysellfwrdd y ddyfais'
   },
   settings: {
     open: 'Agor gosodiadau',
@@ -252,6 +259,8 @@ export const cy = {
     recallPauseNote: 'Oedi’r Saesneg yn fyr fel y gallwch wrando’n gyntaf.',
     soundEffects: 'Effeithiau sain',
     soundEffectsNote: 'Chwarae sain ar gyfer atebion cywir ac anghywir.',
+    customTouchKeyboard: 'Bysellfwrdd cyffwrdd Spelio',
+    customTouchKeyboardNote: 'Defnyddio bysellfwrdd tawel Spelio ar ffonau a thabledi. Diffoddwch i ddefnyddio bysellfwrdd y ddyfais.',
     resetProgress: 'Ailosod cynnydd',
     localProgressNote: 'Mae cynnydd a chyfeiriadau at restrau personol diweddar yn cael eu cadw’n lleol ar y ddyfais hon.',
     resetProgressTitle: 'Ailosod cynnydd?',

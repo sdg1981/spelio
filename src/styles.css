@@ -445,6 +445,222 @@
   caret-color:transparent;
 }
 
+.practice-app.touch-keyboard-active{
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+
+.practice-app.touch-keyboard-active .practice-shell{
+  padding-bottom:calc(330px + env(safe-area-inset-bottom, 0px));
+}
+
+.spelio-touch-keyboard-shell{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:28;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background:linear-gradient(to top, rgba(246,245,242,.98), rgba(246,245,242,.94) 82%, rgba(246,245,242,0));
+  pointer-events:auto;
+}
+
+.spelio-touch-keyboard{
+  width:min(100%, 720px);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.spelio-touch-key-row{
+  display:grid;
+  gap:8px;
+  justify-content:center;
+}
+
+.spelio-touch-key-row.row-1{
+  grid-template-columns:repeat(8, minmax(0, 1fr));
+  width:min(100%, 700px);
+}
+
+.spelio-touch-key-row.row-2{
+  grid-template-columns:repeat(10, minmax(0, 1fr));
+  width:min(100%, 690px);
+}
+
+.spelio-touch-key-row.row-3{
+  grid-template-columns:repeat(9, minmax(0, 1fr));
+  width:min(90%, 620px);
+}
+
+.spelio-touch-key-row.row-4{
+  grid-template-columns:repeat(9, minmax(0, 1fr));
+  width:min(90%, 620px);
+}
+
+.spelio-touch-key{
+  min-width:0;
+  min-height:48px;
+  border:1px solid rgba(138,128,117,.26);
+  border-radius:7px;
+  background:rgba(255,255,252,.96);
+  color:#060f18;
+  box-shadow:0 2px 5px rgba(7,21,34,.14), inset 0 1px 0 rgba(255,255,255,.88);
+  font-size:23px;
+  font-weight:500;
+  line-height:1;
+  letter-spacing:0;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  transition:transform .08s ease-out, background .12s ease-out, box-shadow .12s ease-out;
+}
+
+.spelio-touch-key.digraph{
+  font-size:20px;
+  font-weight:500;
+}
+
+.spelio-touch-key.special{
+  font-size:22px;
+}
+
+.spelio-touch-key:focus-visible,
+.spelio-accent-choice:focus-visible,
+.spelio-native-keyboard-fallback:focus-visible{
+  outline:2px solid rgba(217,0,0,.42);
+  outline-offset:2px;
+}
+
+.spelio-touch-key:active{
+  transform:translateY(1px);
+  background:#faf8f3;
+  box-shadow:0 1px 3px rgba(7,21,34,.12), inset 0 1px 0 rgba(255,255,255,.82);
+}
+
+.spelio-touch-key:disabled{
+  opacity:.55;
+}
+
+.spelio-accent-chooser{
+  width:min(calc(100vw - 24px), 540px);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  padding:9px 10px;
+  border:1px solid rgba(138,128,117,.22);
+  border-radius:12px;
+  background:rgba(255,255,252,.98);
+  box-shadow:0 10px 28px rgba(7,21,34,.11);
+}
+
+.spelio-accent-choice{
+  min-width:44px;
+  min-height:42px;
+  border:1px solid rgba(138,128,117,.24);
+  border-radius:7px;
+  background:#fffefa;
+  color:#071522;
+  font-size:22px;
+  font-weight:600;
+  line-height:1;
+  touch-action:manipulation;
+}
+
+.spelio-touch-keyboard-hint{
+  min-height:18px;
+  color:#77818b;
+  font-size:12px;
+  font-weight:550;
+  line-height:1.2;
+  opacity:0;
+  transform:translateY(2px);
+  transition:opacity .18s ease-out, transform .18s ease-out;
+}
+
+.spelio-touch-keyboard-hint.visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.spelio-native-keyboard-fallback{
+  border:0;
+  background:transparent;
+  color:#6f7882;
+  padding:2px 8px;
+  font-size:12px;
+  font-weight:600;
+  line-height:1.2;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
+@media (max-width:767px){
+  .practice-app.touch-keyboard-active .practice-shell{
+    padding-bottom:calc(310px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .spelio-touch-keyboard-shell{
+    padding-inline:12px;
+  }
+
+  .spelio-touch-keyboard{
+    gap:9px;
+  }
+
+  .spelio-touch-key-row{
+    gap:7px;
+  }
+
+  .spelio-touch-key{
+    min-height:45px;
+    border-radius:7px;
+    font-size:22px;
+  }
+
+  .spelio-touch-key.digraph{
+    min-height:46px;
+    font-size:18px;
+  }
+}
+
+@media (max-width:380px){
+  .practice-app.touch-keyboard-active .practice-shell{
+    padding-bottom:calc(292px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .spelio-touch-keyboard-shell{
+    padding-inline:10px;
+  }
+
+  .spelio-touch-key-row{
+    gap:6px;
+  }
+
+  .spelio-touch-key{
+    min-height:42px;
+    font-size:20px;
+  }
+
+  .spelio-touch-key.digraph{
+    min-height:44px;
+    font-size:16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .spelio-touch-key,
+  .spelio-touch-keyboard-hint{
+    transition:none;
+  }
+}
+
 .letter-input-tap-zone{
   position:relative;
   width:100%;
@@ -6410,6 +6626,33 @@
 .public-app[data-theme="dark"] .practice-app .utility-bar svg{
   color:currentColor;
   stroke-width:2.25;
+}
+
+.public-app[data-theme="dark"] .spelio-touch-keyboard-shell{
+  background:linear-gradient(to top, rgba(18,21,24,.98), rgba(18,21,24,.94) 82%, rgba(18,21,24,0));
+}
+
+.public-app[data-theme="dark"] .spelio-touch-key,
+.public-app[data-theme="dark"] .spelio-accent-choice{
+  border-color:rgba(219,214,205,.16);
+  background:rgba(30,34,38,.97);
+  color:#f3f0ea;
+  box-shadow:0 2px 5px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.public-app[data-theme="dark"] .spelio-touch-key:active{
+  background:#262b30;
+}
+
+.public-app[data-theme="dark"] .spelio-accent-chooser{
+  border-color:rgba(219,214,205,.16);
+  background:rgba(24,27,31,.99);
+  box-shadow:0 12px 32px rgba(0,0,0,.34);
+}
+
+.public-app[data-theme="dark"] .spelio-touch-keyboard-hint,
+.public-app[data-theme="dark"] .spelio-native-keyboard-fallback{
+  color:#aeb6bf;
 }
 
 .public-app[data-theme="dark"] .status-line{

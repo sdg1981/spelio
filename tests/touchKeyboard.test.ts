@@ -1,0 +1,102 @@
+import {
+  TOUCH_KEYBOARD_ROWS,
+  WELSH_ACCENT_VARIANTS,
+  answerNeedsWelshAccent,
+  shouldUseCustomTouchKeyboard
+} from '../src/lib/practice/touchKeyboard';
+import {
+  createInitialPracticeLetters,
+  findNextInputIndex,
+  processPracticeInput
+} from '../src/lib/practice/inputFlow';
+
+function assertEqual<T>(actual: T, expected: T, message: string) {
+  if (actual !== expected) {
+    throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
+  }
+}
+
+function committedValue(letters: Array<{ value: string }>) {
+  return letters.map(letter => letter.value || '_').join('');
+}
+
+{
+  assertEqual(
+    shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true }),
+    true,
+    'Custom keyboard should be eligible on touch devices.'
+  );
+  assertEqual(
+    shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 0, coarsePointer: false, hoverNone: false }),
+    false,
+    'Custom keyboard should not be eligible on desktop-style devices.'
+  );
+  assertEqual(
+    shouldUseCustomTouchKeyboard({ enabled: false, maxTouchPoints: 5, coarsePointer: true }),
+    false,
+    'User fallback setting should disable the custom keyboard.'
+  );
+  assertEqual(
+    shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true, forcedColors: true }),
+    false,
+    'Forced colors should use the native keyboard fallback path.'
+  );
+}
+
+{
+  assertEqual(TOUCH_KEYBOARD_ROWS[0].join(' '), 'CH DD FF NG LL PH RH TH', 'Welsh digraph row should remain fixed.');
+  assertEqual(TOUCH_KEYBOARD_ROWS[3][0], '^', 'Accent affordance should be on the final row.');
+  assertEqual(TOUCH_KEYBOARD_ROWS[3][8], '’', 'Curly apostrophe should be available for Welsh phrase input.');
+}
+
+{
+  const result = processPracticeInput({
+    targetAnswer: 'chwarae',
+    letters: createInitialPracticeLetters('chwarae'),
+    rawInput: 'CH',
+    mode: 'flexible'
+  });
+
+  assertEqual(committedValue(result.letters).slice(0, 2), 'ch', 'Digraph taps should feed both letters through existing validation.');
+  assertEqual(findNextInputIndex('chwarae', result.letters), 2, 'Digraph input should advance by the valid sequence length.');
+}
+
+{
+  const result = processPracticeInput({
+    targetAnswer: 'coffi',
+    letters: createInitialPracticeLetters('coffi'),
+    rawInput: 'CH',
+    mode: 'flexible'
+  });
+
+  assertEqual(committedValue(result.letters), 'c____', 'A digraph with only the first valid character should not corrupt later slots.');
+  assertEqual(result.wrongFeedback?.inputPosition, 1, 'The second digraph character should fail at the current slot.');
+}
+
+{
+  const answer = 'dw i’n';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'dwi’n',
+    mode: 'flexible'
+  });
+
+  assertEqual(result.completed, true, 'Curly apostrophe input should complete phrase answers.');
+  assertEqual(committedValue(result.letters), answer, 'Curly apostrophe input should commit the target phrase.');
+}
+
+{
+  const answer = 'Dŵr';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: `D${WELSH_ACCENT_VARIANTS.W[0]}r`,
+    mode: 'strict'
+  });
+
+  assertEqual(answerNeedsWelshAccent(answer), true, 'Accent hint should know when the current answer needs Welsh accents.');
+  assertEqual(result.completed, true, 'Accent chooser input should feed strict accented validation.');
+}
+
+console.log('touch keyboard tests passed');

@@ -25,6 +25,7 @@ export interface SpelioSettings {
   audioPrompts: boolean;
   recallPause: boolean;
   soundEffects: boolean;
+  customTouchKeyboard: boolean;
   welshSpelling: WelshSpellingMode;
   dialectPreference: DialectPreference;
   interfaceLanguage: InterfaceLanguage;
@@ -103,6 +104,7 @@ export const defaultSettings: SpelioSettings = {
   audioPrompts: true,
   recallPause: true,
   soundEffects: true,
+  customTouchKeyboard: true,
   welshSpelling: 'flexible',
   dialectPreference: 'mixed',
   interfaceLanguage: 'en',
@@ -240,6 +242,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
       audioPrompts,
       recallPause: typeof settings.recallPause === 'boolean' ? settings.recallPause : defaultSettings.recallPause,
       soundEffects: typeof settings.soundEffects === 'boolean' ? settings.soundEffects : defaultSettings.soundEffects,
+      customTouchKeyboard: typeof settings.customTouchKeyboard === 'boolean' ? settings.customTouchKeyboard : defaultSettings.customTouchKeyboard,
       welshSpelling: settings.welshSpelling === 'strict' ? 'strict' : 'flexible',
       dialectPreference: normaliseDialectPreference(settings.dialectPreference),
       interfaceLanguage: normaliseInterfaceLanguage(settings.interfaceLanguage),

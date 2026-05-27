@@ -222,7 +222,14 @@ export const en = {
     southStandardForm: 'South Wales / Standard form',
     standardForm: 'Standard form',
     dialectSpecificForm: 'Dialect-specific form',
-    wordInsight: 'Word insight'
+    wordInsight: 'Word insight',
+    touchKeyboardLabel: 'Spelio touch keyboard',
+    touchKeyboardTypeKey: 'Type',
+    touchKeyboardAccentKey: 'Open accent choices',
+    touchKeyboardApostropheKey: 'Type curly apostrophe',
+    touchKeyboardAccentChoices: 'Accent choices',
+    touchKeyboardAccentHint: 'Press and hold a letter for accents.',
+    useNativeKeyboard: 'Use native keyboard'
   },
   settings: {
     open: 'Open settings',
@@ -252,6 +259,8 @@ export const en = {
     recallPauseNote: 'Briefly delay English so you can listen first.',
     soundEffects: 'Sound effects',
     soundEffectsNote: 'Play sounds for correct and incorrect answers.',
+    customTouchKeyboard: 'Spelio touch keyboard',
+    customTouchKeyboardNote: 'Use Spelio’s calm keyboard on phones and tablets. Turn off to use the device keyboard.',
     resetProgress: 'Reset progress',
     localProgressNote: 'Progress and recent custom-list references are saved locally on this device.',
     resetProgressTitle: 'Reset progress?',

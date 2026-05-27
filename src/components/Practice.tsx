@@ -5,6 +5,7 @@ import { Copy, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { Footer } from './Footer';
+import { SpelioTouchKeyboard } from './SpelioTouchKeyboard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
 import { mainWordLists } from '../data/supportWordLists';
@@ -20,6 +21,7 @@ import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevea
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
+import { detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 import { getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip, type InterfaceAudioClipRegistry } from '../lib/interfaceAudio';
@@ -222,6 +224,7 @@ export function Practice({
   const [localStatusSecondary, setLocalStatusSecondary] = useState<string | null>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
+  const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
   const spellingHintTimerRef = useRef<number | null>(null);
@@ -263,6 +266,7 @@ export function Practice({
 
   function focusMobileInput() {
     if (!shouldUseMobileKeyboard()) return;
+    if (customTouchKeyboardActive) return;
 
     mobileKeyboardEnabledRef.current = true;
     const scrollX = window.scrollX;
@@ -381,7 +385,7 @@ export function Practice({
   }, [clearStruggleAssistEmphasis, stopStruggleAssistHelperAudio]);
 
   const restorePracticeInputFocus = useCallback(() => {
-    if (shouldUseMobileKeyboard()) {
+    if (shouldUseMobileKeyboard() && !customTouchKeyboardActive) {
       focusMobileInput();
       return;
     }
@@ -389,7 +393,7 @@ export function Practice({
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-  }, []);
+  }, [customTouchKeyboardActive]);
 
   const finishPeek = useCallback((showMemoryStatus = true, restoreFocus = true) => {
     clearPeekTimers();
@@ -803,6 +807,28 @@ export function Practice({
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const updateEligibility = () => {
+      setCustomTouchKeyboardActive(detectCustomTouchKeyboardEligibility(storage.settings.customTouchKeyboard));
+    };
+    const mediaQueries = [
+      window.matchMedia('(pointer: coarse)'),
+      window.matchMedia('(hover: none)'),
+      window.matchMedia('(forced-colors: active)')
+    ];
+
+    updateEligibility();
+    window.addEventListener('resize', updateEligibility);
+    for (const query of mediaQueries) query.addEventListener('change', updateEligibility);
+
+    return () => {
+      window.removeEventListener('resize', updateEligibility);
+      for (const query of mediaQueries) query.removeEventListener('change', updateEligibility);
+    };
+  }, [storage.settings.customTouchKeyboard]);
+
+  useEffect(() => {
     if (status) {
       setLocalStatus(null);
       setLocalStatusSecondary(null);
@@ -813,6 +839,7 @@ export function Practice({
     function isControlTarget(target: EventTarget | null) {
       if (!(target instanceof HTMLElement)) return false;
       if (target === mobileInputRef.current) return false;
+      if (target.closest('.spelio-touch-keyboard-shell')) return false;
       return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
     }
 
@@ -890,14 +917,14 @@ export function Practice({
   }, [activateEnglishPromptPeek, beginPeekHold, clearScheduledSpellingHintAudioReplay, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, practiceTestMode, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
-    if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard()) return;
+    if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard() || customTouchKeyboardActive) return;
 
     const timer = window.setTimeout(() => {
       focusMobileInput();
     }, 80);
 
     return () => window.clearTimeout(timer);
-  }, [currentWord?.id, isComplete, modal]);
+  }, [currentWord?.id, customTouchKeyboardActive, isComplete, modal]);
 
   const currentWordComplete = currentWord ? isCommittedAnswerComplete(practiceAnswer, letters, storage.settings.welshSpelling) : false;
 
@@ -1122,6 +1149,20 @@ export function Practice({
     restorePracticeInputFocus();
   }
 
+  function useNativeTouchKeyboard() {
+    updateSettings({ customTouchKeyboard: false });
+    setCustomTouchKeyboardActive(false);
+
+    window.setTimeout(() => {
+      if (!shouldUseMobileKeyboard() || modal || settingsModalOpenRef.current || isComplete) return;
+      mobileKeyboardEnabledRef.current = true;
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+      mobileInputRef.current?.focus({ preventScroll: true });
+      window.requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
+    }, 40);
+  }
+
   function handleWordPillClick(event: MouseEvent<HTMLButtonElement>) {
     clearScheduledSpellingHintAudioReplay();
 
@@ -1216,9 +1257,10 @@ export function Practice({
       .filter((note): note is string => Boolean(note))
     : [];
   const learnerNoteVisible = !practiceTestMode && Boolean(spellingHintText || dialectLabel || wordInsights.length);
+  const showCustomTouchKeyboard = customTouchKeyboardActive && !isComplete;
 
   return (
-    <main className="app-bg practice-app relative overflow-hidden">
+    <main className={`app-bg practice-app relative ${showCustomTouchKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
       <PracticeTopNav onBackHome={onBackHome} />
 
@@ -1280,7 +1322,7 @@ export function Practice({
         />
 
         <div
-          onClick={focusMobileInput}
+          onClick={showCustomTouchKeyboard ? undefined : focusMobileInput}
           className="letter-input-tap-zone"
         >
           <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
@@ -1355,6 +1397,16 @@ export function Practice({
 
         <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
+
+      {showCustomTouchKeyboard && (
+        <SpelioTouchKeyboard
+          answer={answer}
+          disabled={Boolean(modal)}
+          onInput={handlePracticeInput}
+          onUseNativeKeyboard={useNativeTouchKeyboard}
+          t={t}
+        />
+      )}
 
       {modal === 'wordlist' && (
         <WordListModal
@@ -1669,6 +1721,14 @@ export function SettingsModal({
                 <span className="mt-2 block field-note">{t('settings.soundEffectsNote')}</span>
               </span>
               <Toggle active={settings.soundEffects} onClick={() => onChange({ soundEffects: !settings.soundEffects })} />
+            </div>
+
+            <div className="flex items-center justify-between gap-8">
+              <span>
+                <b className="block text-[18px] md:text-[15px]">{t('settings.customTouchKeyboard')}</b>
+                <span className="mt-2 block field-note">{t('settings.customTouchKeyboardNote')}</span>
+              </span>
+              <Toggle active={settings.customTouchKeyboard} onClick={() => onChange({ customTouchKeyboard: !settings.customTouchKeyboard })} />
             </div>
           </div>
 
