@@ -146,7 +146,9 @@ export function WelshSpellingBasicsOverview({
                   onClick={() => onOpenTopic(topic.slug)}
                   aria-label={localize(topic.overviewTitle, interfaceLanguage)}
                 >
-                  {topic.symbol ?? localize(topic.overviewTitle, interfaceLanguage)}
+                  <span className="spelling-basics-sound-tile-label">
+                    {topic.symbol ?? localize(topic.overviewTitle, interfaceLanguage)}
+                  </span>
                 </button>
               ))}
             </div>

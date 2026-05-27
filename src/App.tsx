@@ -904,9 +904,25 @@ export default function App() {
   );
 
   const showSharedPublicBackground = activeScreen !== 'home';
+  const useActionPublicBackground = activeScreen === 'home' || activeScreen === 'end';
+  const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic';
+  const usePracticePublicBackground = activeScreen === 'practice';
+  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry'].includes(activeScreen);
+  const useNeutralPublicBackground = showSharedPublicBackground && !useActionPublicBackground;
+  const useEndPublicBackground = activeScreen === 'end';
+  const publicAppClassName = [
+    'public-app',
+    useActionPublicBackground ? 'public-app-action-background' : '',
+    useEndPublicBackground ? 'public-app-end-background' : '',
+    useNeutralPublicBackground ? 'public-app-neutral-background' : '',
+    showSharedPublicBackground ? 'public-app-with-shared-background' : '',
+    useReadingPublicBackground ? 'public-app-reading-background' : '',
+    usePracticePublicBackground ? 'public-app-practice-background' : '',
+    useUtilityPublicBackground ? 'public-app-utility-background' : ''
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className={`public-app ${showSharedPublicBackground ? 'public-app-with-shared-background' : ''}`} data-theme={storage.settings.theme}>
+    <div className={publicAppClassName} data-theme={storage.settings.theme}>
       {showSharedPublicBackground && <PublicBackgroundTreatment />}
       <ScreenTransition screen={activeScreen}>
         {screenContent}

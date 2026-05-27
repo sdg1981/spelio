@@ -82,7 +82,7 @@ export function Home({
         : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
   const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
-  const selectListIconClassName = isFirst ? undefined : 'change-word-list-icon';
+  const selectListIconClassName = 'change-word-list-icon';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
