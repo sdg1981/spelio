@@ -826,6 +826,7 @@ Done behaviour:
   - If opened during practice, end the current session and return to the homepage.
   - If opened from the end screen, return to the homepage.
 - Pressing Done must never automatically start a practice session.
+- Pressing Done after changing word list must never start practice.
 
 Back arrow behaviour:
 
@@ -1079,10 +1080,12 @@ Correct:
 Incorrect:
 
 - A word with one or more incorrect attempts.
+- Counts unique words where the learner made at least one mistake, not every incorrect keypress.
 
 Revealed:
 
 - A word where one or more letters were revealed.
+- Counts unique words where reveal was used, not every revealed letter.
 
 Spellings learned:
 
@@ -1105,6 +1108,7 @@ Rules:
 - Revealed words must not count as Correct.
 - A word with a reveal but no incorrect attempts should not count as Correct; it should be excluded from Correct and represented through the Revealed stat.
 - If the UI requires Correct + Incorrect to equal total words, then any revealed word should be included in Incorrect for scoring purposes.
+- Repeated mistakes or reveals on the same word may still affect difficult-word and reveal logic, but they count only once in the end-screen totals.
 
 ## 10. Session model
 
