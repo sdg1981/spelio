@@ -816,8 +816,13 @@ export function Practice({
 
     const updateEligibility = () => {
       const available = detectCustomTouchKeyboardAvailability();
-      setCustomTouchKeyboardAvailable(available);
-      setCustomTouchKeyboardActive(available && detectCustomTouchKeyboardEligibility(storage.settings.customTouchKeyboard));
+      const eligible = available && detectCustomTouchKeyboardEligibility(storage.settings.customTouchKeyboard);
+      setCustomTouchKeyboardAvailable(previous => previous === available ? previous : available);
+      setCustomTouchKeyboardActive(previous => previous === eligible ? previous : eligible);
+    };
+    const restoreAfterVisibilityReturn = () => {
+      if (document.visibilityState === 'hidden') return;
+      updateEligibility();
     };
     const mediaQueries = [
       window.matchMedia('(pointer: coarse)'),
@@ -827,13 +832,25 @@ export function Practice({
 
     updateEligibility();
     window.addEventListener('resize', updateEligibility);
+    window.addEventListener('focus', restoreAfterVisibilityReturn);
+    window.addEventListener('pageshow', restoreAfterVisibilityReturn);
+    document.addEventListener('visibilitychange', restoreAfterVisibilityReturn);
     for (const query of mediaQueries) query.addEventListener('change', updateEligibility);
 
     return () => {
       window.removeEventListener('resize', updateEligibility);
+      window.removeEventListener('focus', restoreAfterVisibilityReturn);
+      window.removeEventListener('pageshow', restoreAfterVisibilityReturn);
+      document.removeEventListener('visibilitychange', restoreAfterVisibilityReturn);
       for (const query of mediaQueries) query.removeEventListener('change', updateEligibility);
     };
   }, [storage.settings.customTouchKeyboard]);
+
+  useEffect(() => {
+    if (!customTouchKeyboardActive) return;
+    mobileKeyboardEnabledRef.current = false;
+    mobileInputRef.current?.blur();
+  }, [customTouchKeyboardActive, currentWord?.id]);
 
   useEffect(() => {
     if (status) {
