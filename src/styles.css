@@ -446,23 +446,41 @@
 }
 
 .practice-app.touch-keyboard-active{
-  overflow-x:hidden;
-  overflow-y:auto;
+  --spelio-touch-keyboard-height:330px;
+  height:100dvh;
+  min-height:100dvh;
+  overflow:hidden;
+}
+
+@supports not (height:100dvh){
+  .practice-app.touch-keyboard-active{
+    height:100svh;
+    min-height:100svh;
+  }
 }
 
 .practice-app.touch-keyboard-active .practice-shell{
-  padding-bottom:calc(330px + env(safe-area-inset-bottom, 0px));
+  height:100%;
+  min-height:0;
+  max-height:100dvh;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(var(--spelio-touch-keyboard-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .spelio-touch-keyboard-shell{
+  --spelio-touch-keyboard-height:330px;
   position:fixed;
   left:0;
   right:0;
   bottom:0;
-  z-index:28;
+  z-index:32;
+  min-height:var(--spelio-touch-keyboard-height, 330px);
   display:flex;
   flex-direction:column;
   align-items:center;
+  justify-content:flex-end;
   gap:8px;
   padding:10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   background:linear-gradient(to top, rgba(246,245,242,.98), rgba(246,245,242,.94) 82%, rgba(246,245,242,0));
@@ -602,11 +620,17 @@
 }
 
 @media (max-width:767px){
+  .practice-app.touch-keyboard-active{
+    --spelio-touch-keyboard-height:310px;
+  }
+
   .practice-app.touch-keyboard-active .practice-shell{
-    padding-bottom:calc(310px + env(safe-area-inset-bottom, 0px));
+    padding-top:96px;
+    padding-bottom:calc(var(--spelio-touch-keyboard-height) + env(safe-area-inset-bottom, 0px));
   }
 
   .spelio-touch-keyboard-shell{
+    --spelio-touch-keyboard-height:310px;
     padding-inline:12px;
   }
 
@@ -631,11 +655,16 @@
 }
 
 @media (max-width:380px){
+  .practice-app.touch-keyboard-active{
+    --spelio-touch-keyboard-height:292px;
+  }
+
   .practice-app.touch-keyboard-active .practice-shell{
-    padding-bottom:calc(292px + env(safe-area-inset-bottom, 0px));
+    padding-bottom:calc(var(--spelio-touch-keyboard-height) + env(safe-area-inset-bottom, 0px));
   }
 
   .spelio-touch-keyboard-shell{
+    --spelio-touch-keyboard-height:292px;
     padding-inline:10px;
   }
 

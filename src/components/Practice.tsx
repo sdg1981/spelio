@@ -225,6 +225,7 @@ export function Practice({
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
+  const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
   const spellingHintTimerRef = useRef<number | null>(null);
@@ -804,6 +805,10 @@ export function Practice({
 
   useEffect(() => {
     struggleAssistSeenRef.current = hasSeenPracticeStruggleAssist(typeof window === 'undefined' ? null : window.localStorage);
+  }, []);
+
+  useEffect(() => {
+    setKeyboardPortalTarget(document.querySelector('.public-app') ?? document.body);
   }, []);
 
   useEffect(() => {
@@ -1398,14 +1403,15 @@ export function Practice({
         <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
 
-      {showCustomTouchKeyboard && (
+      {showCustomTouchKeyboard && keyboardPortalTarget && createPortal(
         <SpelioTouchKeyboard
           answer={answer}
           disabled={Boolean(modal)}
           onInput={handlePracticeInput}
           onUseNativeKeyboard={useNativeTouchKeyboard}
           t={t}
-        />
+        />,
+        keyboardPortalTarget
       )}
 
       {modal === 'wordlist' && (
