@@ -208,6 +208,10 @@ export function HowSpelioWorks({
         <div className="how-hero-copy">
           <h1 id="how-spelio-works-title">{t('how.heroHeading')}</h1>
           <p>{t('how.heroSupport')}</p>
+          <button className="how-hero-cta" type="button" onClick={onHome}>
+            <span>{t('how.startPractice')}</span>
+            <ArrowRight size={19} strokeWidth={2.4} aria-hidden="true" />
+          </button>
         </div>
 
         <DeviceMockup t={t} />
