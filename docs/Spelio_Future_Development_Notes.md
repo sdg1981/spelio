@@ -136,6 +136,31 @@ Experimental ElevenLabs audio direction:
 - The workflow should remain admin-only and should not add learner-facing audio complexity.
 - This should remain a pragmatic hybrid experiment and should not imply that ElevenLabs replaces trusted human recordings or makes Azure obsolete.
 
+## Welsh pronunciation and listening discovery pages
+
+Spelio may later create a small number of carefully curated public pages for high-value Welsh pronunciation and listening searches. These should be selected deliberately, not mass-generated, and should exist to help learners and curious searchers hear Welsh clearly.
+
+Candidate page types may include:
+
+- Welsh sound and spelling-pattern pages such as `ll`, `dd`, `ch`, `rh`, `ff`, `w`, and `y`
+- High-confusion Welsh words such as `Cymru`, `iechyd`, `diolch`, `llaeth`, and `chwech`
+- Selected Welsh place names where pronunciation search intent is strong
+
+The purpose should be to make Spelio a trusted, calm, useful place to hear Welsh clearly, not to create SEO content at scale. Trusted Welsh voice recordings are a key differentiator here.
+
+These pages should be audio-first, lightweight, beautifully presented, and aligned with Spelio's calm adult-oriented tone. Each page should provide genuine usefulness, such as:
+
+- Clear Welsh audio
+- A short pronunciation or spelling-pattern note
+- Optional related pattern links
+- An optional gentle CTA into Spelio practice
+
+Search demand should guide page selection using evidence such as Google Search Console, Google autocomplete, Google Trends, and/or SEO tools.
+
+Avoid thin content, AI-generated page farms, generic vocabulary pages, manipulative SEO tactics, or bloated blog-style content.
+
+This should remain future-facing until real search demand, audio quality, and learner usefulness justify implementation.
+
 ## 2. Future educational systems
 
 Possible future systems to keep in mind:
