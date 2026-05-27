@@ -227,6 +227,8 @@ They are:
 - specific enough to deserve unique titles and descriptions
 - directly connected to focused practice
 
+Early manual search observations suggest the strongest organic opportunity is not generic "learn Welsh" SEO, but specific Welsh spelling and pronunciation intent: Welsh digraphs and sounds, Welsh orthography questions, pronunciation of high-confusion Welsh words, and selected place names. This should guide future page prioritisation without overriding Spelio's calm, quality-led SEO philosophy.
+
 Recommended indexed pages:
 
 - `/spelling-basics`

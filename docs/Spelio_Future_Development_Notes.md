@@ -157,6 +157,8 @@ These pages should be audio-first, lightweight, beautifully presented, and align
 
 Search demand should guide page selection using evidence such as Google Search Console, Google autocomplete, Google Trends, and/or SEO tools.
 
+Early manual Google autocomplete and search observations suggest real search interest around Welsh pronunciation, digraphs, orthography, sound-pattern questions, high-confusion words such as `Cymru`, and selected Welsh place-name pronunciation such as Llandudno and Snowdon. This supports the future direction of carefully curated pronunciation and listening pages, but does not justify mass-generated pages or broad SEO expansion.
+
 Avoid thin content, AI-generated page farms, generic vocabulary pages, manipulative SEO tactics, or bloated blog-style content.
 
 This should remain future-facing until real search demand, audio quality, and learner usefulness justify implementation.

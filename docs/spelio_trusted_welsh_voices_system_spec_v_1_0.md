@@ -75,6 +75,8 @@ The voice layer should make Spelio feel special without becoming theatrical, sen
 
 Trusted Welsh audio may also support future public pronunciation and listening-support surfaces outside the core practice loop, including carefully curated pronunciation pages, Welsh sound-pattern pages, and public listening examples. These should remain restrained, useful, and quality-led.
 
+Early manual search observations suggest trusted human Welsh audio may become especially valuable on public spelling-pattern and pronunciation-discovery pages, because "how to pronounce..." intent depends heavily on audio credibility and learner trust.
+
 The ideal reaction is not only:
 
 > “This is accurate.”
