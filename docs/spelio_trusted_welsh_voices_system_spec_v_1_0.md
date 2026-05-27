@@ -73,6 +73,8 @@ Beautiful, warm, natural Welsh voices can create trust, calm, attachment, and a 
 
 The voice layer should make Spelio feel special without becoming theatrical, sentimental, celebrity-driven, or entertainment-led.
 
+Trusted Welsh audio may also support future public pronunciation and listening-support surfaces outside the core practice loop, including carefully curated pronunciation pages, Welsh sound-pattern pages, and public listening examples. These should remain restrained, useful, and quality-led.
+
 The ideal reaction is not only:
 
 > “This is accurate.”
