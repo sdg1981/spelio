@@ -20,7 +20,7 @@ import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevea
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
-import { detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
+import { detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 import { getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip, type InterfaceAudioClipRegistry } from '../lib/interfaceAudio';
@@ -224,6 +224,7 @@ export function Practice({
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
+  const [customTouchKeyboardAvailable, setCustomTouchKeyboardAvailable] = useState(false);
   const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
@@ -814,7 +815,9 @@ export function Practice({
     if (typeof window === 'undefined') return undefined;
 
     const updateEligibility = () => {
-      setCustomTouchKeyboardActive(detectCustomTouchKeyboardEligibility(storage.settings.customTouchKeyboard));
+      const available = detectCustomTouchKeyboardAvailability();
+      setCustomTouchKeyboardAvailable(available);
+      setCustomTouchKeyboardActive(available && detectCustomTouchKeyboardEligibility(storage.settings.customTouchKeyboard));
     };
     const mediaQueries = [
       window.matchMedia('(pointer: coarse)'),
@@ -1390,6 +1393,7 @@ export function Practice({
 
         <SettingsLauncher
           settings={storage.settings}
+          showKeyboardPreference={customTouchKeyboardAvailable}
           activePracticeSession={Boolean(currentWord && hasWords && !isComplete)}
           onChange={updateSettings}
           onOpenChange={handleSettingsModalOpenChange}
@@ -1523,6 +1527,7 @@ function Radio({ active = false }: { active?: boolean }) {
 
 const SettingsLauncher = memo(function SettingsLauncher({
   settings,
+  showKeyboardPreference,
   activePracticeSession,
   onChange,
   onOpenChange,
@@ -1531,6 +1536,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
   t
 }: {
   settings: SpelioSettings;
+  showKeyboardPreference: boolean;
   activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onOpenChange: (open: boolean) => void;
@@ -1553,6 +1559,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
       {open && (
         <SettingsModal
           settings={settings}
+          showKeyboardPreference={showKeyboardPreference}
           activePracticeSession={activePracticeSession}
           onChange={onChange}
           onClose={() => setModalOpen(false)}
@@ -1566,6 +1573,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
 
 export function SettingsModal({
   settings,
+  showKeyboardPreference,
   activePracticeSession,
   onChange,
   onClose,
@@ -1573,6 +1581,7 @@ export function SettingsModal({
   t
 }: {
   settings: SpelioSettings;
+  showKeyboardPreference?: boolean;
   activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
   onClose: () => void;
@@ -1580,7 +1589,31 @@ export function SettingsModal({
   t: Translate;
 }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
+  const [detectedKeyboardPreferenceVisible, setDetectedKeyboardPreferenceVisible] = useState(false);
   const [welshStyleNoticeVisible, setWelshStyleNoticeVisible] = useState(false);
+  const keyboardPreferenceVisible = showKeyboardPreference ?? detectedKeyboardPreferenceVisible;
+
+  useEffect(() => {
+    if (showKeyboardPreference !== undefined || typeof window === 'undefined') return undefined;
+
+    const updateAvailability = () => {
+      setDetectedKeyboardPreferenceVisible(detectCustomTouchKeyboardAvailability());
+    };
+    const mediaQueries = [
+      window.matchMedia('(pointer: coarse)'),
+      window.matchMedia('(hover: none)'),
+      window.matchMedia('(forced-colors: active)')
+    ];
+
+    updateAvailability();
+    window.addEventListener('resize', updateAvailability);
+    for (const query of mediaQueries) query.addEventListener('change', updateAvailability);
+
+    return () => {
+      window.removeEventListener('resize', updateAvailability);
+      for (const query of mediaQueries) query.removeEventListener('change', updateAvailability);
+    };
+  }, [showKeyboardPreference]);
 
   function handleResetConfirm() {
     setConfirmingReset(false);
@@ -1725,15 +1758,30 @@ export function SettingsModal({
               </span>
               <Toggle active={settings.soundEffects} onClick={() => onChange({ soundEffects: !settings.soundEffects })} />
             </div>
-
-            <div className="flex items-center justify-between gap-8">
-              <span>
-                <b className="block text-[18px] md:text-[15px]">{t('settings.customTouchKeyboard')}</b>
-                <span className="mt-2 block field-note">{t('settings.customTouchKeyboardNote')}</span>
-              </span>
-              <Toggle active={settings.customTouchKeyboard} onClick={() => onChange({ customTouchKeyboard: !settings.customTouchKeyboard })} />
-            </div>
           </div>
+
+          {keyboardPreferenceVisible && (
+            <div className="settings-section">
+              <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.keyboard')}</h3>
+              <p className="mt-2 field-note">{t('settings.keyboardNote')}</p>
+
+              <div className="mt-7 space-y-7">
+                <button className="flex gap-5 text-left" onClick={() => onChange({ customTouchKeyboard: true })}>
+                  <Radio active={settings.customTouchKeyboard} />
+                  <span>
+                    <b className="block text-[18px] md:text-[15px]">{t('settings.spelioKeyboard')}</b>
+                  </span>
+                </button>
+
+                <button className="flex gap-5 text-left" onClick={() => onChange({ customTouchKeyboard: false })}>
+                  <Radio active={!settings.customTouchKeyboard} />
+                  <span>
+                    <b className="block text-[18px] md:text-[15px]">{t('settings.nativeKeyboard')}</b>
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="settings-section settings-section-reset">
             <h3 className="text-[16px] md:text-[15px] font-extrabold text-[var(--red)]">{t('settings.resetProgress')}</h3>

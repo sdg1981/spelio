@@ -2,6 +2,7 @@ import {
   TOUCH_KEYBOARD_ROWS,
   WELSH_ACCENT_VARIANTS,
   answerNeedsWelshAccent,
+  isCustomTouchKeyboardAvailable,
   shouldUseCustomTouchKeyboard
 } from '../src/lib/practice/touchKeyboard';
 import {
@@ -27,14 +28,29 @@ function committedValue(letters: Array<{ value: string }>) {
     'Custom keyboard should be eligible on touch devices.'
   );
   assertEqual(
+    isCustomTouchKeyboardAvailable({ maxTouchPoints: 5, coarsePointer: true }),
+    true,
+    'Keyboard preference should be available on touch devices even if the user currently prefers native input.'
+  );
+  assertEqual(
     shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 0, coarsePointer: false, hoverNone: false }),
     false,
     'Custom keyboard should not be eligible on desktop-style devices.'
   );
   assertEqual(
+    isCustomTouchKeyboardAvailable({ maxTouchPoints: 0, coarsePointer: false, hoverNone: false }),
+    false,
+    'Keyboard preference should not be shown on desktop-style devices.'
+  );
+  assertEqual(
     shouldUseCustomTouchKeyboard({ enabled: false, maxTouchPoints: 5, coarsePointer: true }),
     false,
     'User fallback setting should disable the custom keyboard.'
+  );
+  assertEqual(
+    isCustomTouchKeyboardAvailable({ maxTouchPoints: 5, coarsePointer: true, forcedColors: true }),
+    false,
+    'Keyboard preference should not be shown when custom keyboard fallback is required.'
   );
   assertEqual(
     shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true, forcedColors: true }),

@@ -31,6 +31,18 @@ export type TouchKeyboardDetectionInput = {
   forcedColors?: boolean;
 };
 
+export type TouchKeyboardAvailabilityInput = Omit<TouchKeyboardDetectionInput, 'enabled'>;
+
+export function isCustomTouchKeyboardAvailable({
+  maxTouchPoints = 0,
+  coarsePointer = false,
+  hoverNone = false,
+  forcedColors = false
+}: TouchKeyboardAvailabilityInput) {
+  if (forcedColors) return false;
+  return maxTouchPoints > 0 || coarsePointer || hoverNone;
+}
+
 export function shouldUseCustomTouchKeyboard({
   enabled,
   maxTouchPoints = 0,
@@ -38,11 +50,11 @@ export function shouldUseCustomTouchKeyboard({
   hoverNone = false,
   forcedColors = false
 }: TouchKeyboardDetectionInput) {
-  if (!enabled || forcedColors) return false;
-  return maxTouchPoints > 0 || coarsePointer || hoverNone;
+  if (!enabled) return false;
+  return isCustomTouchKeyboardAvailable({ maxTouchPoints, coarsePointer, hoverNone, forcedColors });
 }
 
-export function detectCustomTouchKeyboardEligibility(enabled: boolean) {
+function readCurrentTouchKeyboardEnvironment() {
   if (typeof window === 'undefined') return false;
 
   const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -50,13 +62,24 @@ export function detectCustomTouchKeyboardEligibility(enabled: boolean) {
   const forcedColors = window.matchMedia('(forced-colors: active)').matches;
   const maxTouchPoints = typeof navigator === 'undefined' ? 0 : navigator.maxTouchPoints ?? 0;
 
-  return shouldUseCustomTouchKeyboard({
-    enabled,
+  return {
     maxTouchPoints,
     coarsePointer,
     hoverNone,
     forcedColors
-  });
+  };
+}
+
+export function detectCustomTouchKeyboardAvailability() {
+  const environment = readCurrentTouchKeyboardEnvironment();
+  if (!environment) return false;
+  return isCustomTouchKeyboardAvailable(environment);
+}
+
+export function detectCustomTouchKeyboardEligibility(enabled: boolean) {
+  const environment = readCurrentTouchKeyboardEnvironment();
+  if (!environment) return false;
+  return shouldUseCustomTouchKeyboard({ enabled, ...environment });
 }
 
 export function hasSeenTouchKeyboardAccentHint(storage: Storage | null | undefined) {
