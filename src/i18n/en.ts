@@ -138,6 +138,10 @@ export const en = {
         title: 'Practice test sharing',
         body: 'Create shared practice-test links that hide English prompts and reveal tools for lightweight classroom or homework-style spelling checks.'
       },
+      customWelshKeyboard: {
+        title: 'Custom Welsh keyboard',
+        body: 'A calmer built-in keyboard with larger keys, Welsh digraph shortcuts, and integrated accent support for mobile Welsh spelling practice.'
+      },
       welshSpellingBasics: {
         title: 'Welsh spelling basics',
         body: 'Explore simple explanations of Welsh sounds, accents, and common spelling patterns whenever you need them.'

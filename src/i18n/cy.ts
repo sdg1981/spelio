@@ -138,6 +138,10 @@ export const cy = {
         title: 'Rhannu profion ymarfer',
         body: 'Crëwch ddolenni prawf ymarfer sy’n cuddio promptiau Saesneg ac offer datgelu ar gyfer gwiriadau sillafu ysgafn yn y dosbarth neu fel gwaith cartref.'
       },
+      customWelshKeyboard: {
+        title: 'Bysellfwrdd Cymraeg pwrpasol',
+        body: 'Bysellfwrdd mewnol tawelach gyda bysellau mwy, llwybrau byr ar gyfer deugraffau Cymraeg, a chymorth acenion ar gyfer ymarfer sillafu Cymraeg ar ffôn neu dabled.'
+      },
       welshSpellingBasics: {
         title: 'Hanfodion sillafu Cymraeg',
         body: 'Archwiliwch esboniadau syml o seiniau Cymraeg, acenion, a phatrymau sillafu cyffredin pryd bynnag y bydd eu hangen arnoch.'

@@ -9,6 +9,7 @@ import {
   Globe2,
   Headphones,
   History,
+  Keyboard,
   Languages,
   Lightbulb,
   LibraryBig,
@@ -164,6 +165,11 @@ const features: Feature[] = [
     titleKey: 'how.features.practiceTestSharing.title',
     bodyKey: 'how.features.practiceTestSharing.body',
     icon: BadgeCheck
+  },
+  {
+    titleKey: 'how.features.customWelshKeyboard.title',
+    bodyKey: 'how.features.customWelshKeyboard.body',
+    icon: Keyboard
   },
   {
     titleKey: 'how.features.welshSpellingBasics.title',
