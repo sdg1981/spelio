@@ -8,6 +8,7 @@ import { Practice } from './components/Practice';
 import { WordListsPage } from './components/WordListsPage';
 import { EndScreen } from './components/End';
 import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
+import { PublicMetadata } from './components/PublicMetadata';
 import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
@@ -923,6 +924,14 @@ export default function App() {
 
   return (
     <div className={publicAppClassName} data-theme={storage.settings.theme}>
+      <PublicMetadata
+        origin={window.location.origin}
+        pathname={window.location.pathname}
+        search={window.location.search}
+        interfaceLanguage={interfaceLanguage}
+        screen={activeScreen}
+        wordLists={publicWordLists}
+      />
       {showSharedPublicBackground && <PublicBackgroundTreatment />}
       <ScreenTransition screen={activeScreen}>
         {screenContent}
