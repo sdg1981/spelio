@@ -491,6 +491,7 @@
   width:min(100%, 720px);
   display:flex;
   flex-direction:column;
+  align-items:center;
   gap:10px;
 }
 
@@ -506,18 +507,32 @@
 }
 
 .spelio-touch-key-row.row-2{
-  grid-template-columns:repeat(10, minmax(0, 1fr));
+  grid-template-columns:repeat(20, minmax(0, 1fr));
   width:min(100%, 690px);
 }
 
 .spelio-touch-key-row.row-3{
-  grid-template-columns:repeat(9, minmax(0, 1fr));
-  width:min(90%, 620px);
+  grid-template-columns:repeat(20, minmax(0, 1fr));
+  width:min(100%, 690px);
 }
 
 .spelio-touch-key-row.row-4{
-  grid-template-columns:repeat(9, minmax(0, 1fr));
-  width:min(90%, 620px);
+  grid-template-columns:repeat(20, minmax(0, 1fr));
+  width:min(100%, 690px);
+}
+
+.spelio-touch-key-row.row-2 .spelio-touch-key,
+.spelio-touch-key-row.row-3 .spelio-touch-key,
+.spelio-touch-key-row.row-4 .spelio-touch-key{
+  grid-column:span 2;
+}
+
+.spelio-touch-key-row.row-3::before,
+.spelio-touch-key-row.row-3::after,
+.spelio-touch-key-row.row-4::before,
+.spelio-touch-key-row.row-4::after{
+  content:"";
+  grid-column:span 1;
 }
 
 .spelio-touch-key{
@@ -609,14 +624,16 @@
 
 .spelio-native-keyboard-fallback{
   border:0;
+  border-radius:7px;
   background:transparent;
   color:#6f7882;
-  padding:2px 8px;
+  min-height:30px;
+  padding:5px 10px;
   font-size:12px;
   font-weight:600;
   line-height:1.2;
-  text-decoration:underline;
-  text-underline-offset:3px;
+  text-decoration:none;
+  touch-action:manipulation;
 }
 
 @media (max-width:767px){

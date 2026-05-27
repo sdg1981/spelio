@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 import { ActionRow, PrimaryButton } from './Buttons';
-import { Footer } from './Footer';
 import { Logo } from './Logo';
 import { ListCheck, Play, SlidersHorizontal } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
@@ -82,8 +81,6 @@ export function EndScreen({
   sharedSession,
   onReturnToLearning,
   onPractiseSharedListAgain,
-  interfaceLanguage,
-  onInterfaceLanguageChange,
   t
 }: {
   result: SessionResult;
@@ -212,7 +209,6 @@ export function EndScreen({
           )}
         </div>
 
-        <Footer interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
     </main>
   );

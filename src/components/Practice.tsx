@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { Copy, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
-import { Footer } from './Footer';
 import { SpelioTouchKeyboard } from './SpelioTouchKeyboard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -1206,7 +1205,6 @@ export function Practice({
           <div className="status-line">{t('practice.selectListToBegin')}</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>{t('home.selectWordList')}</button>
           <button className="clear-button mt-8" onClick={onBackHome}>{t('practice.backToHome')}</button>
-          <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
         </section>
         {modal === 'wordlist' && (
           <WordListModal
@@ -1400,7 +1398,6 @@ export function Practice({
           t={t}
         />
 
-        <Footer className="home-footer" interfaceLanguage={interfaceLanguage} onInterfaceLanguageChange={onInterfaceLanguageChange} t={t} />
       </section>
 
       {showCustomTouchKeyboard && keyboardPortalTarget && createPortal(
