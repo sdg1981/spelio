@@ -420,6 +420,87 @@ export function getFullyCompletedListIds(storage: SpelioStorage, lists: WordList
   return lists.filter(list => isListFullyComplete(storage, list)).map(list => list.id);
 }
 
+export function isListInProgress(storage: SpelioStorage, list: WordList) {
+  if (isListFullyComplete(storage, list)) return false;
+
+  const progress = storage.listProgress[list.id];
+  if (
+    progress &&
+    (
+      progress.seenWordIds.length > 0 ||
+      progress.strongSessionCount > 0 ||
+      Boolean(progress.lastPractisedAt)
+    )
+  ) {
+    return true;
+  }
+
+  return list.words.some(word => {
+    const wordProgress = storage.wordProgress[word.id];
+    return Boolean(
+      wordProgress?.seen ||
+      (wordProgress?.completedCount ?? 0) > 0 ||
+      (wordProgress?.incorrectAttempts ?? 0) > 0 ||
+      (wordProgress?.revealedCount ?? 0) > 0 ||
+      wordProgress?.difficult ||
+      wordProgress?.recapDue
+    );
+  });
+}
+
+export function getInProgressListIds(storage: SpelioStorage, lists: WordList[]) {
+  return lists.filter(list => isListInProgress(storage, list)).map(list => list.id);
+}
+
+function getSeenCompletionRepresentativeIds(storage: SpelioStorage, list: WordList) {
+  return groupLearningItems(list.words)
+    .filter(group => group.some(word => storage.wordProgress[word.id]?.seen))
+    .map(group => group[0]?.id)
+    .filter((id): id is string => Boolean(id));
+}
+
+export function updateReviewCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
+  if (
+    result.totalWords === 0 ||
+    result.incorrectWords > 0 ||
+    result.revealedWords > 0 ||
+    result.incorrectAttempts > 0 ||
+    result.revealedLetters > 0
+  ) {
+    return storage;
+  }
+
+  const now = new Date().toISOString();
+  const nextListProgress = { ...storage.listProgress };
+  let changed = false;
+
+  for (const listId of result.listIds) {
+    const list = lists.find(item => item.id === listId);
+    if (!list || !hasSeenAllCompletionItems(storage, list) || hasEligibleDifficultWordsInList(storage, list)) continue;
+
+    const previous = nextListProgress[listId] ?? {
+      seenWordIds: [],
+      completed: false,
+      strongSessionCount: 0
+    };
+    const seenWordIds = unique([
+      ...previous.seenWordIds,
+      ...getSeenCompletionRepresentativeIds(storage, list)
+    ]);
+
+    nextListProgress[listId] = {
+      ...previous,
+      seenWordIds,
+      completed: true,
+      completedAt: previous.completedAt ?? now,
+      lastPractisedAt: now
+    };
+    changed = true;
+  }
+
+  return changed ? { ...storage, listProgress: nextListProgress } : storage;
+}
+
 export function updateListCompletion(storage: SpelioStorage, lists: WordList[], result: SessionResult): SpelioStorage {
   const now = new Date().toISOString();
   const nextListProgress = { ...storage.listProgress };
@@ -434,14 +515,9 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
       strongSessionCount: 0
     };
 
-    const completionItems = groupLearningItems(list.words);
-    const seenRepresentatives = completionItems
-      .filter(group => group.some(word => storage.wordProgress[word.id]?.seen))
-      .map(group => group[0]?.id)
-      .filter((id): id is string => Boolean(id));
     const seenWordIds = unique([
       ...previous.seenWordIds,
-      ...seenRepresentatives
+      ...getSeenCompletionRepresentativeIds(storage, list)
     ]);
 
     const accuracy = result.totalWords ? result.correctWords / result.totalWords : 0;

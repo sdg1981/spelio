@@ -14,7 +14,7 @@ import { classifySession, createPracticeSession, selectPreSessionRecapWord } fro
 import type { SessionWord } from '../lib/practice/sessionEngine';
 import { findNextSequentialRecommendationList, isListProgressionComplete } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
-import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion } from '../lib/practice/storage';
+import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
 import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
@@ -426,6 +426,8 @@ export function usePracticeSession({
       nextStorage = addLearningStats(nextStorage, sessionActiveMsRef.current, nextStorage.lastSessionDate ?? undefined);
       if (!reviewDifficult && !includeRecapDue) {
         nextStorage = updateListCompletion(nextStorage, lists, result);
+      } else if (reviewDifficult && !includeRecapDue) {
+        nextStorage = updateReviewCompletion(nextStorage, lists, result);
       }
     }
 

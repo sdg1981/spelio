@@ -268,6 +268,7 @@ export const en = {
     searchLabel: 'Search word lists',
     searchPlaceholder: 'Search word lists…',
     completed: 'Completed',
+    inProgress: 'In progress',
     done: 'Done',
     shareThisWordList: 'Share this word list',
     shareWordList: 'Share word list',

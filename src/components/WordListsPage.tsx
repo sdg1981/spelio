@@ -13,6 +13,7 @@ export function WordListsPage({
   lists,
   initialSelectedIds,
   completedListIds,
+  inProgressListIds,
   interfaceLanguage,
   onBack,
   onHome,
@@ -24,6 +25,7 @@ export function WordListsPage({
   lists: WordList[];
   initialSelectedIds: string[];
   completedListIds: string[];
+  inProgressListIds: string[];
   interfaceLanguage: InterfaceLanguage;
   onBack: () => void;
   onHome: () => void;
@@ -125,6 +127,7 @@ export function WordListsPage({
           lists={lists}
           initialSelectedIds={initialSelectedIds}
           completedListIds={completedListIds}
+          inProgressListIds={inProgressListIds}
           onClose={onBack}
           onDone={onDone}
           onCreateCustomList={onCreateCustomList}

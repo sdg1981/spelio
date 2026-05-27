@@ -14,7 +14,7 @@ import type { WordList } from './data/wordLists';
 import { findSupportWordList } from './data/supportWordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
-import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
+import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
@@ -233,6 +233,10 @@ export default function App() {
   );
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, publicWordLists),
+    [publicWordLists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
+  );
+  const inProgressListIds = useMemo(
+    () => getInProgressListIds(storage, publicWordLists),
     [publicWordLists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
   );
   const feedbackSignalOptions = useMemo(() => getFeedbackSignalOptions(t), [t]);
@@ -834,6 +838,7 @@ export default function App() {
       lists={publicWordLists}
       initialSelectedIds={visibleStorage.selectedListIds}
       completedListIds={completedListIds}
+      inProgressListIds={inProgressListIds}
       onBack={returnFromWordListsPage}
       onHome={returnToLearning}
       onDone={saveSelectedWordLists}

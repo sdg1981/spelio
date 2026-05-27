@@ -87,6 +87,15 @@ The visual direction should communicate clarity, confidence, and quality rather 
 
 Avoid using "calm" as a reason to add landscapes, leaves, mountains, organic motifs, wellness-style copy, or overly soft green visual treatments unless they are explicitly requested for a specific future marketing asset.
 
+Quiet animation polish:
+
+- Restrained motion is allowed where it makes the app feel responsive and premium without becoming gamified.
+- Examples may include subtle fades, small transitions, soft correct-letter feedback, restrained incorrect-letter shake, revealed-letter fade/slide, word-completion highlight, and lightweight modal/status/progress transitions.
+- The homepage logo cursor animation may blink softly on first render, then stop.
+- The practice logo should not use the homepage cursor animation.
+- `prefers-reduced-motion: reduce` must disable decorative animation and reduce transitions globally.
+- Animation must not change scoring, reveal logic, difficult-word logic, session state, or recommendation behaviour.
+
 ### 3.1 No auto-start rule
 
 The app must never automatically start a practice session as a side-effect of another action.
@@ -403,6 +412,7 @@ Rules:
 - Preserve clear visual spaces between words in multi-word phrases.
 - Spaces are not rendered as input slots.
 - User-typed spaces are ignored silently and should not count as errors.
+- Letter-by-letter validation uses comparison-only normalisation for apostrophe variants, dash/hyphen variants, and case; it must not change stored answers or letter-slot rendering.
 
 Answer layout rules:
 
@@ -560,6 +570,16 @@ Strict:
 - Apostrophe and dash variants are still accepted as equivalent.
 - Comparison is case-insensitive.
 
+Answer comparison uses comparison-only normalisation:
+
+- Apostrophe variants compare as equivalent.
+- Dash and hyphen variants compare as equivalent.
+- Comparison is case-insensitive.
+- Full-answer comparison trims leading/trailing whitespace and collapses repeated whitespace.
+- This normalisation must not mutate stored answers, `acceptedAlternatives`, letter-slot rendering, or displayed correct answers.
+- Strict mode still requires correct Welsh diacritics.
+- Flexible mode keeps the existing Welsh diacritic tolerance.
+
 ## 8. Word Lists page
 
 **UX intent:** The Word Lists page is a lightweight configuration layer. It should never feel like a separate workflow. Selection is simple, reversible, and never forces action.
@@ -584,8 +604,17 @@ Body:
 
 - Grouped, scrollable list body
 - Full-row clickable/tappable word-list rows
-- A clear but calm selected state on the currently selected row, such as stronger text weight, warm soft tint, left accent, or a small checkmark on the right
+- A clear but calm selected state on the currently selected row, such as stronger text weight, warm soft tint, and a left accent stripe
 - No checkbox styling in the public MVP Word Lists page
+
+Word-list status indicators:
+
+- Green tick/check = the list is fully complete.
+- Soft amber dot/circle = the list has been attempted or has unresolved difficult words, but is not fully complete.
+- No icon = the list is untouched or not meaningfully started.
+- The currently selected/current progression list must not show a tick/check icon purely because it is selected.
+- The selected/current row should continue to use the existing row highlight treatment, such as tinted background and left accent stripe.
+- Indicators should remain calm, clear, and low-clutter. Reserve green ticks for genuine completion, keep amber soft and non-warning-like, and avoid checkbox/task-list clutter.
 
 Footer:
 
@@ -773,6 +802,8 @@ Rules:
 - Leaving via the page back arrow discards unsaved changes.
 - Pressing Done / Use this list must never auto-start practice.
 - If no valid active list is selected for any reason, fall back safely to the first active list.
+- If a completed list is manually selected, the homepage should continue recommending that manually selected list until another session is explicitly started and completed.
+- `nextListId` must not immediately override a freshly selected list.
 
 Backward compatibility:
 
@@ -1265,14 +1296,18 @@ List completion and Word Lists ticks must be based on dialect-resolved conceptua
 The list should only receive the stricter Word Lists tick / full completion state when:
 
 - Every dialect-eligible conceptual learning item in the list has been seen at least once according to the active Welsh style rules, and
-- The user has completed a session for that list with at least 85% accuracy and no revealed letters, and
+- The user has completed a clean or qualifying normal session for that list, or has cleanly resolved the remaining difficult words through Review difficult words after a prior attempted normal session, and
 - There are no currently unresolved difficult words from that same list using the current Review difficult words logic.
 
 This prevents a list from being marked fully complete after simply seeing all items once while still struggling. The Word Lists tick must not be shown merely because the user can move on.
 
+A clean normal session may mark the list fully complete. A normal session with Reveal use, insufficient accuracy, or unresolved difficult words should not immediately mark the list fully complete. If the learner later completes the remaining eligible Review difficult words cleanly, the original source list should become fully complete once all completion items have been seen and no eligible difficult words remain.
+
+Review difficult words may update list-completion eligibility for affected source lists, but it must not advance `selectedListIds` or `currentPathPosition`. Recap-only sessions must not mark word lists complete.
+
 Unresolved difficult words from unselected or currently ineligible dialect variants must not prevent full completion under the current Welsh style rules.
 
-The tick in the Word Lists page represents full completion only. Do not add a second tick state, badge, label, or visible "progression-complete" language. The learner can move forward without a tick; the tick appears once the list has been properly settled.
+The green tick in the Word Lists page represents full completion only. Do not add a second tick state, badge, label, or visible "progression-complete" language. The learner can move forward without a tick; the tick appears once the list has been properly settled. A soft amber dot/circle may indicate attempted or in-progress status, but it must not look like a warning or a task checkbox.
 
 Switching Welsh style later may allow the learner to encounter a different variant in future practice, but it should not make past list completion feel broken or incomplete.
 
@@ -1403,6 +1438,8 @@ Old difficult entries from another dialect may remain in storage, but should not
 
 When a review word is completed cleanly, the current difficulty for that exact word variant should be resolved.
 
+Clean Review difficult words completion should also refresh completion eligibility for the affected source word list. If all conceptual learning items in that list have already been seen and no eligible unresolved difficult words remain, the original list may become fully complete and receive the Word Lists green tick. This review recovery must not move normal progression: do not update `selectedListIds` or `currentPathPosition` from Review difficult words.
+
 Review session:
 
 - Up to 10 words.
@@ -1462,6 +1499,8 @@ If user manually selects a later list, the app should continue from that point o
 This creates guided progression rather than locked progression.
 
 Review difficult words must only be recommended when current difficult words exist and are relevant to the learner’s current Welsh style.
+
+Review difficult words only overrides the homepage recommendation when eligible difficult words actually exist.
 
 `recapDue` words do not count as current difficult words for recommendation purposes. They may power the optional From earlier action or be injected quietly into normal sessions, but they must not cause Review difficult words to remain visible.
 

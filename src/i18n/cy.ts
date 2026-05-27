@@ -268,6 +268,7 @@ export const cy = {
     searchLabel: 'Chwilio rhestrau geiriau',
     searchPlaceholder: 'Chwilio rhestrau geiriau…',
     completed: 'Wedi cwblhau',
+    inProgress: 'Ar y gweill',
     done: 'Gorffen',
     shareThisWordList: 'Rhannu’r rhestr eiriau hon',
     shareWordList: 'Rhannu rhestr eiriau',

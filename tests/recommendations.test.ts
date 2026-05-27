@@ -11,9 +11,11 @@ import {
   applyPracticeStartListSelection,
   createDefaultStorage,
   getFullyCompletedListIds,
+  getInProgressListIds,
   isListFullyComplete,
   normaliseStorage,
   updateListCompletion,
+  updateReviewCompletion,
   type SessionResult,
   type SpelioStorage
 } from '../src/lib/practice/storage';
@@ -21,6 +23,10 @@ import { getNormalContinuationRecommendation, getRecommendation, isListProgressi
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
+
+declare function require(name: string): { readFileSync(path: string, encoding: string): string };
+
+const { readFileSync } = require('fs');
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -1680,6 +1686,161 @@ test('resolving the difficult word cleanly allows a previously strong seen-all l
   assertEqual(getFullyCompletedListIds(storage, wordLists).includes('foundations_numbers'), true, 'Word list modal should show the single completed tick');
 });
 
+test('clean manually selected normal session marks People & Family complete', () => {
+  const people = wordLists.find(list => list.id === 'stage2_people');
+  assert(people, 'Expected stage2_people to exist');
+
+  let storage = applyManualWordListSelection(createDefaultStorage(), [people.id]);
+  for (const word of people.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-27T00:00:00.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: 10,
+    correctWords: 10,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [people.id],
+    state: 'strong'
+  };
+  storage = updateListCompletion({ ...storage, lastSessionDate: '2026-05-27T00:00:30.000Z', lastSessionResult: result }, wordLists, result);
+
+  assertEqual(storage.listProgress.stage2_people?.completed, true, 'Clean People normal session should set list completion.');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes(people.id), true, 'Clean People normal session should show the green tick.');
+});
+
+test('revealed manually selected normal session leaves People & Family in progress', () => {
+  const people = wordLists.find(list => list.id === 'stage2_people');
+  assert(people, 'Expected stage2_people to exist');
+
+  let storage = applyManualWordListSelection(createDefaultStorage(), [people.id]);
+  storage = applyWordProgressPatch(storage, people.words[0], { revealed: true }, '2026-05-27T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, people.words[0], { completed: true, cleanCompleted: false }, '2026-05-27T00:00:05.000Z');
+  for (const word of people.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-27T00:00:10.000Z');
+  }
+
+  const result: SessionResult = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 0,
+    revealedWords: 1,
+    incorrectAttempts: 0,
+    revealedLetters: 1,
+    durationSeconds: 30,
+    listIds: [people.id],
+    state: 'struggled'
+  };
+  storage = updateListCompletion({ ...storage, lastSessionDate: '2026-05-27T00:00:30.000Z', lastSessionResult: result }, wordLists, result);
+
+  assertEqual(storage.listProgress.stage2_people?.completed, false, 'Revealed People session should not immediately complete the list.');
+  assertEqual(storage.listProgress.stage2_people?.strongSessionCount, 0, 'Reveal should not count as a strong list-level session.');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes(people.id), false, 'Revealed People session should not show a green tick yet.');
+  assertEqual(getInProgressListIds(storage, wordLists).includes(people.id), true, 'Revealed People session should show the in-progress dot.');
+});
+
+test('clean Review difficult recovery after reveal marks original list complete without advancing progression', () => {
+  const people = wordLists.find(list => list.id === 'stage2_people');
+  assert(people, 'Expected stage2_people to exist');
+
+  let storage = applyManualWordListSelection(createDefaultStorage(), [people.id]);
+  storage = applyWordProgressPatch(storage, people.words[0], { revealed: true }, '2026-05-27T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, people.words[0], { completed: true, cleanCompleted: false }, '2026-05-27T00:00:05.000Z');
+  for (const word of people.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-27T00:00:10.000Z');
+  }
+
+  const normalResult: SessionResult = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 0,
+    revealedWords: 1,
+    incorrectAttempts: 0,
+    revealedLetters: 1,
+    durationSeconds: 30,
+    listIds: [people.id],
+    state: 'struggled'
+  };
+  storage = updateListCompletion({
+    ...storage,
+    selectedListIds: ['stage2_work'],
+    currentPathPosition: 'stage2_work',
+    lastSessionDate: '2026-05-27T00:00:30.000Z',
+    lastSessionResult: normalResult
+  }, wordLists, normalResult);
+
+  storage = applyWordProgressPatch(storage, people.words[0], {
+    completed: true,
+    cleanCompleted: true,
+    reviewResolvedClean: true
+  }, '2026-05-27T00:01:00.000Z');
+  const reviewResult: SessionResult = {
+    totalWords: 1,
+    correctWords: 1,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 10,
+    listIds: [people.id],
+    state: 'strong'
+  };
+  storage = updateReviewCompletion({ ...storage, lastSessionResult: reviewResult }, wordLists, reviewResult);
+
+  assertEqual(hasDifficultWords(storage, wordLists), false, 'Clean review recovery should clear the remaining People difficult word.');
+  assertEqual(storage.listProgress.stage2_people?.completed, true, 'Clean review recovery should set the original list complete.');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes(people.id), true, 'Clean review recovery should show the original list green tick.');
+  assertEqual(storage.selectedListIds[0], 'stage2_work', 'Review recovery must not advance or rewrite selected list.');
+  assertEqual(storage.currentPathPosition, 'stage2_work', 'Review recovery must not advance or rewrite current path.');
+});
+
+test('recap-only recovery does not mark a list complete', () => {
+  const people = wordLists.find(list => list.id === 'stage2_people');
+  assert(people, 'Expected stage2_people to exist');
+
+  let storage = applyManualWordListSelection(createDefaultStorage(), [people.id]);
+  storage = applyWordProgressPatch(storage, people.words[0], { revealed: true }, '2026-05-27T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, people.words[0], { completed: true, cleanCompleted: false }, '2026-05-27T00:00:05.000Z');
+  for (const word of people.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-27T00:00:10.000Z');
+  }
+
+  const normalResult: SessionResult = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 0,
+    revealedWords: 1,
+    incorrectAttempts: 0,
+    revealedLetters: 1,
+    durationSeconds: 30,
+    listIds: [people.id],
+    state: 'struggled'
+  };
+  storage = updateListCompletion({ ...storage, lastSessionResult: normalResult }, wordLists, normalResult);
+  storage = applyWordProgressPatch(storage, people.words[0], {
+    completed: true,
+    cleanCompleted: true,
+    recapCompletedClean: true
+  }, '2026-05-27T00:01:00.000Z');
+
+  assertEqual(storage.wordProgress[people.words[0].id]?.difficult, false, 'Clean recap can clear the difficult flag at word level.');
+  assertEqual(getFullyCompletedListIds(storage, wordLists).includes(people.id), false, 'Recap-only recovery should not create a list completion marker.');
+});
+
+test('manual and continuation starts use the same selected-list completion rules', () => {
+  const people = wordLists.find(list => list.id === 'stage2_people');
+  assert(people, 'Expected stage2_people to exist');
+
+  const manualStorage = applyManualWordListSelection(createDefaultStorage(), [people.id]);
+  const continuationStorage = applyPracticeStartListSelection(createDefaultStorage(), people.id);
+
+  assertEqual(createPracticeSession(wordLists, manualStorage).listIds[0], people.id, 'Manual selection should create a People session.');
+  assertEqual(createPracticeSession(wordLists, continuationStorage).listIds[0], people.id, 'Continuation selection should create a People session.');
+});
+
 test('single-list progression starts the next recommended list with a fresh normal pool', () => {
   let storage = firstWordsStorage('mixed');
   const firstSession = createPracticeSession(wordLists, storage);
@@ -2362,6 +2523,22 @@ test('starting next recommendation stores one selected list ID', () => {
   assertEqual(nextStorage.selectedListIds.length, 1, 'Practice start should store one selected list ID');
   assertEqual(nextStorage.selectedListIds[0], 'stage2_adjectives', 'Practice start should move to nextListId');
   assertEqual(nextStorage.currentPathPosition, 'stage2_adjectives', 'Practice start should update path position');
+});
+
+test('word list selected rows do not render a selected check icon', () => {
+  const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+
+  assertEqual(practiceSource.includes('wordlist-selected-indicator'), false, 'Selected rows should not render a tick/check icon solely for current selection.');
+  assert(practiceSource.includes('wordlist-in-progress-indicator'), 'Word list rows should render an in-progress status indicator.');
+  assert(practiceSource.includes('wordlist-completed-indicator'), 'Word list rows should still render the completed check indicator.');
+});
+
+test('word list selected-row highlight styling is preserved', () => {
+  const styles = readFileSync('src/styles.css', 'utf8');
+
+  assert(styles.includes('.word-lists-page .wordlist-row.selected'), 'Standalone Word Lists selected-row styling should remain present.');
+  assert(styles.includes('box-shadow:inset 3px 0 0 rgba(217,0,0,.34)'), 'Selected rows should preserve the left red stripe/accent.');
+  assert(styles.includes('background:#fff2ee'), 'Selected rows should preserve the pink highlighted background.');
 });
 
 test('older storage without dialectPreference defaults to Mixed Welsh', () => {

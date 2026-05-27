@@ -12,7 +12,7 @@ import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
-import { getFullyCompletedListIds } from '../lib/practice/storage';
+import { getFullyCompletedListIds, getInProgressListIds } from '../lib/practice/storage';
 import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
@@ -298,6 +298,10 @@ export function Practice({
   } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, defaultAudioProvider, disableQuickRecap, detached, sessionKey, onStorageChange, onComplete, t });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
+    [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
+  );
+  const inProgressListIds = useMemo(
+    () => getInProgressListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
   );
 
@@ -1163,6 +1167,7 @@ export function Practice({
             lists={lists}
             initialSelectedIds={storage.selectedListIds}
             completedListIds={completedListIds}
+            inProgressListIds={inProgressListIds}
             onClose={() => setModal(null)}
             onDone={applyWordLists}
             interfaceLanguage={interfaceLanguage}
@@ -1356,6 +1361,7 @@ export function Practice({
           lists={lists}
           initialSelectedIds={storage.selectedListIds}
           completedListIds={completedListIds}
+          inProgressListIds={inProgressListIds}
           onClose={() => setModal(null)}
           onDone={applyWordLists}
           interfaceLanguage={interfaceLanguage}
@@ -1708,7 +1714,9 @@ const WordListRow = memo(function WordListRow({
   displayName,
   selected,
   completed,
+  inProgress,
   completedLabel,
+  inProgressLabel,
   shareLabel,
   onSelect,
   onShare
@@ -1717,7 +1725,9 @@ const WordListRow = memo(function WordListRow({
   displayName: string;
   selected: boolean;
   completed: boolean;
+  inProgress: boolean;
   completedLabel: string;
+  inProgressLabel: string;
   shareLabel: string;
   onSelect: (listId: string) => void;
   onShare: (list: WordList) => void;
@@ -1747,9 +1757,9 @@ const WordListRow = memo(function WordListRow({
             <Check size={16} strokeWidth={2.2} aria-hidden="true" />
           </span>
         )}
-        {selected && (
-          <span className="wordlist-selected-indicator" aria-hidden="true">
-            <Check size={16} strokeWidth={2.2} />
+        {!completed && inProgress && (
+          <span className="wordlist-in-progress-indicator" title={inProgressLabel} aria-label={inProgressLabel} role="img">
+            <span aria-hidden="true" />
           </span>
         )}
         {shouldShowSelectedListShareAction(list.id, selected ? list.id : undefined) && (
@@ -1928,6 +1938,7 @@ export function WordListSelectorPanel({
   lists,
   initialSelectedIds,
   completedListIds = [],
+  inProgressListIds = [],
   onClose,
   onDone,
   onCreateCustomList,
@@ -1941,6 +1952,7 @@ export function WordListSelectorPanel({
   lists: WordList[];
   initialSelectedIds: string[];
   completedListIds?: string[];
+  inProgressListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
   onCreateCustomList?: () => void;
@@ -1957,6 +1969,7 @@ export function WordListSelectorPanel({
   const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
   const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
+  const inProgressSet = useMemo(() => new Set(inProgressListIds), [inProgressListIds]);
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return selectableLists;
@@ -2093,7 +2106,9 @@ export function WordListSelectorPanel({
                     displayName={displayName}
                     selected={selectedId === list.id}
                     completed={completedSet.has(list.id)}
+                    inProgress={!completedSet.has(list.id) && inProgressSet.has(list.id)}
                     completedLabel={t('wordLists.completed')}
+                    inProgressLabel={t('wordLists.inProgress')}
                     shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
                     onSelect={selectList}
                     onShare={openShareList}
@@ -2117,7 +2132,9 @@ export function WordListSelectorPanel({
                         displayName={displayName}
                         selected={selectedId === list.id}
                         completed={completedSet.has(list.id)}
+                        inProgress={!completedSet.has(list.id) && inProgressSet.has(list.id)}
                         completedLabel={t('wordLists.completed')}
+                        inProgressLabel={t('wordLists.inProgress')}
                         shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
                         onSelect={selectList}
                         onShare={openShareList}
@@ -2207,6 +2224,7 @@ export function WordListModal({
   lists,
   initialSelectedIds,
   completedListIds = [],
+  inProgressListIds = [],
   onClose,
   onDone,
   onCreateCustomList,
@@ -2217,6 +2235,7 @@ export function WordListModal({
   lists: WordList[];
   initialSelectedIds: string[];
   completedListIds?: string[];
+  inProgressListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
   onCreateCustomList?: () => void;
@@ -2231,6 +2250,7 @@ export function WordListModal({
           lists={lists}
           initialSelectedIds={initialSelectedIds}
           completedListIds={completedListIds}
+          inProgressListIds={inProgressListIds}
           onClose={onClose}
           onDone={onDone}
           onCreateCustomList={onCreateCustomList}
