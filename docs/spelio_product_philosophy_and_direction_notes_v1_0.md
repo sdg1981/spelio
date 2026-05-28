@@ -219,6 +219,70 @@ The central learner problem is often:
 
 Spelio exists to reduce that gap.
 
+Spelio is increasingly becoming:
+
+> a carefully designed Welsh spelling mastery system.
+
+This should feel closer to:
+
+> a carefully designed apprenticeship
+
+than:
+
+> an infinite content catalogue.
+
+Spelio is not choosing between a tiny finite course and an endless vocabulary catalogue. The stronger model is:
+
+`Learn`
+
+A short, carefully designed path for Welsh spelling confidence.
+
+`Practise`
+
+A broad, expandable library for continued spelling reinforcement.
+
+The key product distinction is:
+
+> The learning path is finite. The practice library can be expansive.
+
+The product should keep asking:
+
+> What is the minimum amount of carefully designed practice required to make a learner genuinely confident at Welsh spelling?
+
+This does not mean reducing educational ambition. It means prioritising:
+
+- educational efficiency
+- transferable pattern recognition
+- Welsh decoding confidence
+- Welsh spelling confidence
+- practical writing confidence
+- calm progression
+
+over:
+
+- maximum content volume
+- endless word lists
+- vocabulary inflation
+- artificially extended learner journeys
+
+Progression quality should matter more than content quantity.
+
+Spelio should increasingly optimise for:
+
+- mastery
+- confidence
+- transfer
+- pattern recognition
+- real-world spelling ability
+
+rather than:
+
+- number of lists completed
+- number of words seen
+- content catalogue size
+
+A carefully designed progression path may contain significantly fewer words than a traditional course while producing stronger spelling outcomes.
+
 ## 5.1 Assisted Listening
 
 Spelio should increasingly help learners hear Welsh more clearly before encouraging full visual exposure of the answer.
@@ -487,6 +551,190 @@ Pattern support should remain:
 - contextual
 - practical
 - learner-focused
+
+---
+
+# 11.1 Curriculum Architecture Direction
+
+Spelio's long-term educational structure may increasingly separate mastery progression from broader practice.
+
+This should not redesign MVP behaviour, introduce dashboards, formal course trees, compulsory progression gates, or remove existing content systems. It is a direction for curriculum thinking.
+
+The clearest architecture is two product layers plus optional future advanced material:
+
+- Learn / Core Path: the deliberately short, curated progression path.
+- Practise / Content Library: the broader optional practice layer.
+- Advanced Topics: optional deeper material, not a required third curriculum stage.
+
+Learn should contain Welsh Foundations, carefully selected representative practice, mixed confidence milestones, and just enough required exposure for the learner to understand the pattern and feel ready to move on.
+
+Practise may include numbers, time, food and drink, places, Welsh place names, travel, everyday actions, common phrases, Duolingo- or SSiW-aligned vocabulary, GCSE practice, teacher-created lists, custom lists, and expanded topic libraries.
+
+The core path should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. The learner should be able to complete it. The broader practice library may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, or everyday Welsh life, but that broader library should not define required progression.
+
+## Learn — Welsh Foundations and Representative Transfer
+
+Purpose:
+
+> Build Welsh spelling confidence through a short, finite, carefully designed path.
+
+This is the core path. It mainly contains Welsh Foundations and any tightly curated representative practice needed to make those foundations feel useful and transferable.
+
+Examples include:
+
+- D / DD
+- Y
+- F / FF
+- W
+- CH
+- LL
+- RH
+- AI / AE
+- WY / YW, subject to future validation
+- mixed confidence recap
+- carefully selected Applied Welsh examples where they prove transfer
+
+Goals:
+
+- decoding confidence
+- listening confidence
+- pattern familiarity
+- reduced intimidation
+
+This layer should remain highly curated and intentionally compact.
+
+## Practise — Applied Welsh and Broader Practice Library
+
+Purpose:
+
+> Reinforce spelling confidence across useful Welsh words and topics.
+
+Examples include:
+
+- numbers
+- time
+- food and drink
+- places
+- Welsh place names
+- travel
+- common actions
+- common phrases
+- messaging
+- everyday written Welsh
+- Duolingo- or SSiW-aligned vocabulary
+- GCSE practice
+- teacher-created lists
+- custom lists
+- expanded topic libraries
+
+The goal is not exhaustive vocabulary coverage.
+
+The goal is demonstrating that the foundations transfer into real Welsh usage.
+
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, and partly as broader optional practice in the Practise library. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
+
+## Advanced Topics
+
+Purpose:
+
+> Offer future optional deeper material for spelling recognition and writing confidence.
+
+Examples include:
+
+- mutation awareness
+- accents
+- tricky spellings
+- similar-looking words
+- subtle spelling distinctions
+- advanced listening
+- advanced orthographic confidence
+- advanced decoding confidence
+
+Advanced Topics are future-facing and may remain "coming soon" during early versions. They should not be framed as a required third curriculum stage.
+
+Mutations are important for Welsh spelling confidence, but they should not pull Spelio into becoming a full Welsh grammar course. They may later appear as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for spelling confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+
+---
+
+# 11.2 Progression and Practice Philosophy
+
+The progression path should be:
+
+- finite
+- curated
+- intentional
+- mastery-oriented
+
+It should include carefully chosen representative practice and mixed confidence milestones, not every possible word in every category.
+
+The learner should feel:
+
+> I am progressing through a carefully designed journey.
+
+Progression should remain visually simple and understandable.
+
+Separate from progression, the practice layer may become:
+
+- broader
+- revisitable
+- expandable
+- potentially very large
+
+Examples include:
+
+- additional words for a pattern
+- additional numbers
+- additional place names
+- Duolingo- or SSiW-aligned vocabulary
+- GCSE practice
+- teacher-created lists
+- custom lists
+- adaptive practice
+
+The practice layer exists to reinforce learning, not define the required curriculum.
+
+The pattern mastery principle is:
+
+> learners should receive only enough required practice to become confident with the underlying spelling mechanic.
+
+Additional practice should remain available but optional. Progression should not require exhaustive repetition once confidence is demonstrated. The educational goal is mastery of the pattern, not exposure to every possible example.
+
+Large collections should be split mentally into:
+
+- a short representative core path
+- optional expanded practice
+
+For example, a Numbers topic should not require the learner to spell every number from 1-100 before moving on. The core path should teach the structure and spelling feel of Welsh numbers through a carefully selected set of examples. Expanded practice can then offer many additional numbers for learners who want more repetition.
+
+After completing a representative core list, the end screen may offer:
+
+- Continue learning →
+- Practise more in this topic →
+
+This preserves learner agency while protecting forward motion. Avoid hard gates, forced completion of large collections, or making learners feel they have thousands of words left before they are "done".
+
+Word-list UI should avoid framing large collections only as discouraging counters such as `52 / 200 complete`. Prefer language such as:
+
+- Core complete
+- Practise more
+- Additional practice available
+- More words in this topic
+
+Progress should feel calm and achievable, not like an infinite backlog.
+
+Mixed confidence lists may become important confidence-building milestones, especially:
+
+- Mixed Confidence — Foundations 1
+- Mixed Confidence — Foundations 2
+- Mixed Confidence — Foundations 3
+
+Their purpose is:
+
+- integrated decoding confidence
+- transfer between learned systems
+- emotional proof that Welsh is becoming readable and spellable
+
+These lists should not be treated as filler content. They should help learners feel that separate spelling systems are beginning to work together.
 
 ---
 

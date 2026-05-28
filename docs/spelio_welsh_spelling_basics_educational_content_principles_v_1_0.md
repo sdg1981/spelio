@@ -41,6 +41,110 @@ over:
 
 ---
 
+# Educational scope and mastery direction
+
+Welsh Spelling Basics should support Spelio's emerging direction as:
+
+> a carefully designed Welsh spelling mastery system
+
+rather than:
+
+> an endless vocabulary-practice platform.
+
+The broader Spelio curriculum model should distinguish:
+
+`Learn`
+
+A short, carefully designed path for Welsh spelling confidence.
+
+`Practise`
+
+A broad, expandable library for continued spelling reinforcement.
+
+The key product distinction is:
+
+> The learning path is finite. The practice library can be expansive.
+
+The subsystem should ask:
+
+> What is the smallest amount of carefully designed explanation and practice required for an adult learner to feel genuinely more confident with this Welsh spelling pattern?
+
+This means prioritising:
+
+- maximum educational leverage
+- minimum unnecessary content
+- carefully sequenced exposure
+- confidence through pattern familiarity
+- Welsh decoding confidence
+- Welsh spelling confidence
+- practical writing confidence
+
+over:
+
+- content volume
+- vocabulary inflation
+- exhaustive example coverage
+- artificially extending the learner journey
+
+The goal is not to show every possible word that contains a pattern. The goal is to help the learner internalise the spelling mechanic well enough that it transfers to new Welsh.
+
+Required practice should therefore include only enough examples to build confidence with the underlying pattern. Additional examples may exist as optional reinforcement, but progression should not depend on exhaustive repetition once confidence is demonstrated.
+
+For this subsystem, the Learn layer should remain deliberately short, curated, representative, and emotionally achievable. Support practice may link out to broader optional reinforcement, but the foundation path should not feel like an infinite backlog of words.
+
+---
+
+# Curriculum relationship
+
+Welsh Spelling Basics sits most naturally inside the Learn path:
+
+> Welsh Foundations — learn how Welsh spelling works.
+
+Foundation topics may include:
+
+- D / DD
+- Y
+- F / FF
+- W
+- CH
+- LL
+- RH
+- AI / AE
+- WY / YW, subject to future validation
+- mixed confidence recap
+
+This layer should remain highly curated and intentionally compact.
+
+Applied Welsh content, such as numbers, time, food and drink, places, Welsh place names, travel, common phrases, messaging, and everyday written Welsh, may appear as transfer practice where it helps prove that foundations work in real Welsh. It should not become the definition of the foundation curriculum.
+
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, and partly as broader optional practice in the Practise library. It does not need to be exhaustive inside the core path, and learners should not need to complete large Applied Welsh collections before moving forward.
+
+Advanced Topics, such as mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, and advanced decoding confidence, should remain future-facing and optional unless they are being introduced in a deliberately small and beginner-safe way.
+
+Mutations are important for Welsh spelling confidence, but they should not turn Welsh Spelling Basics or Spelio more broadly into a full Welsh grammar course. Later mutation content may be introduced as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for advanced writing confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+
+---
+
+# Mixed confidence lists
+
+Mixed confidence lists should be treated as important educational milestones rather than filler content.
+
+Possible milestone structure:
+
+- Mixed Confidence — Foundations 1
+- Mixed Confidence — Foundations 2
+- Mixed Confidence — Foundations 3
+
+Purpose:
+
+- integrated decoding confidence
+- transfer between learned systems
+- emotional proof that Welsh is becoming readable and spellable
+
+These lists should combine previously taught patterns carefully. They should help learners experience that separate spelling systems are starting to work together, while avoiding unexplained patterns that would undermine confidence.
+
+---
+
 # Core educational principles
 
 ## 1. Teach ONE main idea per page
@@ -240,6 +344,7 @@ Support practice must directly reinforce:
 Incorrect:
 - broad or mixed support lists
 - practice words that contradict the page concept
+- large collections that must be completed before the learner can continue
 
 Example mistake:
 - “wy” support page mixing unrelated W/Y concepts
@@ -249,6 +354,8 @@ Correct:
 - support_y
 
 as separate practice systems.
+
+Where a support collection becomes large, it should distinguish a representative core set from optional expanded practice. A learner should be able to complete the core learning step and continue, while still having a calm route to practise more in the same topic.
 
 ---
 
