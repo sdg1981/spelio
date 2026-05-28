@@ -179,6 +179,49 @@ Possible future systems to keep in mind:
 
 These ideas should remain optional and carefully scoped. They should improve learning value without making the core experience feel busy or instructional by default.
 
+## Voice spelling and hands-free input mode
+
+Spelio may eventually support an optional hands-free spelling mode where learners hear the Welsh prompt and then spell the answer aloud letter by letter.
+
+This should be treated as an alternative input method, not as pronunciation practice, conversational AI, or whole-word dictation. The learner should not simply repeat the Welsh word back. The educational value comes from recalling the spelling and committing the letters verbally.
+
+Potential use cases:
+
+- Walking practice
+- Low-dexterity or accessibility support
+- Visually reduced interaction
+- Hands-busy situations
+- Calm review away from a keyboard
+- Classroom or shared-device variation
+
+Preferred interaction model:
+
+1. Spelio plays the Welsh audio.
+2. The learner says the spelling aloud, for example "d d y d d".
+3. The system records one short utterance for the whole answer.
+4. Speech recognition converts the utterance into likely letters.
+5. Spelio parses the result as a constrained spelling attempt and compares it with the target answer.
+6. Feedback remains calm, with retry/replay rather than harsh correction.
+
+Important product principles:
+
+- Keep this optional and separate from the default keyboard experience.
+- Do not add a microphone button or voice clutter to the MVP keyboard.
+- Do not replace the tactile typing flow.
+- Do not turn Spelio into speaking assessment or pronunciation scoring.
+- Avoid per-letter live upload/check interactions if they feel slow or brittle.
+- Prefer whole-answer voice spelling attempts.
+- Preserve the existing calm, adult-oriented emotional tone.
+- Support the core hear → recall → spell philosophy.
+
+Technical notes:
+
+- Future implementation could use Welsh-capable speech recognition, likely Azure Speech-to-Text given Spelio's existing Azure audio direction.
+- The parser should be constrained because Spelio already knows the expected answer.
+- It may need to handle English and Welsh letter names, repeated letters, digraphs such as `ch`, `dd`, `ff`, `ll`, `rh`, `th`, and `ng`, apostrophes, spaces, and accented characters.
+- Recognition ambiguity is likely the main challenge, not audio upload speed.
+- The feature should require careful prototype testing before being treated as a committed roadmap item.
+
 ## Welsh Spelling Tips & Foundations
 
 Spelio could eventually add a lightweight educational layer for beginners who want a little more context around Welsh spelling patterns. This should not become a full course mode, grammar course, or classroom-style teaching system.
