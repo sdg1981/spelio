@@ -140,7 +140,7 @@ export const cy = {
       },
       customWelshKeyboard: {
         title: 'Bysellfwrdd Cymraeg pwrpasol',
-        body: 'Bysellfwrdd mewnol tawelach gyda bysellau mwy, llwybrau byr ar gyfer deugraffau Cymraeg, a chymorth acenion ar gyfer ymarfer sillafu Cymraeg ar ffôn neu dabled.'
+        body: 'Bysellfwrdd symudol pwrpasol gyda llwybrau byr ar gyfer deugraffau Cymraeg a chymorth acenion integredig ar gyfer ymarfer sillafu Cymraeg.'
       },
       welshSpellingBasics: {
         title: 'Hanfodion sillafu Cymraeg',

@@ -140,7 +140,7 @@ export const en = {
       },
       customWelshKeyboard: {
         title: 'Custom Welsh keyboard',
-        body: 'A calmer built-in keyboard with larger keys, Welsh digraph shortcuts, and integrated accent support for mobile Welsh spelling practice.'
+        body: 'A custom mobile keyboard with Welsh digraph shortcuts and integrated accent support for mobile Welsh spelling practice.'
       },
       welshSpellingBasics: {
         title: 'Welsh spelling basics',
