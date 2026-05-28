@@ -226,6 +226,7 @@ export function Practice({
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
   const [customTouchKeyboardAvailable, setCustomTouchKeyboardAvailable] = useState(false);
   const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(initialModal === 'settings');
   const settingsModalOpenRef = useRef(initialModal === 'settings');
   const localStatusTimerRef = useRef<number | null>(null);
   const spellingHintTimerRef = useRef<number | null>(null);
@@ -1018,6 +1019,7 @@ export function Practice({
 
   const handleSettingsModalOpenChange = useCallback((open: boolean) => {
     settingsModalOpenRef.current = open;
+    setSettingsModalOpen(open);
     if (open) {
       finishPeek(false, false);
       clearRecallPauseTimer();
@@ -1280,10 +1282,11 @@ export function Practice({
       .filter((note): note is string => Boolean(note))
     : [];
   const learnerNoteVisible = !practiceTestMode && Boolean(spellingHintText || dialectLabel || wordInsights.length);
-  const showCustomTouchKeyboard = customTouchKeyboardActive && !isComplete;
+  const practiceOverlayOpen = Boolean(modal) || settingsModalOpen;
+  const shouldShowCustomKeyboard = customTouchKeyboardActive && !isComplete && !practiceOverlayOpen;
 
   return (
-    <main className={`app-bg practice-app relative ${showCustomTouchKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
+    <main className={`app-bg practice-app relative ${shouldShowCustomKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
       <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
       <PracticeTopNav onBackHome={onBackHome} />
 
@@ -1345,7 +1348,7 @@ export function Practice({
         />
 
         <div
-          onClick={showCustomTouchKeyboard ? undefined : focusMobileInput}
+          onClick={shouldShowCustomKeyboard ? undefined : focusMobileInput}
           className="letter-input-tap-zone"
         >
           <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
@@ -1421,10 +1424,10 @@ export function Practice({
 
       </section>
 
-      {showCustomTouchKeyboard && keyboardPortalTarget && createPortal(
+      {shouldShowCustomKeyboard && keyboardPortalTarget && createPortal(
         <SpelioTouchKeyboard
           answer={answer}
-          disabled={Boolean(modal)}
+          disabled={false}
           onInput={handlePracticeInput}
           onUseNativeKeyboard={useNativeTouchKeyboard}
           t={t}
