@@ -1166,6 +1166,130 @@ test('homepage pools keep review and From earlier visibility separate', () => {
   assertEqual(getRecapWordCount(recapOnlyStorage, wordLists), 1, 'Recap due words should make From earlier visible');
 });
 
+test('attempted incomplete list shows amber progress without homepage review or From earlier', () => {
+  const list = makeLargeList('test_attempted_no_review', 1, 4);
+  const result: SessionResult = {
+    totalWords: 1,
+    correctWords: 1,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 10,
+    listIds: [list.id],
+    state: 'strong'
+  };
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    lastSessionDate: '2026-05-05T00:00:10.000Z',
+    lastSessionResult: result
+  };
+  storage = applyWordProgressPatch(storage, list.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  storage = updateListCompletion(storage, [list], result);
+
+  const recommendation = getRecommendation(storage, [list]);
+
+  assertEqual(getInProgressListIds(storage, [list]).includes(list.id), true, 'Attempted incomplete list should show the soft amber progress indicator');
+  assertEqual(getFullyCompletedListIds(storage, [list]).includes(list.id), false, 'Attempted incomplete list should not show the completion tick');
+  assertEqual(hasDifficultWords(storage, [list]), false, 'Attempted clean progress alone should not create Review difficult words');
+  assertEqual(getRecapWordCount(storage, [list]), 0, 'Attempted clean progress alone should not create From earlier');
+  assertEqual(recommendation.kind, 'list', 'Homepage should continue normal learning when review and recap pools are empty');
+});
+
+test('unresolved difficult words create review eligibility and keep list amber until resolved', () => {
+  const list = makeLargeList('test_unresolved_difficult', 1, 3);
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    lastSessionDate: '2026-05-05T00:00:10.000Z',
+    lastSessionResult: {
+      totalWords: 1,
+      correctWords: 0,
+      incorrectWords: 1,
+      revealedWords: 0,
+      incorrectAttempts: 1,
+      revealedLetters: 0,
+      durationSeconds: 10,
+      listIds: [list.id],
+      state: 'struggled'
+    }
+  };
+  storage = applyWordProgressPatch(storage, list.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+
+  const recommendation = getRecommendation(storage, [list]);
+
+  assertEqual(getInProgressListIds(storage, [list]).includes(list.id), true, 'Unresolved difficult words should show the list as in progress');
+  assertEqual(hasDifficultWords(storage, [list]), true, 'Unresolved difficult words should be eligible for Review difficult words');
+  assertEqual(getDifficultWordCount(storage, [list]), 1, 'Review difficult word count should reflect the eligible difficult pool');
+  assertEqual(recommendation.kind, 'review', 'A struggled session with eligible difficult words should recommend review');
+});
+
+test('resolved difficult words leave review, become From earlier, and keep incomplete list amber', () => {
+  const list = makeLargeList('test_resolved_recap_due', 1, 3);
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id,
+    lastSessionDate: '2026-05-05T00:01:00.000Z',
+    lastSessionResult: {
+      totalWords: 1,
+      correctWords: 1,
+      incorrectWords: 0,
+      revealedWords: 0,
+      incorrectAttempts: 0,
+      revealedLetters: 0,
+      durationSeconds: 10,
+      listIds: [list.id],
+      state: 'strong'
+    }
+  };
+  storage = applyWordProgressPatch(storage, list.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, list.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+
+  const recommendation = getRecommendation(storage, [list]);
+
+  assertEqual(getInProgressListIds(storage, [list]).includes(list.id), true, 'Resolved but incomplete list should still show amber progress');
+  assertEqual(hasDifficultWords(storage, [list]), false, 'Clean completion should remove the word from Review difficult words');
+  assertEqual(getRecapWordCount(storage, [list]), 1, 'Resolved difficult words should be eligible for From earlier until clean recap');
+  assertEqual(recommendation.kind, 'list', 'Recap-only words should not turn the primary recommendation into Review difficult words');
+});
+
+test('completed list shows green tick without amber, review, or From earlier', () => {
+  const list = makeLargeList('test_completed_clean', 1, 3);
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id
+  };
+  storage = completeListCleanlyInLists(storage, [list], list.id);
+
+  assertEqual(getFullyCompletedListIds(storage, [list]).includes(list.id), true, 'Clean completed list should show the green tick');
+  assertEqual(getInProgressListIds(storage, [list]).includes(list.id), false, 'Clean completed list should not also show amber progress');
+  assertEqual(hasDifficultWords(storage, [list]), false, 'Clean completed list should not create Review difficult words');
+  assertEqual(getRecapWordCount(storage, [list]), 0, 'Clean completed list should not create From earlier');
+});
+
+test('reveal-used incomplete list can stay amber after difficulty and recap are cleared', () => {
+  const list = makeLargeList('test_reveal_used_no_review', 1, 3);
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list.id],
+    currentPathPosition: list.id
+  };
+  storage = applyWordProgressPatch(storage, list.words[0], { revealed: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, list.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  storage = applyWordProgressPatch(storage, list.words[0], { completed: true, cleanCompleted: true, recapCompletedClean: true }, '2026-05-05T00:02:00.000Z');
+
+  assertEqual(storage.wordProgress[list.words[0].id]?.revealedCount, 1, 'Setup should preserve reveal history on the word');
+  assertEqual(getInProgressListIds(storage, [list]).includes(list.id), true, 'Reveal-used incomplete list should show amber progress from meaningful history');
+  assertEqual(getFullyCompletedListIds(storage, [list]).includes(list.id), false, 'Reveal-used incomplete list should not show a completion tick');
+  assertEqual(hasDifficultWords(storage, [list]), false, 'Resolved reveal history should not keep Review difficult words visible');
+  assertEqual(getRecapWordCount(storage, [list]), 0, 'Clean recap should remove From earlier eligibility');
+});
+
 test('learned spelling count excludes currently difficult and revealed-only words', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
