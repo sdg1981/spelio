@@ -425,7 +425,7 @@ Answer layout rules:
 
 ### 6.3.1 Custom mobile/tablet keyboard
 
-On touch-first devices, Spelio may replace the native software keyboard during active practice with a calm custom keyboard docked to the bottom of the viewport.
+The current MVP touch-device direction is a calm custom keyboard docked to the bottom of the viewport during active practice, with native keyboard fallback where needed.
 
 Purpose:
 
@@ -460,6 +460,7 @@ Keyboard layout:
 
 - Stable Welsh digraph row:
   - `CH DD FF NG LL PH RH TH`
+- The digraph row is stable, non-contextual, and non-predictive.
 - Standard QWERTY rows:
   - `Q W E R T Y U I O P`
   - `A S D F G H J K L`
@@ -471,6 +472,7 @@ Do not include:
 
 - predictive suggestions
 - adaptive word-specific keys
+- guided-choice or sequential spelling modes
 - emoji rows
 - GIF buttons
 - microphone buttons

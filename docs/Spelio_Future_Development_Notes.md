@@ -370,6 +370,60 @@ These controls should be hidden behind progressive disclosure such as "Advanced 
 
 The interface should remain simple on the surface and deep underneath. Learners should not be shown unnecessary mechanics.
 
+## Custom keyboard and guided spelling interaction exploration
+
+Spelio explored several possible input directions for Welsh spelling practice:
+
+- fully adaptive Welsh spelling trays
+- reduced letter-choice or sequential guided spelling interactions
+- contextual chunk rows
+- a custom QWERTY-style touch keyboard
+- Welsh digraph shortcuts
+
+The main product conclusion is that fully adaptive spelling trays became too complex for the core adult product. They risk:
+
+- answer leakage
+- inconsistent behaviour
+- reduced spatial familiarity
+- slower input for confident users
+- excessive cognitive complexity
+- a more game-like or educational-tool feeling
+
+Sequential guided-choice spelling may still be valuable in future for:
+
+- younger learners
+- schools
+- public challenge or event modes
+- accessibility
+- dyslexia support
+- beginner listening-focused practice
+
+However, sequential guided-choice spelling is not currently recommended as the default adult or core practice interaction because it:
+
+- slows confident users
+- reduces fluent typing flow
+- may feel too multiple-choice or overly guided
+- may be less appealing to serious adult and GCSE learners who prefer fast recall-to-typing flow
+
+The strongest near-term direction for the core product became:
+
+> a custom mobile/tablet QWERTY-style keyboard with a stable Welsh digraph shortcut row.
+
+Current preferred keyboard direction:
+
+- Preserve normal QWERTY familiarity.
+- Keep fast confident typing flow.
+- Use a calm custom touch keyboard on mobile and tablet.
+- Include a stable, always-visible Welsh digraph row: `CH DD FF NG LL PH RH TH`.
+- Keep the digraph row non-contextual and non-predictive so it does not leak answers.
+- Support hold-for-accent where practical.
+- Avoid adaptive, predictive, or context-aware chunk rows for the core practice keyboard.
+- Avoid turning the keyboard into a phonics engine, game mechanic, or guided-answer system.
+
+The key principle is:
+
+> The core adult Spelio practice experience should preserve fast hear → recall → type flow. More guided or simplified keyboard modes may be explored later as optional modes or separate school, event, or challenge experiences, not as the default core interaction.
+
 ## Future classroom spelling-test identity and pupil progress
 
 Future teacher spelling-test tools may need to track pupil progress over time, especially for classroom tests, homework, revision, and school reporting. This should remain a later, carefully scoped product area and should not change the current public learner flow, MVP practice logic, session generation, scoring, recommendations, or existing learner experience.

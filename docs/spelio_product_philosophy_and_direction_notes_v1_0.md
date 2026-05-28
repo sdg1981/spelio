@@ -359,6 +359,12 @@ over:
 - excessive stimulation
 - entertainment-first design
 
+## Core Adult Flow and Future Guided Modes
+
+The core adult practice experience should remain calm, fluent, typing-preserving, low-friction, and serious in tone. It should protect the fast hear → recall → spell loop.
+
+Future school, event, challenge, accessibility, or beginner-focused modes may explore more guided or simplified choice-based input where that genuinely helps the context. Those modes should remain optional and future-facing, and should still avoid noisy gamification, childish UX, or answer-leaking shortcuts.
+
 ## Future Welsh spelling challenges
 
 Spelio's unusually simple, audio-first interaction model may eventually make it naturally suited to calm shared spelling experiences.
