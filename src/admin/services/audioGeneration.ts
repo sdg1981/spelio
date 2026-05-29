@@ -253,9 +253,16 @@ export function createInterfaceAudioStoragePath(clip: { key: string; language: s
   return `interface/${slugify(clip.key)}/${slugify(clip.language)}.mp3`;
 }
 
-export function createPrimerAudioStoragePath(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs') {
+export function createPrimerAudioStoragePath(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs', version?: string) {
   const root = provider === 'elevenlabs' ? 'cy-primer-elevenlabs' : 'cy-primer';
-  return `${root}/${slugify(listId)}/${slugify(itemKey)}.mp3`;
+  const basePath = `${root}/${slugify(listId)}/${slugify(itemKey)}`;
+  return version?.trim()
+    ? `${basePath}/${slugify(version)}.mp3`
+    : `${basePath}.mp3`;
+}
+
+export function createPrimerAudioObjectVersion(date = new Date(), nonce: string = createAudioObjectNonce()) {
+  return `${date.toISOString().replace(/[^0-9]/g, '')}-${nonce}`;
 }
 
 export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {
@@ -279,4 +286,8 @@ function escapeXml(value: string) {
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'audio';
+}
+
+function createAudioObjectNonce() {
+  return globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
 }

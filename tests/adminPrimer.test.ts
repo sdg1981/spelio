@@ -241,23 +241,49 @@ async function run() {
 
   const generated = await mockAdminRepository.generatePrimerAudioItem(removed.id, 'dd_sound', 'azure');
   assert(generated.ok, 'Primer Azure generation should succeed in mock repository.');
+  const firstGeneratedPrimerAudioUrl = generated.item.audioUrl;
   const afterPrimerAudio = await mockAdminRepository.getWordList(removed.id);
   assert(afterPrimerAudio, 'Expected list after primer audio generation.');
   assertEqual(afterPrimerAudio.words.length, originalWordCount, 'Primer audio generation must not create fake word records.');
   assertEqual(afterPrimerAudio.primerContent?.soundItems[0].audioSource, 'azure', 'Primer audio generation should update source.');
   assertEqual(afterPrimerAudio.primerContent?.soundItems[0].audioStatus, 'ready', 'Primer audio generation should mark audio ready.');
+  assert(
+    firstGeneratedPrimerAudioUrl.includes('/cy-primer/foundations-first-words/dd-sound/'),
+    'Primer Azure generation should store regenerated audio at a versioned primer object path.'
+  );
 
   const cleared = await mockAdminRepository.clearPrimerAudioItem(removed.id, 'dd_sound');
   assert(cleared.ok, 'Primer audio clearing should succeed in mock repository.');
   const afterClear = await mockAdminRepository.getWordList(removed.id);
+  assert(afterClear, 'Expected list after clearing primer audio.');
   assertEqual(afterClear?.primerContent?.soundItems[0].audioUrl, '', 'Primer audio clearing should reset the audio URL.');
+  assertEqual(afterClear?.primerContent?.soundItems[0].audioStatus, 'missing', 'Primer audio clearing should mark preview audio missing.');
+  assertEqual(afterClear?.primerContent?.soundItems[0].audioSource, 'unknown', 'Primer audio clearing should remove the generated source marker.');
 
-  const databasePrimer = getFoundationsPrimer(afterPrimerAudio, 'en');
+  assert(afterClear.primerContent, 'Expected primer content after clearing primer audio.');
+  const editedAfterClear = await mockAdminRepository.saveWordList({
+    ...afterClear,
+    primerContent: {
+      ...afterClear.primerContent,
+      soundItems: afterClear.primerContent.soundItems.map(item => item.key === 'dd_sound' ? { ...item, textToSpeak: 'heddwch' } : item)
+    }
+  });
+  const regenerated = await mockAdminRepository.generatePrimerAudioItem(editedAfterClear.id, 'dd_sound', 'azure');
+  assert(regenerated.ok, 'Primer Azure regeneration after clearing should succeed in mock repository.');
+  const afterRegenerate = await mockAdminRepository.getWordList(editedAfterClear.id);
+  assert(afterRegenerate, 'Expected list after primer audio regeneration.');
+  assertEqual(afterRegenerate.primerContent?.soundItems[0].textToSpeak, 'heddwch', 'Primer Azure regeneration should use the current saved textToSpeak value.');
+  assert(
+    afterRegenerate.primerContent?.soundItems[0].audioUrl !== firstGeneratedPrimerAudioUrl,
+    'Primer Azure regeneration should change audioUrl so preview and learner playback do not reuse stale cached audio.'
+  );
+
+  const databasePrimer = getFoundationsPrimer(afterRegenerate, 'en');
   assert(databasePrimer, 'Learner primer should resolve database primer content.');
   assertEqual(databasePrimer.title, 'Database primer title', 'Database primer content should override JSON primerDraft fallback.');
-  assertEqual(databasePrimer.soundItems[0].audioUrl, generated.item.audioUrl, 'Learner primer should expose stored primer audio before dynamic fallback.');
+  assertEqual(databasePrimer.soundItems[0].audioUrl, afterRegenerate.primerContent?.soundItems[0].audioUrl, 'Learner primer should expose the regenerated stored primer audio URL before dynamic fallback.');
 
-  const wordAudioResult = await mockAdminRepository.generateAudioForWord(afterPrimerAudio.words[0].id);
+  const wordAudioResult = await mockAdminRepository.generateAudioForWord(afterRegenerate.words[0].id);
   assert(wordAudioResult.ok, 'Normal word audio generation should still work.');
   const finalList = await mockAdminRepository.getWordList(removed.id);
   assertEqual(finalList?.words.length, originalWordCount, 'Normal and primer audio operations should preserve word count.');

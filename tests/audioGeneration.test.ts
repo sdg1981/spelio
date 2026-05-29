@@ -31,7 +31,7 @@ import {
   getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
@@ -160,6 +160,16 @@ assertEqual(
   createPrimerAudioStoragePath('foundation_patterns_d_dd', 'dd_sound', 'elevenlabs'),
   'cy-primer-elevenlabs/foundation-patterns-d-dd/dd-sound.mp3',
   'Primer ElevenLabs audio should use a separate list-scoped non-word storage path.'
+);
+assertEqual(
+  createPrimerAudioStoragePath('foundation_patterns_d_dd', 'dd_sound', 'azure', createPrimerAudioObjectVersion(new Date('2026-05-29T12:34:56.789Z'), 'regen')),
+  'cy-primer/foundation-patterns-d-dd/dd-sound/20260529123456789-regen.mp3',
+  'Regenerated primer Azure audio should support a versioned object path so the public URL changes.'
+);
+assertEqual(
+  createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
+  'cy/foundations-first-words/foundations-first-words-001.mp3',
+  'Versioned primer paths must not affect normal word audio storage paths.'
 );
 
 const filter = createAudioPostProcessingFilter();

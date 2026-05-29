@@ -83,27 +83,37 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
 
   async function saveChanges() {
     if (!list) return;
+    try {
+      await persistListChanges(list, 'Saved changes.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'Save failed.'));
+    }
+  }
+
+  async function persistListChanges(listToSave: AdminWordList, successMessage?: string) {
     if (slugError) {
       setErrorMessage(slugError);
-      return;
+      throw new Error(slugError);
     }
     try {
       setSaving(true);
       setErrorMessage('');
       const listForSave = {
-        ...list,
-        primerContent: toPrimerContentStorage(normalizePrimerContent(list.primerContent))
+        ...listToSave,
+        primerContent: toPrimerContentStorage(normalizePrimerContent(listToSave.primerContent))
       };
       // TODO: Send admin saves through a protected server/API route before enabling production writes.
       await repository.saveWordList(listForSave);
-      await Promise.all(list.words.map(word => repository.saveWord(word)));
-      const savedList = await repository.getWordList(list.id) ?? list;
+      await Promise.all(listToSave.words.map(word => repository.saveWord(word)));
+      const savedList = await repository.getWordList(listToSave.id) ?? listToSave;
       setSource(savedList);
       setList(savedList);
-      setStatusMessage('Saved changes.');
+      if (successMessage) setStatusMessage(successMessage);
       setDirty(false);
+      return savedList;
     } catch (error) {
-      setErrorMessage(readError(error, 'Save failed.'));
+      if (error instanceof Error && error.message === slugError) throw error;
+      throw new Error(readError(error, 'Save failed.'));
     } finally {
       setSaving(false);
     }
@@ -337,17 +347,16 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
 
   async function generatePrimerAudio(item: WordListPrimerSoundItem, provider: 'azure' | 'elevenlabs') {
     if (!list || generatingPrimerAudioKeysRef.current.has(item.key)) return;
-    if (dirty) {
-      setErrorMessage('Save primer changes before generating primer audio.');
-      return;
-    }
     try {
       generatingPrimerAudioKeysRef.current = new Set(generatingPrimerAudioKeysRef.current).add(item.key);
       setGeneratingPrimerAudioKeys(new Set(generatingPrimerAudioKeysRef.current));
       setErrorMessage('');
       setStatusMessage('');
-      const result = await repository.generatePrimerAudioItem(list.id, item.key, provider);
-      await refreshCurrentList(list.id);
+      const generationList = dirty ? await persistListChanges(list) : list;
+      const generationItem = normalizePrimerContent(generationList.primerContent).soundItems.find(soundItem => soundItem.key === item.key || soundItem.id === item.key);
+      if (!generationItem) throw new Error('Primer sound item not found after saving current changes.');
+      const result = await repository.generatePrimerAudioItem(generationList.id, generationItem.key, provider);
+      await refreshCurrentList(generationList.id);
       if (result.ok) setStatusMessage(provider === 'elevenlabs' ? 'Primer ElevenLabs audio generated.' : 'Primer Azure audio generated.');
       else setErrorMessage(result.error ?? 'Primer audio generation failed.');
     } catch (error) {
@@ -362,15 +371,14 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
 
   async function clearPrimerAudio(item: WordListPrimerSoundItem) {
     if (!list) return;
-    if (dirty) {
-      setErrorMessage('Save primer changes before clearing primer audio.');
-      return;
-    }
     try {
       setErrorMessage('');
       setStatusMessage('');
-      await repository.clearPrimerAudioItem(list.id, item.key);
-      await refreshCurrentList(list.id);
+      const clearList = dirty ? await persistListChanges(list) : list;
+      const clearItem = normalizePrimerContent(clearList.primerContent).soundItems.find(soundItem => soundItem.key === item.key || soundItem.id === item.key);
+      if (!clearItem) throw new Error('Primer sound item not found after saving current changes.');
+      await repository.clearPrimerAudioItem(clearList.id, clearItem.key);
+      await refreshCurrentList(clearList.id);
       setStatusMessage('Primer audio cleared.');
     } catch (error) {
       setErrorMessage(readError(error, 'Could not clear primer audio.'));

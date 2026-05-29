@@ -5,7 +5,7 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { clearCollectionContentWithClient, deleteWordListWithClient } from './contentDelete';
@@ -395,7 +395,7 @@ export const supabaseAdminRepository: AdminRepository = {
         ? await synthesizeElevenLabsWelshMp3(item.textToSpeak)
         : { blob: await synthesizeWelshMp3(item.textToSpeak) };
       if (audio.blob.size < 100) throw new Error('Primer audio upload was blocked because the generated file was unexpectedly small.');
-      const path = createPrimerAudioStoragePath(list.id, item.key, provider);
+      const path = createPrimerAudioStoragePath(list.id, item.key, provider, createPrimerAudioObjectVersion());
       const { error: uploadError } = await client.storage
         .from('audio')
         .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
@@ -434,10 +434,18 @@ export const supabaseAdminRepository: AdminRepository = {
   },
 
   async clearPrimerAudioItem(listId: string, itemKey: string) {
+    const client = await requireAdminSupabase();
     const list = await this.getWordList(listId);
     const primerContent = normalizePrimerContent(list?.primerContent);
     const item = primerContent.soundItems.find(soundItem => soundItem.key === itemKey || soundItem.id === itemKey);
     if (!list || !item) throw new Error('Primer sound item not found.');
+    const existingStoragePath = getPrimerAudioStoragePathFromPublicUrl(item.audioUrl);
+    if (existingStoragePath) {
+      await client.storage.from('audio').remove([existingStoragePath]).catch(() => {
+        // Clearing the DB fields is still the important safety behaviour if the
+        // object has already been removed or belongs to a different storage URL.
+      });
+    }
     const clearedItem = {
       ...item,
       audioUrl: '',
@@ -927,6 +935,21 @@ function slugOrNull(value: string) {
 
 function readErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function getPrimerAudioStoragePathFromPublicUrl(audioUrl: string) {
+  const candidate = audioUrl.trim();
+  if (!candidate) return null;
+  try {
+    const url = new URL(candidate);
+    const marker = '/storage/v1/object/public/audio/';
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex < 0) return null;
+    const path = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+    return path.startsWith('cy-primer/') || path.startsWith('cy-primer-elevenlabs/') ? path : null;
+  } catch {
+    return null;
+  }
 }
 
 function readDefaultAudioProvider(value: unknown): DefaultAudioProvider {

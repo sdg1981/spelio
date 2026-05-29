@@ -4,7 +4,7 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createMockAudioUrl } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createMockAudioUrl, createPrimerAudioObjectVersion, createPrimerAudioStoragePath } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
 import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 
@@ -224,7 +224,7 @@ export const mockAdminRepository: AdminRepository = {
     if (!item.textToSpeak.trim()) throw new Error('Primer generation text is empty.');
     const readyItem = {
       ...item,
-      audioUrl: `/audio/primer/${encodeURIComponent(listId)}/${encodeURIComponent(item.key)}-${provider}.mp3`,
+      audioUrl: `https://example.test/storage/v1/object/public/audio/${createPrimerAudioStoragePath(listId, item.key, provider, createPrimerAudioObjectVersion())}`,
       audioStatus: 'ready' as const,
       audioSource: provider
     };
