@@ -1,4 +1,5 @@
 import type { AdminWord, AudioStatus, ElevenLabsGenerationMode } from '../types';
+import type { WordListPrimerSoundItem } from '../../data/wordLists';
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
@@ -23,6 +24,12 @@ export interface AudioQueueSnapshot<TWord extends AdminWord = AdminWord> {
 
 export interface AudioGenerationResult {
   word: AdminWord;
+  ok: boolean;
+  error?: string;
+}
+
+export interface PrimerAudioGenerationResult {
+  item: WordListPrimerSoundItem;
   ok: boolean;
   error?: string;
 }
@@ -244,6 +251,11 @@ export function createElevenLabsAudioStoragePath(word: Pick<AdminWord, 'id' | 'l
 
 export function createInterfaceAudioStoragePath(clip: { key: string; language: string }) {
   return `interface/${slugify(clip.key)}/${slugify(clip.language)}.mp3`;
+}
+
+export function createPrimerAudioStoragePath(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs') {
+  const root = provider === 'elevenlabs' ? 'cy-primer-elevenlabs' : 'cy-primer';
+  return `${root}/${slugify(listId)}/${slugify(itemKey)}.mp3`;
 }
 
 export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {

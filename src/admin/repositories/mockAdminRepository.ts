@@ -16,7 +16,14 @@ let audioSettings: AdminAudioSettings = {
 };
 
 function cloneList(list: AdminWordList): AdminWordList {
-  return { ...list, words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] })) };
+  return {
+    ...list,
+    primerContent: list.primerContent ? {
+      ...list.primerContent,
+      soundItems: list.primerContent.soundItems.map(item => ({ ...item }))
+    } : list.primerContent,
+    words: list.words.map(word => ({ ...word, acceptedAlternatives: [...word.acceptedAlternatives] }))
+  };
 }
 
 function cloneCollection(collection: AdminWordListCollection): AdminWordListCollection {
@@ -208,6 +215,47 @@ export const mockAdminRepository: AdminRepository = {
     };
     await this.saveWord(readyWord);
     return { word: readyWord, ok: true };
+  },
+
+  async generatePrimerAudioItem(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs') {
+    const list = await this.getWordList(listId);
+    const item = list?.primerContent?.soundItems.find(soundItem => soundItem.key === itemKey || soundItem.id === itemKey);
+    if (!list || !list.primerContent || !item) throw new Error('Primer sound item not found.');
+    if (!item.textToSpeak.trim()) throw new Error('Primer generation text is empty.');
+    const readyItem = {
+      ...item,
+      audioUrl: `/audio/primer/${encodeURIComponent(listId)}/${encodeURIComponent(item.key)}-${provider}.mp3`,
+      audioStatus: 'ready' as const,
+      audioSource: provider
+    };
+    await this.saveWordList({
+      ...list,
+      primerContent: {
+        ...list.primerContent,
+        soundItems: list.primerContent.soundItems.map(soundItem => soundItem.key === item.key ? readyItem : soundItem)
+      }
+    });
+    return { item: readyItem, ok: true };
+  },
+
+  async clearPrimerAudioItem(listId: string, itemKey: string) {
+    const list = await this.getWordList(listId);
+    const item = list?.primerContent?.soundItems.find(soundItem => soundItem.key === itemKey || soundItem.id === itemKey);
+    if (!list || !list.primerContent || !item) throw new Error('Primer sound item not found.');
+    const clearedItem = {
+      ...item,
+      audioUrl: '',
+      audioStatus: 'missing' as const,
+      audioSource: 'unknown' as const
+    };
+    await this.saveWordList({
+      ...list,
+      primerContent: {
+        ...list.primerContent,
+        soundItems: list.primerContent.soundItems.map(soundItem => soundItem.key === item.key ? clearedItem : soundItem)
+      }
+    });
+    return { item: clearedItem, ok: true };
   },
 
   async generateAudioBatch(wordIds: string[]) {

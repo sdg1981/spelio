@@ -28,13 +28,14 @@ import { getEndScreenProgressSummary } from './lib/practice/endScreenState';
 import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib/customListRoutes';
 import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
+import { isStandalonePublicPagePath, shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange, type PublicScreen } from './lib/interfaceLanguageNavigation';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
 import { getFoundationsPrimer } from './content/foundationsPrimer';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, type InterfaceAudioClipRegistry } from './lib/interfaceAudio';
 
-type Screen = 'home' | 'primer' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
+type Screen = PublicScreen;
 
 type PendingPrimerLaunch = {
   start: PracticeStart;
@@ -130,12 +131,6 @@ function getScreenForPath(pathname: string): Screen {
   if (getCustomSharePublicIdFromPath(pathname)) return 'custom-share';
   if (getCustomPublicIdFromPath(pathname)) return 'custom-entry';
   return 'home';
-}
-
-function isStandalonePublicPagePath(pathname: string) {
-  return ['/how-spelio-works', '/feedback', '/privacy', '/about', '/word-lists', '/spelling-basics', '/custom-list/new'].includes(pathname) ||
-    Boolean(getSpellingBasicsTopicSlugFromPath(pathname)) ||
-    Boolean(getCustomSharePublicIdFromPath(pathname) || getCustomPublicIdFromPath(pathname));
 }
 
 function getInitialPublicScreen(): Screen {
@@ -307,10 +302,22 @@ export default function App() {
   function updateInterfaceLanguage(language: InterfaceLanguage) {
     const shouldPreservePublicPage =
       typeof window !== 'undefined' &&
-      isStandalonePublicPagePath(window.location.pathname);
+      shouldPreserveInterfaceLanguageScreen(screen, Boolean(pendingPrimerLaunch), window.location.pathname);
 
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin') && !shouldPreservePublicPage) {
       window.history.replaceState(null, '', getHomePathForLanguage(language));
+    }
+
+    const shouldResetPracticeLaunchContext = shouldResetPracticeLaunchContextOnInterfaceLanguageChange(screen, Boolean(pendingPrimerLaunch));
+    if (!shouldResetPracticeLaunchContext) {
+      setStorage(previous => ({
+        ...previous,
+        settings: {
+          ...previous.settings,
+          interfaceLanguage: language
+        }
+      }));
+      return;
     }
 
     setSharedContext(null);
@@ -383,7 +390,8 @@ export default function App() {
     }
 
     const primerListId = getPracticeStartPrimerListId(start);
-    const primer = primerListId ? getFoundationsPrimer(primerListId, interfaceLanguage) : null;
+    const primerList = primerListId ? practiceLists.find(list => list.id === primerListId) : null;
+    const primer = primerList ? getFoundationsPrimer(primerList, interfaceLanguage) : primerListId ? getFoundationsPrimer(primerListId, interfaceLanguage) : null;
     if (!options.skipPrimer && primer) {
       setPendingPrimerLaunch({
         start,
@@ -785,7 +793,8 @@ export default function App() {
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
   const activePrimerListId = pendingPrimerLaunch ? getPracticeStartPrimerListId(pendingPrimerLaunch.start) : null;
-  const activePrimer = activePrimerListId ? getFoundationsPrimer(activePrimerListId, interfaceLanguage) : null;
+  const activePrimerList = activePrimerListId ? practiceLists.find(list => list.id === activePrimerListId) : null;
+  const activePrimer = activePrimerList ? getFoundationsPrimer(activePrimerList, interfaceLanguage) : activePrimerListId ? getFoundationsPrimer(activePrimerListId, interfaceLanguage) : null;
   const screenContent = activeScreen === 'how' ? (
     <HowSpelioWorks
       onHome={returnToLearning}

@@ -31,7 +31,7 @@ import {
   getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createAudioStoragePath, createInterfaceAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
@@ -150,6 +150,16 @@ assertEqual(
   createInterfaceAudioStoragePath({ key: 'practice_struggle_assist', language: 'en' }),
   'interface/practice-struggle-assist/en.mp3',
   'Interface helper audio should use a stable non-word queue storage path.'
+);
+assertEqual(
+  createPrimerAudioStoragePath('foundation_patterns_d_dd', 'dd_sound', 'azure'),
+  'cy-primer/foundation-patterns-d-dd/dd-sound.mp3',
+  'Primer Azure audio should use a stable list-scoped non-word storage path.'
+);
+assertEqual(
+  createPrimerAudioStoragePath('foundation_patterns_d_dd', 'dd_sound', 'elevenlabs'),
+  'cy-primer-elevenlabs/foundation-patterns-d-dd/dd-sound.mp3',
+  'Primer ElevenLabs audio should use a separate list-scoped non-word storage path.'
 );
 
 const filter = createAudioPostProcessingFilter();

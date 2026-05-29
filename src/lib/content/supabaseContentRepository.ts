@@ -12,6 +12,7 @@ import {
 import type { PublicContent } from './staticContentRepository';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../audioProvider';
 import { createInterfaceAudioRegistry, normalizeInterfaceAudioClips } from '../interfaceAudio';
+import { normalizePrimerContent } from '../../content/foundationsPrimer';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -53,6 +54,7 @@ type WordListRow = {
   is_active: boolean | null;
   list_type?: string | null;
   hidden_from_main_catalogue?: boolean | null;
+  primer_content?: unknown;
 };
 
 type WordRow = {
@@ -92,7 +94,7 @@ type WordRow = {
   difficulty: number | null;
 };
 
-const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue';
+const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue,primer_content';
 const WORD_LIST_SELECT_WITHOUT_SLUG = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,focus_category_id,difficulty,order_index,next_list_id,is_active';
 
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
@@ -148,7 +150,7 @@ function asAcceptedAlternatives(value: unknown): string[] {
 }
 
 function isMissingOptionalWordListColumnError(error: { code?: string; message?: string } | null) {
-  return error?.code === '42703' && /\b(slug|list_type|hidden_from_main_catalogue)\b/.test(error.message ?? '');
+  return error?.code === '42703' && /\b(slug|list_type|hidden_from_main_catalogue|primer_content)\b/.test(error.message ?? '');
 }
 
 function mapCollection(row: CollectionRow): WordListCollection {
@@ -243,6 +245,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     isSupportList: row.list_type === 'support' || row.hidden_from_main_catalogue === true || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
     listType: row.list_type === 'support' ? 'support' : 'main',
     hiddenFromMainCatalogue: row.hidden_from_main_catalogue === true || row.list_type === 'support' || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
+    primerContent: normalizePrimerContent(row.primer_content),
     words: words
       .map(word => mapWord(word, { ...row, source_language: sourceLanguage, target_language: targetLanguage }))
       .filter((word): word is PracticeWord => Boolean(word))

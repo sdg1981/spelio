@@ -3,15 +3,18 @@ import { playAudioUrl } from './audioPlayback';
 let currentPrimerAudio: HTMLAudioElement | null = null;
 let currentObjectUrl: string | null = null;
 
-export async function playPrimerSound(item: { audioText: string; audioUrl?: string | null }) {
+export async function playPrimerSound(item: { audioText?: string; textToSpeak?: string; audioUrl?: string | null }) {
   if (item.audioUrl) {
     return playAudioUrl(item.audioUrl);
   }
 
+  const text = (item.textToSpeak || item.audioText || '').trim();
+  if (!text) return false;
+
   const response = await fetch('/api/azure-tts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: item.audioText, language: 'cy' })
+    body: JSON.stringify({ text, language: 'cy' })
   });
 
   if (!response.ok) return false;

@@ -1,5 +1,6 @@
 import type { AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
+import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
@@ -113,6 +114,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     if (hasField(list, 'order', 'order_index') && !validOrder(fieldValue(list, 'order', 'order_index'))) errors.push(`List ${listLabel} has invalid order.`);
     if (hasField(list, 'isActive', 'is_active') && typeof fieldValue(list, 'isActive', 'is_active') !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
     if (hasField(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') && typeof fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
+    validatePrimerContent(fieldValue(list, 'primerContent', 'primer_content'), listLabel, errors);
     if (stringField(list, 'listType', 'list_type') && !validListTypes.has(stringField(list, 'listType', 'list_type'))) errors.push(`List ${listLabel} has invalid listType "${stringField(list, 'listType', 'list_type')}".`);
     if (!validLanguage(sourceLanguage)) errors.push(`List ${listLabel} has malformed sourceLanguage "${sourceLanguage}".`);
     if (!validLanguage(targetLanguage)) errors.push(`List ${listLabel} has malformed targetLanguage "${targetLanguage}".`);
@@ -159,6 +161,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       isSupportList: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true || fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true,
       listType: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true ? 'support' : 'main',
       hiddenFromMainCatalogue: fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true || stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true,
+      primerContent: toPrimerContentStorage(normalizePrimerContent(fieldValue(list, 'primerContent', 'primer_content'))),
       createdAt: now,
       updatedAt: now,
       words: []
@@ -241,6 +244,31 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     warnings,
     content
   };
+}
+
+function validatePrimerContent(value: unknown, listLabel: string, errors: string[]) {
+  if (value === undefined) return;
+  if (value === null) return;
+  if (!isRecord(value)) {
+    errors.push(`List ${listLabel} primerContent must be an object when provided.`);
+    return;
+  }
+  if (hasField(value, 'enabled') && typeof fieldValue(value, 'enabled') !== 'boolean') errors.push(`List ${listLabel} primerContent.enabled must be a boolean.`);
+  const soundItems = fieldValue(value, 'soundItems', 'sound_items');
+  if (soundItems !== undefined && !Array.isArray(soundItems)) {
+    errors.push(`List ${listLabel} primerContent.soundItems must be an array.`);
+    return;
+  }
+  if (!Array.isArray(soundItems)) return;
+  soundItems.forEach((item, index) => {
+    if (!isRecord(item)) {
+      errors.push(`Primer sound item ${index + 1} in list ${listLabel} must be an object.`);
+      return;
+    }
+    if (!stringField(item, 'label')) errors.push(`Primer sound item ${index + 1} in list ${listLabel} is missing label.`);
+    const audioStatus = stringField(item, 'audioStatus', 'audio_status');
+    if (audioStatus && !validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Primer sound item ${index + 1} in list ${listLabel} has invalid audioStatus "${audioStatus}".`);
+  });
 }
 
 function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, errors: string[], warnings: string[], now: string): AdminWord | null {

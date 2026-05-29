@@ -1,6 +1,8 @@
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection } from '../types';
+import type { WordListPrimerContent } from '../../data/wordLists';
+import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 
-export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.2';
+export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.3';
 export const ADMIN_CONTENT_EXPORT_SOURCE = 'live_database_export';
 
 export interface AdminContentExportPayload {
@@ -65,6 +67,7 @@ interface ExportedWordList {
   listType: 'main' | 'support';
   isSupportList: boolean;
   hiddenFromMainCatalogue: boolean;
+  primerContent?: WordListPrimerContent;
   words: ExportedWord[];
 }
 
@@ -124,7 +127,7 @@ export function buildAdminContentExportPayload(input: {
     notes: [
       'Generated from the current admin database content, not from static JSON seed files.',
       'The export intentionally excludes learner progress, analytics, timestamps, and transient operational metadata.',
-      'Audio fields contain lightweight URL/status metadata only; physical audio files are not embedded.',
+      'Audio fields, including primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.',
       'Collections, lists, and words are sorted by order, then id, for stable review diffs.'
     ],
     collections,
@@ -163,6 +166,7 @@ function exportList(list: AdminWordList): ExportedWordList {
     listType: list.listType ?? (list.isSupportList ? 'support' : 'main'),
     isSupportList: list.isSupportList === true,
     hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true,
+    primerContent: toPrimerContentStorage(normalizePrimerContent(list.primerContent)),
     words: [...list.words].sort(byOrderThenId).map(exportWord)
   };
 }

@@ -65,6 +65,7 @@ const lists: AdminWordList[] = [
     isSupportList: false,
     listType: 'main',
     hiddenFromMainCatalogue: false,
+    primerContent: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-02T00:00:00.000Z',
     words: []
@@ -93,6 +94,24 @@ const lists: AdminWordList[] = [
     isSupportList: false,
     listType: 'main',
     hiddenFromMainCatalogue: false,
+    primerContent: {
+      enabled: true,
+      titleEn: 'Primer',
+      titleCy: 'Preimiwr',
+      bodyEn: 'Listen to DD.',
+      bodyCy: 'Gwrandewch ar DD.',
+      soundItems: [{
+        id: 'dd_sound',
+        key: 'dd_sound',
+        label: 'DD',
+        labelCy: 'DD',
+        textToSpeak: 'hedd',
+        audioUrl: 'https://example.test/primer-dd.mp3',
+        audioStatus: 'ready',
+        audioSource: 'manual',
+        order: 1
+      }]
+    },
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-02T00:00:00.000Z',
     words: [
@@ -190,6 +209,7 @@ const payload = buildAdminContentExportPayload({
 });
 
 assertEqual(payload.source, 'live_database_export', 'export source should identify live database snapshots');
+assertEqual(payload.schemaVersion, '1.3', 'export schema should include primer content support.');
 assertEqual(payload.lists[0].id, 'first_list', 'lists should sort by order');
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
@@ -198,6 +218,8 @@ assert(!('createdAt' in payload.lists[0]), 'list timestamps should not be export
 assert(!('elevenLabsAudioUrl' in payload.lists[0].words[0]), 'ElevenLabs operational audio metadata should not be exported');
 assertEqual(payload.lists[0].words[0].spellingHintId, 'short-vowel', 'learner-facing spelling hint metadata should be exported');
 assertEqual(payload.lists[0].words[0].disablePatternHints, true, 'learner-facing hint controls should be exported');
+assertEqual(payload.lists[0].primerContent?.enabled, true, 'list-level primer content should be exported.');
+assertEqual(payload.lists[0].primerContent?.soundItems[0].audioUrl, 'https://example.test/primer-dd.mp3', 'primer sound audio metadata should be exported.');
 
 const preview = validateImportPayload(payload, {
   existingCollectionIds: [],
@@ -208,4 +230,5 @@ const preview = validateImportPayload(payload, {
 assertArrayEqual(preview.errors, [], 'export should validate against the current importer');
 assertEqual(preview.totalLists, 2, 'export should include all lists');
 assertEqual(preview.totalWords, 2, 'export should include all words');
+assertEqual(preview.content.lists[0].primerContent?.soundItems[0].textToSpeak, 'hedd', 'import validation should preserve primer sound generation text.');
 assertEqual(createAdminContentExportFilename(payload.exportedAt), 'spelio_live_content_export_2026-05-21_10-11-12Z.json', 'filename should be timestamped and filesystem-safe');

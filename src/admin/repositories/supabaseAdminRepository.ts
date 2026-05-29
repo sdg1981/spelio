@@ -5,10 +5,11 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { clearCollectionContentWithClient, deleteWordListWithClient } from './contentDelete';
+import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 
 type CustomWordListRow = {
   id: string;
@@ -40,6 +41,7 @@ type WordListRow = {
   is_active: boolean;
   list_type?: string | null;
   hidden_from_main_catalogue?: boolean | null;
+  primer_content?: unknown;
   created_at: string;
   updated_at: string;
   stages?: { name: string } | null;
@@ -369,6 +371,92 @@ export const supabaseAdminRepository: AdminRepository = {
     }
   },
 
+  async generatePrimerAudioItem(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs') {
+    const client = await requireAdminSupabase();
+    const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
+    if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    const list = await this.getWordList(listId);
+    const primerContent = normalizePrimerContent(list?.primerContent);
+    const item = primerContent.soundItems.find(soundItem => soundItem.key === itemKey || soundItem.id === itemKey);
+    if (!list || !item) throw new Error('Primer sound item not found.');
+    if (!item.textToSpeak.trim()) throw new Error('Primer generation text is empty.');
+
+    const generatingItem = { ...item, audioStatus: 'generating' as const };
+    await this.saveWordList({
+      ...list,
+      primerContent: {
+        ...primerContent,
+        soundItems: primerContent.soundItems.map(soundItem => soundItem.key === item.key ? generatingItem : soundItem)
+      }
+    });
+
+    try {
+      const audio = provider === 'elevenlabs'
+        ? await synthesizeElevenLabsWelshMp3(item.textToSpeak)
+        : { blob: await synthesizeWelshMp3(item.textToSpeak) };
+      if (audio.blob.size < 100) throw new Error('Primer audio upload was blocked because the generated file was unexpectedly small.');
+      const path = createPrimerAudioStoragePath(list.id, item.key, provider);
+      const { error: uploadError } = await client.storage
+        .from('audio')
+        .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = client.storage.from('audio').getPublicUrl(path);
+      if (!data.publicUrl) throw new Error('Primer audio upload did not return a public URL.');
+
+      const readyItem = {
+        ...item,
+        audioUrl: data.publicUrl,
+        audioStatus: 'ready' as const,
+        audioSource: provider
+      };
+      const saved = await this.saveWordList({
+        ...list,
+        primerContent: {
+          ...primerContent,
+          soundItems: primerContent.soundItems.map(soundItem => soundItem.key === item.key ? readyItem : soundItem)
+        }
+      });
+      const savedItem = normalizePrimerContent(saved.primerContent).soundItems.find(soundItem => soundItem.key === item.key) ?? readyItem;
+      return { item: savedItem, ok: true };
+    } catch (error) {
+      const failedItem = { ...item, audioStatus: 'failed' as const };
+      await this.saveWordList({
+        ...list,
+        primerContent: {
+          ...primerContent,
+          soundItems: primerContent.soundItems.map(soundItem => soundItem.key === item.key ? failedItem : soundItem)
+        }
+      }).catch(saveError => {
+        throw new Error(`${readErrorMessage(error)}; Supabase save failed while marking primer audio as failed: ${readErrorMessage(saveError)}`);
+      });
+      return { item: failedItem, ok: false, error: readErrorMessage(error) };
+    }
+  },
+
+  async clearPrimerAudioItem(listId: string, itemKey: string) {
+    const list = await this.getWordList(listId);
+    const primerContent = normalizePrimerContent(list?.primerContent);
+    const item = primerContent.soundItems.find(soundItem => soundItem.key === itemKey || soundItem.id === itemKey);
+    if (!list || !item) throw new Error('Primer sound item not found.');
+    const clearedItem = {
+      ...item,
+      audioUrl: '',
+      audioStatus: 'missing' as const,
+      audioSource: 'unknown' as const
+    };
+    const saved = await this.saveWordList({
+      ...list,
+      primerContent: {
+        ...primerContent,
+        soundItems: primerContent.soundItems.map(soundItem => soundItem.key === item.key ? clearedItem : soundItem)
+      }
+    });
+    return {
+      item: normalizePrimerContent(saved.primerContent).soundItems.find(soundItem => soundItem.key === item.key) ?? clearedItem,
+      ok: true
+    };
+  },
+
   async generateAudioBatch(wordIds: string[]) {
     // TODO: Move batch synthesis to a server-side job queue before production-scale generation.
     const results = [];
@@ -684,6 +772,7 @@ function mapWordListRow(row: WordListRow): AdminWordList {
     isSupportList: row.list_type === 'support' || row.hidden_from_main_catalogue === true || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
     listType: row.list_type === 'support' ? 'support' : 'main',
     hiddenFromMainCatalogue: row.hidden_from_main_catalogue === true || row.list_type === 'support' || row.collection_id === 'spelio_support_welsh' || row.id.startsWith('support_'),
+    primerContent: normalizePrimerContent(row.primer_content),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     words
@@ -752,7 +841,8 @@ function toWordListRow(list: AdminWordList) {
     next_list_id: list.nextListId,
     is_active: list.isActive,
     list_type: list.listType ?? (list.isSupportList ? 'support' : 'main'),
-    hidden_from_main_catalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support'
+    hidden_from_main_catalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support',
+    primer_content: toPrimerContentStorage(normalizePrimerContent(list.primerContent))
   };
 }
 

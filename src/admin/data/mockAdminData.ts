@@ -1,4 +1,5 @@
 import { wordLists } from '../../data/wordLists';
+import type { WordListPrimerContent } from '../../data/wordLists';
 import { supportWordListCollection } from '../../data/supportWordLists';
 import type { AdminDialect, AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
@@ -61,6 +62,7 @@ type RawList = {
   isSupportList?: boolean;
   listType?: 'main' | 'support';
   hiddenFromMainCatalogue?: boolean;
+  primerContent?: WordListPrimerContent | null;
   words: RawWord[];
 };
 
@@ -124,6 +126,7 @@ export const adminWordLists: AdminWordList[] = rawLists
     isSupportList: list.isSupportList === true || list.listType === 'support' || list.hiddenFromMainCatalogue === true,
     listType: list.listType ?? (list.isSupportList ? 'support' : 'main'),
     hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support',
+    primerContent: list.primerContent ?? null,
     createdAt: baseCreatedAt,
     updatedAt: baseUpdatedAt,
     words: [...list.words]

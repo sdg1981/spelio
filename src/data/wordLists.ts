@@ -87,6 +87,30 @@ export interface PracticeWord {
   variantGroupId?: string;
 }
 
+export type PrimerAudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+export type PrimerAudioSource = 'azure' | 'elevenlabs' | 'manual' | 'unknown';
+
+export interface WordListPrimerSoundItem {
+  id: string;
+  key: string;
+  label: string;
+  labelCy?: string;
+  textToSpeak: string;
+  audioUrl: string;
+  audioStatus: PrimerAudioStatus;
+  audioSource: PrimerAudioSource;
+  order: number;
+}
+
+export interface WordListPrimerContent {
+  enabled: boolean;
+  titleEn: string;
+  titleCy: string;
+  bodyEn: string;
+  bodyCy: string;
+  soundItems: WordListPrimerSoundItem[];
+}
+
 export interface WordList {
   id: string;
   slug?: string;
@@ -109,6 +133,7 @@ export interface WordList {
   isSupportList?: boolean;
   listType?: WordListType;
   hiddenFromMainCatalogue?: boolean;
+  primerContent?: WordListPrimerContent | null;
   words: PracticeWord[];
 }
 
@@ -172,6 +197,7 @@ type DatasetList = {
   isSupportList?: boolean;
   listType?: WordListType;
   hiddenFromMainCatalogue?: boolean;
+  primerContent?: WordListPrimerContent | null;
   words: DatasetWord[];
 };
 
@@ -214,6 +240,7 @@ const baseWordLists: WordList[] = rawLists
     isSupportList: list.isSupportList === true || list.listType === 'support',
     listType: list.listType ?? (list.isSupportList ? 'support' : 'main'),
     hiddenFromMainCatalogue: list.hiddenFromMainCatalogue === true || list.isSupportList === true || list.listType === 'support',
+    primerContent: list.primerContent ?? null,
     words: [...list.words]
       .sort((a, b) => a.order - b.order)
       .map(word => ({

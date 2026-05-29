@@ -1,3 +1,5 @@
+import type { WordListPrimerContent } from '../data/wordLists';
+
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
 export type ElevenLabsGenerationMode = 'direct' | 'direct_with_hint' | 'azure_transform' | 'context_extract';
@@ -93,6 +95,7 @@ export interface AdminWordList {
   isSupportList?: boolean;
   listType?: 'main' | 'support';
   hiddenFromMainCatalogue?: boolean;
+  primerContent?: WordListPrimerContent | null;
   createdAt: string;
   updatedAt: string;
   words: AdminWord[];

@@ -1,9 +1,9 @@
-import { ChevronRight, Copy, ExternalLink, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, ExternalLink, Play, Plus, Trash2, Wand2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminTimestamp } from '../components/AdminTimestamp';
 import { ContentHealthCard } from '../components/ContentHealthCard';
-import { AdminButton, AdminCard, AdminInput, AdminSelect, Field } from '../components/primitives';
+import { AdminButton, AdminCard, AdminInput, AdminSelect, AdminSpinner, AdminTextarea, Field } from '../components/primitives';
 import { UnsavedChangesBar } from '../components/UnsavedChangesBar';
 import { WordEditorPanel } from '../components/WordEditorPanel';
 import { WordRowsTable } from '../components/WordRowsTable';
@@ -13,6 +13,9 @@ import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentD
 import type { AdminWord, AdminWordList, AdminWordListCollection, ElevenLabsGenerationMode } from '../types';
 import type { AdminStructureOption } from '../types';
 import { getWordListCanonicalUrl } from '../../lib/wordListSharing';
+import type { WordListPrimerContent, WordListPrimerSoundItem } from '../../data/wordLists';
+import { createEmptyPrimerContent, getPrimerAudioText, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 
 export function WordListEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [source, setSource] = useState<AdminWordList | null>(null);
@@ -29,9 +32,11 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [generatingAudioWordIds, setGeneratingAudioWordIds] = useState<Set<string>>(() => new Set());
   const [generatingElevenLabsAudioWordIds, setGeneratingElevenLabsAudioWordIds] = useState<Set<string>>(() => new Set());
+  const [generatingPrimerAudioKeys, setGeneratingPrimerAudioKeys] = useState<Set<string>>(() => new Set());
   const [batchAudioBusy, setBatchAudioBusy] = useState(false);
   const generatingAudioWordIdsRef = useRef<Set<string>>(new Set());
   const generatingElevenLabsAudioWordIdsRef = useRef<Set<string>>(new Set());
+  const generatingPrimerAudioKeysRef = useRef<Set<string>>(new Set());
   const batchAudioBusyRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -281,6 +286,103 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     }
   }
 
+  function updatePrimerContent(updater: (primer: WordListPrimerContent) => WordListPrimerContent) {
+    if (!list) return;
+    updateList({ primerContent: toPrimerContentStorage(updater(normalizePrimerContent(list.primerContent))) });
+  }
+
+  function addPrimerSoundItem() {
+    const primer = normalizePrimerContent(list?.primerContent);
+    const nextOrder = primer.soundItems.length + 1;
+    const key = `primer_sound_${Date.now()}`;
+    updatePrimerContent(current => ({
+      ...current,
+      soundItems: [
+        ...current.soundItems,
+        {
+          id: key,
+          key,
+          label: 'DD',
+          labelCy: '',
+          textToSpeak: getPrimerAudioText('DD'),
+          audioUrl: '',
+          audioStatus: 'missing',
+          audioSource: 'unknown',
+          order: nextOrder
+        }
+      ]
+    }));
+  }
+
+  function updatePrimerSoundItem(itemKey: string, patch: Partial<WordListPrimerSoundItem>) {
+    updatePrimerContent(current => ({
+      ...current,
+      soundItems: current.soundItems.map(item => item.key === itemKey || item.id === itemKey ? { ...item, ...patch } : item)
+    }));
+  }
+
+  function removePrimerSoundItem(itemKey: string) {
+    updatePrimerContent(current => ({
+      ...current,
+      soundItems: current.soundItems.filter(item => item.key !== itemKey && item.id !== itemKey)
+    }));
+  }
+
+  function movePrimerSoundItem(itemKey: string, direction: 'up' | 'down') {
+    const primer = normalizePrimerContent(list?.primerContent);
+    const index = primer.soundItems.findIndex(item => item.key === itemKey || item.id === itemKey);
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index < 0 || targetIndex < 0 || targetIndex >= primer.soundItems.length) return;
+    const reordered = [...primer.soundItems];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    updatePrimerContent(current => ({
+      ...current,
+      soundItems: reordered.map((item, orderIndex) => ({ ...item, order: orderIndex + 1 }))
+    }));
+  }
+
+  async function generatePrimerAudio(item: WordListPrimerSoundItem, provider: 'azure' | 'elevenlabs') {
+    if (!list || generatingPrimerAudioKeysRef.current.has(item.key)) return;
+    if (dirty) {
+      setErrorMessage('Save primer changes before generating primer audio.');
+      return;
+    }
+    try {
+      generatingPrimerAudioKeysRef.current = new Set(generatingPrimerAudioKeysRef.current).add(item.key);
+      setGeneratingPrimerAudioKeys(new Set(generatingPrimerAudioKeysRef.current));
+      setErrorMessage('');
+      setStatusMessage('');
+      const result = await repository.generatePrimerAudioItem(list.id, item.key, provider);
+      await refreshCurrentList(list.id);
+      if (result.ok) setStatusMessage(provider === 'elevenlabs' ? 'Primer ElevenLabs audio generated.' : 'Primer Azure audio generated.');
+      else setErrorMessage(result.error ?? 'Primer audio generation failed.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'Primer audio generation failed.'));
+    } finally {
+      const next = new Set(generatingPrimerAudioKeysRef.current);
+      next.delete(item.key);
+      generatingPrimerAudioKeysRef.current = next;
+      setGeneratingPrimerAudioKeys(next);
+    }
+  }
+
+  async function clearPrimerAudio(item: WordListPrimerSoundItem) {
+    if (!list) return;
+    if (dirty) {
+      setErrorMessage('Save primer changes before clearing primer audio.');
+      return;
+    }
+    try {
+      setErrorMessage('');
+      setStatusMessage('');
+      await repository.clearPrimerAudioItem(list.id, item.key);
+      await refreshCurrentList(list.id);
+      setStatusMessage('Primer audio cleared.');
+    } catch (error) {
+      setErrorMessage(readError(error, 'Could not clear primer audio.'));
+    }
+  }
+
   async function deleteList() {
     if (!list || !canConfirmDeleteList) return;
     try {
@@ -425,6 +527,25 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               Created <AdminTimestamp value={list.createdAt} /> · Updated <AdminTimestamp value={list.updatedAt} />
             </p>
           </AdminCard>
+          <AdminCard className="p-5">
+            <details>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black tracking-[-0.02em] text-slate-950">
+                <span>Primer / Introduction</span>
+                <ChevronDown size={18} />
+              </summary>
+              <PrimerEditor
+                primer={normalizePrimerContent(list.primerContent)}
+                busyKeys={generatingPrimerAudioKeys}
+                onChange={updatePrimerContent}
+                onAddSoundItem={addPrimerSoundItem}
+                onUpdateSoundItem={updatePrimerSoundItem}
+                onRemoveSoundItem={removePrimerSoundItem}
+                onMoveSoundItem={movePrimerSoundItem}
+                onGenerateAudio={generatePrimerAudio}
+                onClearAudio={clearPrimerAudio}
+              />
+            </details>
+          </AdminCard>
           <AdminCard className="overflow-hidden">
             <WordRowsTable
               words={list.words}
@@ -538,6 +659,140 @@ function createBlankWord(listId: string, order: number, difficulty: number): Adm
     createdAt: now,
     updatedAt: now
   };
+}
+
+function PrimerEditor({
+  primer,
+  busyKeys,
+  onChange,
+  onAddSoundItem,
+  onUpdateSoundItem,
+  onRemoveSoundItem,
+  onMoveSoundItem,
+  onGenerateAudio,
+  onClearAudio
+}: {
+  primer: WordListPrimerContent;
+  busyKeys: Set<string>;
+  onChange: (updater: (primer: WordListPrimerContent) => WordListPrimerContent) => void;
+  onAddSoundItem: () => void;
+  onUpdateSoundItem: (itemKey: string, patch: Partial<WordListPrimerSoundItem>) => void;
+  onRemoveSoundItem: (itemKey: string) => void;
+  onMoveSoundItem: (itemKey: string, direction: 'up' | 'down') => void;
+  onGenerateAudio: (item: WordListPrimerSoundItem, provider: 'azure' | 'elevenlabs') => void;
+  onClearAudio: (item: WordListPrimerSoundItem) => void;
+}) {
+  const normalized = primer ?? createEmptyPrimerContent();
+  const sortedItems = [...normalized.soundItems].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+
+  function patchPrimer(patch: Partial<WordListPrimerContent>) {
+    onChange(current => ({ ...current, ...patch }));
+  }
+
+  return (
+    <div className="mt-5 grid gap-5">
+      <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+        <input type="checkbox" checked={normalized.enabled} onChange={event => patchPrimer({ enabled: event.target.checked })} />
+        Primer enabled
+      </label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="English primer title">
+          <AdminInput value={normalized.titleEn} onChange={event => patchPrimer({ titleEn: event.target.value })} />
+        </Field>
+        <Field label="Welsh primer title">
+          <AdminInput value={normalized.titleCy} onChange={event => patchPrimer({ titleCy: event.target.value })} />
+        </Field>
+        <Field label="English primer body">
+          <AdminTextarea value={normalized.bodyEn} onChange={event => patchPrimer({ bodyEn: event.target.value })} />
+        </Field>
+        <Field label="Welsh primer body">
+          <AdminTextarea value={normalized.bodyCy} onChange={event => patchPrimer({ bodyCy: event.target.value })} />
+        </Field>
+      </div>
+      <div className="rounded-md border border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <h3 className="text-sm font-black text-slate-950">Primer sound items</h3>
+            <p className="mt-1 text-xs text-slate-500">Labels stay learner-facing; generation text can be an exemplar word.</p>
+          </div>
+          <AdminButton onClick={onAddSoundItem}><Plus size={16} /> Add sound item</AdminButton>
+        </div>
+        <div className="grid gap-3 p-4">
+          {!sortedItems.length && <div className="rounded-md border border-dashed border-slate-200 p-4 text-sm font-bold text-slate-500">No primer sound items.</div>}
+          {sortedItems.map((item, index) => {
+            const busy = busyKeys.has(item.key);
+            const canPreview = hasPlayableAudioUrl(item.audioUrl);
+            return (
+              <div key={item.key || item.id} className="grid gap-3 rounded-md border border-slate-200 p-4">
+                <div className="grid gap-3 md:grid-cols-[1fr_0.8fr_0.8fr_1.4fr]">
+                  <Field label="Stable key / id">
+                    <AdminInput value={item.key} onChange={event => onUpdateSoundItem(item.key, { key: event.target.value, id: event.target.value })} />
+                  </Field>
+                  <Field label="Label">
+                    <AdminInput value={item.label} onChange={event => onUpdateSoundItem(item.key, { label: event.target.value })} />
+                  </Field>
+                  <Field label="Welsh label">
+                    <AdminInput value={item.labelCy ?? ''} onChange={event => onUpdateSoundItem(item.key, { labelCy: event.target.value })} />
+                  </Field>
+                  <Field label="Generation text / textToSpeak">
+                    <AdminInput value={item.textToSpeak} onChange={event => onUpdateSoundItem(item.key, { textToSpeak: event.target.value })} />
+                  </Field>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px_140px]">
+                  <Field label="Audio URL">
+                    <AdminInput value={item.audioUrl} onChange={event => onUpdateSoundItem(item.key, {
+                      audioUrl: event.target.value,
+                      audioStatus: event.target.value.trim() ? 'ready' : 'missing',
+                      audioSource: event.target.value.trim() ? item.audioSource === 'unknown' ? 'manual' : item.audioSource : 'unknown'
+                    })} />
+                  </Field>
+                  <Field label="Audio status">
+                    <AdminSelect value={item.audioStatus} onChange={event => onUpdateSoundItem(item.key, { audioStatus: event.target.value as WordListPrimerSoundItem['audioStatus'] })}>
+                      <option value="missing">missing</option>
+                      <option value="queued">queued</option>
+                      <option value="generating">generating</option>
+                      <option value="ready">ready</option>
+                      <option value="failed">failed</option>
+                    </AdminSelect>
+                  </Field>
+                  <Field label="Audio source">
+                    <AdminSelect value={item.audioSource} onChange={event => onUpdateSoundItem(item.key, { audioSource: event.target.value as WordListPrimerSoundItem['audioSource'] })}>
+                      <option value="unknown">unknown</option>
+                      <option value="azure">azure</option>
+                      <option value="elevenlabs">elevenlabs</option>
+                      <option value="manual">manual</option>
+                    </AdminSelect>
+                  </Field>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    <AdminButton onClick={() => {
+                      logAudioPlaybackClick('admin-primer-preview', item.audioUrl);
+                      void playAudioUrl(item.audioUrl);
+                    }} disabled={!canPreview}>
+                      <Play size={15} /> Preview
+                    </AdminButton>
+                    <AdminButton onClick={() => onGenerateAudio(item, 'azure')} disabled={busy}>
+                      {busy ? <AdminSpinner /> : <Wand2 size={15} />} Azure
+                    </AdminButton>
+                    <AdminButton onClick={() => onGenerateAudio(item, 'elevenlabs')} disabled={busy}>
+                      {busy ? <AdminSpinner /> : <Wand2 size={15} />} ElevenLabs
+                    </AdminButton>
+                    <AdminButton onClick={() => onClearAudio(item)} disabled={!item.audioUrl && item.audioStatus === 'missing'}>Clear audio</AdminButton>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <AdminButton onClick={() => onMoveSoundItem(item.key, 'up')} disabled={index === 0}>Up</AdminButton>
+                    <AdminButton onClick={() => onMoveSoundItem(item.key, 'down')} disabled={index === sortedItems.length - 1}>Down</AdminButton>
+                    <AdminButton variant="danger" onClick={() => onRemoveSoundItem(item.key)}><Trash2 size={15} /> Remove</AdminButton>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function readError(error: unknown, fallback: string) {

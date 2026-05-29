@@ -67,6 +67,7 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
       isSupportList: false,
       listType: 'main',
       hiddenFromMainCatalogue: false,
+      primerContent: null,
       createdAt: now,
       updatedAt: now,
       words: []
