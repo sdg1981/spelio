@@ -186,10 +186,10 @@ export function normalizePrimerContent(value: unknown): WordListPrimerContent {
   const record = value as Record<string, unknown>;
   return {
     enabled: record.enabled === true,
-    titleEn: asString(record.titleEn ?? record.title_en),
-    titleCy: asString(record.titleCy ?? record.title_cy),
-    bodyEn: asString(record.bodyEn ?? record.body_en),
-    bodyCy: asString(record.bodyCy ?? record.body_cy),
+    titleEn: asDraftString(record.titleEn ?? record.title_en),
+    titleCy: asDraftString(record.titleCy ?? record.title_cy),
+    bodyEn: asDraftString(record.bodyEn ?? record.body_en),
+    bodyCy: asDraftString(record.bodyCy ?? record.body_cy),
     soundItems: normalizeDatabaseSoundItems(record.soundItems ?? record.sound_items)
   };
 }
@@ -237,8 +237,8 @@ export function toPrimerContentStorage(content: WordListPrimerContent): WordList
 function normalizeDatabasePrimer(listId: string, content: WordListPrimerContent | null | undefined, interfaceLanguage: InterfaceLanguage): FoundationsPrimer | null {
   const primer = normalizePrimerContent(content);
   if (!primer.enabled) return null;
-  const title = interfaceLanguage === 'cy' ? primer.titleCy || primer.titleEn : primer.titleEn || primer.titleCy;
-  const body = interfaceLanguage === 'cy' ? primer.bodyCy || primer.bodyEn : primer.bodyEn || primer.bodyCy;
+  const title = interfaceLanguage === 'cy' ? primer.titleCy.trim() || primer.titleEn.trim() : primer.titleEn.trim() || primer.titleCy.trim();
+  const body = interfaceLanguage === 'cy' ? primer.bodyCy.trim() || primer.bodyEn.trim() : primer.bodyEn.trim() || primer.bodyCy.trim();
   if (!title || !body) return null;
 
   return {
@@ -256,7 +256,7 @@ function isDatabasePrimerConfigured(content: WordListPrimerContent | null | unde
   const primer = normalizePrimerContent(content);
   return (
     primer.enabled ||
-    Boolean(primer.titleEn || primer.titleCy || primer.bodyEn || primer.bodyCy || primer.soundItems.length)
+    Boolean(primer.titleEn.trim() || primer.titleCy.trim() || primer.bodyEn.trim() || primer.bodyCy.trim() || primer.soundItems.length)
   );
 }
 
@@ -265,16 +265,16 @@ function normalizeDatabaseSoundItems(value: unknown): WordListPrimerSoundItem[] 
   return value.flatMap((item, index) => {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
     const record = item as Record<string, unknown>;
-    const label = asString(record.label);
-    const id = asString(record.id) || asString(record.key) || createSoundItemId(label || 'sound', index);
+    const label = asDraftString(record.label);
+    const id = asDraftString(record.id) || asDraftString(record.key) || createSoundItemId(label.trim() || 'sound', index);
     if (!label && !id) return [];
     return [{
       id,
-      key: asString(record.key) || id,
+      key: asDraftString(record.key) || id,
       label,
-      labelCy: asString(record.labelCy ?? record.label_cy),
-      textToSpeak: asString(record.textToSpeak ?? record.text_to_speak ?? record.generationText ?? record.generation_text ?? record.audioText) || getPrimerAudioText(label),
-      audioUrl: asString(record.audioUrl ?? record.audio_url),
+      labelCy: asDraftString(record.labelCy ?? record.label_cy),
+      textToSpeak: asDraftString(record.textToSpeak ?? record.text_to_speak ?? record.generationText ?? record.generation_text ?? record.audioText) || getPrimerAudioText(label),
+      audioUrl: asDraftString(record.audioUrl ?? record.audio_url),
       audioStatus: normalizePrimerAudioStatus(record.audioStatus ?? record.audio_status),
       audioSource: normalizePrimerAudioSource(record.audioSource ?? record.audio_source),
       order: numberOrFallback(record.order ?? record.order_index, index + 1)
@@ -292,6 +292,10 @@ function normalizePrimerAudioSource(value: unknown): PrimerAudioSource {
 
 function asString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function asDraftString(value: unknown) {
+  return typeof value === 'string' ? value : '';
 }
 
 function numberOrFallback(value: unknown, fallback: number) {

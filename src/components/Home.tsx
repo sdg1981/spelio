@@ -9,6 +9,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
 import type { SpelioSettings } from '../lib/practice/storage';
 import { formatRecapWordCount } from '../lib/practice/sessionEngine';
+import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 type SharedEntryMode = 'normal-share' | 'practice-test';
@@ -247,6 +248,7 @@ function HomepageMenu({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
+      if (shouldIgnoreGlobalKeyboardShortcut(event.target)) return;
       setOpen(false);
       buttonRef.current?.focus();
     }

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Heart } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
+import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
 
 type FooterProps = {
   className?: string;
@@ -161,6 +162,7 @@ export function FeedbackModal({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      if (shouldIgnoreGlobalKeyboardShortcut(event.target)) return;
       if (event.key === 'Escape') onClose();
     }
 

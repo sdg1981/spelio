@@ -24,6 +24,7 @@ import { detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibi
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 import { getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip, type InterfaceAudioClipRegistry } from '../lib/interfaceAudio';
+import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
 import {
   createStruggleAssistState,
   createStruggleAssistAudioPlan,
@@ -861,16 +862,12 @@ export function Practice({
   }, [status]);
 
   useEffect(() => {
-    function isControlTarget(target: EventTarget | null) {
-      if (!(target instanceof HTMLElement)) return false;
-      if (target === mobileInputRef.current) return false;
-      if (target.closest('.spelio-touch-keyboard-shell')) return false;
-      return Boolean(target.closest('input, textarea, select, button, [contenteditable="true"]'));
-    }
-
     function onKeyDown(event: KeyboardEvent) {
       if (modal || settingsModalOpenRef.current || isComplete || !currentWord) return;
-      if (isControlTarget(event.target)) return;
+      if (shouldIgnoreGlobalKeyboardShortcut(event.target, {
+        allowTarget: target => target === mobileInputRef.current,
+        ignoreWithinSelector: '.spelio-touch-keyboard-shell'
+      })) return;
 
       if (event.code === 'ArrowLeft') {
         if (practiceTestMode) return;
@@ -912,6 +909,11 @@ export function Practice({
     }
 
     function onKeyUp(event: KeyboardEvent) {
+      if (shouldIgnoreGlobalKeyboardShortcut(event.target, {
+        allowTarget: target => target === mobileInputRef.current,
+        ignoreWithinSelector: '.spelio-touch-keyboard-shell'
+      })) return;
+
       const result = handleRevealShortcutKeyUp({
         code: event.code,
         held: revealShortcutHeldRef.current
@@ -2312,6 +2314,7 @@ export function LargeWordListQrOverlay({
   useEffect(() => {
     function handleKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key !== 'Escape') return;
+      if (shouldIgnoreGlobalKeyboardShortcut(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
       onClose();

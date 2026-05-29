@@ -1,7 +1,7 @@
 import { mockAdminRepository } from '../src/admin/repositories/mockAdminRepository';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 import { applyPrimerContentDraftUpdate, createNeutralPrimerSoundItem } from '../src/admin/services/primerEditor';
-import { getFoundationsPrimer } from '../src/content/foundationsPrimer';
+import { getFoundationsPrimer, normalizePrimerContent } from '../src/content/foundationsPrimer';
 import type { WordListPrimerContent } from '../src/data/wordLists';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -22,6 +22,33 @@ async function run() {
     { enabled: true, titleEn: '', titleCy: '', bodyEn: '', bodyCy: '', soundItems: [] }
   );
   assertEqual(typedTitle.titleEn, 'DD sounds', 'Primer editor draft updates should preserve spaces while typing.');
+
+  const typedTitleAfterRenderNormalization = normalizePrimerContent(
+    applyPrimerContentDraftUpdate(
+      { enabled: true, titleEn: 'DD', titleCy: '', bodyEn: '', bodyCy: '', soundItems: [] },
+      current => ({ ...current, titleEn: 'DD ' })
+    )
+  );
+  assertEqual(typedTitleAfterRenderNormalization.titleEn, 'DD ', 'Render-time primer normalization should not remove a typed title space.');
+
+  const typedSoundItemAfterRenderNormalization = normalizePrimerContent(
+    applyPrimerContentDraftUpdate(
+      {
+        enabled: true,
+        titleEn: '',
+        titleCy: '',
+        bodyEn: '',
+        bodyCy: '',
+        soundItems: [createNeutralPrimerSoundItem(1, 'primer_sound_test')]
+      },
+      current => ({
+        ...current,
+        soundItems: current.soundItems.map(item => item.key === 'primer_sound_test' ? { ...item, label: 'DD ', textToSpeak: 'hedd ' } : item)
+      })
+    )
+  );
+  assertEqual(typedSoundItemAfterRenderNormalization.soundItems[0]?.label, 'DD ', 'Render-time primer normalization should not remove a typed sound label space.');
+  assertEqual(typedSoundItemAfterRenderNormalization.soundItems[0]?.textToSpeak, 'hedd ', 'Render-time primer normalization should not remove a typed generation-text space.');
 
   const neutralItem = createNeutralPrimerSoundItem(3, 'primer_sound_test');
   assertEqual(neutralItem.key, 'primer_sound_test', 'New primer sound item should receive a stable generated key.');
