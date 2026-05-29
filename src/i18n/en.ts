@@ -27,6 +27,13 @@ export const en = {
     openMenu: 'Open menu',
     menuLabel: 'Homepage menu'
   },
+  primer: {
+    kicker: 'Notice this first',
+    soundButtonsLabel: 'Primer sound buttons',
+    playSound: 'Play sound',
+    audioOffNote: 'These Foundations lists work best with sound.',
+    startPractice: 'Start practice'
+  },
   how: {
     backHomeLabel: 'Back to homepage',
     heroHeading: 'Everything you need to build spelling confidence.',

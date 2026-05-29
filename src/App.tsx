@@ -4,6 +4,7 @@ import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from '
 import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
 import { WelshSpellingBasicsOverview, WelshSpellingBasicsTopicPage } from './components/WelshSpellingBasics';
+import { FoundationsPrimer } from './components/FoundationsPrimer';
 import { Practice } from './components/Practice';
 import { WordListsPage } from './components/WordListsPage';
 import { EndScreen } from './components/End';
@@ -29,10 +30,17 @@ import { getListDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { createTranslator, type InterfaceLanguage } from './i18n';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
+import { getFoundationsPrimer } from './content/foundationsPrimer';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, type InterfaceAudioClipRegistry } from './lib/interfaceAudio';
 
-type Screen = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
+type Screen = 'home' | 'primer' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
+
+type PendingPrimerLaunch = {
+  start: PracticeStart;
+  detachedContext: SharedWordListContext | null;
+  returnScreen: Screen;
+};
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
 
@@ -171,6 +179,7 @@ export default function App() {
   const [practiceTestMode, setPracticeTestMode] = useState(false);
   const [activeSupportPractice, setActiveSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
   const [completedSupportPractice, setCompletedSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
+  const [pendingPrimerLaunch, setPendingPrimerLaunch] = useState<PendingPrimerLaunch | null>(null);
   const resetStatusTimerRef = useRef<number | null>(null);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
@@ -311,6 +320,7 @@ export default function App() {
     setActiveSupportPractice(null);
     setActiveCustomList(null);
     setWordListReturnScreen(null);
+    setPendingPrimerLaunch(null);
     setStorage(previous => ({
       ...previous,
       settings: {
@@ -356,13 +366,36 @@ export default function App() {
     };
   }
 
-  function beginPractice(start: PracticeStart, detachedContext: SharedWordListContext | null = sharedContext) {
+  function getPracticeStartPrimerListId(start: PracticeStart) {
+    if (start.mode !== 'normal' || start.review || start.recap || start.storage.selectedListIds.length !== 1) return null;
+    return start.storage.selectedListIds[0] ?? null;
+  }
+
+  function beginPractice(
+    start: PracticeStart,
+    detachedContext: SharedWordListContext | null = sharedContext,
+    options: { skipPrimer?: boolean; returnScreen?: Screen } = {}
+  ) {
     if (start.review && !difficultWords) {
       setReviewMode(false);
       setScreen('home');
       return;
     }
 
+    const primerListId = getPracticeStartPrimerListId(start);
+    const primer = primerListId ? getFoundationsPrimer(primerListId, interfaceLanguage) : null;
+    if (!options.skipPrimer && primer) {
+      setPendingPrimerLaunch({
+        start,
+        detachedContext,
+        returnScreen: options.returnScreen ?? screen
+      });
+      setScreen('primer');
+      resetPublicPageScrollToTop();
+      return;
+    }
+
+    setPendingPrimerLaunch(null);
     const isDetachedSharedStart =
       Boolean(detachedContext) &&
       start.mode === 'normal' &&
@@ -392,15 +425,15 @@ export default function App() {
 
   function startPrimaryRecommendationPractice() {
     if (sharedContext && sharedList) {
-      beginPractice(createSharedListPracticeStart(sharedContext, sharedList), sharedContext);
+      beginPractice(createSharedListPracticeStart(sharedContext, sharedList), sharedContext, { returnScreen: screen });
       return;
     }
 
-    beginPractice(createPrimaryRecommendationPracticeStart(storage, publicWordLists, t, interfaceLanguage));
+    beginPractice(createPrimaryRecommendationPracticeStart(storage, publicWordLists, t, interfaceLanguage), sharedContext, { returnScreen: screen });
   }
 
   function startNormalContinuationPractice() {
-    beginPractice(createNormalContinuationPracticeStart(storage, publicWordLists, t, interfaceLanguage));
+    beginPractice(createNormalContinuationPracticeStart(storage, publicWordLists, t, interfaceLanguage), sharedContext, { returnScreen: screen });
   }
 
   function startReviewPractice() {
@@ -442,7 +475,22 @@ export default function App() {
       hasMeaningfulLearningHistory(storage)
     );
     setActiveCustomList(list);
-    beginPractice(createSharedListPracticeStart(context, list), context);
+    beginPractice(createSharedListPracticeStart(context, list), context, { returnScreen: screen });
+  }
+
+  function startPracticeFromPrimer() {
+    if (!pendingPrimerLaunch) return;
+    beginPractice(pendingPrimerLaunch.start, pendingPrimerLaunch.detachedContext, {
+      skipPrimer: true,
+      returnScreen: pendingPrimerLaunch.returnScreen
+    });
+  }
+
+  function returnFromPrimer() {
+    const target = pendingPrimerLaunch?.returnScreen;
+    setPendingPrimerLaunch(null);
+    setScreen(target === 'end' && lastResult ? 'end' : 'home');
+    resetPublicPageScrollToTop();
   }
 
   function startSupportPractice(practiceListId: string, topicSlug: SpellingBasicsTopicSlug) {
@@ -535,6 +583,7 @@ export default function App() {
     setActiveCustomList(null);
     setPracticeStartStorage(null);
     setWordListReturnScreen(null);
+    setPendingPrimerLaunch(null);
     setPracticeTestMode(false);
     setReviewMode(false);
     setRecapMode(false);
@@ -656,6 +705,7 @@ export default function App() {
       setActiveSupportPractice(null);
       setActiveCustomList(null);
       setPracticeTestMode(false);
+      setPendingPrimerLaunch(null);
       if (isWordListsPage) returnFromWordListsPage();
       return;
     }
@@ -672,6 +722,7 @@ export default function App() {
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
     setWordListReturnScreen(null);
+    setPendingPrimerLaunch(null);
     if (isWordListsPage && typeof window !== 'undefined') {
       window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
       resetPublicPageScrollToTop();
@@ -702,6 +753,7 @@ export default function App() {
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
     setWordListReturnScreen(null);
+    setPendingPrimerLaunch(null);
     setLastResult(null);
     setScreen('home');
     setResetStatusVisible(true);
@@ -732,6 +784,8 @@ export default function App() {
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
+  const activePrimerListId = pendingPrimerLaunch ? getPracticeStartPrimerListId(pendingPrimerLaunch.start) : null;
+  const activePrimer = activePrimerListId ? getFoundationsPrimer(activePrimerListId, interfaceLanguage) : null;
   const screenContent = activeScreen === 'how' ? (
     <HowSpelioWorks
       onHome={returnToLearning}
@@ -781,6 +835,17 @@ export default function App() {
       onStartPractice={startSupportPractice}
       wordLists={practiceLists}
       topic={spellingBasicsTopic}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'primer' && activePrimer ? (
+    <FoundationsPrimer
+      primer={activePrimer}
+      audioPrompts={storage.settings.audioPrompts}
+      onBack={returnFromPrimer}
+      onHome={returnToLearning}
+      onStartPractice={startPracticeFromPrimer}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
@@ -906,9 +971,9 @@ export default function App() {
 
   const showSharedPublicBackground = activeScreen !== 'home';
   const useActionPublicBackground = activeScreen === 'home' || activeScreen === 'end';
-  const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic';
+  const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic' || activeScreen === 'primer';
   const usePracticePublicBackground = activeScreen === 'practice';
-  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry'].includes(activeScreen);
+  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry', 'primer'].includes(activeScreen);
   const useNeutralPublicBackground = showSharedPublicBackground && !useActionPublicBackground;
   const useEndPublicBackground = activeScreen === 'end';
   const publicAppClassName = [

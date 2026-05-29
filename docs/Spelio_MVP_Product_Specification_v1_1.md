@@ -123,6 +123,16 @@ Shared list links may preselect or preload a word list. They must not start prac
 
 Shared list links, custom list links, and Practice test links are temporary detached session contexts. They must not permanently move the learner’s main Continue learning path unless the learner explicitly saves a core list through the normal Word Lists page flow.
 
+### 3.2 Optional list primer screens
+
+Some word lists may later include an optional pre-practice primer screen. This is especially relevant for Welsh Foundations lists where the learner should briefly hear or notice a target spelling pattern before practice begins.
+
+The primer appears only after the learner explicitly starts a list and before the first spelling item. It must not auto-start practice, and it must preserve the core hear → recall → spell loop.
+
+A primer should be short, calm, low-friction, and skippable or startable immediately. It may include a primer title, a short explanatory body, one or more sound buttons such as D / DD, F / FF, or W as vowel / W before vowel, and a Start practice button. It should support English and Welsh interface/content fields.
+
+The primer must not become a tutorial-heavy lesson screen, phonics drill, or noisy onboarding layer. It should respect audio-disabled and accessibility contexts. If audio is off, show a gentle note that Foundations-style lists work best with sound, but do not block the learner. Reduced-motion and other accessibility preferences must be respected.
+
 ## 4. Core screens
 
 The MVP contains these core screens and states:

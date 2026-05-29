@@ -11,7 +11,7 @@ import {
   isPracticeTestShareMode
 } from './wordListSharing';
 
-export type PublicScreenForMetadata = 'home' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
+export type PublicScreenForMetadata = 'home' | 'primer' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
 
 export type PageMetadata = {
   title: string;
@@ -112,10 +112,12 @@ export function resolvePublicMetadata(input: PublicMetadataInput): PageMetadata 
   const language = pathname === '/cy' || pathname.startsWith('/cy/') ? 'cy' : input.interfaceLanguage;
   const homeMetadata = home[language === 'cy' ? 'cy' : 'en'];
 
-  if (input.screen === 'practice') {
+  if (input.screen === 'practice' || input.screen === 'primer') {
     return createMetadata({
-      title: 'Welsh spelling practice - Spelio',
-      description: 'Hear a Welsh word, recall the spelling, and type your answer in a calm focused session.',
+      title: input.screen === 'primer' ? 'Welsh spelling primer - Spelio' : 'Welsh spelling practice - Spelio',
+      description: input.screen === 'primer'
+        ? 'A short Welsh spelling pattern note before a focused Spelio practice session.'
+        : 'Hear a Welsh word, recall the spelling, and type your answer in a calm focused session.',
       canonicalUrl: `${origin}/`,
       robots: 'noindex, follow',
       ogUrl: `${origin}/`

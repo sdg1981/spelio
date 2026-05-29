@@ -316,6 +316,10 @@ Possible future helper/coaching clips include:
 
 These clips are not an MVP blocker, but the long-term system may need human-recorded versions, Azure fallback, ElevenLabs experimentation, language/locale-aware generation, admin review and approval, stable storage paths, and cache-busted preview/playback.
 
+Primer sound buttons are a future audio asset type for list-level primer screens. They should reuse the same audio quality philosophy and generation/review pipeline as word audio, using Azure, ElevenLabs, or future human-recorded audio depending on availability.
+
+Primer audio should be stored as primer/example audio assets, not as fake words. It should remain admin-controlled and learner-facing only as simple replay buttons, without introducing phonics-drill UX or noisy tutorial audio.
+
 ---
 
 # 4. Voice Profiles

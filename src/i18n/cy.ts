@@ -27,6 +27,13 @@ export const cy = {
     openMenu: 'Agor dewislen',
     menuLabel: 'Dewislen yr hafan'
   },
+  primer: {
+    kicker: 'Sylwch ar hyn yn gyntaf',
+    soundButtonsLabel: 'Botymau sain y cyflwyniad',
+    playSound: 'Chwarae sain',
+    audioOffNote: 'Mae’r rhestrau Foundations hyn yn gweithio orau gyda sain.',
+    startPractice: 'Dechrau ymarfer'
+  },
   how: {
     backHomeLabel: 'Yn ôl i’r hafan',
     heroHeading: 'Popeth sydd ei angen arnoch i feithrin hyder sillafu.',

@@ -221,6 +221,16 @@ Learn mainly contains Welsh Foundations and any tightly curated representative p
 
 Practise may include numbers, time, food and drink, places, Welsh place names, travel, common actions, common phrases, messaging, everyday written Welsh, GCSE practice, teacher-created lists, custom lists, expanded topic libraries, and vocabulary learners recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, or everyday Welsh life. Applied Welsh is not a fixed second course layer: it can appear as representative practice inside Learn where it helps prove foundations transfer into real Welsh, and it can also grow as broader optional practice. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
 
+## Topic collections and school alignment
+
+While Spelio's core learning path may remain deliberately short and focused on Welsh spelling foundations, broader topic collections continue to have significant value. Topic collections such as numbers, time, food and drink, places, travel, everyday actions, common phrases, animals, GCSE topics, and curriculum-linked vocabulary are useful not only for independent learners, but also as potential school and teacher resources.
+
+Teachers often teach Welsh through themes and topics, and may naturally want spelling practice aligned with the topic currently being covered in class, such as food and drink week, numbers work, local area studies, Welsh place names, travel vocabulary, or GCSE revision themes.
+
+This reinforces the distinction between Learn as the finite Welsh Foundations path and Practise as the broader topic-based practice library. Topic collections can support learner reinforcement, confidence building, familiar vocabulary practice, Duolingo / SSiW overlap, classroom support, homework, revision, and teacher recommendations.
+
+The existence of a finite Foundations path does not reduce the value of broader topic collections. The two systems should complement each other.
+
 Advanced Topics are future optional deeper material, not a required third curriculum stage. They may eventually include mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, advanced orthographic confidence, and advanced decoding confidence.
 
 Mutations are important for Welsh spelling confidence, but they should not pull Spelio into becoming a full Welsh grammar course. They may later be introduced as optional advanced spelling-recognition or writing-confidence topics. Possible future framing includes recognising Welsh mutations, common mutation spelling patterns, and mutation awareness for spelling confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.

@@ -346,6 +346,16 @@ List size is based on dialect-resolved conceptual learning items, not necessaril
 
 Spelio-authored lists do not need to contain exactly 10 items and do not need to be multiples of 10. Do not pad, split, or duplicate lists only to create fixed groups of 10.
 
+### Optional list-level primers
+
+Some word lists may include optional primer metadata, especially Welsh Foundations lists that benefit from a brief sound-pattern introduction before practice. Primers belong directly to word lists; do not create a separate primer CMS.
+
+A primer is optional list metadata. Future-compatible conceptual fields may include `primerEnabled`, `primerTitleEn`, `primerTitleCy`, `primerBodyEn`, `primerBodyCy`, and `primerSoundItems`.
+
+`primerSoundItems` may include `label`, `labelCy`, `textToSpeak`, `audioUrl`, `audioStatus`, `audioSource`, and `order`.
+
+Do not create fake word records for primer sound buttons. Import/export should eventually support primer metadata, while existing content import remains safe and backwards-compatible. If the current importer cannot import primers yet, curriculum JSON may hold primer drafts as non-imported editorial metadata.
+
 Good list types:
 
 - First Words — Simple Welsh
