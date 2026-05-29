@@ -2967,8 +2967,16 @@
       "primerBody": "D sounds like the D in the English word “den”.\nDD sounds like the TH in the English word “then”.",
       "primerBodyCy": "Mae D yn swnio fel y D yn y gair Saesneg “den”.\nMae DD yn swnio fel TH yn y gair Saesneg “then”.",
       "primerSoundButtons": [
-        "D",
-        "DD"
+        {
+          "label": "D",
+          "labelCy": "D",
+          "textToSpeak": "da"
+        },
+        {
+          "label": "DD",
+          "labelCy": "DD",
+          "textToSpeak": "hedd"
+        }
       ],
       "teachingContext": "D and DD represent different sounds in Welsh.\nWith practice, they quickly become easier to recognise."
     },
@@ -2980,11 +2988,13 @@
       "primerSoundButtons": [
         {
           "label": "Y (final syllable)",
-          "labelCy": "Y (sillaf olaf)"
+          "labelCy": "Y (sillaf olaf)",
+          "textToSpeak": "byd"
         },
         {
           "label": "Y (earlier syllable)",
-          "labelCy": "Y (sillaf gynharach)"
+          "labelCy": "Y (sillaf gynharach)",
+          "textToSpeak": "ysgol"
         }
       ],
       "teachingContext": "Y behaves differently depending on where it appears in a word.\nThis is one of the most useful Welsh spelling patterns to become familiar with."
@@ -2995,8 +3005,16 @@
       "primerBody": "In Welsh:\n* F often sounds like the English V.\n* FF often sounds like the English F.",
       "primerBodyCy": "Yn Gymraeg:\n* Mae F yn aml yn swnio fel V Saesneg.\n* Mae FF yn aml yn swnio fel F Saesneg.",
       "primerSoundButtons": [
-        "F",
-        "FF"
+        {
+          "label": "F",
+          "labelCy": "F",
+          "textToSpeak": "efo"
+        },
+        {
+          "label": "FF",
+          "labelCy": "FF",
+          "textToSpeak": "coffi"
+        }
       ],
       "teachingContext": "Welsh F and FF behave differently from English.\nOnce this pattern becomes familiar, many Welsh words become much easier to spell."
     },
@@ -3008,11 +3026,13 @@
       "primerSoundButtons": [
         {
           "label": "W as a vowel",
-          "labelCy": "W fel llafariad"
+          "labelCy": "W fel llafariad",
+          "textToSpeak": "cwm"
         },
         {
           "label": "W before a vowel",
-          "labelCy": "W cyn llafariad"
+          "labelCy": "W cyn llafariad",
+          "textToSpeak": "gwen"
         }
       ],
       "teachingContext": "Unlike English, Welsh often uses W as part of the vowel sound.\nThis pattern appears throughout the language."
@@ -3023,7 +3043,11 @@
       "primerBody": "CH is treated as a single Welsh sound.\nIt often sounds like the CH in the Scottish word “loch”.",
       "primerBodyCy": "Mae CH yn cael ei thrin fel un sain Gymraeg.\nMae'n aml yn swnio fel CH yn y gair Albanaidd “loch”.",
       "primerSoundButtons": [
-        "CH"
+        {
+          "label": "CH",
+          "labelCy": "CH",
+          "textToSpeak": "bach"
+        }
       ],
       "teachingContext": "CH is one of the most recognisable Welsh spelling patterns.\nIt is not pronounced like the CH in the English word “church”."
     },
@@ -3033,7 +3057,11 @@
       "primerBody": "LL is treated as its own Welsh sound.\nIt does not behave like two separate letters.",
       "primerBodyCy": "Mae LL yn cael ei thrin fel sain Gymraeg ei hun.\nNid yw'n ymddwyn fel dwy lythyren ar wahân.",
       "primerSoundButtons": [
-        "LL"
+        {
+          "label": "LL",
+          "labelCy": "LL",
+          "textToSpeak": "lle"
+        }
       ],
       "teachingContext": "LL is one of the most distinctive Welsh spelling patterns.\nMany Welsh place names and everyday words contain LL.\nWith practice, it quickly becomes easier to recognise."
     },
@@ -3043,7 +3071,11 @@
       "primerBody": "RH is treated as its own Welsh sound.\nIt is often heard at the beginning of Welsh words.",
       "primerBodyCy": "Mae RH yn cael ei thrin fel sain Gymraeg ei hun.\nFe'i clywir yn aml ar ddechrau geiriau Cymraeg.",
       "primerSoundButtons": [
-        "RH"
+        {
+          "label": "RH",
+          "labelCy": "RH",
+          "textToSpeak": "rhif"
+        }
       ],
       "teachingContext": "RH is a common Welsh spelling pattern.\nOnce familiar, it becomes easy to spot in everyday Welsh."
     },
@@ -3053,8 +3085,16 @@
       "primerBody": "AI and AE often sound similar in Welsh.\nThey can sound a little like the English word “eye”.",
       "primerBodyCy": "Mae AI ac AE yn aml yn swnio'n debyg yn Gymraeg.\nGallant swnio ychydig fel y gair Saesneg “eye”.",
       "primerSoundButtons": [
-        "AI",
-        "AE"
+        {
+          "label": "AI",
+          "labelCy": "AI",
+          "textToSpeak": "tai"
+        },
+        {
+          "label": "AE",
+          "labelCy": "AE",
+          "textToSpeak": "maen"
+        }
       ],
       "teachingContext": "AI and AE appear in many common Welsh words.\nAlthough they are spelled differently, they often produce very similar sounds."
     },
@@ -3064,7 +3104,11 @@
       "primerBody": "WY often sounds similar to the “oi” in the English word “coin”.",
       "primerBodyCy": "Mae WY yn aml yn swnio'n debyg i “oi” yn y gair Saesneg “coin”.",
       "primerSoundButtons": [
-        "WY"
+        {
+          "label": "WY",
+          "labelCy": "WY",
+          "textToSpeak": "pwy"
+        }
       ],
       "teachingContext": "WY appears in a number of common Welsh words.\nThe exact sound can vary in some situations, but these examples provide a useful starting point."
     },
@@ -3074,7 +3118,11 @@
       "primerBody": "YW often sounds similar to the English word “you”.",
       "primerBodyCy": "Mae YW yn aml yn swnio'n debyg i'r gair Saesneg “you”.",
       "primerSoundButtons": [
-        "YW"
+        {
+          "label": "YW",
+          "labelCy": "YW",
+          "textToSpeak": "byw"
+        }
       ],
       "teachingContext": "YW is usually much more consistent than WY.\nOnce familiar, it becomes easy to recognise in Welsh words."
     },
@@ -3084,7 +3132,11 @@
       "primerBody": "OE sounds similar to the “oy” in the English word “boy”.",
       "primerBodyCy": "Mae OE yn swnio'n debyg i “oy” yn y gair Saesneg “boy”.",
       "primerSoundButtons": [
-        "OE"
+        {
+          "label": "OE",
+          "labelCy": "OE",
+          "textToSpeak": "coed"
+        }
       ],
       "teachingContext": "OE is one of the more consistent Welsh vowel combinations.\nThe same sound appears in many Welsh words."
     },
@@ -3094,7 +3146,11 @@
       "primerBody": "AU often sounds similar to the long English “I” sound in words such as “sky” or “tie”.",
       "primerBodyCy": "Mae AU yn aml yn swnio'n debyg i sain hir “I” Saesneg mewn geiriau fel “sky” neu “tie”.",
       "primerSoundButtons": [
-        "AU"
+        {
+          "label": "AU",
+          "labelCy": "AU",
+          "textToSpeak": "dau"
+        }
       ],
       "teachingContext": "AU appears in a variety of Welsh words.\nAlthough it may look unfamiliar at first, the sound quickly becomes recognisable."
     },
@@ -3104,7 +3160,11 @@
       "primerBody": "AW often sounds similar to the “ow” in the English word “cow”.",
       "primerBodyCy": "Mae AW yn aml yn swnio'n debyg i “ow” yn y gair Saesneg “cow”.",
       "primerSoundButtons": [
-        "AW"
+        {
+          "label": "AW",
+          "labelCy": "AW",
+          "textToSpeak": "mawr"
+        }
       ],
       "teachingContext": "AW is another common Welsh vowel pattern.\nMany learners find it easier than expected because it sounds quite familiar to English speakers."
     },
@@ -3114,7 +3174,11 @@
       "primerBody": "In modern Welsh, U often sounds similar to I.",
       "primerBodyCy": "Yn y Gymraeg fodern, mae U yn aml yn swnio'n debyg i I.",
       "primerSoundButtons": [
-        "U"
+        {
+          "label": "U",
+          "labelCy": "U",
+          "textToSpeak": "du"
+        }
       ],
       "teachingContext": "Many learners expect U to behave like English U.\nIn Welsh, it often sounds quite different.\nWith practice, the pattern becomes familiar."
     },
@@ -3124,7 +3188,11 @@
       "primerBody": "Welsh C always keeps its hard sound.\nIt sounds like the C in the English word “cat”.",
       "primerBodyCy": "Mae C Gymraeg bob amser yn cadw ei sain galed.\nMae'n swnio fel y C yn y gair Saesneg “cat”.",
       "primerSoundButtons": [
-        "C"
+        {
+          "label": "C",
+          "labelCy": "C",
+          "textToSpeak": "ci"
+        }
       ],
       "teachingContext": "Unlike English, Welsh C does not change its sound.\nThis makes Welsh spelling more predictable."
     },
@@ -3134,7 +3202,11 @@
       "primerBody": "Welsh G always keeps its hard sound.",
       "primerBodyCy": "Mae G Gymraeg bob amser yn cadw ei sain galed.",
       "primerSoundButtons": [
-        "G"
+        {
+          "label": "G",
+          "labelCy": "G",
+          "textToSpeak": "gât"
+        }
       ],
       "teachingContext": "Welsh G behaves consistently.\nIt does not switch between hard and soft sounds as it sometimes does in English."
     },
@@ -3144,8 +3216,16 @@
       "primerBody": "DD sounds like the TH in the English word “then”.\nTH sounds like the TH in the English word “think”.",
       "primerBodyCy": "Mae DD yn swnio fel TH yn y gair Saesneg “then”.\nMae TH yn swnio fel TH yn y gair Saesneg “think”.",
       "primerSoundButtons": [
-        "TH",
-        "DD"
+        {
+          "label": "TH",
+          "labelCy": "TH",
+          "textToSpeak": "peth"
+        },
+        {
+          "label": "DD",
+          "labelCy": "DD",
+          "textToSpeak": "bodd"
+        }
       ],
       "teachingContext": "TH and DD are often confused by English speakers.\nLearning to hear the difference makes many Welsh words easier to recognise and spell."
     },
