@@ -1063,6 +1063,40 @@ test('reveal then correct completion keeps word difficult and prioritises review
   assertEqual(recommendation.title, 'Review difficult words', 'Primary action should review difficult words');
 });
 
+test('full-word reveal keeps word difficult and prioritises review even without revealed letters', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  let storage = numbersStorage();
+  const difficultWord = numbers.words[0];
+
+  storage = applyWordProgressPatch(storage, difficultWord, { revealed: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, cleanCompleted: false }, '2026-05-05T00:00:05.000Z');
+
+  for (const word of numbers.words.slice(1)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:10.000Z');
+  }
+
+  const base = {
+    totalWords: 10,
+    correctWords: 9,
+    incorrectWords: 0,
+    revealedWords: 1,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: ['foundations_numbers']
+  };
+  storage = finishNumbersSession(storage, { ...base, state: classifySession(base) });
+
+  const recommendation = getRecommendation(storage, wordLists);
+  assertEqual(storage.lastSessionResult?.state, 'struggled', 'A full-word reveal should make the session struggled even when no individual letters were revealed');
+  assertEqual(storage.wordProgress[difficultWord.id]?.difficult, true, 'Full-word reveal should leave the word in Review difficult words');
+  assertEqual(storage.listProgress.foundations_numbers?.strongSessionCount, 0, 'Full-word reveal should not count as a strong list-level session');
+  assertEqual(recommendation.kind, 'review', 'Full-word reveal should make Review difficult words primary');
+  assertEqual(recommendation.title, 'Review difficult words', 'Primary action should review difficult words after a full-word reveal');
+});
+
 test('clean completion of a previously difficult word in a later session clears review', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');

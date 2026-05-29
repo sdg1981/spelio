@@ -434,10 +434,10 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
   return sortPreSessionRecapCandidates(candidates, storage)[0];
 }
 
-export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedLetters'>): SessionState {
+export function classifySession(base: Pick<SessionResult, 'correctWords' | 'totalWords' | 'incorrectAttempts' | 'revealedWords' | 'revealedLetters'>): SessionState {
   const accuracy = base.totalWords ? base.correctWords / base.totalWords : 0;
 
-  if (base.incorrectAttempts > 0 || base.revealedLetters > 0) return 'struggled';
+  if (base.incorrectAttempts > 0 || base.revealedWords > 0 || base.revealedLetters > 0) return 'struggled';
   if (accuracy >= 0.9) return 'strong';
   if (accuracy >= 0.75 && accuracy < 0.9) return 'good';
   if (accuracy < 0.75) return 'struggled';

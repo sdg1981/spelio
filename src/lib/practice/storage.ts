@@ -524,7 +524,7 @@ export function updateListCompletion(storage: SpelioStorage, lists: WordList[], 
     ]);
 
     const accuracy = result.totalWords ? result.correctWords / result.totalWords : 0;
-    const strongSession = accuracy >= 0.85 && result.revealedLetters === 0;
+    const strongSession = accuracy >= 0.85 && result.revealedWords === 0 && result.revealedLetters === 0;
     const progressWithSession = {
       ...previous,
       seenWordIds,
