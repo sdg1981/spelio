@@ -1,4 +1,4 @@
-import { ChevronRight, Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { ChevronRight, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminTimestamp } from '../components/AdminTimestamp';
@@ -9,6 +9,7 @@ import { WordEditorPanel } from '../components/WordEditorPanel';
 import { WordRowsTable } from '../components/WordRowsTable';
 import type { AdminRepository } from '../repositories';
 import { validateAdminWordListSlug } from '../services/wordListSlug';
+import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
 import type { AdminWord, AdminWordList, AdminWordListCollection, ElevenLabsGenerationMode } from '../types';
 import type { AdminStructureOption } from '../types';
 import { getWordListCanonicalUrl } from '../../lib/wordListSharing';
@@ -24,6 +25,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [generatingAudioWordIds, setGeneratingAudioWordIds] = useState<Set<string>>(() => new Set());
   const [generatingElevenLabsAudioWordIds, setGeneratingElevenLabsAudioWordIds] = useState<Set<string>>(() => new Set());
   const [batchAudioBusy, setBatchAudioBusy] = useState(false);
@@ -36,6 +39,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const selectedIndex = list?.words.findIndex(word => word.id === selectedWord?.id) ?? 0;
   const publicUrl = useMemo(() => list ? getWordListCanonicalUrl(list) : '', [list]);
   const slugError = useMemo(() => list ? validateAdminWordListSlug(list.slug, wordLists, list.id) : '', [list, wordLists]);
+  const deleteAllowed = isAdminContentDeleteAllowed(import.meta.env.VITE_ALLOW_ADMIN_CONTENT_DELETE);
+  const canConfirmDeleteList = list ? isDeleteConfirmationValid(deleteConfirmationText, list.id) : false;
 
   useEffect(() => {
     setLoading(true);
@@ -277,10 +282,11 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   }
 
   async function deleteList() {
-    if (!list || !window.confirm(`Delete "${list.name}" and all of its words?`)) return;
+    if (!list || !canConfirmDeleteList) return;
     try {
       setSaving(true);
-      await repository.deleteWordList(list.id);
+      const result = await repository.deleteWordList(list.id);
+      setStatusMessage(`Deleted ${result.listsDeleted} list and ${result.wordsDeleted} word(s).`);
       navigate('/admin/word-lists');
     } catch (error) {
       setErrorMessage(readError(error, 'Delete list failed.'));
@@ -324,11 +330,28 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
         actions={
           <>
             <AdminButton onClick={openPublicLink}>View list <ExternalLink size={16} /></AdminButton>
-            <AdminButton variant="danger" onClick={deleteList}><Trash2 size={16} /> Delete list</AdminButton>
+            {deleteAllowed && (
+              <AdminButton
+                variant="danger"
+                onClick={() => {
+                  setDeleteModalOpen(true);
+                  setDeleteConfirmationText('');
+                  setErrorMessage('');
+                  setStatusMessage('');
+                }}
+              >
+                <Trash2 size={16} /> Delete list
+              </AdminButton>
+            )}
             <AdminButton variant="primary" onClick={saveChanges} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</AdminButton>
           </>
         }
       />
+      {!deleteAllowed && (
+        <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+          Destructive list deletion is unavailable. Set {ADMIN_CONTENT_DELETE_FLAG}=true only for an intentional admin cleanup.
+        </div>
+      )}
       {(statusMessage || errorMessage) && (
         <div className={`mb-5 rounded-md border px-4 py-3 text-sm font-bold ${errorMessage ? 'border-red-100 bg-red-50 text-red-700' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
           {errorMessage || statusMessage}
@@ -432,6 +455,42 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
           />
         )}
       </div>
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
+          <div className="w-full max-w-xl rounded-lg border border-red-100 bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+              <div>
+                <h2 className="text-lg font-black text-slate-950">Delete word list</h2>
+                <p className="mt-1 text-sm text-slate-600">This will delete the list and all words inside it.</p>
+              </div>
+              <button className="rounded-md p-2 text-slate-500 hover:bg-slate-100" type="button" onClick={() => setDeleteModalOpen(false)} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid gap-4 p-5 text-sm">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="font-bold text-slate-950">{list.name}</div>
+                <div className="mt-1 font-mono text-xs text-slate-600">{list.id}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-md border border-slate-200 p-3"><b>1</b><span className="ml-1 text-slate-600">list deleted</span></div>
+                <div className="rounded-md border border-slate-200 p-3"><b>{list.words.length}</b><span className="ml-1 text-slate-600">word(s) deleted</span></div>
+              </div>
+              <div className="rounded-md border border-red-100 bg-red-50 p-4 font-bold text-red-700">This cannot be undone.</div>
+              <label className="grid gap-2">
+                <span className="text-xs font-bold text-slate-700">Type {getDeleteConfirmationPhrase(list.id)} to confirm</span>
+                <AdminInput value={deleteConfirmationText} onChange={event => setDeleteConfirmationText(event.target.value)} autoFocus />
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-200 p-5">
+              <AdminButton onClick={() => setDeleteModalOpen(false)}>Cancel</AdminButton>
+              <AdminButton variant="danger" disabled={!canConfirmDeleteList || saving} onClick={deleteList}>
+                <Trash2 size={16} /> {saving ? 'Deleting...' : 'Delete list & words'}
+              </AdminButton>
+            </div>
+          </div>
+        </div>
+      )}
       <UnsavedChangesBar visible={dirty} onDiscard={() => { setList(source); setDirty(false); setErrorMessage(''); setStatusMessage('Discarded changes.'); }} onSave={saveChanges} />
     </>
   );

@@ -26,6 +26,11 @@ export interface AdminAudioSettings {
   interfaceAudioClips: InterfaceAudioClip[];
 }
 
+export interface AdminContentDeletionResult {
+  listsDeleted: number;
+  wordsDeleted: number;
+}
+
 export interface AdminRepository {
   authMode: 'password' | 'emailPassword';
   authenticateAdmin(credentials: { email?: string; password: string }): Promise<void>;
@@ -34,11 +39,12 @@ export interface AdminRepository {
   createCollection(collection: AdminWordListCollection): Promise<AdminWordListCollection>;
   saveCollection(collection: AdminWordListCollection): Promise<AdminWordListCollection>;
   deleteCollection(id: string): Promise<void>;
+  clearCollectionContent(collectionId: string): Promise<AdminContentDeletionResult>;
   listWordLists(): Promise<AdminWordList[]>;
   getWordList(id: string): Promise<AdminWordList | null>;
   saveWordList(list: AdminWordList): Promise<AdminWordList>;
   createWordList(list: AdminWordList): Promise<AdminWordList>;
-  deleteWordList(id: string): Promise<void>;
+  deleteWordList(id: string): Promise<AdminContentDeletionResult>;
   listWords(filters?: AdminFocusFilters): Promise<AdminWordWithListName[]>;
   getWord(id: string): Promise<AdminWord | null>;
   saveWord(word: AdminWord): Promise<AdminWord>;

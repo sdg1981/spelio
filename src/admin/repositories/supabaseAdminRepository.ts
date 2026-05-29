@@ -8,6 +8,7 @@ import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
+import { clearCollectionContentWithClient, deleteWordListWithClient } from './contentDelete';
 
 type CustomWordListRow = {
   id: string;
@@ -173,6 +174,11 @@ export const supabaseAdminRepository: AdminRepository = {
     if (error) throw error;
   },
 
+  async clearCollectionContent(collectionId: string) {
+    const client = await requireAdminSupabase();
+    return clearCollectionContentWithClient(client, collectionId);
+  },
+
   async listWordLists() {
     const client = await requireAdminSupabase();
     const { data, error } = await client
@@ -210,8 +216,7 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async deleteWordList(id: string) {
     const client = await requireAdminSupabase();
-    const { error } = await client.from('word_lists').delete().eq('id', id);
-    if (error) throw error;
+    return deleteWordListWithClient(client, id);
   },
 
   async listWords(filters?: AdminFocusFilters) {

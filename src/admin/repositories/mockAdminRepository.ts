@@ -63,6 +63,16 @@ export const mockAdminRepository: AdminRepository = {
     collections = collections.filter(collection => collection.id !== id);
   },
 
+  async clearCollectionContent(collectionId: string) {
+    const matchedLists = lists.filter(list => list.collectionId === collectionId);
+    const result = {
+      listsDeleted: matchedLists.length,
+      wordsDeleted: matchedLists.reduce((total, list) => total + list.words.length, 0)
+    };
+    lists = lists.filter(list => list.collectionId !== collectionId);
+    return result;
+  },
+
   async listWordLists() {
     return lists.map(list => cloneList({ ...list, collectionName: collectionName(list.collectionId) }));
   },
@@ -85,7 +95,9 @@ export const mockAdminRepository: AdminRepository = {
   },
 
   async deleteWordList(id: string) {
-    lists = lists.filter(list => list.id !== id);
+    const list = lists.find(item => item.id === id);
+    lists = lists.filter(item => item.id !== id);
+    return { listsDeleted: list ? 1 : 0, wordsDeleted: list?.words.length ?? 0 };
   },
 
   async listWords(filters?: AdminFocusFilters) {

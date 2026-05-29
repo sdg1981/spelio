@@ -158,6 +158,7 @@ export function AboutPage({
         <p>{t('footer.aboutBody3')}</p>
         <p>{t('footer.aboutBody4')}</p>
         <p>{t('footer.aboutBody5')}</p>
+        <p>{t('footer.aboutBody6')}</p>
       </div>
     </PublicPageShell>
   );
