@@ -28,7 +28,7 @@ import {
   shouldShowLegacyShortcutHint
 } from '../src/lib/practice/struggleAssist';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, normalizeInterfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
-import { clearSpelioStorageData } from '../src/lib/practice/storage';
+import { clearSpelioStorageData, createDefaultStorage } from '../src/lib/practice/storage';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -176,6 +176,10 @@ function createMemoryStorage(): Storage {
   assertEqual(storage.getItem(PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY), null, 'Reset progress should clear struggle-assist seen state.');
   assertEqual(storage.getItem('spelio.practiceStruggleAssistCooldown.v1'), null, 'Reset progress should clear future struggle-assist trigger state.');
   assertEqual(storage.getItem('spelio-custom-list-client-id'), 'client-id', 'Reset progress should not clear unrelated local app data.');
+
+  const resetDefaultStorage = createDefaultStorage();
+  assertEqual(resetDefaultStorage.selectedListIds[0], 'foundation_patterns_d_dd', 'Reset progress should return new in-memory storage to D / DD.');
+  assertEqual(resetDefaultStorage.currentPathPosition, 'foundation_patterns_d_dd', 'Reset progress should return the path position to D / DD.');
 
   let state = createStruggleAssistState('word-1');
   let triggered = false;

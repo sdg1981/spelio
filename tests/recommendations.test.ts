@@ -78,6 +78,43 @@ function wantingStorage(dialectPreference: SpelioStorage['settings']['dialectPre
   };
 }
 
+test('brand-new storage defaults to the Welsh Foundations D / DD list', () => {
+  const storage = createDefaultStorage();
+
+  assertEqual(storage.selectedListIds.length, 1, 'Brand-new storage should select one list.');
+  assertEqual(storage.selectedListIds[0], 'foundation_patterns_d_dd', 'Brand-new storage should start at D / DD.');
+  assertEqual(storage.currentPathPosition, 'foundation_patterns_d_dd', 'Brand-new path position should start at D / DD.');
+});
+
+test('stored selected list and current path are preserved for existing learners', () => {
+  const storage = normaliseStorage({
+    selectedListIds: ['foundations_numbers'],
+    currentPathPosition: 'foundations_numbers',
+    hasStartedPracticeSession: true
+  });
+
+  assertEqual(storage.selectedListIds[0], 'foundations_numbers', 'Existing stored selection should not be overwritten by the new default.');
+  assertEqual(storage.currentPathPosition, 'foundations_numbers', 'Existing stored path position should not be overwritten by the new default.');
+});
+
+test('new default falls back safely if D / DD is missing or inactive', () => {
+  const storage = createDefaultStorage();
+  const listsWithoutDefault = wordLists.filter(list => list.id !== 'foundation_patterns_d_dd');
+  const inactiveDefaultList: WordList = {
+    ...wordLists[0],
+    id: 'foundation_patterns_d_dd',
+    name: 'D / DD',
+    isActive: false
+  };
+  const normalized = normalizeStorageWordListSelection(storage, listsWithoutDefault);
+  const normalizedWithInactiveDefault = normalizeStorageWordListSelection(storage, [inactiveDefaultList, ...listsWithoutDefault]);
+
+  assertEqual(normalized.selectedListIds[0], 'foundations_first_words', 'Missing or inactive D / DD should fall back to the first usable main list.');
+  assertEqual(normalized.currentPathPosition, 'foundations_first_words', 'Current path should follow the safe fallback list.');
+  assertEqual(normalizedWithInactiveDefault.selectedListIds[0], 'foundations_first_words', 'Inactive D / DD should fall back to the first usable main list.');
+  assertEqual(normalizedWithInactiveDefault.currentPathPosition, 'foundations_first_words', 'Inactive D / DD path should follow the safe fallback list.');
+});
+
 function wantingVariantWords(storage: SpelioStorage) {
   const targetGroups = new Set(['want coffee', 'want food', 'want help', 'want to go', 'want to learn']);
   return createPracticeSession(wordLists, storage).words.filter(word => targetGroups.has(word.variantGroupId ?? ''));

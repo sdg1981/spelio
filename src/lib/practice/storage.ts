@@ -128,8 +128,8 @@ function createDefaultMixedWelshExposure(): MixedWelshExposure {
 }
 
 export const defaultStorage: SpelioStorage = {
-  selectedListIds: ['foundations_first_words'],
-  currentPathPosition: 'foundations_first_words',
+  selectedListIds: ['foundation_patterns_d_dd'],
+  currentPathPosition: 'foundation_patterns_d_dd',
   hasStartedPracticeSession: false,
   lastSessionDate: null,
   lastSessionResult: null,
