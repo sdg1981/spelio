@@ -1,5 +1,6 @@
 import type { DialectPreference, PracticeWord, WordList } from '../../data/wordLists';
 import { isSupportWordList, mainWordLists } from '../../data/supportWordLists';
+import { hasFoundationsPrimer } from '../../content/foundationsPrimer';
 import type { MixedWelshExposure, SessionResult, SessionState, SpelioStorage } from './storage';
 import { countUnseenLearningItems, groupLearningItems, learningItemKey } from './learningItems';
 import { normalizeSingleSelectedListIds } from './wordListSelection';
@@ -407,8 +408,17 @@ function sortPreSessionRecapCandidates(words: PracticeWord[], storage: SpelioSto
   });
 }
 
+function selectedNormalListHasActivePrimer(storage: SpelioStorage, lists: WordList[]) {
+  const selectedListIds = normalizeSingleSelectedListIds(storage.selectedListIds, mainWordLists(lists));
+  if (selectedListIds.length !== 1) return false;
+
+  const selectedList = lists.find(list => list.id === selectedListIds[0] && list.isActive && list.words.length > 0);
+  return selectedList ? hasFoundationsPrimer(selectedList) : false;
+}
+
 export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordList[], sessionWords: PracticeWord[], reviewDifficult = false) {
   if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
+  if (selectedNormalListHasActivePrimer(storage, lists)) return undefined;
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
   const sessionLearningItemKeys = new Set(sessionWords.map(learningItemKey));

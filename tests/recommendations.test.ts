@@ -2249,6 +2249,46 @@ test('automatic recap injection selects at most one recapDue word for normal ses
   assertEqual(reviewInjected, undefined, 'Dedicated review sessions should not receive automatic recap injection');
 });
 
+test('primer-led normal sessions suppress automatic recap without changing explicit recap or review sessions', () => {
+  const firstWords = wordLists.find(list => list.id === 'foundations_first_words');
+  assert(firstWords, 'Expected foundations_first_words to exist');
+  const please = firstWords.words.find(word => word.englishPrompt === 'please');
+  assert(please, 'Expected please to exist in first words');
+
+  const primerList = makeLargeList('foundation_patterns_f_ff', 500, 12);
+  const lists = [firstWords, primerList];
+  const primerSelectedStorage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [primerList.id],
+    currentPathPosition: primerList.id,
+    completedNormalSessionCount: 2
+  };
+
+  const difficultStorage = applyWordProgressPatch(primerSelectedStorage, please, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  const resolvedRecapStorage = applyWordProgressPatch(difficultStorage, please, { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+
+  const normalSession = createPracticeSession(lists, resolvedRecapStorage);
+  const secondNormalSession = createPracticeSession(lists, resolvedRecapStorage);
+  const injected = selectPreSessionRecapWord(resolvedRecapStorage, lists, normalSession.words);
+  const secondInjected = selectPreSessionRecapWord(resolvedRecapStorage, lists, secondNormalSession.words);
+
+  assertEqual(normalSession.words.every(word => word.listId === primerList.id), true, 'Primer-led normal session should contain only words from the selected list');
+  assertEqual(injected, undefined, 'Primer-led normal session should not receive automatic recap injection');
+  assertEqual(secondInjected, undefined, 'Primer-led recap suppression should remain deterministic');
+  assertEqual(
+    secondNormalSession.words.map(word => word.id).join('|'),
+    normalSession.words.map(word => word.id).join('|'),
+    'Primer-led normal session generation should remain deterministic'
+  );
+
+  const recapStart = createRecapPracticeStart(resolvedRecapStorage);
+  const recapSession = createPracticeSession(lists, recapStart.storage, recapStart.review, recapStart.recap);
+  assertEqual(recapSession.words.some(word => word.id === please.id), true, 'Explicit From earlier sessions should still include recapDue words');
+
+  const reviewSession = createPracticeSession(lists, difficultStorage, true);
+  assertEqual(reviewSession.words.some(word => word.id === please.id), true, 'Review difficult words should still include current difficult words');
+});
+
 test('automatic recap injection avoids duplicate variantGroupId entries', () => {
   const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
   assert(wanting, 'Expected stage2_phrases_wanting to exist');
