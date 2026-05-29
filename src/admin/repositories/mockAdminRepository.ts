@@ -346,7 +346,8 @@ export const mockAdminRepository: AdminRepository = {
     const preview = validateImportPayload(payload, {
       existingCollectionIds: collections.map(collection => collection.id),
       existingListIds: lists.map(list => list.id),
-      existingWordIds: lists.flatMap(list => list.words.map(word => word.id))
+      existingWordIds: lists.flatMap(list => list.words.map(word => word.id)),
+      existingPrimerContentByListId: Object.fromEntries(lists.map(list => [list.id, list.primerContent]))
     });
     return preview;
   },
@@ -356,7 +357,8 @@ export const mockAdminRepository: AdminRepository = {
     const preview = validateImportPayload(payload, {
       existingCollectionIds: collections.map(collection => collection.id),
       existingListIds: lists.map(list => list.id),
-      existingWordIds: lists.flatMap(list => list.words.map(word => word.id))
+      existingWordIds: lists.flatMap(list => list.words.map(word => word.id)),
+      existingPrimerContentByListId: Object.fromEntries(lists.map(list => [list.id, list.primerContent]))
     });
     if (preview.errors.length) {
       return {

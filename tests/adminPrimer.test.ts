@@ -37,9 +37,11 @@ async function run() {
     primerDrafts: {
       primer_import_list: {
         primerTitle: 'Imported primer title',
+        primerTitleCy: 'Teitl preimiwr wedi ei fewnforio',
         primerBody: 'Imported primer body with a space.',
+        primerBodyCy: 'Corff preimiwr wedi ei fewnforio gyda bwlch.',
         primerSoundItems: [
-          { label: 'LL', audioText: 'lle', audioUrl: 'https://example.test/ll.mp3', audioStatus: 'ready', audioSource: 'manual' },
+          { label: 'LL', labelCy: 'LL', audioText: 'lle', audioUrl: 'https://example.test/ll.mp3', audioStatus: 'ready', audioSource: 'manual' },
           { label: 'RH', textToSpeak: 'rhif' }
         ]
       }
@@ -70,15 +72,80 @@ async function run() {
   assertEqual(importedPrimer.enabled, true, 'Imported primerDrafts should enable DB primer content.');
   assertEqual(importedPrimer.titleEn, 'Imported primer title', 'Importer should copy English primer title from primerDrafts.');
   assertEqual(importedPrimer.bodyEn, 'Imported primer body with a space.', 'Importer should copy English primer body from primerDrafts.');
-  assertEqual(importedPrimer.titleCy, '', 'Importer should default missing Welsh primer title to empty string.');
+  assertEqual(importedPrimer.titleCy, 'Teitl preimiwr wedi ei fewnforio', 'Importer should copy Welsh primer title from primerDrafts.');
+  assertEqual(importedPrimer.bodyCy, 'Corff preimiwr wedi ei fewnforio gyda bwlch.', 'Importer should copy Welsh primer body from primerDrafts.');
   assertEqual(importedPrimer.soundItems.length, 2, 'Importer should create ordered sound items from primerDrafts.');
   assertEqual(importedPrimer.soundItems[0].label, 'LL', 'Importer should preserve sound item labels.');
+  assertEqual(importedPrimer.soundItems[0].labelCy, 'LL', 'Importer should preserve Welsh sound item labels.');
   assertEqual(importedPrimer.soundItems[0].textToSpeak, 'lle', 'Importer should preserve audioText as textToSpeak.');
   assertEqual(importedPrimer.soundItems[0].audioUrl, 'https://example.test/ll.mp3', 'Importer should preserve existing primer audio URL.');
   assertEqual(importedPrimer.soundItems[0].audioStatus, 'ready', 'Importer should preserve existing primer audio status.');
   assertEqual(importedPrimer.soundItems[0].audioSource, 'manual', 'Importer should preserve existing primer audio source.');
   assertEqual(importedPrimer.soundItems[1].audioStatus, 'missing', 'Importer should default missing primer audio status to missing.');
   assertEqual(importedPrimer.soundItems[1].audioSource, 'unknown', 'Importer should default missing primer audio source to unknown.');
+
+  const preservePreview = validateImportPayload({
+    primerDrafts: {
+      existing_primer_list: {
+        primerTitle: 'Updated English title',
+        primerTitleCy: '',
+        primerBody: 'Updated English body.',
+        primerSoundItems: [
+          { id: 'dd_sound', key: 'dd_sound', label: 'DD', textToSpeak: 'hedd' }
+        ]
+      }
+    },
+    lists: [{
+      id: 'existing_primer_list',
+      slug: 'existing-primer-list',
+      name: 'Existing Primer List',
+      language: 'cy',
+      dialect: 'Mixed',
+      stage: 'Foundations',
+      focus: 'Patterns',
+      difficulty: 1,
+      order: 1,
+      isActive: true,
+      words: [{
+        id: 'existing_primer_list_001',
+        englishPrompt: 'peace',
+        welshAnswer: 'hedd',
+        audioStatus: 'missing',
+        order: 1
+      }]
+    }]
+  }, {
+    existingListIds: ['existing_primer_list'],
+    existingWordIds: ['existing_primer_list_001'],
+    existingPrimerContentByListId: {
+      existing_primer_list: {
+        enabled: true,
+        titleEn: 'Old English title',
+        titleCy: 'Teitl Cymraeg presennol',
+        bodyEn: 'Old English body.',
+        bodyCy: 'Corff Cymraeg presennol.',
+        soundItems: [{
+          id: 'dd_sound',
+          key: 'dd_sound',
+          label: 'DD',
+          labelCy: 'Label Cymraeg presennol',
+          textToSpeak: 'hedd',
+          audioUrl: '',
+          audioStatus: 'missing',
+          audioSource: 'unknown',
+          order: 1
+        }]
+      }
+    }
+  });
+  assertEqual(preservePreview.errors.length, 0, 'English-only primer preservation payload should validate.');
+  const preservedPrimer = preservePreview.content.lists[0]?.primerContent;
+  assert(preservedPrimer, 'Preservation import should normalize primer content.');
+  assertEqual(preservedPrimer.titleEn, 'Updated English title', 'English primer title should remain importable.');
+  assertEqual(preservedPrimer.bodyEn, 'Updated English body.', 'English primer body should remain importable.');
+  assertEqual(preservedPrimer.titleCy, 'Teitl Cymraeg presennol', 'Blank incoming Welsh title should preserve existing DB titleCy.');
+  assertEqual(preservedPrimer.bodyCy, 'Corff Cymraeg presennol.', 'Missing incoming Welsh body should preserve existing DB bodyCy.');
+  assertEqual(preservedPrimer.soundItems[0].labelCy, 'Label Cymraeg presennol', 'Blank incoming sound labelCy should preserve existing DB labelCy by stable key.');
 
   const list = await mockAdminRepository.getWordList('foundations_first_words');
   assert(list, 'Expected first words list in mock admin repository.');

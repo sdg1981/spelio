@@ -12,10 +12,9 @@
     "Generated from docs/Spelio_Foundations_Curriculum.md, using the live database export schema shape as a compatibility reference.",
     "Designed to be imported alongside existing live content without modifying app behaviour, database migrations, or admin fields.",
     "Audio fields contain lightweight URL/status metadata only; physical audio files are not embedded.",
-    "Primer copy is stored in the top-level primerDrafts object as non-imported editorial/reference metadata only; the current importer ignores this object.",
-    "Welsh interface translations such as nameCy and descriptionCy are intentionally blank unless present in the source material. Welsh translations are required before learner-facing Welsh-interface primer release.",
-    "REVIEW_NEEDED: WY/YW pronunciation grouping and examples require Welsh-speaker/audio validation before activation.",
-    "SCHEMA_NORMALISATION: Mixed Confidence 4 includes six Markdown words without English prompts; their englishPrompt repeats the source Welsh word and notes flags the missing source prompt so no translation is invented."
+    "Primer copy is stored in the top-level primerDrafts object and can be imported into list primer_content.",
+    "Welsh interface translations such as nameCy and descriptionCy are intentionally blank unless present in the source material.",
+    "REVIEW_NEEDED: WY/YW pronunciation grouping and examples require Welsh-speaker/audio validation before activation."
   ],
   "collections": [
     {
@@ -86,7 +85,7 @@
           "id": "foundation_patterns_d_dd_001",
           "listId": "foundation_patterns_d_dd",
           "englishPrompt": "good",
-          "welshAnswer": "Da",
+          "welshAnswer": "da",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -538,7 +537,7 @@
           "id": "foundation_patterns_f_ff_009",
           "listId": "foundation_patterns_f_ff",
           "englishPrompt": "phone",
-          "welshAnswer": "ffon",
+          "welshAnswer": "ffôn",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -691,8 +690,8 @@
         {
           "id": "foundation_patterns_w_007",
           "listId": "foundation_patterns_w",
-          "englishPrompt": "smile / white",
-          "welshAnswer": "Gwen",
+          "englishPrompt": "white / fair",
+          "welshAnswer": "gwen",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -708,7 +707,7 @@
           "id": "foundation_patterns_w_008",
           "listId": "foundation_patterns_w",
           "englishPrompt": "servant / lad",
-          "welshAnswer": "Gwas",
+          "welshAnswer": "gwas",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -724,7 +723,7 @@
           "id": "foundation_patterns_w_009",
           "listId": "foundation_patterns_w",
           "englishPrompt": "value / worth",
-          "welshAnswer": "Gwerth",
+          "welshAnswer": "gwerth",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -856,7 +855,7 @@
           "dialect": "Both",
           "dialectNote": "",
           "variantGroupId": "",
-          "usageNote": "Notice the almost-silent L in this word."
+          "usageNote": "Notice the L before CH."
         }
       ]
     },
@@ -888,7 +887,7 @@
           "id": "foundation_patterns_ll_001",
           "listId": "foundation_patterns_ll",
           "englishPrompt": "church / parish",
-          "welshAnswer": "Llan",
+          "welshAnswer": "llan",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1270,7 +1269,7 @@
           "id": "foundation_patterns_wy_001",
           "listId": "foundation_patterns_wy",
           "englishPrompt": "gentle / mild",
-          "welshAnswer": "Mwyn",
+          "welshAnswer": "mwyn",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1286,7 +1285,7 @@
           "id": "foundation_patterns_wy_002",
           "listId": "foundation_patterns_wy",
           "englishPrompt": "who",
-          "welshAnswer": "Pwy",
+          "welshAnswer": "pwy",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1302,7 +1301,7 @@
           "id": "foundation_patterns_wy_003",
           "listId": "foundation_patterns_wy",
           "englishPrompt": "hill / hillock",
-          "welshAnswer": "Twyn",
+          "welshAnswer": "twyn",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1318,7 +1317,7 @@
           "id": "foundation_patterns_wy_004",
           "listId": "foundation_patterns_wy",
           "englishPrompt": "gas",
-          "welshAnswer": "Nwy",
+          "welshAnswer": "nwy",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1334,7 +1333,7 @@
           "id": "foundation_patterns_wy_005",
           "listId": "foundation_patterns_wy",
           "englishPrompt": "egg",
-          "welshAnswer": "Wy",
+          "welshAnswer": "wy",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1376,7 +1375,7 @@
           "id": "foundation_patterns_yw_001",
           "listId": "foundation_patterns_yw",
           "englishPrompt": "alive / living",
-          "welshAnswer": "Byw",
+          "welshAnswer": "byw",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1392,7 +1391,7 @@
           "id": "foundation_patterns_yw_002",
           "listId": "foundation_patterns_yw",
           "englishPrompt": "hearing / sense of hearing",
-          "welshAnswer": "Clyw",
+          "welshAnswer": "clyw",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1613,8 +1612,8 @@
         {
           "id": "foundation_patterns_aw_001",
           "listId": "foundation_patterns_aw",
-          "englishPrompt": "two",
-          "welshAnswer": "dau",
+          "englishPrompt": "down",
+          "welshAnswer": "lawr",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1874,7 +1873,7 @@
           "id": "foundation_patterns_c_004",
           "listId": "foundation_patterns_c",
           "englishPrompt": "song",
-          "welshAnswer": "can",
+          "welshAnswer": "cân",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -1964,7 +1963,7 @@
           "id": "foundation_patterns_g_003",
           "listId": "foundation_patterns_g",
           "englishPrompt": "smile",
-          "welshAnswer": "gwen",
+          "welshAnswer": "gwên",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
@@ -2701,12 +2700,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_001",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "ddoe",
+          "englishPrompt": "yesterday",
           "welshAnswer": "ddoe",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 1,
           "difficulty": 2,
           "dialect": "Both",
@@ -2717,12 +2716,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_002",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "heddiw",
+          "englishPrompt": "today",
           "welshAnswer": "heddiw",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 2,
           "difficulty": 2,
           "dialect": "Both",
@@ -2733,12 +2732,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_003",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "cymraeg",
-          "welshAnswer": "cymraeg",
+          "englishPrompt": "Welsh",
+          "welshAnswer": "Cymraeg",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 3,
           "difficulty": 2,
           "dialect": "Both",
@@ -2749,12 +2748,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_004",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "cymru",
-          "welshAnswer": "cymru",
+          "englishPrompt": "Wales",
+          "welshAnswer": "Cymru",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 4,
           "difficulty": 2,
           "dialect": "Both",
@@ -2765,12 +2764,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_005",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "rhywbeth",
+          "englishPrompt": "something",
           "welshAnswer": "rhywbeth",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 5,
           "difficulty": 2,
           "dialect": "Both",
@@ -2781,12 +2780,12 @@
         {
           "id": "foundation_patterns_mixed_confidence_4_006",
           "listId": "foundation_patterns_mixed_confidence_4",
-          "englishPrompt": "tywydd",
+          "englishPrompt": "weather",
           "welshAnswer": "tywydd",
           "acceptedAlternatives": [],
           "audioUrl": "",
           "audioStatus": "missing",
-          "notes": "SOURCE_PROMPT_MISSING: Markdown word entry did not include an English prompt; englishPrompt repeats the Welsh answer as an importer-safe placeholder.",
+          "notes": "",
           "order": 6,
           "difficulty": 2,
           "dialect": "Both",
@@ -2964,7 +2963,9 @@
   "primerDrafts": {
     "foundation_patterns_d_dd": {
       "primerTitle": "D and DD",
+      "primerTitleCy": "D a DD",
       "primerBody": "D sounds like the D in the English word “den”.\nDD sounds like the TH in the English word “then”.",
+      "primerBodyCy": "Mae D yn swnio fel y D yn y gair Saesneg “den”.\nMae DD yn swnio fel TH yn y gair Saesneg “then”.",
       "primerSoundButtons": [
         "D",
         "DD"
@@ -2973,16 +2974,26 @@
     },
     "foundation_patterns_y": {
       "primerTitle": "The letter Y",
+      "primerTitleCy": "Y llythyren Y",
       "primerBody": "The letter Y can make different sounds in Welsh.\nEarlier in a word it often sounds a little like the “u” in the English word “cut”.\nIn the final syllable of a word — and often in one-syllable words — it more commonly sounds like the “ee” in the English word “beet”.",
+      "primerBodyCy": "Gall y llythyren Y wneud gwahanol synau yn Gymraeg.\nYn gynharach mewn gair, mae'n aml yn swnio ychydig fel yr “u” yn y gair Saesneg “cut”.\nYn sillaf olaf gair — ac yn aml mewn geiriau un sillaf — mae'n fwy aml yn swnio fel “ee” yn y gair Saesneg “beet”.",
       "primerSoundButtons": [
-        "Y (final syllable)",
-        "Y (earlier syllable)"
+        {
+          "label": "Y (final syllable)",
+          "labelCy": "Y (sillaf olaf)"
+        },
+        {
+          "label": "Y (earlier syllable)",
+          "labelCy": "Y (sillaf gynharach)"
+        }
       ],
       "teachingContext": "Y behaves differently depending on where it appears in a word.\nThis is one of the most useful Welsh spelling patterns to become familiar with."
     },
     "foundation_patterns_f_ff": {
       "primerTitle": "F and FF",
+      "primerTitleCy": "F a FF",
       "primerBody": "In Welsh:\n* F often sounds like the English V.\n* FF often sounds like the English F.",
+      "primerBodyCy": "Yn Gymraeg:\n* Mae F yn aml yn swnio fel V Saesneg.\n* Mae FF yn aml yn swnio fel F Saesneg.",
       "primerSoundButtons": [
         "F",
         "FF"
@@ -2991,16 +3002,26 @@
     },
     "foundation_patterns_w": {
       "primerTitle": "The letter W",
+      "primerTitleCy": "Y llythyren W",
       "primerBody": "W often behaves like a vowel in Welsh.\nIt can sound a little like the “oo” in the English word “pool”.\nWhen W comes before a vowel, it often sounds more like the W in the English word “wet”.",
+      "primerBodyCy": "Mae W yn aml yn ymddwyn fel llafariad yn Gymraeg.\nGall swnio ychydig fel “oo” yn y gair Saesneg “pool”.\nPan ddaw W cyn llafariad, mae'n aml yn swnio'n fwy fel y W yn y gair Saesneg “wet”.",
       "primerSoundButtons": [
-        "W as a vowel",
-        "W before a vowel"
+        {
+          "label": "W as a vowel",
+          "labelCy": "W fel llafariad"
+        },
+        {
+          "label": "W before a vowel",
+          "labelCy": "W cyn llafariad"
+        }
       ],
       "teachingContext": "Unlike English, Welsh often uses W as part of the vowel sound.\nThis pattern appears throughout the language."
     },
     "foundation_patterns_ch": {
       "primerTitle": "CH",
+      "primerTitleCy": "CH",
       "primerBody": "CH is treated as a single Welsh sound.\nIt often sounds like the CH in the Scottish word “loch”.",
+      "primerBodyCy": "Mae CH yn cael ei thrin fel un sain Gymraeg.\nMae'n aml yn swnio fel CH yn y gair Albanaidd “loch”.",
       "primerSoundButtons": [
         "CH"
       ],
@@ -3008,7 +3029,9 @@
     },
     "foundation_patterns_ll": {
       "primerTitle": "LL",
+      "primerTitleCy": "LL",
       "primerBody": "LL is treated as its own Welsh sound.\nIt does not behave like two separate letters.",
+      "primerBodyCy": "Mae LL yn cael ei thrin fel sain Gymraeg ei hun.\nNid yw'n ymddwyn fel dwy lythyren ar wahân.",
       "primerSoundButtons": [
         "LL"
       ],
@@ -3016,7 +3039,9 @@
     },
     "foundation_patterns_rh": {
       "primerTitle": "RH",
+      "primerTitleCy": "RH",
       "primerBody": "RH is treated as its own Welsh sound.\nIt is often heard at the beginning of Welsh words.",
+      "primerBodyCy": "Mae RH yn cael ei thrin fel sain Gymraeg ei hun.\nFe'i clywir yn aml ar ddechrau geiriau Cymraeg.",
       "primerSoundButtons": [
         "RH"
       ],
@@ -3024,7 +3049,9 @@
     },
     "foundation_patterns_ae_ai": {
       "primerTitle": "AI and AE",
+      "primerTitleCy": "AI ac AE",
       "primerBody": "AI and AE often sound similar in Welsh.\nThey can sound a little like the English word “eye”.",
+      "primerBodyCy": "Mae AI ac AE yn aml yn swnio'n debyg yn Gymraeg.\nGallant swnio ychydig fel y gair Saesneg “eye”.",
       "primerSoundButtons": [
         "AI",
         "AE"
@@ -3033,7 +3060,9 @@
     },
     "foundation_patterns_wy": {
       "primerTitle": "WY",
+      "primerTitleCy": "WY",
       "primerBody": "WY often sounds similar to the “oi” in the English word “coin”.",
+      "primerBodyCy": "Mae WY yn aml yn swnio'n debyg i “oi” yn y gair Saesneg “coin”.",
       "primerSoundButtons": [
         "WY"
       ],
@@ -3041,7 +3070,9 @@
     },
     "foundation_patterns_yw": {
       "primerTitle": "YW",
+      "primerTitleCy": "YW",
       "primerBody": "YW often sounds similar to the English word “you”.",
+      "primerBodyCy": "Mae YW yn aml yn swnio'n debyg i'r gair Saesneg “you”.",
       "primerSoundButtons": [
         "YW"
       ],
@@ -3049,7 +3080,9 @@
     },
     "foundation_patterns_oe": {
       "primerTitle": "OE",
+      "primerTitleCy": "OE",
       "primerBody": "OE sounds similar to the “oy” in the English word “boy”.",
+      "primerBodyCy": "Mae OE yn swnio'n debyg i “oy” yn y gair Saesneg “boy”.",
       "primerSoundButtons": [
         "OE"
       ],
@@ -3057,7 +3090,9 @@
     },
     "foundation_patterns_au": {
       "primerTitle": "AU",
+      "primerTitleCy": "AU",
       "primerBody": "AU often sounds similar to the long English “I” sound in words such as “sky” or “tie”.",
+      "primerBodyCy": "Mae AU yn aml yn swnio'n debyg i sain hir “I” Saesneg mewn geiriau fel “sky” neu “tie”.",
       "primerSoundButtons": [
         "AU"
       ],
@@ -3065,7 +3100,9 @@
     },
     "foundation_patterns_aw": {
       "primerTitle": "AW",
+      "primerTitleCy": "AW",
       "primerBody": "AW often sounds similar to the “ow” in the English word “cow”.",
+      "primerBodyCy": "Mae AW yn aml yn swnio'n debyg i “ow” yn y gair Saesneg “cow”.",
       "primerSoundButtons": [
         "AW"
       ],
@@ -3073,7 +3110,9 @@
     },
     "foundation_patterns_u": {
       "primerTitle": "U",
+      "primerTitleCy": "U",
       "primerBody": "In modern Welsh, U often sounds similar to I.",
+      "primerBodyCy": "Yn y Gymraeg fodern, mae U yn aml yn swnio'n debyg i I.",
       "primerSoundButtons": [
         "U"
       ],
@@ -3081,7 +3120,9 @@
     },
     "foundation_patterns_c": {
       "primerTitle": "C",
+      "primerTitleCy": "C",
       "primerBody": "Welsh C always keeps its hard sound.\nIt sounds like the C in the English word “cat”.",
+      "primerBodyCy": "Mae C Gymraeg bob amser yn cadw ei sain galed.\nMae'n swnio fel y C yn y gair Saesneg “cat”.",
       "primerSoundButtons": [
         "C"
       ],
@@ -3089,7 +3130,9 @@
     },
     "foundation_patterns_g": {
       "primerTitle": "G",
+      "primerTitleCy": "G",
       "primerBody": "Welsh G always keeps its hard sound.",
+      "primerBodyCy": "Mae G Gymraeg bob amser yn cadw ei sain galed.",
       "primerSoundButtons": [
         "G"
       ],
@@ -3097,7 +3140,9 @@
     },
     "foundation_patterns_th_vs_dd": {
       "primerTitle": "TH and DD",
+      "primerTitleCy": "TH a DD",
       "primerBody": "DD sounds like the TH in the English word “then”.\nTH sounds like the TH in the English word “think”.",
+      "primerBodyCy": "Mae DD yn swnio fel TH yn y gair Saesneg “then”.\nMae TH yn swnio fel TH yn y gair Saesneg “think”.",
       "primerSoundButtons": [
         "TH",
         "DD"
@@ -3106,25 +3151,33 @@
     },
     "foundation_patterns_mixed_confidence_1": {
       "primerTitle": "Mixed Confidence 1",
+      "primerTitleCy": "Hyder Cymysg 1",
       "primerBody": "This review combines several patterns you have already practised.\nThere are no new rules here.\nSimply notice how familiar patterns start working together.",
+      "primerBodyCy": "Mae'r adolygiad hwn yn cyfuno sawl patrwm rydych eisoes wedi'u hymarfer.\nNid oes rheolau newydd yma.\nSylwch sut mae patrymau cyfarwydd yn dechrau gweithio gyda'i gilydd.",
       "primerSoundButtons": [],
       "teachingContext": "These words combine several patterns from earlier lessons.\nThe goal is confidence, not perfection."
     },
     "foundation_patterns_mixed_confidence_2": {
       "primerTitle": "Mixed Confidence 2",
+      "primerTitleCy": "Hyder Cymysg 2",
       "primerBody": "This review introduces longer words and a wider mixture of familiar spelling patterns.",
+      "primerBodyCy": "Mae'r adolygiad hwn yn cyflwyno geiriau hirach a chymysgedd ehangach o batrymau sillafu cyfarwydd.",
       "primerSoundButtons": [],
       "teachingContext": "Many of these words contain patterns you have already learned.\nTry noticing how those patterns become easier to recognise."
     },
     "foundation_patterns_mixed_confidence_3": {
       "primerTitle": "Mixed Confidence 3",
+      "primerTitleCy": "Hyder Cymysg 3",
       "primerBody": "This review combines many of the patterns introduced throughout Foundations.",
+      "primerBodyCy": "Mae'r adolygiad hwn yn cyfuno llawer o'r patrymau a gyflwynwyd drwy gydol Foundations.",
       "primerSoundButtons": [],
       "teachingContext": "By now you have seen many of the most important Welsh spelling patterns.\nThe goal is to recognise them naturally when they appear together."
     },
     "foundation_patterns_mixed_confidence_4": {
       "primerTitle": "Mixed Confidence 4",
+      "primerTitleCy": "Hyder Cymysg 4",
       "primerBody": "These words introduce a broader range of familiar Welsh spelling patterns.\nThere are no new rules to learn.\nInstead, use them as an opportunity to recognise patterns you have already practised.",
+      "primerBodyCy": "Mae'r geiriau hyn yn cyflwyno ystod ehangach o batrymau sillafu Cymraeg cyfarwydd.\nNid oes rheolau newydd i'w dysgu.\nYn hytrach, defnyddiwch nhw fel cyfle i adnabod patrymau rydych eisoes wedi'u hymarfer.",
       "primerSoundButtons": [],
       "teachingContext": "These words are intended to feel slightly more natural and less controlled than the earlier lessons.\nNotice how many familiar patterns now appear automatically without needing to think about them."
     }

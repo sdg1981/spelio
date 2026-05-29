@@ -1,6 +1,7 @@
 import type { AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 import { createPrimerContentFromDraft, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import type { WordListPrimerContent, WordListPrimerSoundItem } from '../../data/wordLists';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
@@ -17,6 +18,7 @@ export interface ImportValidationContext {
   existingCollectionIds?: string[];
   existingListIds?: string[];
   existingWordIds?: string[];
+  existingPrimerContentByListId?: Record<string, WordListPrimerContent | null | undefined>;
 }
 
 export interface NormalizedImportContent {
@@ -37,6 +39,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
   const existingCollectionIds = Array.isArray(context) ? context : context.existingCollectionIds ?? [];
   const existingListIds = new Set(Array.isArray(context) ? [] : context.existingListIds ?? []);
   const existingWordIds = new Set(Array.isArray(context) ? [] : context.existingWordIds ?? []);
+  const existingPrimerContentByListId = Array.isArray(context) ? {} : context.existingPrimerContentByListId ?? {};
   const parsed = typeof payload === 'string' ? parseJson(payload) : { value: payload, error: '' };
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -117,6 +120,10 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     if (hasField(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') && typeof fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
     const rawPrimerContent = fieldValue(list, 'primerContent', 'primer_content');
     const primerContentFromDraft = rawPrimerContent === undefined ? createPrimerContentFromDraft(listId, primerDrafts[listId]) : null;
+    const normalizedPrimerContent = mergeExistingWelshPrimerFields(
+      rawPrimerContent ?? primerContentFromDraft,
+      existingPrimerContentByListId[listId]
+    );
     validatePrimerContent(rawPrimerContent ?? primerContentFromDraft, listLabel, errors);
     if (stringField(list, 'listType', 'list_type') && !validListTypes.has(stringField(list, 'listType', 'list_type'))) errors.push(`List ${listLabel} has invalid listType "${stringField(list, 'listType', 'list_type')}".`);
     if (!validLanguage(sourceLanguage)) errors.push(`List ${listLabel} has malformed sourceLanguage "${sourceLanguage}".`);
@@ -164,7 +171,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       isSupportList: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true || fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true,
       listType: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true ? 'support' : 'main',
       hiddenFromMainCatalogue: fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true || stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true,
-      primerContent: toPrimerContentStorage(normalizePrimerContent(rawPrimerContent ?? primerContentFromDraft)),
+      primerContent: normalizedPrimerContent,
       createdAt: now,
       updatedAt: now,
       words: []
@@ -246,6 +253,30 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     errors,
     warnings,
     content
+  };
+}
+
+function mergeExistingWelshPrimerFields(incoming: unknown, existing: WordListPrimerContent | null | undefined): WordListPrimerContent {
+  const normalizedIncoming = toPrimerContentStorage(normalizePrimerContent(incoming));
+  const normalizedExisting = normalizePrimerContent(existing);
+  const existingSoundItemsByStableKey = new Map<string, WordListPrimerSoundItem>();
+  normalizedExisting.soundItems.forEach(item => {
+    if (item.id) existingSoundItemsByStableKey.set(`id:${item.id}`, item);
+    if (item.key) existingSoundItemsByStableKey.set(`key:${item.key}`, item);
+  });
+
+  return {
+    ...normalizedIncoming,
+    titleCy: normalizedIncoming.titleCy || normalizedExisting.titleCy,
+    bodyCy: normalizedIncoming.bodyCy || normalizedExisting.bodyCy,
+    soundItems: normalizedIncoming.soundItems.map(item => {
+      const existingItem = (item.id ? existingSoundItemsByStableKey.get(`id:${item.id}`) : undefined)
+        ?? (item.key ? existingSoundItemsByStableKey.get(`key:${item.key}`) : undefined);
+      return {
+        ...item,
+        labelCy: item.labelCy || existingItem?.labelCy || ''
+      };
+    })
   };
 }
 

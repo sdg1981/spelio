@@ -605,7 +605,7 @@ export const supabaseAdminRepository: AdminRepository = {
     const client = await requireAdminSupabase();
     const [collectionsResult, listsResult, wordsResult] = await Promise.all([
       client.from('word_list_collections').select('id'),
-      client.from('word_lists').select('id'),
+      client.from('word_lists').select('id,primer_content'),
       client.from('words').select('id')
     ]);
     if (collectionsResult.error) throw collectionsResult.error;
@@ -614,7 +614,8 @@ export const supabaseAdminRepository: AdminRepository = {
     return validateImportPayload(payload, {
       existingCollectionIds: (collectionsResult.data ?? []).map(collection => collection.id),
       existingListIds: (listsResult.data ?? []).map(list => list.id),
-      existingWordIds: (wordsResult.data ?? []).map(word => word.id)
+      existingWordIds: (wordsResult.data ?? []).map(word => word.id),
+      existingPrimerContentByListId: Object.fromEntries((listsResult.data ?? []).map(list => [list.id, normalizePrimerContent(list.primer_content)]))
     });
   },
 

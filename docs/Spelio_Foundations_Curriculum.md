@@ -22,7 +22,7 @@ DD sounds like the TH in the English word “then”.
 
 ## Words
 
-* Da — good
+* da — good
 * do — yes
 
   * Useful note: One of several ways to say “yes” in Welsh.
@@ -119,7 +119,7 @@ In Welsh:
   * Useful note: FF often sounds like a typical English F.
 
 * ffrind — friend
-* ffon — phone
+* ffôn — phone
 * ffilm — film
 
 ## Teaching Context
@@ -154,12 +154,12 @@ When W comes before a vowel, it often sounds more like the W in the English word
 
 ### W before a vowel
 
-* Gwen — smile / white
+* gwen — white / fair
 
   * Useful note: Notice how W behaves differently before a vowel.
 
-* Gwas — servant / lad
-* Gwerth — value / worth
+* gwas — servant / lad
+* gwerth — value / worth
 
 ## Teaching Context
 
@@ -186,7 +186,7 @@ It often sounds like the CH in the Scottish word “loch”.
 * achos — because / cause
 * diolch — thanks
 
-  * Useful note: Notice the almost-silent L in this word.
+  * Useful note: Notice the L before CH.
 
 ## Teaching Context
 
@@ -206,7 +206,7 @@ It does not behave like two separate letters.
 
 ## Words
 
-* Llan — church / parish
+* llan — church / parish
 * llaw — hand
 * llawn — full
 * pell — far
@@ -290,11 +290,11 @@ WY often sounds similar to the “oi” in the English word “coin”.
 
 ## Words
 
-* Mwyn — gentle / mild
-* Pwy — who
-* Twyn — hill / hillock
-* Nwy — gas
-* Wy — egg
+* mwyn — gentle / mild
+* pwy — who
+* twyn — hill / hillock
+* nwy — gas
+* wy — egg
 
 ## Teaching Context
 
@@ -313,8 +313,8 @@ YW often sounds similar to the English word “you”.
 
 ## Words
 
-* Byw — alive / living
-* Clyw — hearing / sense of hearing
+* byw — alive / living
+* clyw — hearing / sense of hearing
 
 ## Teaching Context
 
@@ -377,7 +377,7 @@ AW often sounds similar to the “ow” in the English word “cow”.
 
 ## Words
 
-* dau — two
+* lawr — down
 * mawr — big / large
 * taw — quiet / be silent
 * gawg — slot / notch
@@ -428,7 +428,7 @@ It sounds like the C in the English word “cat”.
 * ci — dog
 * ceg — mouth
 * cap — cap
-* can — song
+* cân — song
 * cop — top / summit
 
 ## Teaching Context
@@ -450,7 +450,7 @@ Welsh G always keeps its hard sound.
 
 * gât — gate
 * gof — blacksmith
-* gwen — smile
+* gwên — smile
 * gêm — game
 * gan — by / with
 
@@ -580,12 +580,12 @@ Instead, use them as an opportunity to recognise patterns you have already pract
 
 ## Words
 
-* ddoe
-* heddiw
-* cymraeg
-* cymru
-* rhywbeth
-* tywydd
+* ddoe — yesterday
+* heddiw — today
+* Cymraeg — Welsh
+* Cymru — Wales
+* rhywbeth — something
+* tywydd — weather
 * noddi — to sponsor
 * diwedd — end
 * bysedd — fingers
