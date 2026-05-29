@@ -10,11 +10,12 @@ import { WordRowsTable } from '../components/WordRowsTable';
 import type { AdminRepository } from '../repositories';
 import { validateAdminWordListSlug } from '../services/wordListSlug';
 import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
+import { applyPrimerContentDraftUpdate, createNeutralPrimerSoundItem } from '../services/primerEditor';
 import type { AdminWord, AdminWordList, AdminWordListCollection, ElevenLabsGenerationMode } from '../types';
 import type { AdminStructureOption } from '../types';
 import { getWordListCanonicalUrl } from '../../lib/wordListSharing';
 import type { WordListPrimerContent, WordListPrimerSoundItem } from '../../data/wordLists';
-import { createEmptyPrimerContent, getPrimerAudioText, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { createEmptyPrimerContent, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 import { hasPlayableAudioUrl, logAudioPlaybackClick, playAudioUrl } from '../../lib/audioPlayback';
 
 export function WordListEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
@@ -89,8 +90,12 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
     try {
       setSaving(true);
       setErrorMessage('');
+      const listForSave = {
+        ...list,
+        primerContent: toPrimerContentStorage(normalizePrimerContent(list.primerContent))
+      };
       // TODO: Send admin saves through a protected server/API route before enabling production writes.
-      await repository.saveWordList(list);
+      await repository.saveWordList(listForSave);
       await Promise.all(list.words.map(word => repository.saveWord(word)));
       const savedList = await repository.getWordList(list.id) ?? list;
       setSource(savedList);
@@ -288,28 +293,17 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
 
   function updatePrimerContent(updater: (primer: WordListPrimerContent) => WordListPrimerContent) {
     if (!list) return;
-    updateList({ primerContent: toPrimerContentStorage(updater(normalizePrimerContent(list.primerContent))) });
+    updateList({ primerContent: applyPrimerContentDraftUpdate(list.primerContent, updater) });
   }
 
   function addPrimerSoundItem() {
     const primer = normalizePrimerContent(list?.primerContent);
     const nextOrder = primer.soundItems.length + 1;
-    const key = `primer_sound_${Date.now()}`;
     updatePrimerContent(current => ({
       ...current,
       soundItems: [
         ...current.soundItems,
-        {
-          id: key,
-          key,
-          label: 'DD',
-          labelCy: '',
-          textToSpeak: getPrimerAudioText('DD'),
-          audioUrl: '',
-          audioStatus: 'missing',
-          audioSource: 'unknown',
-          order: nextOrder
-        }
+        createNeutralPrimerSoundItem(nextOrder)
       ]
     }));
   }

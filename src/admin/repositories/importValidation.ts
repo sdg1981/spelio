@@ -1,6 +1,6 @@
 import type { AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
-import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { createPrimerContentFromDraft, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
 const validWordDialects = new Set(['Both', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
@@ -50,6 +50,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
   }
 
   const root = parsed.value;
+  const primerDrafts = isRecord(root.primerDrafts) ? root.primerDrafts : isRecord(root.primer_drafts) ? root.primer_drafts : {};
   const collectionIds = new Set<string>([DEFAULT_COLLECTION_ID, ...existingCollectionIds]);
   const importCollectionIds = new Set<string>();
   const listIds = new Set<string>();
@@ -114,7 +115,9 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
     if (hasField(list, 'order', 'order_index') && !validOrder(fieldValue(list, 'order', 'order_index'))) errors.push(`List ${listLabel} has invalid order.`);
     if (hasField(list, 'isActive', 'is_active') && typeof fieldValue(list, 'isActive', 'is_active') !== 'boolean') errors.push(`List ${listLabel} has invalid isActive.`);
     if (hasField(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') && typeof fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') !== 'boolean') errors.push(`List ${listLabel} has invalid hiddenFromMainCatalogue.`);
-    validatePrimerContent(fieldValue(list, 'primerContent', 'primer_content'), listLabel, errors);
+    const rawPrimerContent = fieldValue(list, 'primerContent', 'primer_content');
+    const primerContentFromDraft = rawPrimerContent === undefined ? createPrimerContentFromDraft(listId, primerDrafts[listId]) : null;
+    validatePrimerContent(rawPrimerContent ?? primerContentFromDraft, listLabel, errors);
     if (stringField(list, 'listType', 'list_type') && !validListTypes.has(stringField(list, 'listType', 'list_type'))) errors.push(`List ${listLabel} has invalid listType "${stringField(list, 'listType', 'list_type')}".`);
     if (!validLanguage(sourceLanguage)) errors.push(`List ${listLabel} has malformed sourceLanguage "${sourceLanguage}".`);
     if (!validLanguage(targetLanguage)) errors.push(`List ${listLabel} has malformed targetLanguage "${targetLanguage}".`);
@@ -161,7 +164,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       isSupportList: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true || fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true,
       listType: stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true ? 'support' : 'main',
       hiddenFromMainCatalogue: fieldValue(list, 'hiddenFromMainCatalogue', 'hidden_from_main_catalogue') === true || stringField(list, 'listType', 'list_type') === 'support' || fieldValue(list, 'isSupportList', 'is_support_list') === true,
-      primerContent: toPrimerContentStorage(normalizePrimerContent(fieldValue(list, 'primerContent', 'primer_content'))),
+      primerContent: toPrimerContentStorage(normalizePrimerContent(rawPrimerContent ?? primerContentFromDraft)),
       createdAt: now,
       updatedAt: now,
       words: []
@@ -265,7 +268,9 @@ function validatePrimerContent(value: unknown, listLabel: string, errors: string
       errors.push(`Primer sound item ${index + 1} in list ${listLabel} must be an object.`);
       return;
     }
-    if (!stringField(item, 'label')) errors.push(`Primer sound item ${index + 1} in list ${listLabel} is missing label.`);
+    if (!stringField(item, 'label') && !stringField(item, 'id') && !stringField(item, 'key')) {
+      errors.push(`Primer sound item ${index + 1} in list ${listLabel} is missing label or stable key.`);
+    }
     const audioStatus = stringField(item, 'audioStatus', 'audio_status');
     if (audioStatus && !validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Primer sound item ${index + 1} in list ${listLabel} has invalid audioStatus "${audioStatus}".`);
   });

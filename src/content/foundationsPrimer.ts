@@ -23,10 +23,25 @@ export type FoundationsPrimer = {
 };
 
 type RawPrimerSoundItem = string | {
+  id?: unknown;
+  key?: unknown;
   label?: unknown;
+  labelCy?: unknown;
+  label_cy?: unknown;
   text?: unknown;
+  textToSpeak?: unknown;
+  text_to_speak?: unknown;
   audioText?: unknown;
+  generationText?: unknown;
+  generation_text?: unknown;
   audioUrl?: unknown;
+  audio_url?: unknown;
+  audioStatus?: unknown;
+  audio_status?: unknown;
+  audioSource?: unknown;
+  audio_source?: unknown;
+  order?: unknown;
+  order_index?: unknown;
 };
 
 type RawPrimerDraft = {
@@ -84,7 +99,7 @@ export function getFoundationsPrimer(listOrId: string | Pick<WordList, 'id' | 'p
     listId,
     title,
     body,
-    soundItems: normalizeSoundItems(draft.primerSoundItems ?? draft.primerSoundButtons)
+    soundItems: normalizeDraftSoundItems(draft.primerSoundItems ?? draft.primerSoundButtons)
   };
 }
 
@@ -100,16 +115,35 @@ function pickLocalizedText(draft: RawPrimerDraft, baseKey: 'primerTitle' | 'prim
   return localized ?? asNonEmptyString(draft[baseKey]) ?? '';
 }
 
-function normalizeSoundItems(value: unknown): PrimerSoundItem[] {
+export function createPrimerContentFromDraft(listId: string, draftValue: unknown): WordListPrimerContent | null {
+  if (!draftValue || typeof draftValue !== 'object' || Array.isArray(draftValue)) return null;
+  const draft = draftValue as RawPrimerDraft;
+  return toPrimerContentStorage({
+    enabled: true,
+    titleEn: pickLocalizedText(draft, 'primerTitle', 'en'),
+    titleCy: asString(draft.primerTitleCy),
+    bodyEn: pickLocalizedText(draft, 'primerBody', 'en'),
+    bodyCy: asString(draft.primerBodyCy),
+    soundItems: normalizeDraftSoundItems(draft.primerSoundItems ?? draft.primerSoundButtons).map((item, index) => ({
+      ...item,
+      id: item.id || item.key || createSoundItemId(item.label || `${listId}-sound`, index),
+      key: item.key || item.id || createSoundItemId(item.label || `${listId}-sound`, index),
+      audioUrl: item.audioUrl || '',
+      order: item.order || index + 1
+    }))
+  });
+}
+
+function normalizeDraftSoundItems(value: unknown): PrimerSoundItem[] {
   if (!Array.isArray(value)) return [];
 
   return value.flatMap((item, index) => {
-    const normalized = normalizeSoundItem(item, index);
+    const normalized = normalizeDraftSoundItem(item, index);
     return normalized ? [normalized] : [];
   });
 }
 
-function normalizeSoundItem(item: RawPrimerSoundItem, index: number): PrimerSoundItem | null {
+function normalizeDraftSoundItem(item: RawPrimerSoundItem, index: number): PrimerSoundItem | null {
   if (typeof item === 'string') {
     const label = item.trim();
     return label ? createPrimerSoundItem({ id: createSoundItemId(label, index), label, textToSpeak: getPrimerAudioText(label), order: index + 1 }) : null;
@@ -120,11 +154,15 @@ function normalizeSoundItem(item: RawPrimerSoundItem, index: number): PrimerSoun
   if (!label) return null;
 
   return createPrimerSoundItem({
-    id: createSoundItemId(label, index),
+    id: asString(item.id) || asString(item.key) || createSoundItemId(label, index),
+    key: asString(item.key) || asString(item.id) || createSoundItemId(label, index),
     label,
-    textToSpeak: asNonEmptyString(item.audioText) ?? asNonEmptyString(item.text) ?? getPrimerAudioText(label),
-    audioUrl: asNonEmptyString(item.audioUrl) ?? '',
-    order: index + 1
+    labelCy: asString(item.labelCy ?? item.label_cy),
+    textToSpeak: asNonEmptyString(item.textToSpeak ?? item.text_to_speak ?? item.generationText ?? item.generation_text ?? item.audioText ?? item.text) ?? getPrimerAudioText(label),
+    audioUrl: asString(item.audioUrl ?? item.audio_url),
+    audioStatus: normalizePrimerAudioStatus(item.audioStatus ?? item.audio_status),
+    audioSource: normalizePrimerAudioSource(item.audioSource ?? item.audio_source),
+    order: numberOrFallback(item.order ?? item.order_index, index + 1)
   });
 }
 
@@ -156,10 +194,10 @@ export function normalizePrimerContent(value: unknown): WordListPrimerContent {
   };
 }
 
-export function createPrimerSoundItem(input: Partial<WordListPrimerSoundItem> & { label: string }): PrimerSoundItem {
-  const label = input.label.trim();
+export function createPrimerSoundItem(input: Partial<WordListPrimerSoundItem>): PrimerSoundItem {
+  const label = (input.label ?? '').trim();
   const id = (input.id || input.key || createSoundItemId(label || 'sound', input.order ? input.order - 1 : 0)).trim();
-  const textToSpeak = (input.textToSpeak || getPrimerAudioText(label)).trim();
+  const textToSpeak = input.textToSpeak === undefined ? getPrimerAudioText(label) : input.textToSpeak.trim();
   return {
     id,
     key: (input.key || id).trim(),
@@ -187,13 +225,12 @@ export function toPrimerContentStorage(content: WordListPrimerContent): WordList
         key: item.key.trim() || item.id.trim() || createSoundItemId(item.label, index),
         label: item.label.trim(),
         labelCy: item.labelCy?.trim() || '',
-        textToSpeak: item.textToSpeak.trim() || getPrimerAudioText(item.label),
-        audioUrl: item.audioUrl.trim(),
+        textToSpeak: item.textToSpeak.trim(),
+        audioUrl: item.audioUrl?.trim() || '',
         audioStatus: normalizePrimerAudioStatus(item.audioStatus),
         audioSource: normalizePrimerAudioSource(item.audioSource),
         order: index + 1
       }))
-      .filter(item => item.label)
   };
 }
 
@@ -209,6 +246,7 @@ function normalizeDatabasePrimer(listId: string, content: WordListPrimerContent 
     title,
     body,
     soundItems: primer.soundItems
+      .filter(item => item.label.trim())
       .map((item, index) => createPrimerSoundItem({ ...item, order: item.order || index + 1 }))
       .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
   };
@@ -228,8 +266,8 @@ function normalizeDatabaseSoundItems(value: unknown): WordListPrimerSoundItem[] 
     if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
     const record = item as Record<string, unknown>;
     const label = asString(record.label);
-    if (!label) return [];
-    const id = asString(record.id) || asString(record.key) || createSoundItemId(label, index);
+    const id = asString(record.id) || asString(record.key) || createSoundItemId(label || 'sound', index);
+    if (!label && !id) return [];
     return [{
       id,
       key: asString(record.key) || id,

@@ -1,5 +1,8 @@
 import { mockAdminRepository } from '../src/admin/repositories/mockAdminRepository';
+import { validateImportPayload } from '../src/admin/repositories/importValidation';
+import { applyPrimerContentDraftUpdate, createNeutralPrimerSoundItem } from '../src/admin/services/primerEditor';
 import { getFoundationsPrimer } from '../src/content/foundationsPrimer';
+import type { WordListPrimerContent } from '../src/data/wordLists';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -14,6 +17,69 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 void run();
 
 async function run() {
+  const typedTitle = ['D', 'DD', 'DD ', 'DD sounds'].reduce<WordListPrimerContent>(
+    (primer, nextText) => applyPrimerContentDraftUpdate(primer, current => ({ ...current, titleEn: nextText })),
+    { enabled: true, titleEn: '', titleCy: '', bodyEn: '', bodyCy: '', soundItems: [] }
+  );
+  assertEqual(typedTitle.titleEn, 'DD sounds', 'Primer editor draft updates should preserve spaces while typing.');
+
+  const neutralItem = createNeutralPrimerSoundItem(3, 'primer_sound_test');
+  assertEqual(neutralItem.key, 'primer_sound_test', 'New primer sound item should receive a stable generated key.');
+  assertEqual(neutralItem.label, '', 'New primer sound item label should default empty.');
+  assertEqual(neutralItem.labelCy, '', 'New primer sound item Welsh label should default empty.');
+  assertEqual(neutralItem.textToSpeak, '', 'New primer sound item textToSpeak should default empty.');
+  assertEqual(neutralItem.audioUrl, '', 'New primer sound item audioUrl should default empty.');
+  assertEqual(neutralItem.audioStatus, 'missing', 'New primer sound item audioStatus should default missing.');
+  assertEqual(neutralItem.audioSource, 'unknown', 'New primer sound item audioSource should default unknown.');
+  assertEqual(neutralItem.order, 3, 'New primer sound item should use the next order value.');
+
+  const importPreview = validateImportPayload({
+    primerDrafts: {
+      primer_import_list: {
+        primerTitle: 'Imported primer title',
+        primerBody: 'Imported primer body with a space.',
+        primerSoundItems: [
+          { label: 'LL', audioText: 'lle', audioUrl: 'https://example.test/ll.mp3', audioStatus: 'ready', audioSource: 'manual' },
+          { label: 'RH', textToSpeak: 'rhif' }
+        ]
+      }
+    },
+    lists: [{
+      id: 'primer_import_list',
+      slug: 'primer-import-list',
+      name: 'Primer Import List',
+      language: 'cy',
+      dialect: 'Mixed',
+      stage: 'Foundations',
+      focus: 'Patterns',
+      difficulty: 1,
+      order: 1,
+      isActive: true,
+      words: [{
+        id: 'primer_import_list_001',
+        englishPrompt: 'place',
+        welshAnswer: 'lle',
+        audioStatus: 'missing',
+        order: 1
+      }]
+    }]
+  });
+  assertEqual(importPreview.errors.length, 0, 'PrimerDraft import payload should validate.');
+  const importedPrimer = importPreview.content.lists[0]?.primerContent;
+  assert(importedPrimer, 'Importer should populate list-level primerContent from top-level primerDrafts.');
+  assertEqual(importedPrimer.enabled, true, 'Imported primerDrafts should enable DB primer content.');
+  assertEqual(importedPrimer.titleEn, 'Imported primer title', 'Importer should copy English primer title from primerDrafts.');
+  assertEqual(importedPrimer.bodyEn, 'Imported primer body with a space.', 'Importer should copy English primer body from primerDrafts.');
+  assertEqual(importedPrimer.titleCy, '', 'Importer should default missing Welsh primer title to empty string.');
+  assertEqual(importedPrimer.soundItems.length, 2, 'Importer should create ordered sound items from primerDrafts.');
+  assertEqual(importedPrimer.soundItems[0].label, 'LL', 'Importer should preserve sound item labels.');
+  assertEqual(importedPrimer.soundItems[0].textToSpeak, 'lle', 'Importer should preserve audioText as textToSpeak.');
+  assertEqual(importedPrimer.soundItems[0].audioUrl, 'https://example.test/ll.mp3', 'Importer should preserve existing primer audio URL.');
+  assertEqual(importedPrimer.soundItems[0].audioStatus, 'ready', 'Importer should preserve existing primer audio status.');
+  assertEqual(importedPrimer.soundItems[0].audioSource, 'manual', 'Importer should preserve existing primer audio source.');
+  assertEqual(importedPrimer.soundItems[1].audioStatus, 'missing', 'Importer should default missing primer audio status to missing.');
+  assertEqual(importedPrimer.soundItems[1].audioSource, 'unknown', 'Importer should default missing primer audio source to unknown.');
+
   const list = await mockAdminRepository.getWordList('foundations_first_words');
   assert(list, 'Expected first words list in mock admin repository.');
   const originalWordCount = list.words.length;
