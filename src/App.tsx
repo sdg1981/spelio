@@ -10,7 +10,6 @@ import { WordListsPage } from './components/WordListsPage';
 import { EndScreen } from './components/End';
 import { FeedbackModal, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './components/Footer';
 import { PublicMetadata } from './components/PublicMetadata';
-import { ScreenTransition } from './components/ScreenTransition';
 import { wordLists } from './data/wordLists';
 import type { WordList } from './data/wordLists';
 import { findSupportWordList } from './data/supportWordLists';
@@ -1007,9 +1006,9 @@ export default function App() {
         wordLists={publicWordLists}
       />
       {showSharedPublicBackground && <PublicBackgroundTreatment />}
-      <ScreenTransition screen={activeScreen}>
+      <div className="screen-stage">
         {screenContent}
-      </ScreenTransition>
+      </div>
       <div className={`app-toast ${resetStatusVisible ? 'visible' : ''}`} role="status" aria-live="polite">
         {t('progress.resetFresh')}
       </div>

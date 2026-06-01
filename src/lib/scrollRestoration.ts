@@ -6,7 +6,7 @@ function resetScrollTargets() {
   document.body.scrollTop = 0;
   document.body.scrollLeft = 0;
 
-  document.querySelectorAll('.screen-stage, .screen-transition').forEach(element => {
+  document.querySelectorAll('.screen-stage').forEach(element => {
     if (element instanceof HTMLElement) {
       element.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
