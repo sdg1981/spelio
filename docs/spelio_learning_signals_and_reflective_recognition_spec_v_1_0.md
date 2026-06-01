@@ -40,6 +40,8 @@ The system should remain deeply aligned with Spelio’s existing philosophy:
 - focused repetition
 - quiet confidence-building
 
+Future recognition may eventually include context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This should remain tied to spelling confidence, decoding confidence, and written-form recognition rather than becoming a comprehensive grammar curriculum.
+
 ---
 
 # 1. Core Product Philosophy

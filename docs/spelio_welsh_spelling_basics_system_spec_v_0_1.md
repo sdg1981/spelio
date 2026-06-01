@@ -682,11 +682,14 @@ The digraph/symbol itself acts as the visual title.
 
 Mutations are future-supported but initially de-emphasised.
 
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum.
+
 Mutation content should remain:
 
 - optional
 - calm
 - explanation-light
+- scoped around spelling mechanics, recognition, and written accuracy
 
 Avoid turning mutations into:
 
@@ -854,4 +857,3 @@ Avoid duplicate uppercase/lowercase title structures.
 - behave more like contextual utility actions
 
 The educational layer must remain secondary to the core spelling-practice product.
-

@@ -734,6 +734,8 @@ as defined in the system specification.
 - vowel combinations
 - sentence moments
 
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum. Any future mutation content should stay scoped around spelling mechanics, recognition, and written accuracy.
+
 ---
 
 ## 9.2 Avoid feature sprawl

@@ -48,6 +48,8 @@ Spelio is not:
 
 Content should support spelling practice first. It may reinforce vocabulary and structures, but it should not try to teach the entire language.
 
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This should remain a spelling-confidence direction, not a comprehensive grammar curriculum. Any future mutation work should be carefully scoped around spelling mechanics, recognition, and written accuracy.
+
 ---
 
 ## 4. Audience
@@ -191,11 +193,11 @@ Avoid:
 - several new grammar features in one item
 - mutation-heavy phrase sets unless intentionally controlled
 
-### Stage 5 — Controlled Mutation Exposure
+### Possible Future Stage 5 — Controlled Mutation Exposure
 
 Purpose: expose learners to common mutated forms inside useful fixed phrases.
 
-At this stage, mutation can appear, but the list should not yet behave like a grammar lesson.
+In a future sequence, mutation can appear once learners have enough spelling confidence, but the list should not behave like a grammar lesson.
 
 Good approach:
 
@@ -210,11 +212,11 @@ Avoid:
 - mixing too many mutation types in one list
 - making mutation knowledge essential without context
 
-### Stage 6 — Mutation Pattern Lists
+### Possible Future Stage 6 — Mutation Pattern Lists
 
 Purpose: practise mutation patterns directly through spelling contrast.
 
-Mutation pattern lists should be introduced only after learners have enough spelling confidence.
+Mutation pattern lists should be introduced only after learners have enough spelling confidence, and only if they serve spelling recognition and written accuracy rather than comprehensive grammar teaching.
 
 Structure:
 
@@ -361,7 +363,7 @@ Good list types:
 - First Words — Simple Welsh
 - Spelling Focus — LL
 - Short Phrases — Going Somewhere
-- Mutation Pattern — tref
+- Mutation Pattern — tref, as future optional content
 - Food & Drink — Essentials
 
 Weak list types:
@@ -1192,20 +1194,27 @@ To keep content scalable:
 - create expansion packs rather than bloated stages
 - maintain a content index as the library grows
 
-Suggested high-level library structure:
+Possible long-term high-level library structure:
 
 - Foundations
 - Core Vocabulary
 - Spelling Patterns
 - Phrases
-- Controlled Mutations
-- Mutation Patterns
+- Controlled Mutations, if introduced as future spelling-confidence material
+- Mutation Patterns, if introduced as future spelling-confidence material
 - Sentences
 - Mixed Review
 - Topic Packs
 - School Packs
 - Course-Aligned Packs
 - Advanced Welsh
+
+Possible long-term spelling-confidence sequence:
+
+1. Foundations 1 — Core Patterns
+2. Foundations 2 — Pattern Extensions
+3. Foundations 3 — Advanced Recognition
+4. Written Welsh — Context & Mutation Patterns
 
 ---
 
@@ -1219,7 +1228,7 @@ Good:
 - Food & Drink — Essentials
 - Spelling Focus — LL
 - Short Phrases — Going Somewhere
-- Mutation Pattern — tref
+- Mutation Pattern — tref, as future optional content
 
 Avoid:
 

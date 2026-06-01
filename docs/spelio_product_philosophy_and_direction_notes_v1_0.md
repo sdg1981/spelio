@@ -652,7 +652,16 @@ Examples include:
 
 Advanced Topics are future-facing and may remain "coming soon" during early versions. They should not be framed as a required third curriculum stage.
 
-Mutations are important for Welsh spelling confidence, but they should not pull Spelio into becoming a full Welsh grammar course. They may later appear as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for spelling confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum.
+
+Mutations are important for Welsh spelling confidence because Welsh spelling can change in context, but they should not pull Spelio into becoming a full Welsh grammar course. They may later appear as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for spelling confidence. Any future mutation work should be carefully scoped around spelling mechanics, recognition, and written accuracy. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+
+Possible long-term spelling-confidence sequence:
+
+1. Foundations 1 — Core Patterns
+2. Foundations 2 — Pattern Extensions
+3. Foundations 3 — Advanced Recognition
+4. Written Welsh — Context & Mutation Patterns
 
 ---
 

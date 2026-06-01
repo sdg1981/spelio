@@ -121,7 +121,16 @@ Applied Welsh is not necessarily a fixed second course layer. It can exist partl
 
 Advanced Topics, such as mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, and advanced decoding confidence, should remain future-facing and optional unless they are being introduced in a deliberately small and beginner-safe way.
 
-Mutations are important for Welsh spelling confidence, but they should not turn Welsh Spelling Basics or Spelio more broadly into a full Welsh grammar course. Later mutation content may be introduced as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for advanced writing confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum.
+
+Mutations are important for Welsh spelling confidence because Welsh spelling can change in context, but they should not turn Welsh Spelling Basics or Spelio more broadly into a full Welsh grammar course. Later mutation content may be introduced as optional advanced spelling-recognition or writing-confidence topics, such as recognising Welsh mutations, common mutation spelling patterns, or mutation awareness for advanced writing confidence. Any future mutation work should be carefully scoped around spelling mechanics, recognition, and written accuracy. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+
+Possible long-term spelling-confidence sequence:
+
+1. Foundations 1 — Core Patterns
+2. Foundations 2 — Pattern Extensions
+3. Foundations 3 — Advanced Recognition
+4. Written Welsh — Context & Mutation Patterns
 
 ---
 

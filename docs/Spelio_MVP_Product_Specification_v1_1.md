@@ -29,6 +29,8 @@ A serious, simple Welsh spelling practice tool for adult learners who want to im
 
 It is not a full Welsh course. It is not a Duolingo clone. It is a practice layer that could eventually support learners using any course.
 
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. That future work should be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum, and does not expand the current MVP scope.
+
 The first market is Welsh learners, especially adults who can say words or recognise them but struggle to spell them correctly.
 
 Long-term, the same engine could support other languages, English spelling, teacher lists, custom lists, or institutional integrations.

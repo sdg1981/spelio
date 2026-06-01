@@ -7,6 +7,21 @@ These short lessons introduce some of the most useful Welsh spelling patterns fo
 Try to notice patterns rather than memorise rules.
 Over time, these patterns begin to feel natural.
 
+## Future curriculum note
+
+The current Foundations material remains focused on core Welsh spelling patterns, decoding confidence, and written-form recognition.
+
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum.
+
+Possible long-term spelling-confidence sequence:
+
+1. Foundations 1 — Core Patterns
+2. Foundations 2 — Pattern Extensions
+3. Foundations 3 — Advanced Recognition
+4. Written Welsh — Context & Mutation Patterns
+
+This is exploratory curriculum thinking, not a committed roadmap or an expansion of the current MVP. Any future mutation work should stay carefully scoped around spelling mechanics, recognition, and written accuracy, not a full Welsh grammar course.
+
 # D / DD
 
 ## Primer

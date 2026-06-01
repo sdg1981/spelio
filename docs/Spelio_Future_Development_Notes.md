@@ -240,7 +240,16 @@ The existence of a finite Foundations path does not reduce the value of broader 
 
 Advanced Topics are future optional deeper material, not a required third curriculum stage. They may eventually include mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, advanced orthographic confidence, and advanced decoding confidence.
 
-Mutations are important for Welsh spelling confidence, but they should not pull Spelio into becoming a full Welsh grammar course. They may later be introduced as optional advanced spelling-recognition or writing-confidence topics. Possible future framing includes recognising Welsh mutations, common mutation spelling patterns, and mutation awareness for spelling confidence. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+Future versions of Spelio may explore context-dependent spelling patterns, for example Welsh mutations, where correct written Welsh depends on neighbouring words. This would be approached from a spelling-confidence perspective rather than as a comprehensive grammar curriculum.
+
+Mutations are important for Welsh spelling confidence because written Welsh can change in context, but they should not pull Spelio into becoming a full Welsh grammar course. They may later be introduced as optional advanced spelling-recognition or writing-confidence topics. Possible future framing includes recognising Welsh mutations, common mutation spelling patterns, and mutation awareness for spelling confidence. Any future mutation work should be carefully scoped around spelling mechanics, recognition, and written accuracy. Spelio may support those areas without claiming to teach all mutation rules comprehensively.
+
+Possible long-term spelling-confidence sequence:
+
+1. Foundations 1 — Core Patterns
+2. Foundations 2 — Pattern Extensions
+3. Foundations 3 — Advanced Recognition
+4. Written Welsh — Context & Mutation Patterns
 
 This direction should not redesign MVP behaviour, introduce dashboards, introduce gamification, introduce formal course trees, introduce compulsory progression gates, or remove existing content systems.
 
