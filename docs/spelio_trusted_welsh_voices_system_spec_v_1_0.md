@@ -77,6 +77,8 @@ Trusted Welsh audio may also support future public pronunciation and listening-s
 
 Early manual search observations suggest trusted human Welsh audio may become especially valuable on public spelling-pattern and pronunciation-discovery pages, because "how to pronounce..." intent depends heavily on audio credibility and learner trust.
 
+Trusted human Welsh voices would be especially valuable for any future public Welsh personal-name and place-name pronunciation pages, where credibility, natural pronunciation, and cultural care matter more than content volume.
+
 The ideal reaction is not only:
 
 > “This is accurate.”

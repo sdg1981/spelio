@@ -144,7 +144,8 @@ Candidate page types may include:
 
 - Welsh sound and spelling-pattern pages such as `ll`, `dd`, `ch`, `rh`, `ff`, `w`, and `y`
 - High-confusion Welsh words such as `Cymru`, `iechyd`, `diolch`, `llaeth`, and `chwech`
-- Selected Welsh place names where pronunciation search intent is strong
+- Selected Welsh place names where pronunciation search intent is strong, such as `Llandudno`, `Llanelli`, `Caernarfon`, `Aberystwyth`, and `Rhyl`
+- Selected Welsh personal names where pronunciation and spelling questions are common, such as `Rhys`, `Gwyn`, `Gwen` / `Gwên`, `Carys`, `Llyr`, `Dafydd`, and `Siân`
 
 The purpose should be to make Spelio a trusted, calm, useful place to hear Welsh clearly, not to create SEO content at scale. Trusted Welsh voice recordings are a key differentiator here.
 
@@ -155,11 +156,17 @@ These pages should be audio-first, lightweight, beautifully presented, and align
 - Optional related pattern links
 - An optional gentle CTA into Spelio practice
 
+Future Welsh place-name pages could combine trusted Welsh voice pronunciation, a spelling breakdown, pronunciation guidance, links back to relevant Foundations patterns such as LL, CH, RH, W, Y, and AE / AI, and an optional short cultural or location note where appropriate. The goal would be to help people understand why Welsh place names are pronounced and spelled the way they are, while gently connecting that understanding to relevant Foundations practice.
+
+Future Welsh personal-name pages could similarly include trusted Welsh pronunciation, a spelling explanation, common learner confusions, relevant spelling-pattern links, and optional notes on accents or meaning where appropriate. These pages should be especially careful, respectful, and human-sounding, because names carry personal and cultural weight.
+
 Search demand should guide page selection using evidence such as Google Search Console, Google autocomplete, Google Trends, and/or SEO tools.
 
-Early manual Google autocomplete and search observations suggest real search interest around Welsh pronunciation, digraphs, orthography, sound-pattern questions, high-confusion words such as `Cymru`, and selected Welsh place-name pronunciation such as Llandudno and Snowdon. This supports the future direction of carefully curated pronunciation and listening pages, but does not justify mass-generated pages or broad SEO expansion.
+Early manual Google autocomplete and search observations suggest real search interest around Welsh pronunciation, digraphs, orthography, sound-pattern questions, high-confusion words such as `Cymru`, and selected Welsh place-name pronunciation such as Llandudno and Snowdon. Future research may also assess demand around searches such as "how to pronounce [Welsh place name]", "how to pronounce [Welsh name]", "Welsh name pronunciation", and "Welsh place-name pronunciation". This supports the future direction of carefully curated pronunciation and listening pages, but does not justify mass-generated pages or broad SEO expansion.
 
 Avoid thin content, AI-generated page farms, generic vocabulary pages, manipulative SEO tactics, or bloated blog-style content.
+
+SEO value should come from genuine usefulness, not volume. These pages should remain carefully curated, high-trust, audio-led, calm, useful, adult-oriented, and visibly connected to Spelio's Foundations model.
 
 This should remain future-facing until real search demand, audio quality, and learner usefulness justify implementation.
 

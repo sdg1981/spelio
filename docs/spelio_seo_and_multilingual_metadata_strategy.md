@@ -229,6 +229,8 @@ They are:
 
 Early manual search observations suggest the strongest organic opportunity is not generic "learn Welsh" SEO, but specific Welsh spelling and pronunciation intent: Welsh digraphs and sounds, Welsh orthography questions, pronunciation of high-confusion Welsh words, and selected place names. This should guide future page prioritisation without overriding Spelio's calm, quality-led SEO philosophy.
 
+Future research may also assess carefully curated Welsh place-name and personal-name pronunciation pages around search demand such as "how to pronounce [Welsh place name]", "how to pronounce [Welsh name]", "Welsh name pronunciation", and "Welsh place-name pronunciation". These should not become mass-generated SEO pages. Any future value should come from trusted Welsh audio, spelling explanation, pronunciation guidance, links back to relevant Foundations patterns, and genuine public usefulness.
+
 Recommended indexed pages:
 
 - `/spelling-basics`
