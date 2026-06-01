@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Volume2 } from 'lucide-react';
 import { PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
@@ -6,7 +6,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import type { FoundationsPrimer as FoundationsPrimerContent, PrimerSoundItem } from '../content/foundationsPrimer';
 import type { InterfaceLanguage, Translate } from '../i18n';
-import { playPrimerSound } from '../lib/foundationsPrimerAudio';
+import { playPrimerSound, preloadPrimerSounds } from '../lib/foundationsPrimerAudio';
 
 export function FoundationsPrimer({
   primer,
@@ -27,6 +27,10 @@ export function FoundationsPrimer({
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  useEffect(() => {
+    preloadPrimerSounds(primer.soundItems);
+  }, [primer.soundItems]);
+
   return (
     <main className="how-page public-info-page foundations-primer-page">
       <button className="how-back-button foundations-primer-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
@@ -99,9 +103,10 @@ function PrimerSoundButton({ item, t }: { item: PrimerSoundItem; t: Translate })
 
   return (
     <button
-      className={`foundations-primer-sound ${state === 'failed' ? 'failed' : ''}`.trim()}
+      className={`foundations-primer-sound ${state === 'playing' ? 'playing' : ''} ${state === 'failed' ? 'failed' : ''}`.trim()}
       type="button"
       onClick={playSound}
+      aria-busy={state === 'playing'}
       aria-label={`${t('primer.playSound')} ${item.label}`}
     >
       <Volume2 size={20} strokeWidth={2.2} aria-hidden="true" />

@@ -1,4 +1,5 @@
 import { getFoundationsPrimer, getPrimerAudioText, hasFoundationsPrimer } from '../src/content/foundationsPrimer';
+import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds } from '../src/lib/foundationsPrimerAudio';
 import { shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange } from '../src/lib/interfaceLanguageNavigation';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -81,3 +82,101 @@ assert(
   shouldResetPracticeLaunchContextOnInterfaceLanguageChange('home', false),
   'Normal homepage language switching should keep resetting transient practice launch context.'
 );
+
+class MockAudio {
+  static instances: MockAudio[] = [];
+
+  currentTime = 0;
+  loadCalls = 0;
+  onended: (() => void) | null = null;
+  pauseCalls = 0;
+  playCalls = 0;
+  preload = '';
+  src = '';
+
+  constructor() {
+    MockAudio.instances.push(this);
+  }
+
+  load() {
+    this.loadCalls += 1;
+  }
+
+  pause() {
+    this.pauseCalls += 1;
+  }
+
+  play() {
+    this.playCalls += 1;
+    return Promise.resolve();
+  }
+}
+
+async function runPrimerAudioTests() {
+  const originalAudio = globalThis.Audio;
+  const originalFetch = globalThis.fetch;
+  const originalCreateObjectUrl = URL.createObjectURL;
+  const originalRevokeObjectUrl = URL.revokeObjectURL;
+  let fetchCalls = 0;
+  let objectUrlCounter = 0;
+
+  (globalThis as unknown as { Audio: typeof MockAudio }).Audio = MockAudio;
+  (globalThis as unknown as { fetch: typeof fetch }).fetch = async () => {
+    fetchCalls += 1;
+    return new Response(new Blob(['mock audio'], { type: 'audio/mpeg' }), { status: 200 });
+  };
+  URL.createObjectURL = () => `blob:primer-audio-${objectUrlCounter += 1}`;
+  URL.revokeObjectURL = () => undefined;
+
+  try {
+    const storedItem = {
+      audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/dd-sound/20260529T120000Z.mp3',
+      textToSpeak: 'hedd'
+    };
+
+    clearPrimerAudioCacheForTests();
+    MockAudio.instances = [];
+    fetchCalls = 0;
+    preloadPrimerSounds([storedItem, storedItem]);
+    assertEqual(MockAudio.instances.length, 1, 'Primer preload should create one cached audio element per stored URL.');
+    assertEqual(MockAudio.instances[0].loadCalls, 1, 'Primer preload should only call load once for a stable stored URL.');
+    assertEqual(MockAudio.instances[0].src, storedItem.audioUrl, 'Primer preload should use the stored URL without adding a click-time cache buster.');
+
+    const firstStoredPlayback = await playPrimerSound(storedItem);
+    const secondStoredPlayback = await playPrimerSound(storedItem);
+    assert(firstStoredPlayback && secondStoredPlayback, 'Stored primer audio should play successfully from the cached audio element.');
+    assertEqual(fetchCalls, 0, 'Stored primer audio should not call the dynamic Azure fallback.');
+    assertEqual(MockAudio.instances.length, 1, 'Stored primer audio should reuse the cached audio element across clicks.');
+    assertEqual(MockAudio.instances[0].playCalls, 2, 'Stored primer audio should replay the cached element on each click.');
+
+    const cacheBustedUrl = `${storedItem.audioUrl}?v=2026-05-29T12%3A00%3A00.000Z`;
+    assertEqual(getStoredPrimerAudioUrl({ audioUrl: cacheBustedUrl }), cacheBustedUrl, 'Primer audio URL normalization should keep an existing stable cache-busting query intact.');
+    assertEqual(getStoredPrimerAudioUrl({ audioUrl: storedItem.audioUrl }), storedItem.audioUrl, 'Primer audio URL normalization should not append new cache-busting parameters.');
+
+    const regeneratedItem = {
+      ...storedItem,
+      audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/dd-sound/20260529T121500Z.mp3'
+    };
+    await playPrimerSound(regeneratedItem);
+    assertEqual(MockAudio.instances.length, 2, 'A regenerated primer audio URL should get a fresh cached audio element.');
+
+    clearPrimerAudioCacheForTests();
+    MockAudio.instances = [];
+    fetchCalls = 0;
+    const fallbackPlayback = await playPrimerSound({ textToSpeak: 'lle' });
+    assert(fallbackPlayback, 'Primer audio should fall back to Azure TTS when no stored URL exists.');
+    assertEqual(fetchCalls, 1, 'Azure TTS fallback should be called exactly once for a missing stored URL click.');
+  } finally {
+    clearPrimerAudioCacheForTests();
+    (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = originalFetch;
+    URL.createObjectURL = originalCreateObjectUrl;
+    URL.revokeObjectURL = originalRevokeObjectUrl;
+  }
+}
+
+void runPrimerAudioTests().catch(error => {
+  setTimeout(() => {
+    throw error;
+  }, 0);
+});

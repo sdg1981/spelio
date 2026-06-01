@@ -8069,6 +8069,11 @@
   transform:translateY(0);
 }
 
+.foundations-primer-sound.playing{
+  cursor:progress;
+  opacity:.78;
+}
+
 .foundations-primer-sound.failed{
   border-color:rgba(217,0,0,.24);
   color:var(--accent, #d90000);
