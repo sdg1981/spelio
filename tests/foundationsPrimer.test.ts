@@ -27,6 +27,11 @@ assertEqual(dDdPrimer.soundItems[1].audioText, 'hedd', 'DD sound button should u
 assertEqual(getPrimerAudioText('DD'), 'hedd', 'DD primer audio override should be stable.');
 assertEqual(getPrimerAudioText('LL'), 'lle', 'LL primer audio override should use a Welsh exemplar.');
 
+const welshYPrimerFromDraft = getFoundationsPrimer('foundation_patterns_y', 'cy');
+assert(welshYPrimerFromDraft, 'Welsh interface should resolve Y primer from bundled primerDrafts when DB content is absent.');
+assertEqual(welshYPrimerFromDraft.title, 'Y llythyren Y', 'Welsh fallback primer should use primerDrafts.primerTitleCy.');
+assertEqual(welshYPrimerFromDraft.soundItems[0].label, 'Y (sillaf olaf)', 'Welsh primer sound labels should prefer labelCy from primerDrafts.');
+
 const databaseDddPrimer = getFoundationsPrimer({
   id: 'foundation_patterns_d_dd',
   primerContent: {
@@ -51,6 +56,42 @@ const databaseDddPrimer = getFoundationsPrimer({
 assert(databaseDddPrimer, 'Database primer content should resolve for a list object.');
 assertEqual(databaseDddPrimer.title, 'Admin D/DD', 'Database primer content should take priority over JSON primerDrafts.');
 assertEqual(databaseDddPrimer.soundItems[0].audioUrl, 'https://example.test/dd.mp3', 'Stored primer audio URL should be exposed before dynamic fallback.');
+const databaseDddPrimerCy = getFoundationsPrimer({
+  id: 'foundation_patterns_d_dd',
+  primerContent: {
+    enabled: true,
+    titleEn: 'Admin D/DD',
+    titleCy: 'Admin D/DD CY',
+    bodyEn: 'Admin primer body.',
+    bodyCy: 'Corff admin.',
+    soundItems: [{
+      id: 'dd_admin',
+      key: 'dd_admin',
+      label: 'DD English',
+      labelCy: 'DD Cymraeg',
+      textToSpeak: 'hedd',
+      audioUrl: 'https://example.test/dd.mp3',
+      audioStatus: 'ready',
+      audioSource: 'manual',
+      order: 1
+    }, {
+      id: 'd_admin',
+      key: 'd_admin',
+      label: 'D fallback',
+      labelCy: '',
+      textToSpeak: 'da',
+      audioUrl: '',
+      audioStatus: 'missing',
+      audioSource: 'unknown',
+      order: 2
+    }]
+  }
+}, 'cy');
+assert(databaseDddPrimerCy, 'Welsh database primer content should resolve for a list object.');
+assertEqual(databaseDddPrimerCy.title, 'Admin D/DD CY', 'Learner primer should prefer DB titleCy for the Welsh interface.');
+assertEqual(databaseDddPrimerCy.body, 'Corff admin.', 'Learner primer should prefer DB bodyCy for the Welsh interface.');
+assertEqual(databaseDddPrimerCy.soundItems[0].label, 'DD Cymraeg', 'Welsh database primer sound labels should prefer DB labelCy.');
+assertEqual(databaseDddPrimerCy.soundItems[1].label, 'D fallback', 'Welsh database primer sound labels should fall back to English labels when labelCy is empty.');
 assertEqual(getFoundationsPrimer({
   id: 'foundation_patterns_d_dd',
   primerContent: {

@@ -99,7 +99,10 @@ export function getFoundationsPrimer(listOrId: string | Pick<WordList, 'id' | 'p
     listId,
     title,
     body,
-    soundItems: normalizeDraftSoundItems(draft.primerSoundItems ?? draft.primerSoundButtons)
+    soundItems: localizePrimerSoundItems(
+      normalizeDraftSoundItems(draft.primerSoundItems ?? draft.primerSoundButtons),
+      interfaceLanguage
+    )
   };
 }
 
@@ -186,11 +189,11 @@ export function normalizePrimerContent(value: unknown): WordListPrimerContent {
   const record = value as Record<string, unknown>;
   return {
     enabled: record.enabled === true,
-    titleEn: asDraftString(record.titleEn ?? record.title_en),
-    titleCy: asDraftString(record.titleCy ?? record.title_cy),
-    bodyEn: asDraftString(record.bodyEn ?? record.body_en),
-    bodyCy: asDraftString(record.bodyCy ?? record.body_cy),
-    soundItems: normalizeDatabaseSoundItems(record.soundItems ?? record.sound_items)
+    titleEn: asDraftString(record.titleEn ?? record.title_en ?? record.primerTitleEn ?? record.primer_title_en ?? record.primerTitle ?? record.primer_title),
+    titleCy: asDraftString(record.titleCy ?? record.title_cy ?? record.primerTitleCy ?? record.primer_title_cy),
+    bodyEn: asDraftString(record.bodyEn ?? record.body_en ?? record.primerBodyEn ?? record.primer_body_en ?? record.primerBody ?? record.primer_body),
+    bodyCy: asDraftString(record.bodyCy ?? record.body_cy ?? record.primerBodyCy ?? record.primer_body_cy),
+    soundItems: normalizeDatabaseSoundItems(record.soundItems ?? record.sound_items ?? record.primerSoundItems ?? record.primer_sound_items ?? record.primerSoundButtons ?? record.primer_sound_buttons)
   };
 }
 
@@ -245,7 +248,7 @@ function normalizeDatabasePrimer(listId: string, content: WordListPrimerContent 
     listId,
     title,
     body,
-    soundItems: primer.soundItems
+    soundItems: localizePrimerSoundItems(primer.soundItems, interfaceLanguage)
       .filter(item => item.label.trim())
       .map((item, index) => createPrimerSoundItem({ ...item, order: item.order || index + 1 }))
       .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
@@ -280,6 +283,16 @@ function normalizeDatabaseSoundItems(value: unknown): WordListPrimerSoundItem[] 
       order: numberOrFallback(record.order ?? record.order_index, index + 1)
     }];
   }).sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+}
+
+function localizePrimerSoundItems<T extends { label: string; labelCy?: string }>(items: T[], interfaceLanguage: InterfaceLanguage): T[] {
+  return items.map(item => {
+    const localizedLabel = interfaceLanguage === 'cy' ? item.labelCy?.trim() || item.label : item.label;
+    return {
+      ...item,
+      label: localizedLabel
+    };
+  });
 }
 
 function normalizePrimerAudioStatus(value: unknown): PrimerAudioStatus {

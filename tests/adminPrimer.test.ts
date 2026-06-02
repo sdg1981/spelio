@@ -111,6 +111,21 @@ async function run() {
   assertEqual(importedPrimer.soundItems[1].audioStatus, 'missing', 'Importer should default missing primer audio status to missing.');
   assertEqual(importedPrimer.soundItems[1].audioSource, 'unknown', 'Importer should default missing primer audio source to unknown.');
 
+  const legacyStoredPrimer = normalizePrimerContent({
+    enabled: true,
+    primerTitle: 'Legacy DB primer title',
+    primerTitleCy: 'Teitl Cymraeg legacy',
+    primerBody: 'Legacy DB primer body.',
+    primerBodyCy: 'Corff Cymraeg legacy.',
+    primerSoundButtons: [
+      { label: 'Y', labelCy: 'Y Cymraeg', textToSpeak: 'byd' }
+    ]
+  });
+  assertEqual(legacyStoredPrimer.titleEn, 'Legacy DB primer title', 'Admin repository normalization should read legacy primerTitle from stored primer_content.');
+  assertEqual(legacyStoredPrimer.titleCy, 'Teitl Cymraeg legacy', 'Admin repository normalization should read legacy primerTitleCy from stored primer_content.');
+  assertEqual(legacyStoredPrimer.bodyCy, 'Corff Cymraeg legacy.', 'Admin repository normalization should read legacy primerBodyCy from stored primer_content.');
+  assertEqual(legacyStoredPrimer.soundItems[0].labelCy, 'Y Cymraeg', 'Admin repository normalization should read legacy primerSoundButtons labelCy.');
+
   const preservePreview = validateImportPayload({
     primerDrafts: {
       existing_primer_list: {
@@ -204,6 +219,7 @@ async function run() {
 
   assertEqual(saved.primerContent?.enabled, true, 'Admin save should persist primer enabled state.');
   assertEqual(saved.primerContent?.titleEn, 'Database primer title', 'Admin save should persist English primer title.');
+  assertEqual(saved.primerContent?.titleCy, 'Teitl cronfa ddata', 'Admin save should persist Welsh primer title.');
   assertEqual(saved.primerContent?.bodyCy, 'Corff cronfa ddata.', 'Admin save should persist Welsh primer body.');
   assertEqual(saved.primerContent?.soundItems.length, 1, 'Admin save should persist added primer sound items.');
 
@@ -228,6 +244,7 @@ async function run() {
     }
   });
   assertEqual(edited.primerContent?.soundItems[0].label, 'DD edited', 'Admin save should persist edited primer sound item labels.');
+  assertEqual(edited.primerContent?.soundItems[0].labelCy, 'DD', 'Admin save should preserve existing Welsh primer sound labels while editing English labels.');
   assertEqual(edited.primerContent?.soundItems.length, 2, 'Admin save should persist additional primer sound items.');
 
   const removed = await mockAdminRepository.saveWordList({
