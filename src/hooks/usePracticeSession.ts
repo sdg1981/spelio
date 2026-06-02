@@ -665,8 +665,6 @@ export function usePracticeSession({
     correct: stats.correctWords,
     incorrect: stats.incorrectWordIds.size,
     revealed: stats.revealedWordIds.size,
-    currentWordHadIncorrectAttempt: currentWord ? incorrectWordIdsRef.current.has(currentWord.id) : false,
-    currentWordHadReveal: currentWord ? revealedWordIdsRef.current.has(currentWord.id) || letters.some(letter => letter.revealed) : false,
     incorrectAttempts: stats.incorrectAttempts,
     revealedLetters: stats.revealedLetters,
     startTime: stats.startedAt,

@@ -1278,9 +1278,8 @@ export function Practice({
   const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
   const wordPillAudioIconVisible = !currentWordAudioUnavailable;
   const WordPillAudioIcon = storage.settings.audioPrompts ? Repeat : Volume2;
-  const authoredLearnerNotesUnlocked = wordComplete || stats.currentWordHadIncorrectAttempt || stats.currentWordHadReveal;
-  const wordInsights = !practiceTestMode && interfaceLanguage === 'en' && authoredLearnerNotesUnlocked
-    ? [currentWord.usageNote, currentWord.dialectNote]
+  const wordInsights = !practiceTestMode && interfaceLanguage === 'en'
+    ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
       .filter((note): note is string => Boolean(note))
     : [];
