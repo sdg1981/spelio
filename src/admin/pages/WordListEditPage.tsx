@@ -463,7 +463,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       )}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_384px]">
         <div className="grid gap-6">
-          <ContentHealthCard list={list} />
+          <ContentHealthCard list={list} onActiveChange={isActive => updateList({ isActive })} />
           <AdminCard className="p-5">
             <h2 className="mb-4 text-lg font-black tracking-[-0.02em]">List details</h2>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

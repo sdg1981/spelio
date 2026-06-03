@@ -2,7 +2,7 @@ import { FileText } from 'lucide-react';
 import type { AdminWordList } from '../types';
 import { AdminButton, AdminCard } from './primitives';
 
-export function ContentHealthCard({ list }: { list: AdminWordList }) {
+export function ContentHealthCard({ list, onActiveChange }: { list: AdminWordList; onActiveChange?: (isActive: boolean) => void }) {
   const missingAudio = list.words.filter(word => word.audioStatus === 'missing').length;
   const missingDialect = list.words.filter(word => !word.dialect).length;
   const missingNotes = list.words.filter(word => !word.usageNote && !word.dialectNote).length;
@@ -16,12 +16,18 @@ export function ContentHealthCard({ list }: { list: AdminWordList }) {
           <FileText size={20} className="text-slate-700" />
           <h2 className="text-lg font-black tracking-[-0.02em]">Content health</h2>
         </div>
-        <div className="flex items-center gap-3 text-sm font-bold text-slate-700">
+        <label className="flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
           Active
+          <input
+            className="sr-only"
+            type="checkbox"
+            checked={list.isActive}
+            onChange={event => onActiveChange?.(event.target.checked)}
+          />
           <span className={`relative h-5 w-9 rounded-full ${list.isActive ? 'bg-red-600' : 'bg-slate-300'}`}>
             <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${list.isActive ? 'left-[18px]' : 'left-0.5'}`} />
           </span>
-        </div>
+        </label>
       </div>
       <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 sm:grid-cols-3 lg:grid-cols-[repeat(5,1fr)_auto] lg:divide-y-0">
         <Metric label="Total words" value={list.words.length} />

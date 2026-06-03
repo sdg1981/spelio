@@ -211,6 +211,8 @@ const payload = buildAdminContentExportPayload({
 assertEqual(payload.source, 'live_database_export', 'export source should identify live database snapshots');
 assertEqual(payload.schemaVersion, '1.3', 'export schema should include primer content support.');
 assertEqual(payload.lists[0].id, 'first_list', 'lists should sort by order');
+assertEqual(payload.lists[0].isActive, true, 'export should preserve active list status.');
+assertEqual(payload.lists[1].isActive, false, 'export should preserve inactive list status.');
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
 assert(!('ownerId' in payload.collections[0]), 'collection ownerId should not be exported');
@@ -230,5 +232,7 @@ const preview = validateImportPayload(payload, {
 assertArrayEqual(preview.errors, [], 'export should validate against the current importer');
 assertEqual(preview.totalLists, 2, 'export should include all lists');
 assertEqual(preview.totalWords, 2, 'export should include all words');
+assertEqual(preview.content.lists[0].isActive, true, 'import validation should preserve active list status.');
+assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
 assertEqual(preview.content.lists[0].primerContent?.soundItems[0].textToSpeak, 'hedd', 'import validation should preserve primer sound generation text.');
 assertEqual(createAdminContentExportFilename(payload.exportedAt), 'spelio_live_content_export_2026-05-21_10-11-12Z.json', 'filename should be timestamped and filesystem-safe');
