@@ -1,6 +1,7 @@
 import { AdminLayout } from './components/AdminLayout';
 import { useAdminPath } from './utils/router';
 import { AudioQueuePage } from './pages/AudioQueuePage';
+import { CollectionEditPage } from './pages/CollectionEditPage';
 import { CollectionsPage } from './pages/CollectionsPage';
 import { CustomListsPage } from './pages/CustomListsPage';
 import { FocusCategoriesPage, DialectsPage, StagesPage } from './pages/StructurePages';
@@ -32,7 +33,8 @@ function AdminRoute({ path, navigate, repository }: { path: string; navigate: (p
   if (path === '/admin') return <OverviewPage navigate={navigate} repository={repository} />;
   if (path === '/admin/word-lists') return <WordListsPage navigate={navigate} repository={repository} />;
   if (path === '/admin/custom-lists') return <CustomListsPage repository={repository} />;
-  if (path === '/admin/collections') return <CollectionsPage repository={repository} />;
+  if (path === '/admin/collections') return <CollectionsPage navigate={navigate} repository={repository} />;
+  if (path.startsWith('/admin/collections/')) return <CollectionEditPage id={decodeURIComponent(path.replace('/admin/collections/', ''))} navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/word-lists/')) return <WordListEditPage id={decodeURIComponent(path.replace('/admin/word-lists/', ''))} navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/words/')) return <WordEditPage id={decodeURIComponent(path.replace('/admin/words/', ''))} navigate={navigate} repository={repository} />;
   if (path === '/admin/words') return <WordsPage navigate={navigate} repository={repository} />;

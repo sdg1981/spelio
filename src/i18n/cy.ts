@@ -34,6 +34,16 @@ export const cy = {
     audioOffNote: 'Mae’r rhestrau Foundations hyn yn gweithio orau gyda sain.',
     startPractice: 'Dechrau ymarfer'
   },
+  collectionIntro: {
+    kicker: 'Cyn i chi ddechrau',
+    play: 'Chwarae',
+    pause: 'Oedi',
+    playAudio: 'Chwarae sain y cyflwyniad',
+    pauseAudio: 'Oedi sain y cyflwyniad',
+    autoplayBlocked: 'Mae eich porwr wedi rhwystro awtochwarae. Pwyswch Chwarae i glywed y cyflwyniad.',
+    audioUnavailable: 'Nid yw sain y cyflwyniad wedi ei hychwanegu eto.',
+    start: 'Dechrau’r Sylfeini'
+  },
   how: {
     backHomeLabel: 'Yn ôl i’r hafan',
     heroHeading: 'Popeth sydd ei angen arnoch i feithrin hyder sillafu.',

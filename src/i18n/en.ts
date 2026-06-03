@@ -34,6 +34,16 @@ export const en = {
     audioOffNote: 'These Foundations lists work best with sound.',
     startPractice: 'Start practice'
   },
+  collectionIntro: {
+    kicker: 'Before you begin',
+    play: 'Play',
+    pause: 'Pause',
+    playAudio: 'Play introduction audio',
+    pauseAudio: 'Pause introduction audio',
+    autoplayBlocked: 'Your browser blocked autoplay. Press Play to hear the introduction.',
+    audioUnavailable: 'Introduction audio has not been added yet.',
+    start: 'Start Foundations'
+  },
   how: {
     backHomeLabel: 'Back to homepage',
     heroHeading: 'Everything you need to build spelling confidence.',

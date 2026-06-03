@@ -27,7 +27,10 @@ function cloneList(list: AdminWordList): AdminWordList {
 }
 
 function cloneCollection(collection: AdminWordListCollection): AdminWordListCollection {
-  return { ...collection };
+  return {
+    ...collection,
+    introContent: collection.introContent ? { ...collection.introContent } : collection.introContent
+  };
 }
 
 function collectionName(id: string) {
@@ -256,6 +259,33 @@ export const mockAdminRepository: AdminRepository = {
       }
     });
     return { item: clearedItem, ok: true };
+  },
+
+  async generateCollectionIntroAudio(collectionId: string, provider: 'azure') {
+    const collection = await this.getCollection(collectionId);
+    if (!collection?.introContent) throw new Error('Collection intro content not found.');
+    if (provider !== 'azure') throw new Error('Collection intro audio currently supports Azure generation only.');
+    const readyIntro = {
+      ...collection.introContent,
+      audioUrl: `https://example.test/storage/v1/object/public/audio/collection-intros/azure/${collection.id}/${createPrimerAudioObjectVersion()}.mp3`,
+      audioStatus: 'ready' as const,
+      audioSource: 'azure' as const
+    };
+    await this.saveCollection({ ...collection, introContent: readyIntro });
+    return { audioUrl: readyIntro.audioUrl, audioStatus: readyIntro.audioStatus, audioSource: readyIntro.audioSource, ok: true };
+  },
+
+  async clearCollectionIntroAudio(collectionId: string) {
+    const collection = await this.getCollection(collectionId);
+    if (!collection?.introContent) throw new Error('Collection intro content not found.');
+    const clearedIntro = {
+      ...collection.introContent,
+      audioUrl: '',
+      audioStatus: 'missing' as const,
+      audioSource: 'unknown' as const
+    };
+    await this.saveCollection({ ...collection, introContent: clearedIntro });
+    return { audioUrl: clearedIntro.audioUrl, audioStatus: clearedIntro.audioStatus, audioSource: clearedIntro.audioSource, ok: true };
   },
 
   async generateAudioBatch(wordIds: string[]) {

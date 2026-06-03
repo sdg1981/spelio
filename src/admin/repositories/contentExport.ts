@@ -1,8 +1,9 @@
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection } from '../types';
-import type { WordListPrimerContent } from '../../data/wordLists';
+import type { WordListCollectionIntroContent, WordListPrimerContent } from '../../data/wordLists';
 import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 
-export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.3';
+export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.4';
 export const ADMIN_CONTENT_EXPORT_SOURCE = 'live_database_export';
 
 export interface AdminContentExportPayload {
@@ -37,6 +38,7 @@ interface ExportedCollection {
   ownerType: string | null;
   order: number;
   isActive: boolean;
+  introContent?: WordListCollectionIntroContent;
 }
 
 interface ExportedStructureOption {
@@ -115,7 +117,8 @@ export function buildAdminContentExportPayload(input: {
     curriculumArea: collection.curriculumArea,
     ownerType: collection.ownerType,
     order: collection.order,
-    isActive: collection.isActive
+    isActive: collection.isActive,
+    introContent: toCollectionIntroStorage(normalizeCollectionIntroContent(collection.introContent, collection.id), collection.id)
   }));
   const lists = [...input.lists].sort(byOrderThenId).map(exportList);
 
@@ -131,7 +134,7 @@ export function buildAdminContentExportPayload(input: {
     notes: [
       'Generated from the current admin database content, not from static JSON seed files.',
       'The export intentionally excludes learner progress, analytics, timestamps, and transient operational metadata.',
-      'Audio fields, including primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.',
+      'Audio fields, including collection intro and primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.',
       'Collections, lists, and words are sorted by order, then id, for stable review diffs.'
     ],
     collections,

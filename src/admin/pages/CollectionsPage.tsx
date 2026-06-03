@@ -9,7 +9,7 @@ import type { AdminWordListCollection } from '../types';
 import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
 import type { AdminWordList } from '../types';
 
-export function CollectionsPage({ repository }: { repository: AdminRepository }) {
+export function CollectionsPage({ navigate, repository }: { navigate: (path: string) => void; repository: AdminRepository }) {
   const [collections, setCollections] = useState<AdminWordListCollection[]>([]);
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
   const [clearingCollection, setClearingCollection] = useState<AdminWordListCollection | null>(null);
@@ -99,7 +99,13 @@ export function CollectionsPage({ repository }: { repository: AdminRepository })
                 return (
                   <tr key={collection.id}>
                     <td className="px-5 py-4">
-                      <div className="font-bold text-slate-950">{collection.name}</div>
+                      <button
+                        type="button"
+                        className="text-left font-bold text-slate-950 underline-offset-4 hover:underline"
+                        onClick={() => navigate(`/admin/collections/${encodeURIComponent(collection.id)}`)}
+                      >
+                        {collection.name}
+                      </button>
                       {collection.nameCy && <div className="mt-1 text-xs font-semibold text-slate-700">{collection.nameCy}</div>}
                       <div className="mt-1 text-xs text-slate-500">{collection.description}</div>
                       {collection.descriptionCy && <div className="mt-1 text-xs text-slate-500">{collection.descriptionCy}</div>}

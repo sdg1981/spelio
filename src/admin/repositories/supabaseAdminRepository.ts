@@ -5,11 +5,12 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createCollectionIntroAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { clearCollectionContentWithClient, deleteWordListWithClient } from './contentDelete';
 import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 
 type CustomWordListRow = {
   id: string;
@@ -66,6 +67,7 @@ type CollectionRow = {
   owner_id: string | null;
   order_index: number;
   is_active: boolean;
+  intro_content?: unknown;
   created_at: string;
   updated_at: string;
 };
@@ -467,6 +469,83 @@ export const supabaseAdminRepository: AdminRepository = {
     };
   },
 
+  async generateCollectionIntroAudio(collectionId: string, provider: 'azure') {
+    const client = await requireAdminSupabase();
+    const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
+    if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
+    if (provider !== 'azure') throw new Error('Collection intro audio currently supports Azure generation only.');
+    const collection = await this.getCollection(collectionId);
+    if (!collection) throw new Error('Collection not found.');
+    const introContent = normalizeCollectionIntroContent(collection.introContent, collection.id);
+    const text = [introContent.titleEn, introContent.bodyEn].map(value => value.trim()).filter(Boolean).join('\n\n');
+    if (!text) throw new Error('Collection intro English copy is empty.');
+
+    await this.saveCollection({
+      ...collection,
+      introContent: {
+        ...introContent,
+        audioStatus: 'generating',
+        audioSource: 'azure'
+      }
+    });
+
+    try {
+      const audio = await synthesizeInterfaceAudioMp3(text, 'en');
+      if (audio.blob.size < 100) throw new Error('Collection intro audio upload was blocked because the generated file was unexpectedly small.');
+      const path = createCollectionIntroAudioStoragePath(collection.id, 'azure', createPrimerAudioObjectVersion());
+      const { error: uploadError } = await client.storage
+        .from('audio')
+        .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = client.storage.from('audio').getPublicUrl(path);
+      if (!data.publicUrl) throw new Error('Collection intro audio upload did not return a public URL.');
+
+      const saved = await this.saveCollection({
+        ...collection,
+        introContent: {
+          ...introContent,
+          audioUrl: data.publicUrl,
+          audioStatus: 'ready',
+          audioSource: 'azure'
+        }
+      });
+      const savedIntro = normalizeCollectionIntroContent(saved.introContent, saved.id);
+      return { audioUrl: savedIntro.audioUrl, audioStatus: savedIntro.audioStatus, audioSource: savedIntro.audioSource, ok: true };
+    } catch (error) {
+      const failedIntro = {
+        ...introContent,
+        audioStatus: 'failed' as const,
+        audioSource: 'azure' as const
+      };
+      await this.saveCollection({ ...collection, introContent: failedIntro }).catch(saveError => {
+        throw new Error(`${readErrorMessage(error)}; Supabase save failed while marking collection intro audio as failed: ${readErrorMessage(saveError)}`);
+      });
+      return { audioUrl: failedIntro.audioUrl, audioStatus: failedIntro.audioStatus, audioSource: failedIntro.audioSource, ok: false, error: readErrorMessage(error) };
+    }
+  },
+
+  async clearCollectionIntroAudio(collectionId: string) {
+    const client = await requireAdminSupabase();
+    const collection = await this.getCollection(collectionId);
+    if (!collection) throw new Error('Collection not found.');
+    const introContent = normalizeCollectionIntroContent(collection.introContent, collection.id);
+    const existingStoragePath = getCollectionIntroAudioStoragePathFromPublicUrl(introContent.audioUrl);
+    if (existingStoragePath) {
+      await client.storage.from('audio').remove([existingStoragePath]).catch(() => {
+        // Clearing the DB fields is still useful if the object is already gone.
+      });
+    }
+    const clearedIntro = {
+      ...introContent,
+      audioUrl: '',
+      audioStatus: 'missing' as const,
+      audioSource: 'unknown' as const
+    };
+    const saved = await this.saveCollection({ ...collection, introContent: clearedIntro });
+    const savedIntro = normalizeCollectionIntroContent(saved.introContent, saved.id);
+    return { audioUrl: savedIntro.audioUrl, audioStatus: savedIntro.audioStatus, audioSource: savedIntro.audioSource, ok: true };
+  },
+
   async generateAudioBatch(wordIds: string[]) {
     // TODO: Move batch synthesis to a server-side job queue before production-scale generation.
     const results = [];
@@ -754,6 +833,7 @@ function mapCollectionRow(row: CollectionRow): AdminWordListCollection {
     ownerId: row.owner_id,
     order: row.order_index,
     isActive: row.is_active,
+    introContent: normalizeCollectionIntroContent(row.intro_content, row.id),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -875,7 +955,8 @@ function toCollectionRow(collection: AdminWordListCollection) {
     owner_type: collection.ownerType,
     owner_id: collection.ownerId || null,
     order_index: collection.order,
-    is_active: collection.isActive
+    is_active: collection.isActive,
+    intro_content: toCollectionIntroStorage(normalizeCollectionIntroContent(collection.introContent, collection.id), collection.id)
   };
 }
 
@@ -953,6 +1034,21 @@ function getPrimerAudioStoragePathFromPublicUrl(audioUrl: string) {
     if (markerIndex < 0) return null;
     const path = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
     return path.startsWith('cy-primer/') || path.startsWith('cy-primer-elevenlabs/') ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+function getCollectionIntroAudioStoragePathFromPublicUrl(audioUrl: string) {
+  const candidate = audioUrl.trim();
+  if (!candidate) return null;
+  try {
+    const url = new URL(candidate);
+    const marker = '/storage/v1/object/public/audio/';
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex < 0) return null;
+    const path = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+    return path.startsWith('collection-intros/') ? path : null;
   } catch {
     return null;
   }

@@ -13,6 +13,7 @@ import type { PublicContent } from './staticContentRepository';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../audioProvider';
 import { createInterfaceAudioRegistry, normalizeInterfaceAudioClips } from '../interfaceAudio';
 import { normalizePrimerContent } from '../../content/foundationsPrimer';
+import { normalizeCollectionIntroContent } from '../../content/collectionIntro';
 
 type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
 
@@ -32,6 +33,7 @@ type CollectionRow = {
   owner_id: string | null;
   order_index: number | null;
   is_active: boolean | null;
+  intro_content?: unknown;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -173,6 +175,7 @@ function mapCollection(row: CollectionRow): WordListCollection {
     ownerId: row.owner_id,
     order: row.order_index ?? 0,
     isActive: row.is_active === true,
+    introContent: normalizeCollectionIntroContent(row.intro_content, row.id),
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined
   };
@@ -265,7 +268,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const [collectionsResult, initialListsResult, wordsResult, audioProviderResult, interfaceAudioResult] = await Promise.all([
     client
       .from('word_list_collections')
-      .select('id,slug,name,name_cy,description,description_cy,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
+      .select('id,slug,name,name_cy,description,description_cy,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,intro_content,created_at,updated_at')
       .eq('is_active', true)
       .order('order_index', { ascending: true })
       .order('id', { ascending: true }),

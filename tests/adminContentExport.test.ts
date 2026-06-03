@@ -37,6 +37,18 @@ const collections: AdminWordListCollection[] = [
     ownerId: 'internal-owner-not-exported',
     order: 2,
     isActive: true,
+    introContent: {
+      enabled: true,
+      titleEn: 'Collection Intro',
+      titleCy: '',
+      bodyEn: 'A calm collection introduction.',
+      bodyCy: '',
+      audioUrl: 'https://example.test/collection-intro.mp3',
+      audioStatus: 'ready',
+      audioSource: 'manual',
+      version: '2026-06-03',
+      seenKey: 'spelio-collection-intro:spelio_core_welsh:2026-06-03'
+    },
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-02T00:00:00.000Z'
   }
@@ -211,7 +223,7 @@ const payload = buildAdminContentExportPayload({
 });
 
 assertEqual(payload.source, 'live_database_export', 'export source should identify live database snapshots');
-assertEqual(payload.schemaVersion, '1.3', 'export schema should include primer content support.');
+assertEqual(payload.schemaVersion, '1.4', 'export schema should include collection intro content support.');
 assertEqual(payload.lists[0].id, 'first_list', 'lists should sort by order');
 assertEqual(payload.lists[0].isActive, true, 'export should preserve active list status.');
 assertEqual(payload.lists[1].isActive, false, 'export should preserve inactive list status.');
@@ -219,6 +231,8 @@ assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort b
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
 assertEqual(payload.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'collection Welsh display name should be exported');
 assertEqual(payload.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'collection Welsh display description should be exported');
+assertEqual(payload.collections[0].introContent?.enabled, true, 'collection intro enabled state should be exported');
+assertEqual(payload.collections[0].introContent?.audioUrl, 'https://example.test/collection-intro.mp3', 'collection intro audio metadata should be exported');
 assert(!('ownerId' in payload.collections[0]), 'collection ownerId should not be exported');
 assert(!('createdAt' in payload.lists[0]), 'list timestamps should not be exported');
 assert(!('elevenLabsAudioUrl' in payload.lists[0].words[0]), 'ElevenLabs operational audio metadata should not be exported');
@@ -240,6 +254,8 @@ assertEqual(preview.content.lists[0].isActive, true, 'import validation should p
 assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
 assertEqual(preview.content.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'import validation should preserve collection Welsh display name.');
 assertEqual(preview.content.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'import validation should preserve collection Welsh display description.');
+assertEqual(preview.content.collections[0].introContent?.titleEn, 'Collection Intro', 'import validation should preserve collection intro title.');
+assertEqual(preview.content.collections[0].introContent?.audioStatus, 'ready', 'import validation should preserve collection intro audio status.');
 assertEqual(preview.content.lists[0].nameCy, 'Rhestr Gyntaf', 'import validation should preserve list Welsh display name.');
 assertEqual(preview.content.lists[0].descriptionCy, 'Disgrifiad Cymraeg cyntaf.', 'import validation should preserve list Welsh display description.');
 assertEqual(preview.content.lists[0].primerContent?.soundItems[0].textToSpeak, 'hedd', 'import validation should preserve primer sound generation text.');

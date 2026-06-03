@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.3",
+  "schemaVersion": "1.4",
   "exportedAt": "2026-06-03T22:39:28.498Z",
   "source": "live_database_export",
   "product": "Spelio",
@@ -10,7 +10,7 @@
   "notes": [
     "Generated from the current admin database content, not from static JSON seed files.",
     "The export intentionally excludes learner progress, analytics, timestamps, and transient operational metadata.",
-    "Audio fields, including primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.",
+    "Audio fields, including collection intro and primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.",
     "Collections, lists, and words are sorted by order, then id, for stable review diffs."
   ],
   "collections": [
@@ -44,7 +44,19 @@
       "order": 2,
       "isActive": true,
       "nameCy": "Sylfeini Sillafu Cymraeg",
-      "descriptionCy": "Patrymau sillafu Cymraeg cyffredin i helpu sillafu i deimlo’n fwy cyfarwydd a rhagweladwy."
+      "descriptionCy": "Patrymau sillafu Cymraeg cyffredin i helpu sillafu i deimlo’n fwy cyfarwydd a rhagweladwy.",
+      "introContent": {
+        "enabled": true,
+        "titleEn": "Welsh Spelling Foundations",
+        "titleCy": "",
+        "bodyEn": "Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.\n\nIn this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.\n\nListen carefully, notice the patterns, and take your time. The aim is not to memorise rules, but to make Welsh spelling feel more predictable.",
+        "bodyCy": "",
+        "audioUrl": "",
+        "audioStatus": "missing",
+        "audioSource": "unknown",
+        "version": "2026-06-03",
+        "seenKey": "spelio-collection-intro:spelio_welsh_foundations:2026-06-03"
+      }
     },
     {
       "id": "spelio_support_welsh",

@@ -8,6 +8,21 @@ export type DialectPreference = 'mixed' | 'north' | 'south_standard';
 export type LanguageCode = 'en' | 'cy' | string;
 export type WordListCollectionType = 'spelio_core' | 'curriculum' | 'course' | 'school' | 'teacher' | 'personal' | 'custom';
 export type WordListCollectionOwnerType = 'spelio' | 'school' | 'teacher' | 'user' | null;
+export type PrimerAudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+export type PrimerAudioSource = 'azure' | 'elevenlabs' | 'manual' | 'unknown';
+
+export interface WordListCollectionIntroContent {
+  enabled: boolean;
+  titleEn: string;
+  titleCy: string;
+  bodyEn: string;
+  bodyCy: string;
+  audioUrl: string;
+  audioStatus: PrimerAudioStatus;
+  audioSource: PrimerAudioSource;
+  version: string;
+  seenKey: string;
+}
 
 export const DEFAULT_WORD_LIST_COLLECTION_ID = 'spelio_core_welsh';
 
@@ -27,6 +42,7 @@ export interface WordListCollection {
   ownerId?: string | null;
   order: number;
   isActive: boolean;
+  introContent?: WordListCollectionIntroContent | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -90,9 +106,6 @@ export interface PracticeWord {
   disablePatternHints?: boolean;
   variantGroupId?: string;
 }
-
-export type PrimerAudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
-export type PrimerAudioSource = 'azure' | 'elevenlabs' | 'manual' | 'unknown';
 
 export interface WordListPrimerSoundItem {
   id: string;

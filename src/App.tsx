@@ -4,6 +4,7 @@ import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from '
 import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
 import { WelshSpellingBasicsOverview, WelshSpellingBasicsTopicPage } from './components/WelshSpellingBasics';
+import { CollectionIntro } from './components/CollectionIntro';
 import { FoundationsPrimer } from './components/FoundationsPrimer';
 import { Practice } from './components/Practice';
 import { WordListsPage } from './components/WordListsPage';
@@ -31,6 +32,7 @@ import { isStandalonePublicPagePath, shouldPreserveInterfaceLanguageScreen, shou
 import { createTranslator, type InterfaceLanguage } from './i18n';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, type SpellingBasicsTopicSlug } from './content/spellingBasics';
 import { getFoundationsPrimer } from './content/foundationsPrimer';
+import { getCollectionIntroForPracticeStart, hasSeenCollectionIntro, WELSH_FOUNDATIONS_COLLECTION_ID } from './content/collectionIntro';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, type InterfaceAudioClipRegistry } from './lib/interfaceAudio';
 
@@ -40,6 +42,7 @@ type PendingPrimerLaunch = {
   start: PracticeStart;
   detachedContext: SharedWordListContext | null;
   returnScreen: Screen;
+  introSeenBeforeView?: boolean;
 };
 
 const AdminApp = lazy(() => import('./admin/AdminApp').then(module => ({ default: module.AdminApp })));
@@ -380,7 +383,7 @@ export default function App() {
   function beginPractice(
     start: PracticeStart,
     detachedContext: SharedWordListContext | null = sharedContext,
-    options: { skipPrimer?: boolean; returnScreen?: Screen } = {}
+    options: { skipCollectionIntro?: boolean; skipPrimer?: boolean; returnScreen?: Screen } = {}
   ) {
     if (start.review && !difficultWords) {
       setReviewMode(false);
@@ -390,12 +393,29 @@ export default function App() {
 
     const primerListId = getPracticeStartPrimerListId(start);
     const primerList = primerListId ? practiceLists.find(list => list.id === primerListId) : null;
+    const collectionIntro = !detachedContext && primerList?.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID
+      ? getCollectionIntroForPracticeStart(primerList, interfaceLanguage)
+      : null;
+    const introSeenBeforeView = collectionIntro ? hasSeenCollectionIntro(collectionIntro) : true;
+    if (!options.skipCollectionIntro && collectionIntro && !introSeenBeforeView) {
+      setPendingPrimerLaunch({
+        start,
+        detachedContext,
+        returnScreen: options.returnScreen ?? screen,
+        introSeenBeforeView
+      });
+      setScreen('collection-intro');
+      resetPublicPageScrollToTop();
+      return;
+    }
+
     const primer = primerList ? getFoundationsPrimer(primerList, interfaceLanguage) : primerListId ? getFoundationsPrimer(primerListId, interfaceLanguage) : null;
     if (!options.skipPrimer && primer) {
       setPendingPrimerLaunch({
         start,
         detachedContext,
-        returnScreen: options.returnScreen ?? screen
+        returnScreen: options.returnScreen ?? screen,
+        introSeenBeforeView: true
       });
       setScreen('primer');
       resetPublicPageScrollToTop();
@@ -488,7 +508,16 @@ export default function App() {
   function startPracticeFromPrimer() {
     if (!pendingPrimerLaunch) return;
     beginPractice(pendingPrimerLaunch.start, pendingPrimerLaunch.detachedContext, {
+      skipCollectionIntro: true,
       skipPrimer: true,
+      returnScreen: pendingPrimerLaunch.returnScreen
+    });
+  }
+
+  function startPracticeFromCollectionIntro() {
+    if (!pendingPrimerLaunch) return;
+    beginPractice(pendingPrimerLaunch.start, pendingPrimerLaunch.detachedContext, {
+      skipCollectionIntro: true,
       returnScreen: pendingPrimerLaunch.returnScreen
     });
   }
@@ -794,6 +823,9 @@ export default function App() {
   const activePrimerListId = pendingPrimerLaunch ? getPracticeStartPrimerListId(pendingPrimerLaunch.start) : null;
   const activePrimerList = activePrimerListId ? practiceLists.find(list => list.id === activePrimerListId) : null;
   const activePrimer = activePrimerList ? getFoundationsPrimer(activePrimerList, interfaceLanguage) : activePrimerListId ? getFoundationsPrimer(activePrimerListId, interfaceLanguage) : null;
+  const activeCollectionIntro = activePrimerList?.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID
+    ? getCollectionIntroForPracticeStart(activePrimerList, interfaceLanguage)
+    : null;
   const screenContent = activeScreen === 'how' ? (
     <HowSpelioWorks
       onHome={returnToLearning}
@@ -843,6 +875,17 @@ export default function App() {
       onStartPractice={startSupportPractice}
       wordLists={practiceLists}
       topic={spellingBasicsTopic}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
+  ) : activeScreen === 'collection-intro' && activeCollectionIntro ? (
+    <CollectionIntro
+      intro={activeCollectionIntro}
+      shouldAutoplay={pendingPrimerLaunch?.introSeenBeforeView === false}
+      onBack={returnFromPrimer}
+      onHome={returnToLearning}
+      onStart={startPracticeFromCollectionIntro}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
@@ -979,9 +1022,9 @@ export default function App() {
 
   const showSharedPublicBackground = activeScreen !== 'home';
   const useActionPublicBackground = activeScreen === 'home' || activeScreen === 'end';
-  const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic' || activeScreen === 'primer';
+  const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic' || activeScreen === 'primer' || activeScreen === 'collection-intro';
   const usePracticePublicBackground = activeScreen === 'practice';
-  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry', 'primer'].includes(activeScreen);
+  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry', 'primer', 'collection-intro'].includes(activeScreen);
   const useNeutralPublicBackground = showSharedPublicBackground && !useActionPublicBackground;
   const useEndPublicBackground = activeScreen === 'end';
   const publicAppClassName = [

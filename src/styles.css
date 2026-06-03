@@ -8209,6 +8209,10 @@
   margin-top:10px;
 }
 
+.collection-intro-body p + p{
+  margin-top:16px;
+}
+
 .foundations-primer-sounds{
   display:flex;
   flex-wrap:wrap;
@@ -8261,12 +8265,20 @@
 }
 
 .foundations-primer-audio-note{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
   width:min(100%,430px);
   margin:24px auto 0;
   color:var(--text-secondary, #5f6b78);
   font-size:15px;
   font-weight:750;
   line-height:1.45;
+}
+
+.collection-intro-audio{
+  margin-top:30px;
 }
 
 .foundations-primer-start{

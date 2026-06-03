@@ -34,6 +34,14 @@ export interface PrimerAudioGenerationResult {
   error?: string;
 }
 
+export interface CollectionIntroAudioGenerationResult {
+  audioUrl: string;
+  audioStatus: 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
+  audioSource: 'azure' | 'elevenlabs' | 'manual' | 'unknown';
+  ok: boolean;
+  error?: string;
+}
+
 export interface ElevenLabsAudioDiagnostics {
   model: string;
   voiceId: string;
@@ -256,6 +264,13 @@ export function createInterfaceAudioStoragePath(clip: { key: string; language: s
 export function createPrimerAudioStoragePath(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs', version?: string) {
   const root = provider === 'elevenlabs' ? 'cy-primer-elevenlabs' : 'cy-primer';
   const basePath = `${root}/${slugify(listId)}/${slugify(itemKey)}`;
+  return version?.trim()
+    ? `${basePath}/${slugify(version)}.mp3`
+    : `${basePath}.mp3`;
+}
+
+export function createCollectionIntroAudioStoragePath(collectionId: string, provider: 'azure', version?: string) {
+  const basePath = `collection-intros/${provider}/${slugify(collectionId)}`;
   return version?.trim()
     ? `${basePath}/${slugify(version)}.mp3`
     : `${basePath}.mp3`;

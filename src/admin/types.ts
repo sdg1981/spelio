@@ -1,4 +1,4 @@
-import type { WordListPrimerContent } from '../data/wordLists';
+import type { WordListCollectionIntroContent, WordListPrimerContent } from '../data/wordLists';
 
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 export type ElevenLabsAudioStatus = 'missing' | 'pending' | 'generated' | 'failed';
@@ -29,6 +29,7 @@ export interface AdminWordListCollection {
   ownerId: string | null;
   order: number;
   isActive: boolean;
+  introContent?: WordListCollectionIntroContent | null;
   createdAt: string;
   updatedAt: string;
 }

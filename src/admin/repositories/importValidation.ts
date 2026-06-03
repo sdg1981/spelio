@@ -1,6 +1,7 @@
 import type { AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
 import { createPrimerContentFromDraft, normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
+import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 import type { WordListPrimerContent, WordListPrimerSoundItem } from '../../data/wordLists';
 
 const validDialects = new Set(['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other']);
@@ -416,6 +417,7 @@ function validateCollection(collection: RawCollection, id: string, errors: strin
   if (hasField(collection, 'isActive', 'is_active') && typeof fieldValue(collection, 'isActive', 'is_active') !== 'boolean') errors.push(`Collection ${id} has invalid isActive.`);
   if (hasField(collection, 'sourceLanguage', 'source_language') && !validLanguage(stringField(collection, 'sourceLanguage', 'source_language'))) warnings.push(`Collection ${id} has unusual sourceLanguage.`);
   if (hasField(collection, 'targetLanguage', 'target_language') && !validLanguage(stringField(collection, 'targetLanguage', 'target_language'))) warnings.push(`Collection ${id} has unusual targetLanguage.`);
+  validateCollectionIntroContent(fieldValue(collection, 'introContent', 'intro_content'), id, errors);
 }
 
 function normalizeCollection(collection: RawCollection | undefined, id: string, now: string): AdminWordListCollection {
@@ -438,9 +440,21 @@ function normalizeCollection(collection: RawCollection | undefined, id: string, 
     ownerId: nullableString(fieldValue(collection, 'ownerId', 'owner_id')),
     order: numberField(collection, isDefault ? 1 : 0, 'order', 'order_index'),
     isActive: typeof fieldValue(collection, 'isActive', 'is_active') === 'boolean' ? fieldValue(collection, 'isActive', 'is_active') as boolean : true,
+    introContent: toCollectionIntroStorage(normalizeCollectionIntroContent(fieldValue(collection, 'introContent', 'intro_content'), id), id),
     createdAt: now,
     updatedAt: now
   };
+}
+
+function validateCollectionIntroContent(value: unknown, collectionId: string, errors: string[]) {
+  if (value === undefined || value === null) return;
+  if (!isRecord(value)) {
+    errors.push(`Collection ${collectionId} introContent must be an object when provided.`);
+    return;
+  }
+  if (hasField(value, 'enabled') && typeof fieldValue(value, 'enabled') !== 'boolean') errors.push(`Collection ${collectionId} introContent.enabled must be a boolean.`);
+  const audioStatus = stringField(value, 'audioStatus', 'audio_status', 'introAudioStatus', 'intro_audio_status');
+  if (audioStatus && !validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Collection ${collectionId} introContent has invalid audioStatus "${audioStatus}".`);
 }
 
 function emptyPreview(errors: string[], warnings: string[]): ImportPreview {

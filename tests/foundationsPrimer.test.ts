@@ -1,4 +1,5 @@
 import { getFoundationsPrimer, getPrimerAudioText, hasFoundationsPrimer } from '../src/content/foundationsPrimer';
+import { getCollectionIntro, hasSeenCollectionIntro, markCollectionIntroSeen, normalizeCollectionIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
 import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds } from '../src/lib/foundationsPrimerAudio';
 import { shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange } from '../src/lib/interfaceLanguageNavigation';
 
@@ -111,6 +112,18 @@ assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons shou
 assert(hasFoundationsPrimer('foundation_patterns_y'), 'Known Foundations list should report primer availability.');
 assertEqual(getFoundationsPrimer('foundations_first_words', 'en'), null, 'Lists without primerDrafts should not show a primer.');
 
+const foundationsIntroContent = normalizeCollectionIntroContent(undefined, WELSH_FOUNDATIONS_COLLECTION_ID);
+assertEqual(foundationsIntroContent.enabled, true, 'Foundations collection should have a default enabled introduction.');
+assertEqual(foundationsIntroContent.titleEn, 'Welsh Spelling Foundations', 'Foundations collection intro should carry the approved English title.');
+assertEqual(foundationsIntroContent.titleCy, '', 'Foundations collection intro Welsh title should remain empty until reviewed.');
+const foundationsIntro = getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: foundationsIntroContent }, 'en');
+assert(foundationsIntro, 'Enabled Foundations collection intro should resolve for learners.');
+assert(
+  foundationsIntro.body.includes('Welsh spelling can look unfamiliar at first'),
+  'Foundations collection intro should include the approved English body.'
+);
+assertEqual(getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: { ...foundationsIntroContent, enabled: false } }, 'en'), null, 'Disabled collection intro should not resolve.');
+
 assert(
   shouldPreserveInterfaceLanguageScreen('primer', true, '/'),
   'Language switching from an active primer should preserve the primer screen even when the browser path is the homepage.'
@@ -158,6 +171,8 @@ async function runPrimerAudioTests() {
   const originalFetch = globalThis.fetch;
   const originalCreateObjectUrl = URL.createObjectURL;
   const originalRevokeObjectUrl = URL.revokeObjectURL;
+  const originalLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   let fetchCalls = 0;
   let objectUrlCounter = 0;
 
@@ -170,6 +185,27 @@ async function runPrimerAudioTests() {
   URL.revokeObjectURL = () => undefined;
 
   try {
+    const localStorageValues = new Map<string, string>();
+    const mockLocalStorage = {
+      getItem: (key: string) => localStorageValues.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        localStorageValues.set(key, value);
+      }
+    };
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: mockLocalStorage
+    });
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: mockLocalStorage }
+    });
+
+    assert(foundationsIntro, 'Foundations intro should be available for local seen-state tests.');
+    assert(!hasSeenCollectionIntro(foundationsIntro), 'Collection intro should initially be unseen in local storage.');
+    markCollectionIntroSeen(foundationsIntro);
+    assert(hasSeenCollectionIntro(foundationsIntro), 'Collection intro should store seen state locally.');
+
     const storedItem = {
       audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/dd-sound/20260529T120000Z.mp3',
       textToSpeak: 'hedd'
@@ -211,6 +247,10 @@ async function runPrimerAudioTests() {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
     (globalThis as unknown as { fetch: typeof fetch }).fetch = originalFetch;
+    if (originalLocalStorage) Object.defineProperty(globalThis, 'localStorage', originalLocalStorage);
+    else delete (globalThis as unknown as { localStorage?: unknown }).localStorage;
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete (globalThis as unknown as { window?: unknown }).window;
     URL.createObjectURL = originalCreateObjectUrl;
     URL.revokeObjectURL = originalRevokeObjectUrl;
   }
