@@ -1134,6 +1134,15 @@ export function Practice({
     }
 
     const nextVisible = !storage.settings.englishVisible;
+    if (nextVisible && currentWord) {
+      const nextSettings = { ...storage.settings, englishVisible: true };
+      const playbackFailed = audioPlaybackFailedWordIds.has(currentWord.id);
+      if (shouldDelayEnglishPrompt(nextSettings, currentWord, playbackFailed, defaultAudioProvider)) {
+        clearRecallPauseTimer();
+        setRecallPauseVisibility({ wordId: currentWord.id, visible: false });
+      }
+    }
+
     updateSettings({ englishVisible: nextVisible });
     showLocalStatus(
       nextVisible ? t('practice.promptOn') : t('practice.promptOff'),

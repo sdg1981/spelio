@@ -2,6 +2,33 @@
 
 This document captures useful future-facing ideas for Spelio before they are forgotten. It is not a specification, roadmap, release checklist, or MVP requirement. It is a lightweight reference for future planning, product thinking, and AI-assisted development conversations.
 
+## User Testing Insights — June 2026
+
+Early learner testing has surfaced useful product-learning signals around listening confidence, learner expectations, and the shape of future support. These observations should inform future thinking without becoming committed roadmap items or changing current specifications.
+
+Testing included experienced Welsh learners who had completed substantial Welsh learning elsewhere, alongside complete beginners with little or no prior Welsh exposure. Experienced learners generally understood Spelio immediately and described it as a useful refresher. Complete beginners found Welsh sounds significantly harder to hear and distinguish than expected.
+
+Beginners often struggled to identify Welsh sounds accurately from audio alone. Human guidance during testing improved confidence substantially. This suggests trusted human Welsh recordings may become increasingly valuable, especially where warm, clear, natural Welsh audio can reduce intimidation and help learners trust what they are hearing. Human audio should prioritise clarity and naturalness rather than exaggerated teaching styles.
+
+Testing also suggests value in short audio introductions to Foundations collections. These could briefly reassure learners that Welsh spelling follows patterns and provide light guidance before practice begins. They should not turn Spelio into a full course or tutorial-heavy experience. Introductions should remain short, calm, optional, and low-friction.
+
+Brief reflective completion moments may also be useful at the end of a list. These could remind learners what pattern they have just practised and help them recognise genuine progress. Examples include:
+
+- "You have practised D and DD."
+- "You are starting to recognise one of the most common Welsh spelling patterns."
+
+These moments should remain reflective rather than congratulatory.
+
+Desktop testing reinforced earlier founder intuition that the practice experience can feel visually distant. Larger answer slots improved focus and engagement. The answer area should remain the primary visual focus of the practice experience.
+
+When English prompts are hidden, learners may still benefit from briefly seeing the English meaning after successfully completing a word. This could close the recall loop and confirm that the learner understood the word correctly. Practice test mode should remain exempt from this behaviour.
+
+Learners also appeared to expect recommended lists to start with the list shown on the homepage or end screen. Unexpected recap words can create confusion when they interrupt that expectation. Manual list selection should therefore bypass automatic recap injection, and recap behaviour should remain transparent enough that it does not undermine learner expectations.
+
+One possible future exploration is small mixed recap sessions after several Foundations topics. The purpose would be to reinforce transfer between patterns and provide evidence of growing confidence. This remains exploratory and should be validated through further testing.
+
+These observations represent early testing insights and should be treated as product-learning signals rather than committed roadmap decisions. Future implementation should continue to prioritise calmness, clarity, learner confidence, and low-friction practice.
+
 ## 1. Contextual spelling hint evolution
 
 Spelio may gradually expand its generic hint registry as real learner patterns become clearer. The goal would be to add calm, lightweight support for spelling recall without turning the app into a full phonics, grammar, or language-analysis engine.
