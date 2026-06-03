@@ -236,6 +236,7 @@ export function Practice({
   const [spellingHint, setSpellingHint] = useState<SpellingPatternHint | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
   const [isEnglishPromptPeeking, setIsEnglishPromptPeeking] = useState(false);
+  const [postAnswerEnglishConfirmationWordId, setPostAnswerEnglishConfirmationWordId] = useState<string | null>(null);
   const [peekUsedForCurrentWord, setPeekUsedForCurrentWord] = useState(false);
   const peekTimerRef = useRef<number | null>(null);
   const peekAutoHideTimerRef = useRef<number | null>(null);
@@ -302,7 +303,22 @@ export function Practice({
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
     playAudio
-  } = usePracticeSession({ lists, storage, sessionStorage, reviewDifficult, includeRecapDue, forceAudioAvailable: practiceTestMode, defaultAudioProvider, disableQuickRecap, detached, sessionKey, onStorageChange, onComplete, t });
+  } = usePracticeSession({
+    lists,
+    storage,
+    sessionStorage,
+    reviewDifficult,
+    includeRecapDue,
+    forceAudioAvailable: practiceTestMode,
+    defaultAudioProvider,
+    disableQuickRecap,
+    detached,
+    sessionKey,
+    onStorageChange,
+    onComplete,
+    onPostAnswerEnglishConfirmation: setPostAnswerEnglishConfirmationWordId,
+    t
+  });
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -330,6 +346,10 @@ export function Practice({
       englishPromptPeekTimerRef.current = null;
     }
     setIsEnglishPromptPeeking(false);
+  }, []);
+
+  const clearPostAnswerEnglishConfirmation = useCallback(() => {
+    setPostAnswerEnglishConfirmationWordId(null);
   }, []);
 
   const clearRecallPauseTimer = useCallback(() => {
@@ -763,10 +783,11 @@ export function Practice({
       clearStruggleAssistTimers();
       clearPeekTimers();
       clearEnglishPromptPeek();
+      clearPostAnswerEnglishConfirmation();
       clearRecallPauseTimer();
       revealShortcutHeldRef.current = false;
     };
-  }, [clearEnglishPromptPeek, clearPeekTimers, clearRecallPauseTimer, clearStruggleAssistTimers]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, clearStruggleAssistTimers]);
 
   useEffect(() => {
     isPeekingRef.current = isPeeking;
@@ -779,6 +800,7 @@ export function Practice({
     isPeekingRef.current = false;
     setIsPeeking(false);
     clearEnglishPromptPeek();
+    clearPostAnswerEnglishConfirmation();
     clearRecallPauseTimer();
     clearStruggleAssistTimers();
     clearSpellingHint();
@@ -790,12 +812,13 @@ export function Practice({
     setPeekUsedForCurrentWord(false);
     revealShortcutHeldRef.current = false;
     if (wasPeeking) restorePracticeInputFocus();
-  }, [clearEnglishPromptPeek, clearPeekTimers, clearRecallPauseTimer, clearSpellingHint, clearStruggleAssistTimers, currentWord?.id, restorePracticeInputFocus]);
+  }, [clearEnglishPromptPeek, clearPeekTimers, clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, clearSpellingHint, clearStruggleAssistTimers, currentWord?.id, restorePracticeInputFocus]);
 
   useEffect(() => {
     if (modal || isComplete || settingsModalOpenRef.current) {
       finishPeek(false);
       clearEnglishPromptPeek();
+      clearPostAnswerEnglishConfirmation();
       clearRecallPauseTimer();
       if (currentWord) setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       if (isComplete) clearSpellingHint();
@@ -803,7 +826,7 @@ export function Practice({
       peekActivatedRef.current = false;
       revealShortcutHeldRef.current = false;
     }
-  }, [clearEnglishPromptPeek, clearRecallPauseTimer, clearSpellingHint, clearStruggleAssistTimers, currentWord?.id, finishPeek, isComplete, modal]);
+  }, [clearEnglishPromptPeek, clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, clearSpellingHint, clearStruggleAssistTimers, currentWord?.id, finishPeek, isComplete, modal]);
 
   useEffect(() => {
     struggleAssistSeenRef.current = hasSeenPracticeStruggleAssist(typeof window === 'undefined' ? null : window.localStorage);
@@ -1025,6 +1048,7 @@ export function Practice({
     if (open) {
       finishPeek(false, false);
       clearRecallPauseTimer();
+      clearPostAnswerEnglishConfirmation();
       clearStruggleAssistTimers();
       if (currentWord) setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       blurMobileInput();
@@ -1032,7 +1056,7 @@ export function Practice({
     } else {
       restorePracticeInputFocus();
     }
-  }, [clearRecallPauseTimer, currentWord?.id, finishPeek, restorePracticeInputFocus]);
+  }, [clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, currentWord?.id, finishPeek, restorePracticeInputFocus]);
 
   function applyWordLists(selectedIds: string[]) {
     const ids = normalizeSingleSelectedListIds(selectedIds, lists);
@@ -1267,15 +1291,16 @@ export function Practice({
   const recallPausePromptReleased =
     !shouldDelayCurrentEnglishPrompt ||
     (recallPauseVisibility.wordId === currentWord.id && recallPauseVisibility.visible);
+  const postAnswerEnglishConfirmationVisible = postAnswerEnglishConfirmationWordId === currentWord.id;
   const promptDisplay = getEnglishPromptDisplayState({
     basePromptVisible,
     shouldDelay: shouldDelayCurrentEnglishPrompt,
     delayedVisible: recallPausePromptReleased,
-    peeking: isEnglishPromptPeeking
+    peeking: isEnglishPromptPeeking || postAnswerEnglishConfirmationVisible
   });
   const promptVisible = promptDisplay.visible;
   const promptDelayed = promptDisplay.reserved;
-  const promptUsesRecallPauseShell = promptDelayed || (promptVisible && shouldDelayCurrentEnglishPrompt);
+  const promptUsesRecallPauseShell = promptDelayed || (promptVisible && (shouldDelayCurrentEnglishPrompt || postAnswerEnglishConfirmationVisible));
   const wordPillAudioIconVisible = !currentWordAudioUnavailable;
   const WordPillAudioIcon = storage.settings.audioPrompts ? Repeat : Volume2;
   const wordInsights = !practiceTestMode && interfaceLanguage === 'en'

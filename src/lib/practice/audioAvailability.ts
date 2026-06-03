@@ -14,6 +14,9 @@ const RECALL_PAUSE_MAX_DELAY_MS = 3400;
 const RECALL_PAUSE_WORD_DELAY_MS = 150;
 const RECALL_PAUSE_CHARACTER_DELAY_MS = 40;
 const RECALL_PAUSE_CHARACTER_THRESHOLD = 8;
+const POST_ANSWER_ENGLISH_CONFIRMATION_BASE_DELAY_MS = 1200;
+const POST_ANSWER_ENGLISH_CONFIRMATION_WORD_DELAY_MS = 150;
+const POST_ANSWER_ENGLISH_CONFIRMATION_MAX_DELAY_MS = 2000;
 
 export function getPlayableAudioUrl(audioUrl?: string | null) {
   const candidate = audioUrl?.trim();
@@ -79,6 +82,26 @@ export function getEnglishPromptDisplayState({
     visible,
     reserved: basePromptVisible && shouldDelay && !delayedVisible && !peeking
   };
+}
+
+export function shouldShowPostAnswerEnglishConfirmation({
+  englishVisible,
+  practiceTestMode,
+  audioUnavailable
+}: {
+  englishVisible: boolean;
+  practiceTestMode: boolean;
+  audioUnavailable: boolean;
+}) {
+  return !englishVisible && !practiceTestMode && !audioUnavailable;
+}
+
+export function getPostAnswerEnglishConfirmationDelayMs(prompt: string) {
+  const promptWordCount = prompt.trim() ? prompt.trim().split(/\s+/).length : 0;
+  const wordDelay = Math.max(0, promptWordCount - 1) * POST_ANSWER_ENGLISH_CONFIRMATION_WORD_DELAY_MS;
+  const delay = POST_ANSWER_ENGLISH_CONFIRMATION_BASE_DELAY_MS + wordDelay;
+
+  return Math.min(POST_ANSWER_ENGLISH_CONFIRMATION_MAX_DELAY_MS, Math.max(POST_ANSWER_ENGLISH_CONFIRMATION_BASE_DELAY_MS, delay));
 }
 
 export function getRecallPauseDelayMs({

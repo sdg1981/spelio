@@ -1,4 +1,13 @@
-import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldAllowAudioPlayback, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../src/lib/practice/audioAvailability';
+import {
+  getEnglishPromptDisplayState,
+  getPostAnswerEnglishConfirmationDelayMs,
+  getRecallPauseDelayMs,
+  isAudioUnavailableForPrompt,
+  shouldAllowAudioPlayback,
+  shouldDelayEnglishPrompt,
+  shouldShowEnglishPrompt,
+  shouldShowPostAnswerEnglishConfirmation
+} from '../src/lib/practice/audioAvailability';
 import type { PracticeWord } from '../src/data/wordLists';
 import { createDefaultStorage, normaliseStorage } from '../src/lib/practice/storage';
 import { getResolvedPracticeAudioUrl } from '../src/lib/audioProvider';
@@ -88,6 +97,64 @@ assertEqual(
   promptVisible(false, makeWord()),
   false,
   'English off + audio available should keep the prompt hidden.'
+);
+
+assertEqual(
+  shouldShowPostAnswerEnglishConfirmation({
+    englishVisible: false,
+    practiceTestMode: false,
+    audioUnavailable: false
+  }),
+  true,
+  'English off + correct answer should show post-answer English before advancing.'
+);
+
+assertEqual(
+  getPostAnswerEnglishConfirmationDelayMs('work'),
+  1200,
+  'Single-word post-answer English confirmation should use the 1200ms base delay.'
+);
+
+assertEqual(
+  getPostAnswerEnglishConfirmationDelayMs('open the big window'),
+  1650,
+  'Longer post-answer English confirmations should add 150ms for each prompt word after the first.'
+);
+
+assertEqual(
+  getPostAnswerEnglishConfirmationDelayMs('one two three four five six seven eight nine ten'),
+  2000,
+  'Post-answer English confirmation delay should cap at 2000ms.'
+);
+
+assertEqual(
+  shouldShowPostAnswerEnglishConfirmation({
+    englishVisible: true,
+    practiceTestMode: false,
+    audioUnavailable: false
+  }),
+  false,
+  'English on should keep the existing immediate advance behaviour.'
+);
+
+assertEqual(
+  shouldShowPostAnswerEnglishConfirmation({
+    englishVisible: false,
+    practiceTestMode: true,
+    audioUnavailable: false
+  }),
+  false,
+  'Practice test mode should never show post-answer English confirmation.'
+);
+
+assertEqual(
+  shouldShowPostAnswerEnglishConfirmation({
+    englishVisible: false,
+    practiceTestMode: false,
+    audioUnavailable: true
+  }),
+  false,
+  'Post-answer confirmation should not add a second delay when English is already visible as an audio fallback.'
 );
 
 assertEqual(

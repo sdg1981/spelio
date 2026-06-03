@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PracticeWord, WordList } from '../data/wordLists';
-import { getAnswer } from '../data/wordLists';
+import { getAnswer, getPrompt } from '../data/wordLists';
 import type { Translate } from '../i18n';
 import { createPracticeAnswer } from '../lib/practice/validator';
 import {
@@ -17,7 +17,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
-import { isAudioUnavailableForPrompt } from '../lib/practice/audioAvailability';
+import { getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
@@ -112,6 +112,7 @@ export function usePracticeSession({
   sessionKey = 0,
   onStorageChange,
   onComplete,
+  onPostAnswerEnglishConfirmation,
   t = key => key
 }: {
   lists: WordList[];
@@ -126,6 +127,7 @@ export function usePracticeSession({
   sessionKey?: number;
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
+  onPostAnswerEnglishConfirmation?: (wordId: string | null) => void;
   t?: Translate;
 }) {
   // A practice run must keep the word queue it started with. Storage and content can
@@ -163,6 +165,7 @@ export function usePracticeSession({
   const statusTimerRef = useRef<number | null>(null);
   const wrongTimerRef = useRef<number | null>(null);
   const revealedCompletionTimerRef = useRef<number | null>(null);
+  const completionAdvanceTimerRef = useRef<number | null>(null);
   const inputLockedRef = useRef(false);
   const isCompletingRevealedWordRef = useRef(false);
   const lettersRef = useRef<LetterState[]>(letters);
@@ -286,9 +289,11 @@ export function usePracticeSession({
       if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
       if (wrongTimerRef.current) window.clearTimeout(wrongTimerRef.current);
       if (revealedCompletionTimerRef.current) window.clearTimeout(revealedCompletionTimerRef.current);
+      if (completionAdvanceTimerRef.current) window.clearTimeout(completionAdvanceTimerRef.current);
+      onPostAnswerEnglishConfirmation?.(null);
       stopCurrentAudio(true);
     };
-  }, [stopCurrentAudio]);
+  }, [onPostAnswerEnglishConfirmation, stopCurrentAudio]);
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -307,6 +312,11 @@ export function usePracticeSession({
       window.clearTimeout(revealedCompletionTimerRef.current);
       revealedCompletionTimerRef.current = null;
     }
+    if (completionAdvanceTimerRef.current) {
+      window.clearTimeout(completionAdvanceTimerRef.current);
+      completionAdvanceTimerRef.current = null;
+    }
+    onPostAnswerEnglishConfirmation?.(null);
     setStats({
       correctWords: 0,
       incorrectWordIds: new Set<string>(),
@@ -331,6 +341,11 @@ export function usePracticeSession({
 
   useEffect(() => {
     if (!currentWord) return;
+    if (completionAdvanceTimerRef.current) {
+      window.clearTimeout(completionAdvanceTimerRef.current);
+      completionAdvanceTimerRef.current = null;
+    }
+    onPostAnswerEnglishConfirmation?.(null);
     stopCurrentAudio(true);
     wordTimingRef.current = {
       wordStartedAt: Date.now(),
@@ -348,7 +363,7 @@ export function usePracticeSession({
     if (storage.settings.audioPrompts && !isAudioUnavailableForPrompt(currentWord, false, defaultAudioProvider)) {
       void restartCurrentAudio({ recordInteraction: false, showUnavailableStatus: false });
     }
-  }, [currentWord?.id, defaultAudioProvider]);
+  }, [currentWord?.id, defaultAudioProvider, onPostAnswerEnglishConfirmation]);
 
   function markAudioPlaybackFailed(wordId: string) {
     setAudioPlaybackFailedWordIds(previous => {
@@ -370,6 +385,37 @@ export function usePracticeSession({
     setStatusTone(tone);
     if (statusTimerRef.current) window.clearTimeout(statusTimerRef.current);
     statusTimerRef.current = window.setTimeout(() => setStatus(null), 1500);
+  }
+
+  function getCorrectAnswerAdvanceDelay(word: PracticeWord, answer: string) {
+    const successDelay = getSuccessAdvanceDelay(answer);
+    const audioUnavailable = isAudioUnavailableForPrompt(word, audioPlaybackFailedWordIds.has(word.id), defaultAudioProvider);
+    const shouldConfirmEnglish = shouldShowPostAnswerEnglishConfirmation({
+      englishVisible: storageRef.current.settings.englishVisible,
+      practiceTestMode: forceAudioAvailable,
+      audioUnavailable
+    });
+
+    if (!shouldConfirmEnglish) {
+      onPostAnswerEnglishConfirmation?.(null);
+      return successDelay;
+    }
+
+    onPostAnswerEnglishConfirmation?.(word.id);
+    return Math.max(successDelay, getPostAnswerEnglishConfirmationDelayMs(getPrompt(word)));
+  }
+
+  function scheduleCorrectAnswerAdvance(word: PracticeWord, onAdvance: () => void) {
+    if (completionAdvanceTimerRef.current) {
+      window.clearTimeout(completionAdvanceTimerRef.current);
+      completionAdvanceTimerRef.current = null;
+    }
+
+    completionAdvanceTimerRef.current = window.setTimeout(() => {
+      completionAdvanceTimerRef.current = null;
+      onPostAnswerEnglishConfirmation?.(null);
+      onAdvance();
+    }, getCorrectAnswerAdvanceDelay(word, getPracticeAnswer(word)));
   }
 
   const playAudio = restartCurrentAudio;
@@ -482,7 +528,7 @@ export function usePracticeSession({
     });
 
     if (completingInjectedRecap) {
-      window.setTimeout(() => {
+      scheduleCorrectAnswerAdvance(currentWord, () => {
         const nextWord = session.words[currentIndex];
         resetLetters(nextWord ? getPracticeAnswer(nextWord) : '');
         setWrongIndex(null);
@@ -491,7 +537,7 @@ export function usePracticeSession({
         setIsRecapActive(false);
         setStatus(null);
         setStatusTone('neutral');
-      }, getSuccessAdvanceDelay(getPracticeAnswer(currentWord)));
+      });
 
       if (storage.settings.soundEffects) playTone('success');
       return;
@@ -510,7 +556,7 @@ export function usePracticeSession({
         incorrectWordIds,
         revealedWordIds
       };
-      window.setTimeout(() => {
+      scheduleCorrectAnswerAdvance(currentWord, () => {
         if (currentIndex + 1 >= session.words.length) {
           finishSession(next);
         } else {
@@ -518,7 +564,7 @@ export function usePracticeSession({
           setStatus(null);
           setStatusTone('neutral');
         }
-      }, getSuccessAdvanceDelay(getPracticeAnswer(currentWord)));
+      });
       return next;
     });
 
