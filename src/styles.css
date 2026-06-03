@@ -6220,6 +6220,187 @@
   outline-color:var(--focus-ring);
 }
 
+@media (min-width:768px){
+  .practice-app .practice-shell{
+    max-width:1040px;
+    padding-top:188px;
+  }
+
+  .practice-app .word-pill{
+    min-width:min(500px, calc(100vw - 96px));
+    max-width:min(680px, calc(100vw - 96px));
+    gap:32px;
+    padding:32px 58px;
+    font-size:30px;
+    box-shadow:0 22px 52px rgba(7,21,34,.06);
+  }
+
+  .practice-app .word-pill svg{
+    width:35px;
+    height:35px;
+  }
+
+  .practice-app .prompt-text{
+    max-width:100%;
+  }
+
+  .practice-app .prompt-text-reserve,
+  .practice-app .prompt-text-value{
+    white-space:normal;
+    overflow-wrap:anywhere;
+    text-align:center;
+  }
+
+  .practice-app .audio-fallback-label{
+    margin-top:8px;
+  }
+
+  .practice-app .word-insight{
+    margin-top:10px;
+    max-width:min(620px, calc(100vw - 96px));
+  }
+
+  .practice-app .letter-input-tap-zone,
+  .practice-app .dialect-label + .letter-input-tap-zone,
+  .practice-app .word-insight + .letter-input-tap-zone{
+    margin-top:52px;
+  }
+
+  .practice-app .letter-grid{
+    max-width:min(980px, calc(100vw - 80px));
+    gap:60px 88px;
+  }
+
+  .practice-app .letter-word{
+    gap:50px;
+  }
+
+  .practice-app .letter-slot{
+    min-width:70px;
+    height:90px;
+    font-size:70px;
+    border-bottom-width:4px;
+  }
+
+  .practice-app .letter-slot.active:not(.mistake){
+    border-bottom-width:4px;
+  }
+
+  .practice-app .letter-slot.mistake{
+    min-width:70px;
+    height:90px;
+    border-bottom-width:4px;
+    font-size:34px;
+  }
+
+  .practice-app .letter-grid.compact{
+    gap:52px 74px;
+  }
+
+  .practice-app .letter-grid.compact .letter-word{
+    gap:34px;
+  }
+
+  .practice-app .letter-grid.compact .letter-slot{
+    min-width:56px;
+    font-size:58px;
+  }
+
+  .practice-app .letter-grid.extra-compact{
+    gap:44px 62px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-word{
+    gap:22px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-slot{
+    min-width:42px;
+    font-size:48px;
+  }
+
+  .practice-app .status-line{
+    margin-top:44px;
+  }
+
+  .practice-app .utility-bar{
+    margin-top:26px;
+  }
+}
+
+@media (min-width:768px) and (max-width:960px){
+  .practice-app .practice-shell{
+    max-width:900px;
+    padding-top:176px;
+  }
+
+  .practice-app .word-pill{
+    min-width:min(460px, calc(100vw - 80px));
+    max-width:calc(100vw - 80px);
+    gap:28px;
+    padding:28px 50px;
+    font-size:28px;
+  }
+
+  .practice-app .word-pill svg{
+    width:32px;
+    height:32px;
+  }
+
+  .practice-app .letter-input-tap-zone,
+  .practice-app .dialect-label + .letter-input-tap-zone,
+  .practice-app .word-insight + .letter-input-tap-zone{
+    margin-top:46px;
+  }
+
+  .practice-app .letter-grid{
+    max-width:calc(100vw - 64px);
+    gap:48px 70px;
+  }
+
+  .practice-app .letter-word{
+    gap:38px;
+  }
+
+  .practice-app .letter-slot{
+    min-width:58px;
+    height:78px;
+    font-size:60px;
+  }
+
+  .practice-app .letter-slot.mistake{
+    min-width:58px;
+    height:78px;
+    font-size:30px;
+  }
+
+  .practice-app .letter-grid.compact{
+    gap:42px 58px;
+  }
+
+  .practice-app .letter-grid.compact .letter-word{
+    gap:26px;
+  }
+
+  .practice-app .letter-grid.compact .letter-slot{
+    min-width:46px;
+    font-size:48px;
+  }
+
+  .practice-app .letter-grid.extra-compact{
+    gap:36px 46px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-word{
+    gap:16px;
+  }
+
+  .practice-app .letter-grid.extra-compact .letter-slot{
+    min-width:34px;
+    font-size:38px;
+  }
+}
+
 .toggle-switch{
   background:var(--bg-surface-soft);
 }
