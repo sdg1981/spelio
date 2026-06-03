@@ -124,6 +124,7 @@ export interface WordList {
   sourceLanguage: LanguageCode;
   targetLanguage: LanguageCode;
   dialect: Dialect;
+  stageId?: string;
   stage: string;
   focus?: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
@@ -188,6 +189,7 @@ type DatasetList = {
   sourceLanguage?: LanguageCode;
   targetLanguage?: LanguageCode;
   dialect: Dialect;
+  stageId?: string;
   stage: string;
   focus?: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
@@ -207,6 +209,10 @@ const collectionMap = new Map(
   (datasetMetadata.collections?.length ? datasetMetadata.collections : [defaultWordListCollection])
     .map(collection => [collection.id, collection])
 );
+
+function normalizeStageId(stage: string) {
+  return stage.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
 
 const usageNotesByWordId = new Map(
   (dataset.lists as DatasetList[])
@@ -231,6 +237,7 @@ const baseWordLists: WordList[] = rawLists
     sourceLanguage: list.sourceLanguage ?? datasetMetadata.sourceLanguage ?? 'en',
     targetLanguage: list.targetLanguage ?? datasetMetadata.targetLanguage ?? 'cy',
     dialect: list.dialect,
+    stageId: list.stageId ?? normalizeStageId(list.stage),
     stage: list.stage,
     focus: list.focus,
     difficulty: list.difficulty,

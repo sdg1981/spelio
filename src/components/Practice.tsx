@@ -13,7 +13,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds } from '../lib/practice/storage';
-import { getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
+import { getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -2150,7 +2150,7 @@ export function WordListSelectorPanel({
     return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
       const collectionName = list.collection?.name ?? 'Spelio Core Welsh';
       const collection = (acc[collectionName] ??= {});
-      (collection[list.stage] ??= []).push(list);
+      (collection[getWordListStageDisplayName(list)] ??= []).push(list);
       return acc;
     }, {});
   }, [filteredLists]);

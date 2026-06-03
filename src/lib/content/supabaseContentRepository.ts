@@ -237,6 +237,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     sourceLanguage,
     targetLanguage,
     dialect: asDialect(row.dialect),
+    stageId: row.stage_id ?? '',
     stage: row.stages?.name ?? row.stage_id ?? '',
     focus: row.focus_category_id ?? '',
     difficulty: asDifficulty(row.difficulty),

@@ -1,6 +1,10 @@
 import type { WordList } from '../../data/wordLists';
 import type { InterfaceLanguage } from '../../i18n';
 
+const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
+const FOUNDATIONS_STAGE_ID = 'foundations';
+const WELSH_FOUNDATIONS_STAGE_LABEL = 'Common Patterns';
+
 type WordListDisplayFields = Pick<WordList, 'name' | 'description'> & {
   nameCy?: string | null;
   descriptionCy?: string | null;
@@ -27,4 +31,15 @@ export function getListDisplayDescription(
   }
 
   return list.description;
+}
+
+export function getWordListStageDisplayName(
+  list: Pick<WordList, 'collectionId' | 'stage'> & { stageId?: string | null }
+) {
+  if (list.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID && list.stageId === FOUNDATIONS_STAGE_ID) {
+    return WELSH_FOUNDATIONS_STAGE_LABEL;
+  }
+  if (list.stageId === FOUNDATIONS_STAGE_ID) return 'Foundations';
+
+  return list.stage;
 }

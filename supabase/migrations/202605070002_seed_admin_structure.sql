@@ -1,5 +1,5 @@
 insert into public.stages (id, name, order_index) values
-  ('foundations', 'Common Patterns', 1),
+  ('foundations', 'Foundations', 1),
   ('core', 'Core', 2),
   ('spelling', 'Spelling', 3),
   ('usage', 'Usage', 4),
