@@ -15,7 +15,9 @@ export interface WordListCollection {
   id: string;
   slug: string;
   name: string;
+  nameCy?: string;
   description: string;
+  descriptionCy?: string;
   type: WordListCollectionType;
   sourceLanguage: LanguageCode;
   targetLanguage: LanguageCode;
@@ -33,7 +35,9 @@ export const defaultWordListCollection: WordListCollection = {
   id: DEFAULT_WORD_LIST_COLLECTION_ID,
   slug: 'spelio-core-welsh',
   name: 'Spelio Core Welsh',
+  nameCy: 'Spelio Cymraeg Craidd',
   description: 'Core Welsh spelling practice lists for the Spelio MVP.',
+  descriptionCy: 'Rhestrau ymarfer sillafu Cymraeg craidd ar gyfer MVP Spelio.',
   type: 'spelio_core',
   sourceLanguage: 'en',
   targetLanguage: 'cy',

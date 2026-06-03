@@ -100,7 +100,9 @@ export function CollectionsPage({ repository }: { repository: AdminRepository })
                   <tr key={collection.id}>
                     <td className="px-5 py-4">
                       <div className="font-bold text-slate-950">{collection.name}</div>
+                      {collection.nameCy && <div className="mt-1 text-xs font-semibold text-slate-700">{collection.nameCy}</div>}
                       <div className="mt-1 text-xs text-slate-500">{collection.description}</div>
+                      {collection.descriptionCy && <div className="mt-1 text-xs text-slate-500">{collection.descriptionCy}</div>}
                       <div className="mt-1 font-mono text-[11px] text-slate-400">{collection.id}</div>
                     </td>
                     <td className="px-5 py-4 font-mono text-xs text-slate-600">{collection.slug}</td>

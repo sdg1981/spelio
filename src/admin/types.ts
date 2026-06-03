@@ -17,7 +17,9 @@ export interface AdminWordListCollection {
   id: string;
   slug: string;
   name: string;
+  nameCy: string;
   description: string;
+  descriptionCy: string;
   type: AdminCollectionType;
   sourceLanguage: string;
   targetLanguage: string;

@@ -54,7 +54,9 @@ type CollectionRow = {
   id: string;
   slug: string;
   name: string;
+  name_cy?: string | null;
   description: string;
+  description_cy?: string | null;
   type: AdminCollectionType;
   source_language: string;
   target_language: string;
@@ -740,7 +742,9 @@ function mapCollectionRow(row: CollectionRow): AdminWordListCollection {
     id: row.id,
     slug: row.slug,
     name: row.name,
+    nameCy: row.name_cy ?? '',
     description: row.description,
+    descriptionCy: row.description_cy ?? '',
     type: row.type,
     sourceLanguage: row.source_language,
     targetLanguage: row.target_language,
@@ -860,7 +864,9 @@ function toCollectionRow(collection: AdminWordListCollection) {
     id: collection.id,
     slug: collection.slug,
     name: collection.name,
+    name_cy: collection.nameCy || null,
     description: collection.description,
+    description_cy: collection.descriptionCy || null,
     type: collection.type,
     source_language: collection.sourceLanguage,
     target_language: collection.targetLanguage,

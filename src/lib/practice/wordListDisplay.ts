@@ -1,4 +1,4 @@
-import type { WordList } from '../../data/wordLists';
+import type { WordList, WordListCollection } from '../../data/wordLists';
 import type { InterfaceLanguage } from '../../i18n';
 
 const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
@@ -31,6 +31,18 @@ export function getListDisplayDescription(
   }
 
   return list.description;
+}
+
+export function getCollectionDisplayName(
+  collection: Pick<WordListCollection, 'name'> & { nameCy?: string | null; name_cy?: string | null },
+  interfaceLanguage?: InterfaceLanguage
+) {
+  if (interfaceLanguage === 'cy') {
+    const welshName = collection.nameCy?.trim() || collection.name_cy?.trim();
+    if (welshName) return welshName;
+  }
+
+  return collection.name;
 }
 
 export function getWordListStageDisplayName(

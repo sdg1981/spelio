@@ -26,7 +26,9 @@ interface ExportedCollection {
   id: string;
   slug: string;
   name: string;
+  nameCy: string;
   description: string;
+  descriptionCy: string;
   type: string;
   sourceLanguage: string;
   targetLanguage: string;
@@ -103,7 +105,9 @@ export function buildAdminContentExportPayload(input: {
     id: collection.id,
     slug: collection.slug,
     name: collection.name,
+    nameCy: collection.nameCy,
     description: collection.description,
+    descriptionCy: collection.descriptionCy,
     type: collection.type,
     sourceLanguage: collection.sourceLanguage,
     targetLanguage: collection.targetLanguage,

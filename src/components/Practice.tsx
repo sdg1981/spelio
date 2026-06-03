@@ -13,7 +13,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds } from '../lib/practice/storage';
-import { getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
+import { getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -2148,12 +2148,12 @@ export function WordListSelectorPanel({
   }, [interfaceLanguage, selectableLists, query]);
   const groups = useMemo(() => {
     return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
-      const collectionName = list.collection?.name ?? 'Spelio Core Welsh';
+      const collectionName = list.collection ? getCollectionDisplayName(list.collection, interfaceLanguage) : 'Spelio Core Welsh';
       const collection = (acc[collectionName] ??= {});
       (collection[getWordListStageDisplayName(list)] ??= []).push(list);
       return acc;
     }, {});
-  }, [filteredLists]);
+  }, [filteredLists, interfaceLanguage]);
   const showCollections = Object.keys(groups).length > 1;
   const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
 

@@ -76,7 +76,9 @@ export const adminWordListCollections: AdminWordListCollection[] = [
     id: DEFAULT_COLLECTION_ID,
     slug: 'spelio-core-welsh',
     name: 'Spelio Core Welsh',
+    nameCy: 'Spelio Cymraeg Craidd',
     description: 'Core Welsh spelling practice lists for the Spelio MVP.',
+    descriptionCy: 'Rhestrau ymarfer sillafu Cymraeg craidd ar gyfer MVP Spelio.',
     type: 'spelio_core',
     sourceLanguage: 'en',
     targetLanguage: 'cy',
@@ -91,6 +93,8 @@ export const adminWordListCollections: AdminWordListCollection[] = [
   },
   {
     ...supportWordListCollection,
+    nameCy: supportWordListCollection.nameCy ?? '',
+    descriptionCy: supportWordListCollection.descriptionCy ?? '',
     curriculumKeyStage: supportWordListCollection.curriculumKeyStage ?? null,
     curriculumArea: supportWordListCollection.curriculumArea ?? null,
     ownerId: supportWordListCollection.ownerId ?? null,

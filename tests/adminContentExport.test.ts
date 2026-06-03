@@ -25,7 +25,9 @@ const collections: AdminWordListCollection[] = [
     id: 'spelio_core_welsh',
     slug: 'spelio-core-welsh',
     name: 'Spelio Core Welsh',
+    nameCy: 'Spelio Cymraeg Craidd',
     description: 'Core Welsh spelling practice.',
+    descriptionCy: 'Ymarfer sillafu Cymraeg craidd.',
     type: 'spelio_core',
     sourceLanguage: 'en',
     targetLanguage: 'cy',
@@ -76,9 +78,9 @@ const lists: AdminWordList[] = [
     collectionId: 'spelio_core_welsh',
     collectionName: 'Spelio Core Welsh',
     name: 'First List',
-    nameCy: '',
+    nameCy: 'Rhestr Gyntaf',
     description: 'First list.',
-    descriptionCy: '',
+    descriptionCy: 'Disgrifiad Cymraeg cyntaf.',
     language: 'cy',
     sourceLanguage: 'en',
     targetLanguage: 'cy',
@@ -215,6 +217,8 @@ assertEqual(payload.lists[0].isActive, true, 'export should preserve active list
 assertEqual(payload.lists[1].isActive, false, 'export should preserve inactive list status.');
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
+assertEqual(payload.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'collection Welsh display name should be exported');
+assertEqual(payload.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'collection Welsh display description should be exported');
 assert(!('ownerId' in payload.collections[0]), 'collection ownerId should not be exported');
 assert(!('createdAt' in payload.lists[0]), 'list timestamps should not be exported');
 assert(!('elevenLabsAudioUrl' in payload.lists[0].words[0]), 'ElevenLabs operational audio metadata should not be exported');
@@ -234,5 +238,9 @@ assertEqual(preview.totalLists, 2, 'export should include all lists');
 assertEqual(preview.totalWords, 2, 'export should include all words');
 assertEqual(preview.content.lists[0].isActive, true, 'import validation should preserve active list status.');
 assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
+assertEqual(preview.content.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'import validation should preserve collection Welsh display name.');
+assertEqual(preview.content.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'import validation should preserve collection Welsh display description.');
+assertEqual(preview.content.lists[0].nameCy, 'Rhestr Gyntaf', 'import validation should preserve list Welsh display name.');
+assertEqual(preview.content.lists[0].descriptionCy, 'Disgrifiad Cymraeg cyntaf.', 'import validation should preserve list Welsh display description.');
 assertEqual(preview.content.lists[0].primerContent?.soundItems[0].textToSpeak, 'hedd', 'import validation should preserve primer sound generation text.');
 assertEqual(createAdminContentExportFilename(payload.exportedAt), 'spelio_live_content_export_2026-05-21_10-11-12Z.json', 'filename should be timestamped and filesystem-safe');

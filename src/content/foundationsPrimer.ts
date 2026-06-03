@@ -56,6 +56,18 @@ type RawPrimerDraft = {
 };
 
 const rawPrimerDrafts = (foundationsContent as { primerDrafts?: Record<string, RawPrimerDraft> }).primerDrafts ?? {};
+const rawPrimerContentByListId = new Map(
+  ((foundationsContent as { lists?: Array<{ id?: unknown; primerContent?: unknown; primer_content?: unknown }> }).lists ?? [])
+    .map(list => [asString(list.id), normalizePrimerContent(list.primerContent ?? list.primer_content)] as const)
+    .filter(([listId, primerContent]) => Boolean(listId) && isDatabasePrimerConfigured(primerContent))
+);
+
+const LEGACY_PRIMER_LIST_IDS: Record<string, string> = {
+  foundation_patterns_mixed_confidence_1: 'foundation_patterns_mixed_confidence_1_revised',
+  foundation_patterns_mixed_confidence_2: 'foundation_patterns_mixed_confidence_2_revised',
+  foundation_patterns_mixed_confidence_3: 'foundation_patterns_mixed_confidence_3_revised',
+  foundation_patterns_mixed_confidence_4: 'foundation_patterns_mixed_confidence_4_revised'
+};
 
 const PRIMER_AUDIO_TEXT_OVERRIDES: Record<string, string> = {
   D: 'da',
@@ -88,8 +100,12 @@ export function getFoundationsPrimer(listOrId: string | Pick<WordList, 'id' | 'p
     return normalizeDatabasePrimer(listOrId.id, listOrId.primerContent, interfaceLanguage);
   }
 
-  const draft = rawPrimerDrafts[listId];
-  if (!draft) return null;
+  const fallbackListId = resolveFallbackPrimerListId(listId);
+  const draft = rawPrimerDrafts[fallbackListId];
+  if (!draft) {
+    const primerContent = rawPrimerContentByListId.get(fallbackListId);
+    return primerContent ? normalizeDatabasePrimer(listId, primerContent, interfaceLanguage) : null;
+  }
 
   const title = pickLocalizedText(draft, 'primerTitle', interfaceLanguage);
   const body = pickLocalizedText(draft, 'primerBody', interfaceLanguage);
@@ -109,7 +125,14 @@ export function getFoundationsPrimer(listOrId: string | Pick<WordList, 'id' | 'p
 export function hasFoundationsPrimer(listOrId: string | Pick<WordList, 'id' | 'primerContent'>) {
   if (typeof listOrId !== 'string' && isDatabasePrimerConfigured(listOrId.primerContent)) return Boolean(normalizeDatabasePrimer(listOrId.id, listOrId.primerContent, 'en'));
   const listId = typeof listOrId === 'string' ? listOrId : listOrId.id;
-  return Boolean(rawPrimerDrafts[listId]);
+  const fallbackListId = resolveFallbackPrimerListId(listId);
+  return Boolean(rawPrimerDrafts[fallbackListId] || rawPrimerContentByListId.has(fallbackListId));
+}
+
+function resolveFallbackPrimerListId(listId: string) {
+  return rawPrimerDrafts[listId] || rawPrimerContentByListId.has(listId)
+    ? listId
+    : LEGACY_PRIMER_LIST_IDS[listId] ?? listId;
 }
 
 function pickLocalizedText(draft: RawPrimerDraft, baseKey: 'primerTitle' | 'primerBody', language: InterfaceLanguage) {

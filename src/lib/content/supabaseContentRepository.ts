@@ -20,7 +20,9 @@ type CollectionRow = {
   id: string;
   slug: string | null;
   name: string | null;
+  name_cy?: string | null;
   description: string | null;
+  description_cy?: string | null;
   type: string | null;
   source_language: string | null;
   target_language: string | null;
@@ -159,7 +161,9 @@ function mapCollection(row: CollectionRow): WordListCollection {
     id: row.id,
     slug: row.slug ?? row.id,
     name: row.name ?? row.id,
+    nameCy: row.name_cy ?? '',
     description: row.description ?? '',
+    descriptionCy: row.description_cy ?? '',
     type: asCollectionType(row.type),
     sourceLanguage: row.source_language ?? 'en',
     targetLanguage: row.target_language ?? 'cy',
@@ -261,7 +265,7 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
   const [collectionsResult, initialListsResult, wordsResult, audioProviderResult, interfaceAudioResult] = await Promise.all([
     client
       .from('word_list_collections')
-      .select('id,slug,name,description,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
+      .select('id,slug,name,name_cy,description,description_cy,type,source_language,target_language,curriculum_key_stage,curriculum_area,owner_type,owner_id,order_index,is_active,created_at,updated_at')
       .eq('is_active', true)
       .order('order_index', { ascending: true })
       .order('id', { ascending: true }),
