@@ -109,9 +109,17 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
       const result = await repository.generateCollectionIntroAudio(saved.id, language, 'azure');
       const nextCollection = await repository.getCollection(saved.id);
       if (nextCollection) setCollection({ ...nextCollection, introContent: normalizeCollectionIntroContent(nextCollection.introContent, nextCollection.id) });
-      setStatusMessage(result.ok ? `${language === 'cy' ? 'Welsh' : 'English'} Azure intro audio generated.` : result.error ?? 'Azure intro audio generation failed.');
+      if (result.ok) {
+        setStatusMessage(`${language === 'cy' ? 'Welsh' : 'English'} Azure intro audio generated.`);
+      } else {
+        const message = result.error ?? 'Azure intro audio generation failed.';
+        console.error('Collection intro Azure audio generation failed', { collectionId: saved.id, language, message });
+        setErrorMessage(message);
+      }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not generate collection intro audio.');
+      const message = error instanceof Error ? error.message : 'Could not generate collection intro audio.';
+      console.error('Collection intro Azure audio generation failed', { collectionId: saved.id, language, error });
+      setErrorMessage(message);
     } finally {
       setGeneratingLanguage(null);
     }

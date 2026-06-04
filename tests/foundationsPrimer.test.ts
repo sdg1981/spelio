@@ -1,5 +1,5 @@
 import { getFoundationsPrimer, getPrimerAudioText, hasFoundationsPrimer } from '../src/content/foundationsPrimer';
-import { getCollectionIntro, hasSeenCollectionIntro, markCollectionIntroSeen, normalizeCollectionIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
+import { getCollectionIntro, getCollectionIntroAudioGenerationText, hasSeenCollectionIntro, markCollectionIntroSeen, normalizeCollectionIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
 import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds } from '../src/lib/foundationsPrimerAudio';
 import { shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange } from '../src/lib/interfaceLanguageNavigation';
 
@@ -146,6 +146,16 @@ assertEqual(welshCollectionIntro.displayLanguage, 'cy', 'Welsh interface should 
 assertEqual(welshCollectionIntro.title, 'Sylfeini Sillafu Cymraeg', 'Welsh interface should use Welsh intro title when present.');
 assertEqual(welshCollectionIntro.body, 'Corff cyflwyniad Cymraeg.', 'Welsh interface should use Welsh intro body when present.');
 assertEqual(welshCollectionIntro.audioUrl, 'https://example.test/collection-intro-cy.mp3', 'Welsh interface should use Welsh intro audio when available.');
+assertEqual(
+  getCollectionIntroAudioGenerationText(bilingualCollectionIntro, 'en'),
+  foundationsIntroContent.bodyEn,
+  'English collection intro audio generation should use body text only, without the visible title.'
+);
+assertEqual(
+  getCollectionIntroAudioGenerationText(bilingualCollectionIntro, 'cy'),
+  'Corff cyflwyniad Cymraeg.',
+  'Welsh collection intro audio generation should use body text only, without the visible title.'
+);
 
 const welshTextWithoutWelshAudioIntro = getCollectionIntro({
   id: WELSH_FOUNDATIONS_COLLECTION_ID,

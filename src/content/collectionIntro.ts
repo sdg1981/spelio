@@ -138,6 +138,11 @@ export function getCollectionIntroForPracticeStart(list: WordList | null | undef
   return getCollectionIntro(list?.collection, interfaceLanguage);
 }
 
+export function getCollectionIntroAudioGenerationText(content: WordListCollectionIntroContent, language: 'en' | 'cy') {
+  const normalized = normalizeCollectionIntroContent(content);
+  return (language === 'cy' ? normalized.bodyCy : normalized.bodyEn).trim();
+}
+
 export function hasSeenCollectionIntro(intro: Pick<CollectionIntro, 'seenKey'>) {
   if (typeof window === 'undefined') return true;
   try {

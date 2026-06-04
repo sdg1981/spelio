@@ -5,12 +5,13 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createAudioStoragePath, createCollectionIntroAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createAudioStoragePath, createCollectionIntroAudioStoragePath, createElevenLabsAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, normalizeElevenLabsExtractChunkCount, normalizeElevenLabsExtractStartOffsetMs, normalizeLegacyAudioStatus, synthesizeCollectionIntroAudioMp3, synthesizeElevenLabsContextExtractMp3, synthesizeElevenLabsWelshMp3, synthesizeInterfaceAudioMp3, synthesizeWelshMp3, transformAzureMp3WithElevenLabs } from '../services/audioGeneration';
 import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAudioProvider, normalizeElevenLabsAudioStatus, normalizeElevenLabsGenerationMode } from '../../lib/audioProvider';
 import { normalizeInterfaceAudioClips, withInterfaceAudioCacheBust, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { clearCollectionContentWithClient, deleteWordListWithClient } from './contentDelete';
 import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
-import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
+import { getCollectionIntroAudioGenerationText, normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
+import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
 
 type CustomWordListRow = {
   id: string;
@@ -477,10 +478,10 @@ export const supabaseAdminRepository: AdminRepository = {
     const collection = await this.getCollection(collectionId);
     if (!collection) throw new Error('Collection not found.');
     const introContent = normalizeCollectionIntroContent(collection.introContent, collection.id);
-    const title = language === 'cy' ? introContent.titleCy : introContent.titleEn;
-    const body = language === 'cy' ? introContent.bodyCy : introContent.bodyEn;
-    const text = [title, body].map(value => value.trim()).filter(Boolean).join('\n\n');
-    if (!body.trim()) throw new Error(language === 'cy' ? 'Collection intro Welsh body is empty.' : 'Collection intro English body is empty.');
+    const text = getCollectionIntroAudioGenerationText(introContent, language);
+    if (!text) throw new Error(language === 'cy' ? 'Collection intro Welsh body is empty.' : 'Collection intro English body is empty.');
+    const textLimit = getAzureTtsTextLimit('collection_intro');
+    if (text.length > textLimit) throw new Error(`Collection intro ${language === 'cy' ? 'Welsh' : 'English'} body is too long for Azure generation (${text.length}/${textLimit} characters).`);
 
     await this.saveCollection({
       ...collection,
@@ -493,7 +494,7 @@ export const supabaseAdminRepository: AdminRepository = {
     });
 
     try {
-      const audio = await synthesizeInterfaceAudioMp3(text, language);
+      const audio = await synthesizeCollectionIntroAudioMp3(text, language);
       if (audio.blob.size < 100) throw new Error('Collection intro audio upload was blocked because the generated file was unexpectedly small.');
       const path = createCollectionIntroAudioStoragePath(collection.id, 'azure', language, createPrimerAudioObjectVersion());
       const { error: uploadError } = await client.storage

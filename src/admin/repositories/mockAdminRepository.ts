@@ -7,6 +7,8 @@ import { buildAdminContentExportPayload } from './contentExport';
 import { createAudioQueueSnapshot, createMockAudioUrl, createPrimerAudioObjectVersion, createPrimerAudioStoragePath } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
 import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
+import { getCollectionIntroAudioGenerationText } from '../../content/collectionIntro';
+import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
@@ -265,8 +267,10 @@ export const mockAdminRepository: AdminRepository = {
     const collection = await this.getCollection(collectionId);
     if (!collection?.introContent) throw new Error('Collection intro content not found.');
     if (provider !== 'azure') throw new Error('Collection intro audio currently supports Azure generation only.');
-    if (language === 'cy' && !collection.introContent.bodyCy.trim()) throw new Error('Collection intro Welsh body is empty.');
-    if (language === 'en' && !collection.introContent.bodyEn.trim()) throw new Error('Collection intro English body is empty.');
+    const text = getCollectionIntroAudioGenerationText(collection.introContent, language);
+    if (!text) throw new Error(language === 'cy' ? 'Collection intro Welsh body is empty.' : 'Collection intro English body is empty.');
+    const textLimit = getAzureTtsTextLimit('collection_intro');
+    if (text.length > textLimit) throw new Error(`Collection intro ${language === 'cy' ? 'Welsh' : 'English'} body is too long for Azure generation (${text.length}/${textLimit} characters).`);
     const audioUrl = `https://example.test/storage/v1/object/public/audio/collection-intros/azure/${collection.id}/${language}/${createPrimerAudioObjectVersion()}.mp3`;
     const readyIntro = {
       ...collection.introContent,

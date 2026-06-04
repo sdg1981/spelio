@@ -19,6 +19,7 @@ declare const Buffer: {
 };
 
 import { postProcessAzureWavToMp3 } from './audioPostProcessing.js';
+import { getAzureTtsTextLimit, normalizeAzureTtsPurpose, type AzureTtsPurpose } from '../src/lib/azureTtsLimits.js';
 
 console.info('audioPostProcessing helper loaded successfully', {
   helper: 'audioPostProcessing',
@@ -50,6 +51,9 @@ type AudioRouteJsonResponse = {
   error?: string;
   errorStage?: AudioErrorStage;
   audioPipelineVersion?: string;
+  audioPurpose?: AzureTtsPurpose;
+  textLength?: number;
+  textLimit?: number;
   requestedLanguage?: AzureSpeechLanguage;
   requestedLocale?: string;
   requestedVoice?: string;
@@ -142,9 +146,19 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
 
     const body = parseBody(request.body);
     const text = typeof body?.text === 'string' ? body.text.trim() : '';
+    const audioPurpose = normalizeAzureTtsPurpose(body?.purpose);
+    const textLimit = getAzureTtsTextLimit(audioPurpose);
     const voiceConfig = getAzureVoiceConfig(body?.language);
     if (!text) return sendJsonError(response, 400, 'Text is required.', 'ssml_construction');
-    if (text.length > 500) return sendJsonError(response, 400, 'Text is too long.', 'ssml_construction');
+    if (text.length > textLimit) {
+      return sendJsonError(
+        response,
+        400,
+        `Text is too long for ${audioPurpose === 'collection_intro' ? 'collection intro narration' : 'short audio'} (max ${textLimit} characters).`,
+        'ssml_construction',
+        { audioPurpose, textLength: text.length, textLimit }
+      );
+    }
 
     const env = dependencies.env ?? process.env;
     const config = getAzureSpeechConfig(env);
@@ -157,7 +171,10 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       regionConfigured: Boolean(region),
       voice: voiceConfig.voice,
       locale: voiceConfig.locale,
-      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT
+      outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+      audioPurpose,
+      textLength: text.length,
+      textLimit
     });
 
     if (!key || !region) {
@@ -170,6 +187,8 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       ssmlLength: ssml.length,
       textLength: text.length,
+      textLimit,
+      audioPurpose,
       voice: voiceConfig.voice,
       locale: voiceConfig.locale,
       prosodyRate: AZURE_SPEECH_PROSODY_RATE
@@ -189,7 +208,8 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       contentType: 'application/ssml+xml',
       userAgent: AZURE_TTS_USER_AGENT,
       voice: voiceConfig.voice,
-      ssmlLength: ssml.length
+      ssmlLength: ssml.length,
+      audioPurpose
     });
 
     const azureResponse = await requestAzureAudio(text, { key, region, fetchImpl, voiceConfig });
@@ -380,16 +400,16 @@ function processAzureAudio(wavBuffer: ArrayBuffer, postProcess?: (wavAudio: Arra
   return (postProcess ?? postProcessAzureWavToMp3)(wavBuffer);
 }
 
-function parseBody(body: unknown): { text?: unknown; language?: unknown } | null {
+function parseBody(body: unknown): { text?: unknown; language?: unknown; purpose?: unknown } | null {
   if (typeof body === 'string') {
     try {
-      return JSON.parse(body) as { text?: unknown; language?: unknown };
+      return JSON.parse(body) as { text?: unknown; language?: unknown; purpose?: unknown };
     } catch {
       return null;
     }
   }
 
-  if (body && typeof body === 'object') return body as { text?: unknown; language?: unknown };
+  if (body && typeof body === 'object') return body as { text?: unknown; language?: unknown; purpose?: unknown };
   return null;
 }
 

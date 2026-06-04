@@ -32,6 +32,7 @@ import {
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
 import { createAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { AZURE_TTS_COLLECTION_INTRO_TEXT_LIMIT, AZURE_TTS_DEFAULT_TEXT_LIMIT } from '../src/lib/azureTtsLimits';
 
 type TestResponseBody = Uint8Array | {
   ok: boolean;
@@ -310,6 +311,73 @@ async function runAsyncAssertions() {
     englishRequestedSsml.includes(`xml:lang="${AZURE_ENGLISH_SPEECH_LOCALE}"`) &&
       englishRequestedSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
     'English helper generation should send English SSML to Azure.'
+  );
+
+  const tooLongDefaultResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: 'a'.repeat(AZURE_TTS_DEFAULT_TEXT_LIMIT + 1), language: 'en' } },
+    tooLongDefaultResponse,
+    {
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(tooLongDefaultResponse.statusCode, 400, 'Default short-audio generation should keep the existing 500-character guard.');
+  const tooLongDefaultBody = tooLongDefaultResponse.body;
+  assert(
+    typeof tooLongDefaultBody === 'object' &&
+      tooLongDefaultBody !== null &&
+      !('byteLength' in tooLongDefaultBody) &&
+      typeof tooLongDefaultBody.error === 'string' &&
+      tooLongDefaultBody.error.includes(`max ${AZURE_TTS_DEFAULT_TEXT_LIMIT} characters`),
+    'Default short-audio limit errors should explain the active text cap.'
+  );
+
+  const collectionIntroText = [
+    'Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.',
+    "In this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.",
+    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.',
+    'Keep listening for the patterns as you practise.',
+    'Some spellings will feel new at first, and that is fine. Each short practice round is a chance to connect what you hear with what you see on the page.'
+  ].join('\n\n');
+  assert(collectionIntroText.length > AZURE_TTS_DEFAULT_TEXT_LIMIT, 'Collection intro test text should exceed the default short-audio limit.');
+  assert(collectionIntroText.length < AZURE_TTS_COLLECTION_INTRO_TEXT_LIMIT, 'Collection intro test text should remain inside the narration limit.');
+  let collectionIntroRequestedSsml = '';
+  const collectionIntroResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: { text: collectionIntroText, language: 'en', purpose: 'collection_intro' } },
+    collectionIntroResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async (_url, options) => {
+        collectionIntroRequestedSsml = options.body;
+        return {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => makeAudioBuffer()
+        };
+      },
+      postProcess: async () => {
+        const mp3Bytes = new Uint8Array(128);
+        mp3Bytes[0] = 0x49;
+        mp3Bytes[1] = 0x44;
+        mp3Bytes[2] = 0x33;
+        return mp3Bytes;
+      },
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(collectionIntroResponse.statusCode, 200, 'Collection intro narration should be allowed beyond the short helper limit.');
+  assertEqual(collectionIntroResponse.headers['X-Spelio-Azure-Language'], 'en', 'Collection intro generation should preserve the requested English voice route.');
+  assert(
+    collectionIntroRequestedSsml.includes('Welsh spelling can look unfamiliar') &&
+      collectionIntroRequestedSsml.includes('Keep listening for the patterns') &&
+      collectionIntroRequestedSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
+    'Collection intro generation should send the full body-only narration text with English Azure settings.'
   );
 
   const pipelineLogs: Array<Record<string, unknown>> = [];

@@ -1,5 +1,6 @@
 import type { AdminWord, AudioStatus, ElevenLabsGenerationMode } from '../types';
 import type { WordListPrimerSoundItem } from '../../data/wordLists';
+import type { AzureTtsPurpose } from '../../lib/azureTtsLimits';
 
 export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
 export const AZURE_SPEECH_LOCALE = 'cy-GB';
@@ -74,6 +75,9 @@ type AudioRouteErrorPayload = {
   error?: string;
   errorStage?: string;
   audioPipelineVersion?: string;
+  audioPurpose?: AzureTtsPurpose;
+  textLength?: number;
+  textLimit?: number;
   requestedLanguage?: 'en' | 'cy';
   requestedLocale?: string;
   requestedVoice?: string;
@@ -113,13 +117,17 @@ export async function synthesizeInterfaceAudioMp3(text: string, language: 'en' |
   return synthesizeAzureMp3(text, language);
 }
 
-async function synthesizeAzureMp3(text: string, language: 'en' | 'cy'): Promise<InterfaceAudioBlob> {
+export async function synthesizeCollectionIntroAudioMp3(text: string, language: 'en' | 'cy'): Promise<InterfaceAudioBlob> {
+  return synthesizeAzureMp3(text, language, 'collection_intro');
+}
+
+async function synthesizeAzureMp3(text: string, language: 'en' | 'cy', purpose: AzureTtsPurpose = 'default'): Promise<InterfaceAudioBlob> {
   const response = await fetch('/api/azure-tts', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ text, language })
+    body: JSON.stringify({ text, language, purpose })
   });
 
   if (!response.ok) {
@@ -228,7 +236,8 @@ function formatAudioRouteError(status: number, payload: AudioRouteErrorPayload |
   const message = payload.error ?? (status === 429 ? 'Azure rate limit reached.' : `Audio route failed (${status}).`);
   const stage = payload.errorStage ? `stage: ${payload.errorStage}` : '';
   const version = payload.audioPipelineVersion ? `pipeline: ${payload.audioPipelineVersion}` : '';
-  const details = [stage, version].filter(Boolean).join(', ');
+  const limit = payload.textLimit && payload.textLength ? `text: ${payload.textLength}/${payload.textLimit}` : '';
+  const details = [stage, version, limit].filter(Boolean).join(', ');
   return details ? `${message} (${details})` : message;
 }
 
