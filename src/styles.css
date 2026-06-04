@@ -6867,6 +6867,20 @@
   border-color:rgba(255,255,255,.18);
 }
 
+.public-app[data-theme="dark"] .collection-intro-audio{
+  color:var(--text-secondary, #9aa7b6);
+}
+
+.public-app[data-theme="dark"] .collection-intro-audio:hover,
+.public-app[data-theme="dark"] .collection-intro-audio:focus-visible{
+  color:var(--text-primary, #f8fafc);
+}
+
+.public-app[data-theme="dark"] .collection-intro-audio.playing,
+.public-app[data-theme="dark"] .collection-intro-audio.failed{
+  color:#fecaca;
+}
+
 .public-app[data-theme="dark"] .search-input,
 .public-app[data-theme="dark"] .feedback-input{
   background:rgba(15,13,11,.52);
@@ -8216,9 +8230,13 @@
 .collection-intro-actions{
   display:grid;
   justify-items:center;
-  gap:14px;
+  gap:12px;
   width:min(100%,430px);
-  margin:26px auto 0;
+  margin:24px auto 0;
+}
+
+.collection-intro-actions .foundations-primer-audio-note{
+  margin:2px auto 0;
 }
 
 .foundations-primer-sounds{
@@ -8286,7 +8304,44 @@
 }
 
 .collection-intro-audio{
-  margin-top:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:34px;
+  border:0;
+  background:transparent;
+  color:var(--text-secondary, #5f6b78);
+  padding:0 4px;
+  font-size:15px;
+  font-weight:850;
+  line-height:1.2;
+  text-decoration:none;
+  transition:color .16s ease, transform .16s ease;
+}
+
+.collection-intro-audio:hover,
+.collection-intro-audio:focus-visible{
+  outline:0;
+  color:var(--text-primary, #071522);
+  transform:translateY(-1px);
+}
+
+.collection-intro-audio:focus-visible{
+  border-radius:999px;
+  box-shadow:var(--public-card-focus-shadow, 0 0 0 3px rgba(15,23,42,.14));
+}
+
+.collection-intro-audio:active{
+  transform:translateY(0);
+}
+
+.collection-intro-audio.playing{
+  color:var(--accent, #d90000);
+}
+
+.collection-intro-audio.failed{
+  color:var(--accent, #d90000);
 }
 
 .foundations-primer-start{
@@ -8296,6 +8351,18 @@
 
 .collection-intro-start.foundations-primer-start{
   margin-top:0;
+}
+
+@media (max-width:620px){
+  .collection-intro-actions{
+    gap:10px;
+    margin-top:22px;
+  }
+
+  .collection-intro-audio{
+    min-height:32px;
+    font-size:14px;
+  }
 }
 
 .foundations-primer-footer.public-info-footer{

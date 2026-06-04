@@ -104,21 +104,21 @@ export function CollectionIntro({
         <h1 id="collection-intro-title">{intro.title}</h1>
 
         <div className="collection-intro-actions">
+          <PrimaryButton className="foundations-primer-start collection-intro-start" onClick={onStart}>
+            {t('collectionIntro.start')}
+          </PrimaryButton>
+
           {audioUrl && (
             <button
-              className={`foundations-primer-sound collection-intro-audio ${playbackState === 'playing' ? 'playing' : ''} ${playbackState === 'failed' ? 'failed' : ''}`.trim()}
+              className={`collection-intro-audio ${playbackState === 'playing' ? 'playing' : ''} ${playbackState === 'failed' ? 'failed' : ''}`.trim()}
               type="button"
               onClick={togglePlayback}
               aria-label={playbackState === 'playing' ? t('collectionIntro.pauseAudio') : t('collectionIntro.playAudio')}
             >
-              {playbackState === 'playing' ? <Pause size={20} strokeWidth={2.2} aria-hidden="true" /> : <Play size={20} strokeWidth={2.2} aria-hidden="true" />}
+              {playbackState === 'playing' ? <Pause size={16} strokeWidth={2.3} aria-hidden="true" /> : <Play size={16} strokeWidth={2.3} aria-hidden="true" />}
               <span>{playbackState === 'playing' ? t('collectionIntro.pause') : t('collectionIntro.play')}</span>
             </button>
           )}
-
-          <PrimaryButton className="foundations-primer-start collection-intro-start" onClick={onStart}>
-            {t('collectionIntro.start')}
-          </PrimaryButton>
 
           {audioUrl && playbackState === 'blocked' && (
             <p className="foundations-primer-audio-note" role="note">{t('collectionIntro.autoplayBlocked')}</p>

@@ -36,8 +36,8 @@ export const en = {
   },
   collectionIntro: {
     kicker: 'Before you begin',
-    play: 'Play',
-    pause: 'Pause',
+    play: 'Listen to introduction',
+    pause: 'Pause introduction',
     playAudio: 'Play introduction audio',
     pauseAudio: 'Pause introduction audio',
     autoplayBlocked: 'Your browser blocked autoplay. Press Play to hear the introduction.',

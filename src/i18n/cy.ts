@@ -36,8 +36,8 @@ export const cy = {
   },
   collectionIntro: {
     kicker: 'Cyn i chi ddechrau',
-    play: 'Chwarae',
-    pause: 'Oedi',
+    play: 'Gwrando ar y cyflwyniad',
+    pause: 'Oedi’r cyflwyniad',
     playAudio: 'Chwarae sain y cyflwyniad',
     pauseAudio: 'Oedi sain y cyflwyniad',
     autoplayBlocked: 'Mae eich porwr wedi rhwystro awtochwarae. Pwyswch Chwarae i glywed y cyflwyniad.',
