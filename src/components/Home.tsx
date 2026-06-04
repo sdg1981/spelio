@@ -90,6 +90,9 @@ export function Home({
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
   const showRecapEntry = !isSharedEntry && mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
+  const supportText = isFirst
+    ? recommendedStartingCollectionTitle
+    : shouldPrioritiseReview ? t('home.basedOnLastSession') : recommendation.subtitle;
 
   return (
     <main className="homepage-bg">
@@ -145,18 +148,14 @@ export function Home({
             ) : homeHeading}
           </h1>
 
-          {!isFirst && (
+          {supportText && (
             <p className="home-support">
-              {shouldPrioritiseReview ? t('home.basedOnLastSession') : recommendation.subtitle}
+              {supportText}
             </p>
           )}
         </div>
 
-        {isFirst && recommendedStartingCollectionTitle && (
-          <p className="home-starting-point">{recommendedStartingCollectionTitle}</p>
-        )}
-
-        <PrimaryButton className={`home-primary ${isFirst ? 'home-primary-first-start' : ''}`} onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
+        <PrimaryButton className="home-primary" onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
 
         {!isFirst && progressSummary && (
           <p className="home-progress-line">{progressSummary}</p>
