@@ -10,6 +10,7 @@ export const cy = {
     continueLearning: 'Parhau i ddysgu',
     startPractice: 'Dechrau ymarfer sillafu',
     startPracticeTest: 'Dechrau prawf ymarfer',
+    recommendedStartingPoint: 'Man cychwyn a argymhellir',
     reviewDifficult: 'Adolygu geiriau anodd',
     chooseAnotherList: 'Dewis rhestr eiriau arall',
     selectWordList: 'Dewis rhestr eiriau',

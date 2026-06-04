@@ -10,6 +10,7 @@ export const en = {
     continueLearning: 'Continue learning',
     startPractice: 'Start spelling practice',
     startPracticeTest: 'Start practice test',
+    recommendedStartingPoint: 'Recommended starting point',
     reviewDifficult: 'Review difficult words',
     chooseAnotherList: 'Choose another word list',
     selectWordList: 'Select word list',

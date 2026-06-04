@@ -149,9 +149,12 @@ export function Home({
           </h1>
 
           {supportText && (
-            <p className="home-support">
-              {supportText}
-            </p>
+            <>
+              {isFirst && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
+              <p className="home-support">
+                {supportText}
+              </p>
+            </>
           )}
         </div>
 

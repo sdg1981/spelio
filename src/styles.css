@@ -1822,6 +1822,14 @@
   line-height:1.35;
 }
 
+.home-copy .foundations-primer-kicker{
+  margin:28px 0 10px;
+}
+
+.home-copy .foundations-primer-kicker+.home-support{
+  margin-top:0;
+}
+
 .home-primary{
   width:100%;
   max-width:560px;
