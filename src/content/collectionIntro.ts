@@ -2,6 +2,7 @@ import type { InterfaceLanguage } from '../i18n';
 import type { PrimerAudioSource, PrimerAudioStatus, WordList, WordListCollection, WordListCollectionIntroContent } from '../data/wordLists';
 
 export const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
+export const COLLECTION_INTRO_SEEN_KEY_PREFIX = 'spelio-collection-intro:';
 
 export type CollectionIntro = {
   collectionId: string;
@@ -136,8 +137,23 @@ export function markCollectionIntroSeen(intro: Pick<CollectionIntro, 'seenKey'>)
   }
 }
 
+export function clearCollectionIntroSeenState(storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage) {
+  if (!storage) return;
+
+  try {
+    const keysToRemove: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key?.startsWith(COLLECTION_INTRO_SEEN_KEY_PREFIX)) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(key => storage.removeItem(key));
+  } catch {
+    // Local storage should never block resetting learner progress.
+  }
+}
+
 function createCollectionIntroSeenKey(collectionId: string, version: string) {
-  return `spelio-collection-intro:${collectionId || 'collection'}:${version || DEFAULT_FOUNDATIONS_INTRO_VERSION}`;
+  return `${COLLECTION_INTRO_SEEN_KEY_PREFIX}${collectionId || 'collection'}:${version || DEFAULT_FOUNDATIONS_INTRO_VERSION}`;
 }
 
 function normalizeIntroAudioStatus(value: unknown): PrimerAudioStatus {

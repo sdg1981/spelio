@@ -4,6 +4,7 @@ import { normaliseInterfaceLanguage } from '../../i18n';
 import { groupLearningItems, isLearningItemSeen } from './learningItems';
 import { hasEligibleDifficultWordsInList } from './sessionEngine';
 import { clearPracticeStruggleAssistStorage } from './struggleAssist';
+import { clearCollectionIntroSeenState } from '../../content/collectionIntro';
 
 export type SessionState = 'strong' | 'good' | 'struggled';
 export type SpelioTheme = 'light' | 'dark';
@@ -337,6 +338,7 @@ export function clearSpelioStorageData(storage: Storage | null = typeof window =
       storage.removeItem(key);
     }
     clearPracticeStruggleAssistStorage(storage);
+    clearCollectionIntroSeenState(storage);
   } catch {
     // Local storage should never block resetting in-memory progress.
   }

@@ -29,6 +29,7 @@ import {
 } from '../src/lib/practice/struggleAssist';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, getPlayableInterfaceAudioUrl, normalizeInterfaceAudioClips, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip } from '../src/lib/interfaceAudio';
 import { clearSpelioStorageData, createDefaultStorage } from '../src/lib/practice/storage';
+import { COLLECTION_INTRO_SEEN_KEY_PREFIX } from '../src/content/collectionIntro';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -164,6 +165,8 @@ function createMemoryStorage(): Storage {
   storage.setItem('selectedListIds', '["legacy-list"]');
   storage.setItem('settings', '{"soundEffects":false}');
   storage.setItem('spelio-custom-list-client-id', 'client-id');
+  storage.setItem(`${COLLECTION_INTRO_SEEN_KEY_PREFIX}spelio_welsh_foundations:2026-06-03`, 'seen');
+  storage.setItem(`${COLLECTION_INTRO_SEEN_KEY_PREFIX}future_collection:2026-07-01`, 'seen');
   markPracticeStruggleAssistSeen(storage);
   storage.setItem('spelio.practiceStruggleAssistCooldown.v1', 'active');
 
@@ -175,6 +178,8 @@ function createMemoryStorage(): Storage {
   assertEqual(storage.getItem('settings'), null, 'Reset progress should preserve existing legacy reset behaviour.');
   assertEqual(storage.getItem(PRACTICE_STRUGGLE_ASSIST_STORAGE_KEY), null, 'Reset progress should clear struggle-assist seen state.');
   assertEqual(storage.getItem('spelio.practiceStruggleAssistCooldown.v1'), null, 'Reset progress should clear future struggle-assist trigger state.');
+  assertEqual(storage.getItem(`${COLLECTION_INTRO_SEEN_KEY_PREFIX}spelio_welsh_foundations:2026-06-03`), null, 'Reset progress should clear Welsh Foundations intro seen state.');
+  assertEqual(storage.getItem(`${COLLECTION_INTRO_SEEN_KEY_PREFIX}future_collection:2026-07-01`), null, 'Reset progress should clear future collection intro seen state.');
   assertEqual(storage.getItem('spelio-custom-list-client-id'), 'client-id', 'Reset progress should not clear unrelated local app data.');
 
   const resetDefaultStorage = createDefaultStorage();
