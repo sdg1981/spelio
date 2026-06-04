@@ -12,8 +12,8 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [clearingAudio, setClearingAudio] = useState(false);
+  const [generatingLanguage, setGeneratingLanguage] = useState<'en' | 'cy' | null>(null);
+  const [clearingAudioLanguage, setClearingAudioLanguage] = useState<'en' | 'cy' | null>(null);
 
   useEffect(() => {
     repository.getCollection(id)
@@ -63,38 +63,74 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
     }
   }
 
-  async function generateAudio() {
+  const busy = saving || Boolean(generatingLanguage) || Boolean(clearingAudioLanguage);
+
+  function audioFields(language: 'en' | 'cy') {
+    return language === 'cy'
+      ? {
+          label: 'Welsh intro audio',
+          url: intro.audioUrlCy,
+          status: intro.audioStatusCy,
+          source: intro.audioSourceCy,
+          canGenerate: Boolean(intro.bodyCy.trim()),
+          missingCopy: 'Add Welsh intro body text before generating Welsh audio.'
+        }
+      : {
+          label: 'English intro audio',
+          url: intro.audioUrlEn,
+          status: intro.audioStatusEn,
+          source: intro.audioSourceEn,
+          canGenerate: Boolean(intro.bodyEn.trim()),
+          missingCopy: 'Add English intro body text before generating English audio.'
+        };
+  }
+
+  function updateAudio(language: 'en' | 'cy', patch: { url?: string; status?: typeof intro.audioStatusEn; source?: typeof intro.audioSourceEn }) {
+    updateIntro(language === 'cy'
+      ? {
+          audioUrlCy: patch.url ?? intro.audioUrlCy,
+          audioStatusCy: patch.status ?? intro.audioStatusCy,
+          audioSourceCy: patch.source ?? intro.audioSourceCy
+        }
+      : {
+          audioUrlEn: patch.url ?? intro.audioUrlEn,
+          audioStatusEn: patch.status ?? intro.audioStatusEn,
+          audioSourceEn: patch.source ?? intro.audioSourceEn
+        });
+  }
+
+  async function generateAudio(language: 'en' | 'cy') {
     const saved = await saveCollection();
     if (!saved) return;
-    setGenerating(true);
+    setGeneratingLanguage(language);
     setErrorMessage('');
     setStatusMessage('');
     try {
-      const result = await repository.generateCollectionIntroAudio(saved.id, 'azure');
+      const result = await repository.generateCollectionIntroAudio(saved.id, language, 'azure');
       const nextCollection = await repository.getCollection(saved.id);
       if (nextCollection) setCollection({ ...nextCollection, introContent: normalizeCollectionIntroContent(nextCollection.introContent, nextCollection.id) });
-      setStatusMessage(result.ok ? 'Azure intro audio generated.' : result.error ?? 'Azure intro audio generation failed.');
+      setStatusMessage(result.ok ? `${language === 'cy' ? 'Welsh' : 'English'} Azure intro audio generated.` : result.error ?? 'Azure intro audio generation failed.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Could not generate collection intro audio.');
     } finally {
-      setGenerating(false);
+      setGeneratingLanguage(null);
     }
   }
 
-  async function clearAudio() {
+  async function clearAudio(language: 'en' | 'cy') {
     if (!collection) return;
-    setClearingAudio(true);
+    setClearingAudioLanguage(language);
     setErrorMessage('');
     setStatusMessage('');
     try {
-      await repository.clearCollectionIntroAudio(collection.id);
+      await repository.clearCollectionIntroAudio(collection.id, language);
       const nextCollection = await repository.getCollection(collection.id);
       if (nextCollection) setCollection({ ...nextCollection, introContent: normalizeCollectionIntroContent(nextCollection.introContent, nextCollection.id) });
-      setStatusMessage('Collection intro audio cleared.');
+      setStatusMessage(`${language === 'cy' ? 'Welsh' : 'English'} collection intro audio cleared.`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Could not clear collection intro audio.');
     } finally {
-      setClearingAudio(false);
+      setClearingAudioLanguage(null);
     }
   }
 
@@ -129,7 +165,6 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 <h2 className="text-lg font-black text-slate-950">Collection introduction</h2>
                 <p className="mt-1 text-sm text-slate-500">Shown once locally before the first normal Foundations practice flow.</p>
               </div>
-              <AudioStatusPill status={intro.audioStatus} />
             </div>
 
             <div className="grid gap-5">
@@ -161,20 +196,59 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 </Field>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-[1fr_180px_180px]">
-                <Field label="Intro audio URL">
-                  <AdminInput value={intro.audioUrl} onChange={event => updateIntro({ audioUrl: event.target.value, audioStatus: event.target.value.trim() ? 'ready' : 'missing', audioSource: event.target.value.trim() ? intro.audioSource : 'unknown' })} />
-                </Field>
-                <Field label="Audio status">
-                  <AdminSelect value={intro.audioStatus} onChange={event => updateIntro({ audioStatus: event.target.value as typeof intro.audioStatus })}>
-                    {['missing', 'queued', 'generating', 'ready', 'failed'].map(status => <option key={status} value={status}>{status}</option>)}
-                  </AdminSelect>
-                </Field>
-                <Field label="Audio source">
-                  <AdminSelect value={intro.audioSource} onChange={event => updateIntro({ audioSource: event.target.value as typeof intro.audioSource })}>
-                    {['unknown', 'manual', 'azure', 'elevenlabs'].map(source => <option key={source} value={source}>{source}</option>)}
-                  </AdminSelect>
-                </Field>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {(['en', 'cy'] as const).map(language => {
+                  const fields = audioFields(language);
+                  const isGenerating = generatingLanguage === language;
+                  const isClearing = clearingAudioLanguage === language;
+                  return (
+                    <div key={language} className="grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm font-black text-slate-950">{fields.label}</h3>
+                          <p className="mt-1 text-xs text-slate-500">Uses Azure {language === 'cy' ? 'Welsh' : 'English'} voice settings.</p>
+                        </div>
+                        <AudioStatusPill status={fields.status} />
+                      </div>
+                      <Field label={`${language === 'cy' ? 'Welsh' : 'English'} audio URL`}>
+                        <AdminInput
+                          value={fields.url}
+                          onChange={event => updateAudio(language, {
+                            url: event.target.value,
+                            status: event.target.value.trim() ? 'ready' : 'missing',
+                            source: event.target.value.trim() ? fields.source : 'unknown'
+                          })}
+                        />
+                      </Field>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Audio status">
+                          <AdminSelect value={fields.status} onChange={event => updateAudio(language, { status: event.target.value as typeof intro.audioStatusEn })}>
+                            {['missing', 'queued', 'generating', 'ready', 'failed'].map(status => <option key={status} value={status}>{status}</option>)}
+                          </AdminSelect>
+                        </Field>
+                        <Field label="Audio source">
+                          <AdminSelect value={fields.source} onChange={event => updateAudio(language, { source: event.target.value as typeof intro.audioSourceEn })}>
+                            {['unknown', 'manual', 'azure', 'elevenlabs'].map(source => <option key={source} value={source}>{source}</option>)}
+                          </AdminSelect>
+                        </Field>
+                      </div>
+                      {fields.url.trim() && (
+                        <audio className="w-full" controls src={fields.url} />
+                      )}
+                      {!fields.canGenerate && (
+                        <p className="text-xs font-semibold text-amber-700">{fields.missingCopy}</p>
+                      )}
+                      <div className="flex flex-wrap gap-3">
+                        <AdminButton onClick={() => generateAudio(language)} disabled={busy || !fields.canGenerate}>
+                          <Wand2 size={16} /> {isGenerating ? 'Generating...' : `Generate ${language === 'cy' ? 'Welsh' : 'English'} Azure audio`}
+                        </AdminButton>
+                        <AdminButton variant="danger" onClick={() => clearAudio(language)} disabled={busy || (!fields.url && fields.status === 'missing')}>
+                          <Trash2 size={16} /> {isClearing ? 'Clearing...' : 'Clear audio'}
+                        </AdminButton>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -187,14 +261,8 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
               </div>
 
               <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-                <AdminButton variant="primary" onClick={saveCollection} disabled={saving || generating || clearingAudio}>
+                <AdminButton variant="primary" onClick={saveCollection} disabled={busy}>
                   <Save size={16} /> {saving ? 'Saving...' : 'Save intro'}
-                </AdminButton>
-                <AdminButton onClick={generateAudio} disabled={saving || generating || clearingAudio || !intro.bodyEn.trim()}>
-                  <Wand2 size={16} /> {generating ? 'Generating...' : 'Generate Azure audio'}
-                </AdminButton>
-                <AdminButton variant="danger" onClick={clearAudio} disabled={saving || generating || clearingAudio || (!intro.audioUrl && intro.audioStatus === 'missing')}>
-                  <Trash2 size={16} /> {clearingAudio ? 'Clearing...' : 'Clear audio'}
                 </AdminButton>
               </div>
               <p className="text-xs leading-5 text-slate-500">ElevenLabs generation is not exposed here yet; the current reusable ElevenLabs path is tuned for Welsh word and primer audio, not English collection introductions.</p>

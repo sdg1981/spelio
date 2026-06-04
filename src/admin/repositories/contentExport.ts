@@ -3,7 +3,7 @@ import type { WordListCollectionIntroContent, WordListPrimerContent } from '../.
 import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 
-export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.4';
+export const ADMIN_CONTENT_EXPORT_SCHEMA_VERSION = '1.5';
 export const ADMIN_CONTENT_EXPORT_SOURCE = 'live_database_export';
 
 export interface AdminContentExportPayload {

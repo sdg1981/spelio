@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Pause, Play, Volume2 } from 'lucide-react';
+import { ArrowLeft, Pause, Play } from 'lucide-react';
 import { PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -120,11 +120,6 @@ export function CollectionIntro({
           </button>
         )}
 
-        {!audioUrl && (
-          <p className="foundations-primer-audio-note" role="note">
-            <Volume2 size={18} strokeWidth={2.1} aria-hidden="true" /> {t('collectionIntro.audioUnavailable')}
-          </p>
-        )}
         {audioUrl && playbackState === 'blocked' && (
           <p className="foundations-primer-audio-note" role="note">{t('collectionIntro.autoplayBlocked')}</p>
         )}

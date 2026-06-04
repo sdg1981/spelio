@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.4",
+  "schemaVersion": "1.5",
   "exportedAt": "2026-06-03T22:39:28.498Z",
   "source": "live_database_export",
   "product": "Spelio",
@@ -49,11 +49,14 @@
         "enabled": true,
         "titleEn": "Welsh Spelling Foundations",
         "titleCy": "",
-        "bodyEn": "Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.\n\nIn this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.\n\nListen carefully, notice the patterns, and take your time. The aim is not to memorise rules, but to make Welsh spelling feel more predictable.",
+        "bodyEn": "Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.\n\nIn this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.\n\nListen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.",
         "bodyCy": "",
-        "audioUrl": "",
-        "audioStatus": "missing",
-        "audioSource": "unknown",
+        "audioUrlEn": "",
+        "audioStatusEn": "missing",
+        "audioSourceEn": "unknown",
+        "audioUrlCy": "",
+        "audioStatusCy": "missing",
+        "audioSourceCy": "unknown",
         "version": "2026-06-03",
         "seenKey": "spelio-collection-intro:spelio_welsh_foundations:2026-06-03"
       }

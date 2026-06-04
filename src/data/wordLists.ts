@@ -17,9 +17,12 @@ export interface WordListCollectionIntroContent {
   titleCy: string;
   bodyEn: string;
   bodyCy: string;
-  audioUrl: string;
-  audioStatus: PrimerAudioStatus;
-  audioSource: PrimerAudioSource;
+  audioUrlEn: string;
+  audioStatusEn: PrimerAudioStatus;
+  audioSourceEn: PrimerAudioSource;
+  audioUrlCy: string;
+  audioStatusCy: PrimerAudioStatus;
+  audioSourceCy: PrimerAudioSource;
   version: string;
   seenKey: string;
 }

@@ -57,8 +57,8 @@ export interface AdminRepository {
   generateElevenLabsAudioForWord(wordId: string, mode?: ElevenLabsGenerationMode): Promise<AudioGenerationResult>;
   generatePrimerAudioItem(listId: string, itemKey: string, provider: 'azure' | 'elevenlabs'): Promise<PrimerAudioGenerationResult>;
   clearPrimerAudioItem(listId: string, itemKey: string): Promise<PrimerAudioGenerationResult>;
-  generateCollectionIntroAudio(collectionId: string, provider: 'azure'): Promise<CollectionIntroAudioGenerationResult>;
-  clearCollectionIntroAudio(collectionId: string): Promise<CollectionIntroAudioGenerationResult>;
+  generateCollectionIntroAudio(collectionId: string, language: 'en' | 'cy', provider: 'azure'): Promise<CollectionIntroAudioGenerationResult>;
+  clearCollectionIntroAudio(collectionId: string, language: 'en' | 'cy'): Promise<CollectionIntroAudioGenerationResult>;
   generateAudioBatch(wordIds: string[]): Promise<AudioGenerationResult[]>;
   retryAudioGeneration(wordId: string): Promise<AudioGenerationResult>;
   uploadAudioFile(word: AdminWord, file: Blob): Promise<string>;

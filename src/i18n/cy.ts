@@ -41,7 +41,7 @@ export const cy = {
     playAudio: 'Chwarae sain y cyflwyniad',
     pauseAudio: 'Oedi sain y cyflwyniad',
     autoplayBlocked: 'Mae eich porwr wedi rhwystro awtochwarae. Pwyswch Chwarae i glywed y cyflwyniad.',
-    audioUnavailable: 'Nid yw sain y cyflwyniad wedi ei hychwanegu eto.',
+    audioUnavailable: 'Bydd cyflwyniad sain ar gael yn fuan.',
     start: 'Dechrau’r Sylfeini'
   },
   how: {

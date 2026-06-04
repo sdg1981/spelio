@@ -122,7 +122,58 @@ assert(
   foundationsIntro.body.includes('Welsh spelling can look unfamiliar at first'),
   'Foundations collection intro should include the approved English body.'
 );
+assert(
+  foundationsIntro.body.includes('memorise words and rules'),
+  'Foundations collection intro should include the approved updated English body copy.'
+);
+assertEqual(foundationsIntro.displayLanguage, 'en', 'English interface should display English intro content.');
 assertEqual(getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: { ...foundationsIntroContent, enabled: false } }, 'en'), null, 'Disabled collection intro should not resolve.');
+
+const bilingualCollectionIntro = {
+  ...foundationsIntroContent,
+  titleCy: 'Sylfeini Sillafu Cymraeg',
+  bodyCy: 'Corff cyflwyniad Cymraeg.',
+  audioUrlEn: 'https://example.test/collection-intro-en.mp3',
+  audioStatusEn: 'ready' as const,
+  audioSourceEn: 'manual' as const,
+  audioUrlCy: 'https://example.test/collection-intro-cy.mp3',
+  audioStatusCy: 'ready' as const,
+  audioSourceCy: 'manual' as const
+};
+const welshCollectionIntro = getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: bilingualCollectionIntro }, 'cy');
+assert(welshCollectionIntro, 'Welsh interface should resolve collection intro content.');
+assertEqual(welshCollectionIntro.displayLanguage, 'cy', 'Welsh interface should display Welsh intro content when reviewed Welsh copy exists.');
+assertEqual(welshCollectionIntro.title, 'Sylfeini Sillafu Cymraeg', 'Welsh interface should use Welsh intro title when present.');
+assertEqual(welshCollectionIntro.body, 'Corff cyflwyniad Cymraeg.', 'Welsh interface should use Welsh intro body when present.');
+assertEqual(welshCollectionIntro.audioUrl, 'https://example.test/collection-intro-cy.mp3', 'Welsh interface should use Welsh intro audio when available.');
+
+const welshTextWithoutWelshAudioIntro = getCollectionIntro({
+  id: WELSH_FOUNDATIONS_COLLECTION_ID,
+  introContent: {
+    ...bilingualCollectionIntro,
+    audioUrlCy: '',
+    audioStatusCy: 'missing',
+    audioSourceCy: 'unknown'
+  }
+}, 'cy');
+assert(welshTextWithoutWelshAudioIntro, 'Welsh text intro should still resolve without Welsh audio.');
+assertEqual(welshTextWithoutWelshAudioIntro.displayLanguage, 'cy', 'Welsh text should remain selected when Welsh audio is missing.');
+assertEqual(welshTextWithoutWelshAudioIntro.audioUrl, undefined, 'Welsh interface should not play English audio while showing Welsh intro text.');
+
+const welshFallbackIntro = getCollectionIntro({
+  id: WELSH_FOUNDATIONS_COLLECTION_ID,
+  introContent: {
+    ...bilingualCollectionIntro,
+    titleCy: '',
+    bodyCy: '',
+    audioUrlCy: '',
+    audioStatusCy: 'missing',
+    audioSourceCy: 'unknown'
+  }
+}, 'cy');
+assert(welshFallbackIntro, 'Welsh interface should fall back safely when Welsh intro copy is missing.');
+assertEqual(welshFallbackIntro.displayLanguage, 'en', 'Missing Welsh intro copy should fall back to English display content.');
+assertEqual(welshFallbackIntro.audioUrl, 'https://example.test/collection-intro-en.mp3', 'English audio may be used when the displayed intro copy falls back to English.');
 
 assert(
   shouldPreserveInterfaceLanguageScreen('primer', true, '/'),

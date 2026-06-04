@@ -453,8 +453,10 @@ function validateCollectionIntroContent(value: unknown, collectionId: string, er
     return;
   }
   if (hasField(value, 'enabled') && typeof fieldValue(value, 'enabled') !== 'boolean') errors.push(`Collection ${collectionId} introContent.enabled must be a boolean.`);
-  const audioStatus = stringField(value, 'audioStatus', 'audio_status', 'introAudioStatus', 'intro_audio_status');
-  if (audioStatus && !validAudioStatuses.has(audioStatus as AudioStatus)) errors.push(`Collection ${collectionId} introContent has invalid audioStatus "${audioStatus}".`);
+  const audioStatusEn = stringField(value, 'audioStatusEn', 'audio_status_en', 'introAudioStatusEn', 'intro_audio_status_en', 'audioStatus', 'audio_status', 'introAudioStatus', 'intro_audio_status');
+  const audioStatusCy = stringField(value, 'audioStatusCy', 'audio_status_cy', 'introAudioStatusCy', 'intro_audio_status_cy');
+  if (audioStatusEn && !validAudioStatuses.has(audioStatusEn as AudioStatus)) errors.push(`Collection ${collectionId} introContent has invalid audioStatusEn "${audioStatusEn}".`);
+  if (audioStatusCy && !validAudioStatuses.has(audioStatusCy as AudioStatus)) errors.push(`Collection ${collectionId} introContent has invalid audioStatusCy "${audioStatusCy}".`);
 }
 
 function emptyPreview(errors: string[], warnings: string[]): ImportPreview {

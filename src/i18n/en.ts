@@ -41,7 +41,7 @@ export const en = {
     playAudio: 'Play introduction audio',
     pauseAudio: 'Pause introduction audio',
     autoplayBlocked: 'Your browser blocked autoplay. Press Play to hear the introduction.',
-    audioUnavailable: 'Introduction audio has not been added yet.',
+    audioUnavailable: 'Audio introduction coming soon.',
     start: 'Start Foundations'
   },
   how: {

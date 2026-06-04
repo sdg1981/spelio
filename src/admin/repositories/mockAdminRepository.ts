@@ -261,31 +261,46 @@ export const mockAdminRepository: AdminRepository = {
     return { item: clearedItem, ok: true };
   },
 
-  async generateCollectionIntroAudio(collectionId: string, provider: 'azure') {
+  async generateCollectionIntroAudio(collectionId: string, language: 'en' | 'cy', provider: 'azure') {
     const collection = await this.getCollection(collectionId);
     if (!collection?.introContent) throw new Error('Collection intro content not found.');
     if (provider !== 'azure') throw new Error('Collection intro audio currently supports Azure generation only.');
+    if (language === 'cy' && !collection.introContent.bodyCy.trim()) throw new Error('Collection intro Welsh body is empty.');
+    if (language === 'en' && !collection.introContent.bodyEn.trim()) throw new Error('Collection intro English body is empty.');
+    const audioUrl = `https://example.test/storage/v1/object/public/audio/collection-intros/azure/${collection.id}/${language}/${createPrimerAudioObjectVersion()}.mp3`;
     const readyIntro = {
       ...collection.introContent,
-      audioUrl: `https://example.test/storage/v1/object/public/audio/collection-intros/azure/${collection.id}/${createPrimerAudioObjectVersion()}.mp3`,
-      audioStatus: 'ready' as const,
-      audioSource: 'azure' as const
+      ...(language === 'cy'
+        ? { audioUrlCy: audioUrl, audioStatusCy: 'ready' as const, audioSourceCy: 'azure' as const }
+        : { audioUrlEn: audioUrl, audioStatusEn: 'ready' as const, audioSourceEn: 'azure' as const })
     };
     await this.saveCollection({ ...collection, introContent: readyIntro });
-    return { audioUrl: readyIntro.audioUrl, audioStatus: readyIntro.audioStatus, audioSource: readyIntro.audioSource, ok: true };
+    return {
+      language,
+      audioUrl,
+      audioStatus: language === 'cy' ? readyIntro.audioStatusCy : readyIntro.audioStatusEn,
+      audioSource: language === 'cy' ? readyIntro.audioSourceCy : readyIntro.audioSourceEn,
+      ok: true
+    };
   },
 
-  async clearCollectionIntroAudio(collectionId: string) {
+  async clearCollectionIntroAudio(collectionId: string, language: 'en' | 'cy') {
     const collection = await this.getCollection(collectionId);
     if (!collection?.introContent) throw new Error('Collection intro content not found.');
     const clearedIntro = {
       ...collection.introContent,
-      audioUrl: '',
-      audioStatus: 'missing' as const,
-      audioSource: 'unknown' as const
+      ...(language === 'cy'
+        ? { audioUrlCy: '', audioStatusCy: 'missing' as const, audioSourceCy: 'unknown' as const }
+        : { audioUrlEn: '', audioStatusEn: 'missing' as const, audioSourceEn: 'unknown' as const })
     };
     await this.saveCollection({ ...collection, introContent: clearedIntro });
-    return { audioUrl: clearedIntro.audioUrl, audioStatus: clearedIntro.audioStatus, audioSource: clearedIntro.audioSource, ok: true };
+    return {
+      language,
+      audioUrl: language === 'cy' ? clearedIntro.audioUrlCy : clearedIntro.audioUrlEn,
+      audioStatus: language === 'cy' ? clearedIntro.audioStatusCy : clearedIntro.audioStatusEn,
+      audioSource: language === 'cy' ? clearedIntro.audioSourceCy : clearedIntro.audioSourceEn,
+      ok: true
+    };
   },
 
   async generateAudioBatch(wordIds: string[]) {

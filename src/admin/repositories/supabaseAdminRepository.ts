@@ -469,7 +469,7 @@ export const supabaseAdminRepository: AdminRepository = {
     };
   },
 
-  async generateCollectionIntroAudio(collectionId: string, provider: 'azure') {
+  async generateCollectionIntroAudio(collectionId: string, language: 'en' | 'cy', provider: 'azure') {
     const client = await requireAdminSupabase();
     const storageMode = (import.meta.env.VITE_AUDIO_STORAGE_MODE as string | undefined) ?? 'supabase';
     if (storageMode !== 'supabase') throw new Error('Only Supabase audio storage is configured.');
@@ -477,22 +477,25 @@ export const supabaseAdminRepository: AdminRepository = {
     const collection = await this.getCollection(collectionId);
     if (!collection) throw new Error('Collection not found.');
     const introContent = normalizeCollectionIntroContent(collection.introContent, collection.id);
-    const text = [introContent.titleEn, introContent.bodyEn].map(value => value.trim()).filter(Boolean).join('\n\n');
-    if (!text) throw new Error('Collection intro English copy is empty.');
+    const title = language === 'cy' ? introContent.titleCy : introContent.titleEn;
+    const body = language === 'cy' ? introContent.bodyCy : introContent.bodyEn;
+    const text = [title, body].map(value => value.trim()).filter(Boolean).join('\n\n');
+    if (!body.trim()) throw new Error(language === 'cy' ? 'Collection intro Welsh body is empty.' : 'Collection intro English body is empty.');
 
     await this.saveCollection({
       ...collection,
       introContent: {
         ...introContent,
-        audioStatus: 'generating',
-        audioSource: 'azure'
+        ...(language === 'cy'
+          ? { audioStatusCy: 'generating' as const, audioSourceCy: 'azure' as const }
+          : { audioStatusEn: 'generating' as const, audioSourceEn: 'azure' as const })
       }
     });
 
     try {
-      const audio = await synthesizeInterfaceAudioMp3(text, 'en');
+      const audio = await synthesizeInterfaceAudioMp3(text, language);
       if (audio.blob.size < 100) throw new Error('Collection intro audio upload was blocked because the generated file was unexpectedly small.');
-      const path = createCollectionIntroAudioStoragePath(collection.id, 'azure', createPrimerAudioObjectVersion());
+      const path = createCollectionIntroAudioStoragePath(collection.id, 'azure', language, createPrimerAudioObjectVersion());
       const { error: uploadError } = await client.storage
         .from('audio')
         .upload(path, audio.blob, { cacheControl: '3600', contentType: 'audio/mpeg', upsert: true });
@@ -504,32 +507,46 @@ export const supabaseAdminRepository: AdminRepository = {
         ...collection,
         introContent: {
           ...introContent,
-          audioUrl: data.publicUrl,
-          audioStatus: 'ready',
-          audioSource: 'azure'
+          ...(language === 'cy'
+            ? { audioUrlCy: data.publicUrl, audioStatusCy: 'ready' as const, audioSourceCy: 'azure' as const }
+            : { audioUrlEn: data.publicUrl, audioStatusEn: 'ready' as const, audioSourceEn: 'azure' as const })
         }
       });
       const savedIntro = normalizeCollectionIntroContent(saved.introContent, saved.id);
-      return { audioUrl: savedIntro.audioUrl, audioStatus: savedIntro.audioStatus, audioSource: savedIntro.audioSource, ok: true };
+      return {
+        language,
+        audioUrl: language === 'cy' ? savedIntro.audioUrlCy : savedIntro.audioUrlEn,
+        audioStatus: language === 'cy' ? savedIntro.audioStatusCy : savedIntro.audioStatusEn,
+        audioSource: language === 'cy' ? savedIntro.audioSourceCy : savedIntro.audioSourceEn,
+        ok: true
+      };
     } catch (error) {
       const failedIntro = {
         ...introContent,
-        audioStatus: 'failed' as const,
-        audioSource: 'azure' as const
+        ...(language === 'cy'
+          ? { audioStatusCy: 'failed' as const, audioSourceCy: 'azure' as const }
+          : { audioStatusEn: 'failed' as const, audioSourceEn: 'azure' as const })
       };
       await this.saveCollection({ ...collection, introContent: failedIntro }).catch(saveError => {
         throw new Error(`${readErrorMessage(error)}; Supabase save failed while marking collection intro audio as failed: ${readErrorMessage(saveError)}`);
       });
-      return { audioUrl: failedIntro.audioUrl, audioStatus: failedIntro.audioStatus, audioSource: failedIntro.audioSource, ok: false, error: readErrorMessage(error) };
+      return {
+        language,
+        audioUrl: language === 'cy' ? failedIntro.audioUrlCy : failedIntro.audioUrlEn,
+        audioStatus: language === 'cy' ? failedIntro.audioStatusCy : failedIntro.audioStatusEn,
+        audioSource: language === 'cy' ? failedIntro.audioSourceCy : failedIntro.audioSourceEn,
+        ok: false,
+        error: readErrorMessage(error)
+      };
     }
   },
 
-  async clearCollectionIntroAudio(collectionId: string) {
+  async clearCollectionIntroAudio(collectionId: string, language: 'en' | 'cy') {
     const client = await requireAdminSupabase();
     const collection = await this.getCollection(collectionId);
     if (!collection) throw new Error('Collection not found.');
     const introContent = normalizeCollectionIntroContent(collection.introContent, collection.id);
-    const existingStoragePath = getCollectionIntroAudioStoragePathFromPublicUrl(introContent.audioUrl);
+    const existingStoragePath = getCollectionIntroAudioStoragePathFromPublicUrl(language === 'cy' ? introContent.audioUrlCy : introContent.audioUrlEn);
     if (existingStoragePath) {
       await client.storage.from('audio').remove([existingStoragePath]).catch(() => {
         // Clearing the DB fields is still useful if the object is already gone.
@@ -537,13 +554,19 @@ export const supabaseAdminRepository: AdminRepository = {
     }
     const clearedIntro = {
       ...introContent,
-      audioUrl: '',
-      audioStatus: 'missing' as const,
-      audioSource: 'unknown' as const
+      ...(language === 'cy'
+        ? { audioUrlCy: '', audioStatusCy: 'missing' as const, audioSourceCy: 'unknown' as const }
+        : { audioUrlEn: '', audioStatusEn: 'missing' as const, audioSourceEn: 'unknown' as const })
     };
     const saved = await this.saveCollection({ ...collection, introContent: clearedIntro });
     const savedIntro = normalizeCollectionIntroContent(saved.introContent, saved.id);
-    return { audioUrl: savedIntro.audioUrl, audioStatus: savedIntro.audioStatus, audioSource: savedIntro.audioSource, ok: true };
+    return {
+      language,
+      audioUrl: language === 'cy' ? savedIntro.audioUrlCy : savedIntro.audioUrlEn,
+      audioStatus: language === 'cy' ? savedIntro.audioStatusCy : savedIntro.audioStatusEn,
+      audioSource: language === 'cy' ? savedIntro.audioSourceCy : savedIntro.audioSourceEn,
+      ok: true
+    };
   },
 
   async generateAudioBatch(wordIds: string[]) {

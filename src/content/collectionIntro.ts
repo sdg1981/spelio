@@ -8,6 +8,7 @@ export type CollectionIntro = {
   collectionId: string;
   title: string;
   body: string;
+  displayLanguage: 'en' | 'cy';
   audioUrl?: string;
   audioStatus: PrimerAudioStatus;
   audioSource: PrimerAudioSource;
@@ -24,12 +25,15 @@ const DEFAULT_FOUNDATIONS_INTRO: WordListCollectionIntroContent = {
   bodyEn: [
     'Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.',
     "In this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.",
-    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise rules, but to make Welsh spelling feel more predictable.'
+    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.'
   ].join('\n\n'),
   bodyCy: '',
-  audioUrl: '',
-  audioStatus: 'missing',
-  audioSource: 'unknown',
+  audioUrlEn: '',
+  audioStatusEn: 'missing',
+  audioSourceEn: 'unknown',
+  audioUrlCy: '',
+  audioStatusCy: 'missing',
+  audioSourceCy: 'unknown',
   version: DEFAULT_FOUNDATIONS_INTRO_VERSION,
   seenKey: ''
 };
@@ -41,9 +45,12 @@ export function createEmptyCollectionIntroContent(): WordListCollectionIntroCont
     titleCy: '',
     bodyEn: '',
     bodyCy: '',
-    audioUrl: '',
-    audioStatus: 'missing',
-    audioSource: 'unknown',
+    audioUrlEn: '',
+    audioStatusEn: 'missing',
+    audioSourceEn: 'unknown',
+    audioUrlCy: '',
+    audioStatusCy: 'missing',
+    audioSourceCy: 'unknown',
     version: '',
     seenKey: ''
   };
@@ -67,9 +74,12 @@ export function normalizeCollectionIntroContent(value: unknown, collectionId = '
     titleCy: draftString(record.titleCy ?? record.title_cy ?? record.introTitleCy ?? record.intro_title_cy),
     bodyEn: bodyEn || fallback.bodyEn,
     bodyCy: draftString(record.bodyCy ?? record.body_cy ?? record.introBodyCy ?? record.intro_body_cy),
-    audioUrl: draftString(record.audioUrl ?? record.audio_url ?? record.introAudioUrl ?? record.intro_audio_url),
-    audioStatus: normalizeIntroAudioStatus(record.audioStatus ?? record.audio_status ?? record.introAudioStatus ?? record.intro_audio_status),
-    audioSource: normalizeIntroAudioSource(record.audioSource ?? record.audio_source ?? record.introAudioSource ?? record.intro_audio_source),
+    audioUrlEn: draftString(record.audioUrlEn ?? record.audio_url_en ?? record.introAudioUrlEn ?? record.intro_audio_url_en ?? record.audioUrl ?? record.audio_url ?? record.introAudioUrl ?? record.intro_audio_url),
+    audioStatusEn: normalizeIntroAudioStatus(record.audioStatusEn ?? record.audio_status_en ?? record.introAudioStatusEn ?? record.intro_audio_status_en ?? record.audioStatus ?? record.audio_status ?? record.introAudioStatus ?? record.intro_audio_status),
+    audioSourceEn: normalizeIntroAudioSource(record.audioSourceEn ?? record.audio_source_en ?? record.introAudioSourceEn ?? record.intro_audio_source_en ?? record.audioSource ?? record.audio_source ?? record.introAudioSource ?? record.intro_audio_source),
+    audioUrlCy: draftString(record.audioUrlCy ?? record.audio_url_cy ?? record.introAudioUrlCy ?? record.intro_audio_url_cy),
+    audioStatusCy: normalizeIntroAudioStatus(record.audioStatusCy ?? record.audio_status_cy ?? record.introAudioStatusCy ?? record.intro_audio_status_cy),
+    audioSourceCy: normalizeIntroAudioSource(record.audioSourceCy ?? record.audio_source_cy ?? record.introAudioSourceCy ?? record.intro_audio_source_cy),
     version: draftString(record.version ?? record.introVersion ?? record.intro_version) || fallback.version || DEFAULT_FOUNDATIONS_INTRO_VERSION,
     seenKey: draftString(record.seenKey ?? record.seen_key ?? record.introSeenKey ?? record.intro_seen_key)
   };
@@ -88,9 +98,12 @@ export function toCollectionIntroStorage(content: WordListCollectionIntroContent
     titleCy: normalized.titleCy.trim(),
     bodyEn: normalized.bodyEn.trim(),
     bodyCy: normalized.bodyCy.trim(),
-    audioUrl: normalized.audioUrl.trim(),
-    audioStatus: normalizeIntroAudioStatus(normalized.audioStatus),
-    audioSource: normalizeIntroAudioSource(normalized.audioSource),
+    audioUrlEn: normalized.audioUrlEn.trim(),
+    audioStatusEn: normalizeIntroAudioStatus(normalized.audioStatusEn),
+    audioSourceEn: normalizeIntroAudioSource(normalized.audioSourceEn),
+    audioUrlCy: normalized.audioUrlCy.trim(),
+    audioStatusCy: normalizeIntroAudioStatus(normalized.audioStatusCy),
+    audioSourceCy: normalizeIntroAudioSource(normalized.audioSourceCy),
     version,
     seenKey: normalized.seenKey.trim() || createCollectionIntroSeenKey(collectionId, version)
   };
@@ -100,16 +113,22 @@ export function getCollectionIntro(collection: Pick<WordListCollection, 'id' | '
   if (!collection) return null;
   const content = normalizeCollectionIntroContent(collection.introContent, collection.id);
   if (!content.enabled) return null;
-  const title = interfaceLanguage === 'cy' ? content.titleCy.trim() || content.titleEn.trim() : content.titleEn.trim() || content.titleCy.trim();
-  const body = interfaceLanguage === 'cy' ? content.bodyCy.trim() || content.bodyEn.trim() : content.bodyEn.trim() || content.bodyCy.trim();
+  const hasCompleteWelshText = Boolean(content.titleCy.trim() && content.bodyCy.trim());
+  const displayLanguage = interfaceLanguage === 'cy' && hasCompleteWelshText ? 'cy' : 'en';
+  const title = displayLanguage === 'cy' ? content.titleCy.trim() : content.titleEn.trim() || content.titleCy.trim();
+  const body = displayLanguage === 'cy' ? content.bodyCy.trim() : content.bodyEn.trim() || content.bodyCy.trim();
   if (!title || !body) return null;
+  const audioUrl = displayLanguage === 'cy' ? content.audioUrlCy.trim() : content.audioUrlEn.trim();
+  const audioStatus = displayLanguage === 'cy' ? content.audioStatusCy : content.audioStatusEn;
+  const audioSource = displayLanguage === 'cy' ? content.audioSourceCy : content.audioSourceEn;
   return {
     collectionId: collection.id,
     title,
     body,
-    audioUrl: content.audioStatus === 'ready' ? content.audioUrl.trim() || undefined : undefined,
-    audioStatus: content.audioStatus,
-    audioSource: content.audioSource,
+    displayLanguage,
+    audioUrl: audioStatus === 'ready' ? audioUrl || undefined : undefined,
+    audioStatus,
+    audioSource,
     version: content.version,
     seenKey: content.seenKey || createCollectionIntroSeenKey(collection.id, content.version)
   };
