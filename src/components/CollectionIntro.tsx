@@ -102,31 +102,34 @@ export function CollectionIntro({
       <section className="foundations-primer-shell collection-intro-shell" aria-labelledby="collection-intro-title">
         <p className="foundations-primer-kicker">{t('collectionIntro.kicker')}</p>
         <h1 id="collection-intro-title">{intro.title}</h1>
+
+        <div className="collection-intro-actions">
+          {audioUrl && (
+            <button
+              className={`foundations-primer-sound collection-intro-audio ${playbackState === 'playing' ? 'playing' : ''} ${playbackState === 'failed' ? 'failed' : ''}`.trim()}
+              type="button"
+              onClick={togglePlayback}
+              aria-label={playbackState === 'playing' ? t('collectionIntro.pauseAudio') : t('collectionIntro.playAudio')}
+            >
+              {playbackState === 'playing' ? <Pause size={20} strokeWidth={2.2} aria-hidden="true" /> : <Play size={20} strokeWidth={2.2} aria-hidden="true" />}
+              <span>{playbackState === 'playing' ? t('collectionIntro.pause') : t('collectionIntro.play')}</span>
+            </button>
+          )}
+
+          <PrimaryButton className="foundations-primer-start collection-intro-start" onClick={onStart}>
+            {t('collectionIntro.start')}
+          </PrimaryButton>
+
+          {audioUrl && playbackState === 'blocked' && (
+            <p className="foundations-primer-audio-note" role="note">{t('collectionIntro.autoplayBlocked')}</p>
+          )}
+        </div>
+
         <div className="foundations-primer-body collection-intro-body">
           {intro.body.split('\n').filter(line => line.trim()).map((line, index) => (
             <p key={`${intro.collectionId}-intro-${index}`}>{line.trim()}</p>
           ))}
         </div>
-
-        {audioUrl && (
-          <button
-            className={`foundations-primer-sound collection-intro-audio ${playbackState === 'playing' ? 'playing' : ''} ${playbackState === 'failed' ? 'failed' : ''}`.trim()}
-            type="button"
-            onClick={togglePlayback}
-            aria-label={playbackState === 'playing' ? t('collectionIntro.pauseAudio') : t('collectionIntro.playAudio')}
-          >
-            {playbackState === 'playing' ? <Pause size={20} strokeWidth={2.2} aria-hidden="true" /> : <Play size={20} strokeWidth={2.2} aria-hidden="true" />}
-            <span>{playbackState === 'playing' ? t('collectionIntro.pause') : t('collectionIntro.play')}</span>
-          </button>
-        )}
-
-        {audioUrl && playbackState === 'blocked' && (
-          <p className="foundations-primer-audio-note" role="note">{t('collectionIntro.autoplayBlocked')}</p>
-        )}
-
-        <PrimaryButton className="foundations-primer-start" onClick={onStart}>
-          {t('collectionIntro.start')}
-        </PrimaryButton>
       </section>
 
       <Footer

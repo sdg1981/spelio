@@ -8213,6 +8213,14 @@
   margin-top:16px;
 }
 
+.collection-intro-actions{
+  display:grid;
+  justify-items:center;
+  gap:14px;
+  width:min(100%,430px);
+  margin:26px auto 0;
+}
+
 .foundations-primer-sounds{
   display:flex;
   flex-wrap:wrap;
@@ -8278,12 +8286,16 @@
 }
 
 .collection-intro-audio{
-  margin-top:30px;
+  margin-top:0;
 }
 
 .foundations-primer-start{
   width:min(100%,430px);
   margin:34px auto 0;
+}
+
+.collection-intro-start.foundations-primer-start{
+  margin-top:0;
 }
 
 .foundations-primer-footer.public-info-footer{
