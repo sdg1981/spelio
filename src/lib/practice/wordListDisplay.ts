@@ -2,6 +2,8 @@ import type { WordList, WordListCollection } from '../../data/wordLists';
 import type { InterfaceLanguage } from '../../i18n';
 
 const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
+const WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME = 'Welsh Spelling Foundations';
+const WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME_CY = 'Sylfeini Sillafu Cymraeg';
 const FOUNDATIONS_STAGE_ID = 'foundations';
 const WELSH_FOUNDATIONS_STAGE_LABEL = 'Common Patterns';
 
@@ -43,6 +45,16 @@ export function getCollectionDisplayName(
   }
 
   return collection.name;
+}
+
+export function getWelshFoundationsCollectionDisplayName(interfaceLanguage?: InterfaceLanguage) {
+  return getCollectionDisplayName(
+    {
+      name: WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME,
+      nameCy: WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME_CY
+    },
+    interfaceLanguage
+  );
 }
 
 export function getWordListStageDisplayName(

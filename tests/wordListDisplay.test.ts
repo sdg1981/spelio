@@ -1,4 +1,4 @@
-import { getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -54,4 +54,10 @@ assertEqual(
   getCollectionDisplayName({ name: 'Welsh Spelling Foundations', nameCy: '' }, 'cy'),
   'Welsh Spelling Foundations',
   'Collection display should fall back to English when Welsh metadata is absent.'
+);
+
+assertEqual(
+  getWelshFoundationsCollectionDisplayName('cy'),
+  'Sylfeini Sillafu Cymraeg',
+  'Foundations collection fallback should preserve Welsh homepage context copy.'
 );

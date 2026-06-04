@@ -26,7 +26,7 @@ import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } fro
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
 import { getEndScreenProgressSummary } from './lib/practice/endScreenState';
 import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib/customListRoutes';
-import { getListDisplayName } from './lib/practice/wordListDisplay';
+import { getCollectionDisplayName, getListDisplayName, getWelshFoundationsCollectionDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
 import { isStandalonePublicPagePath, shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange, type PublicScreen } from './lib/interfaceLanguageNavigation';
 import { createTranslator, type InterfaceLanguage } from './i18n';
@@ -228,6 +228,12 @@ export default function App() {
     () => formatCumulativeProgress(storage, publicWordLists, { prefix: t('progress.totalProgress'), t }),
     [publicWordLists, storage.learningStats, storage.wordProgress, t]
   );
+  const recommendedStartingCollectionTitle = useMemo(() => {
+    const foundationsCollection = publicWordLists.find(list => list.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID)?.collection;
+    return foundationsCollection
+      ? getCollectionDisplayName(foundationsCollection, interfaceLanguage)
+      : getWelshFoundationsCollectionDisplayName(interfaceLanguage);
+  }, [interfaceLanguage, publicWordLists]);
   const completedSupportList = useMemo(
     () => completedSupportPractice ? findSupportWordList(practiceLists, completedSupportPractice.listId) ?? null : null,
     [completedSupportPractice, practiceLists]
@@ -996,6 +1002,7 @@ export default function App() {
     <Home
       mode={homeMode}
       recommendation={recommendation}
+      recommendedStartingCollectionTitle={recommendedStartingCollectionTitle}
       sharedEntryMode={sharedContext?.mode ?? null}
       progressSummary={homeProgressSummary}
       hasDifficultWords={difficultWords}

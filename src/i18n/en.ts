@@ -13,6 +13,7 @@ export const en = {
     reviewDifficult: 'Review difficult words',
     chooseAnotherList: 'Choose another word list',
     selectWordList: 'Select word list',
+    browseAllWordLists: 'Browse all word lists',
     changeWordList: 'Change word list',
     basedOnLastSession: 'Based on your last session',
     fromWhereLeftOff: 'From where you left off',

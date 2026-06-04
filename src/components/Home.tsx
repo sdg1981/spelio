@@ -17,6 +17,7 @@ type SharedEntryMode = 'normal-share' | 'practice-test';
 export function Home({
   mode,
   recommendation,
+  recommendedStartingCollectionTitle,
   sharedEntryMode,
   progressSummary,
   hasDifficultWords,
@@ -41,6 +42,7 @@ export function Home({
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
+  recommendedStartingCollectionTitle?: string | null;
   sharedEntryMode?: SharedEntryMode | null;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
@@ -82,7 +84,7 @@ export function Home({
         ? t('home.chooseAnotherList')
         : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
-  const selectListLabel = isFirst ? t('home.selectWordList') : t('home.changeWordList');
+  const selectListLabel = isFirst ? t('home.browseAllWordLists') : t('home.changeWordList');
   const selectListIconClassName = 'change-word-list-icon';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
@@ -150,7 +152,11 @@ export function Home({
           )}
         </div>
 
-        <PrimaryButton className="home-primary" onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
+        {isFirst && recommendedStartingCollectionTitle && (
+          <p className="home-starting-point">{recommendedStartingCollectionTitle}</p>
+        )}
+
+        <PrimaryButton className={`home-primary ${isFirst ? 'home-primary-first-start' : ''}`} onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
 
         {!isFirst && progressSummary && (
           <p className="home-progress-line">{progressSummary}</p>

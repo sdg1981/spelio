@@ -13,6 +13,7 @@ export const cy = {
     reviewDifficult: 'Adolygu geiriau anodd',
     chooseAnotherList: 'Dewis rhestr eiriau arall',
     selectWordList: 'Dewis rhestr eiriau',
+    browseAllWordLists: 'Pori pob rhestr eiriau',
     changeWordList: 'Newid rhestr eiriau',
     basedOnLastSession: 'Yn seiliedig ar eich sesiwn ddiwethaf',
     fromWhereLeftOff: 'O ble wnaethoch chi stopio',
