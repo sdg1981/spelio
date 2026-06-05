@@ -290,6 +290,7 @@ async function runPrimerAudioTests() {
     const cacheBustedUrl = `${storedItem.audioUrl}?v=2026-05-29T12%3A00%3A00.000Z`;
     assertEqual(getStoredPrimerAudioUrl({ audioUrl: cacheBustedUrl }), cacheBustedUrl, 'Primer audio URL normalization should keep an existing stable cache-busting query intact.');
     assertEqual(getStoredPrimerAudioUrl({ audioUrl: storedItem.audioUrl }), storedItem.audioUrl, 'Primer audio URL normalization should not append new cache-busting parameters.');
+    assertEqual(getStoredPrimerAudioUrl({ audioUrl: storedItem.audioUrl, audioStatus: 'missing' }), null, 'Primer audio should not use a stored URL unless its status is ready.');
 
     const regeneratedItem = {
       ...storedItem,
@@ -301,9 +302,15 @@ async function runPrimerAudioTests() {
     clearPrimerAudioCacheForTests();
     MockAudio.instances = [];
     fetchCalls = 0;
-    const fallbackPlayback = await playPrimerSound({ textToSpeak: 'lle' });
-    assert(fallbackPlayback, 'Primer audio should fall back to Azure TTS when no stored URL exists.');
-    assertEqual(fetchCalls, 1, 'Azure TTS fallback should be called exactly once for a missing stored URL click.');
+    const fallbackItem = { textToSpeak: 'lle', audioStatus: 'missing' };
+    preloadPrimerSounds([fallbackItem, fallbackItem]);
+    const firstFallbackPlayback = await playPrimerSound(fallbackItem);
+    const secondFallbackPlayback = await playPrimerSound(fallbackItem);
+    assert(firstFallbackPlayback && secondFallbackPlayback, 'Primer audio should fall back to Azure TTS when no stored URL exists.');
+    assertEqual(fetchCalls, 1, 'Azure TTS fallback should be preloaded once and reused across clicks for a missing stored URL.');
+    assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one cached audio element across clicks.');
+    assertEqual(MockAudio.instances[0].loadCalls, 1, 'Generated primer audio fallback should be loaded during preload.');
+    assertEqual(MockAudio.instances[0].playCalls, 2, 'Generated primer audio fallback should replay the cached element on each click.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
