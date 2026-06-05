@@ -1895,6 +1895,10 @@
   line-height:1.15;
 }
 
+.home-select-list-label-mobile{
+  display:none;
+}
+
 .home-action-list .action-row-sub{
   margin-top:9px;
   color:#5f6b78;
@@ -2189,6 +2193,14 @@
   .home-action-list .action-row-title{
     font-size:20px;
     line-height:1.16;
+  }
+
+  .home-select-list-label-wide{
+    display:none;
+  }
+
+  .home-select-list-label-mobile{
+    display:inline;
   }
 
   .home-action-list .action-row-sub{

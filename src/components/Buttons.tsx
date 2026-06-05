@@ -20,7 +20,7 @@ export function PrimaryButton({
 
 type ActionProps = {
   icon: ReactNode;
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   subtitleClassName?: string;
   accent?: 'red' | 'blue' | 'muted';

@@ -84,7 +84,12 @@ export function Home({
         ? t('home.chooseAnotherList')
         : t('home.continueLearning');
   const handlePrimary = shouldPrioritiseReview ? onReview : shouldChooseAnotherList ? onSelectList : onStart;
-  const selectListLabel = isFirst ? t('home.browseAllWordLists') : t('home.changeWordList');
+  const selectListLabel = isFirst ? (
+    <>
+      <span className="home-select-list-label-wide">{t('home.browseAllWordLists')}</span>
+      <span className="home-select-list-label-mobile">{t('home.browseWordLists')}</span>
+    </>
+  ) : t('home.changeWordList');
   const selectListIconClassName = 'change-word-list-icon';
   const shellStateClass = isFirst ? 'home-shell-first' : shouldPrioritiseReview ? 'home-shell-review' : 'home-shell-returning';
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
