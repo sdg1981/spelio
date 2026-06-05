@@ -16,7 +16,7 @@ import type { WordList } from './data/wordLists';
 import { findSupportWordList } from './data/supportWordLists';
 import { loadPublicContent } from './lib/content/publicContentRepository';
 import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practice/storage';
-import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
+import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, isFirstTimeManualWordListSelection, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
@@ -462,7 +462,10 @@ export default function App() {
       return;
     }
 
-    beginPractice(createPrimaryRecommendationPracticeStart(storage, publicWordLists, t, interfaceLanguage), sharedContext, { returnScreen: screen });
+    beginPractice(createPrimaryRecommendationPracticeStart(storage, publicWordLists, t, interfaceLanguage), sharedContext, {
+      returnScreen: screen,
+      skipCollectionIntro: isFirstTimeManualWordListSelection(storage)
+    });
   }
 
   function startNormalContinuationPractice() {
@@ -737,9 +740,13 @@ export default function App() {
   function saveSelectedWordLists(selectedIds: string[]) {
     const ids = normalizeSelectedListIds(selectedIds, publicWordLists);
     const changed = !sameListSelection(ids, storage.selectedListIds);
+    const needsFirstTimeManualSelectionMarker = !changed && ids.length > 0 && isFirstTimeManualWordListSelection({
+      ...storage,
+      hasManualWordListSelection: true
+    });
     const isWordListsPage = screen === 'word-lists';
 
-    if (!changed) {
+    if (!changed && !needsFirstTimeManualSelectionMarker) {
       setSharedContext(null);
       setCompletedSharedContext(null);
       setActiveSharedContext(null);
@@ -823,6 +830,7 @@ export default function App() {
     : storage.lastSessionResult?.state === 'struggled' && difficultWords
       ? 'struggled'
       : 'returning';
+  const showFirstTimeManualSelection = homeMode === 'first' && isFirstTimeManualWordListSelection(storage);
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
@@ -1003,6 +1011,7 @@ export default function App() {
       mode={homeMode}
       recommendation={recommendation}
       recommendedStartingCollectionTitle={recommendedStartingCollectionTitle}
+      showFirstTimeManualSelection={showFirstTimeManualSelection}
       sharedEntryMode={sharedContext?.mode ?? null}
       progressSummary={homeProgressSummary}
       hasDifficultWords={difficultWords}

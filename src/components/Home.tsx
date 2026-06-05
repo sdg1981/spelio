@@ -18,6 +18,7 @@ export function Home({
   mode,
   recommendation,
   recommendedStartingCollectionTitle,
+  showFirstTimeManualSelection = false,
   sharedEntryMode,
   progressSummary,
   hasDifficultWords,
@@ -43,6 +44,7 @@ export function Home({
   mode: HomeMode;
   recommendation: Recommendation;
   recommendedStartingCollectionTitle?: string | null;
+  showFirstTimeManualSelection?: boolean;
   sharedEntryMode?: SharedEntryMode | null;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
@@ -96,7 +98,7 @@ export function Home({
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
   const showRecapEntry = !isSharedEntry && mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
   const supportText = isFirst
-    ? recommendedStartingCollectionTitle
+    ? showFirstTimeManualSelection ? recommendation.subtitle : recommendedStartingCollectionTitle
     : shouldPrioritiseReview ? t('home.basedOnLastSession') : recommendation.subtitle;
 
   return (
@@ -155,7 +157,7 @@ export function Home({
 
           {supportText && (
             <>
-              {isFirst && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
+              {isFirst && !showFirstTimeManualSelection && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
               <p className="home-support">
                 {supportText}
               </p>

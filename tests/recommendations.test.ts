@@ -12,6 +12,7 @@ import {
   createDefaultStorage,
   getFullyCompletedListIds,
   getInProgressListIds,
+  isFirstTimeManualWordListSelection,
   isListFullyComplete,
   normaliseStorage,
   updateListCompletion,
@@ -84,17 +85,22 @@ test('brand-new storage defaults to the Welsh Foundations D / DD list', () => {
   assertEqual(storage.selectedListIds.length, 1, 'Brand-new storage should select one list.');
   assertEqual(storage.selectedListIds[0], 'foundation_patterns_d_dd', 'Brand-new storage should start at D / DD.');
   assertEqual(storage.currentPathPosition, 'foundation_patterns_d_dd', 'Brand-new path position should start at D / DD.');
+  assertEqual(storage.hasManualWordListSelection, false, 'Brand-new storage should not treat the default recommendation as manual selection.');
+  assertEqual(isFirstTimeManualWordListSelection(storage), false, 'Brand-new storage should keep the Foundations recommendation flow.');
 });
 
 test('stored selected list and current path are preserved for existing learners', () => {
   const storage = normaliseStorage({
     selectedListIds: ['foundations_numbers'],
     currentPathPosition: 'foundations_numbers',
+    hasManualWordListSelection: true,
     hasStartedPracticeSession: true
   });
 
   assertEqual(storage.selectedListIds[0], 'foundations_numbers', 'Existing stored selection should not be overwritten by the new default.');
   assertEqual(storage.currentPathPosition, 'foundations_numbers', 'Existing stored path position should not be overwritten by the new default.');
+  assertEqual(storage.hasManualWordListSelection, true, 'Existing stored manual selection marker should be preserved.');
+  assertEqual(isFirstTimeManualWordListSelection(storage), false, 'Started learners should not use the first-time manual homepage override.');
 });
 
 test('new default falls back safely if D / DD is missing or inactive', () => {
@@ -2606,8 +2612,21 @@ test('Done saves one selected list without starting practice', () => {
   assertEqual(saved.selectedListIds.length, 1, 'Done should save one selected list');
   assertEqual(saved.selectedListIds[0], 'stage2_work', 'Done should save the pending selected list');
   assertEqual(saved.currentPathPosition, 'stage2_work', 'Done should move the path position to the selected list');
+  assertEqual(saved.hasManualWordListSelection, true, 'Done should mark the selected list as an explicit learner choice');
+  assertEqual(isFirstTimeManualWordListSelection(saved), true, 'First-time manual selection should activate the homepage override');
   assertEqual(saved.hasStartedPracticeSession, false, 'Done must not mark practice as started');
   assertEqual(saved.lastSessionResult, null, 'Done should clear stale session-derived state');
+});
+
+test('manual selection marker expires after first practice start', () => {
+  const selected = applyManualWordListSelection(createDefaultStorage(), ['foundation_patterns_y']);
+  const started = {
+    ...selected,
+    hasStartedPracticeSession: true
+  };
+
+  assertEqual(isFirstTimeManualWordListSelection(selected), true, 'Manual selection should be active before practice starts.');
+  assertEqual(isFirstTimeManualWordListSelection(started), false, 'Manual first-time override should not affect returning homepage starts.');
 });
 
 test('closing word list modal discards pending changes', () => {

@@ -67,6 +67,7 @@ export interface MixedWelshExposure {
 export interface SpelioStorage {
   selectedListIds: string[];
   currentPathPosition: string | null;
+  hasManualWordListSelection: boolean;
   hasStartedPracticeSession: boolean;
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
@@ -131,6 +132,7 @@ function createDefaultMixedWelshExposure(): MixedWelshExposure {
 export const defaultStorage: SpelioStorage = {
   selectedListIds: ['foundation_patterns_d_dd'],
   currentPathPosition: 'foundation_patterns_d_dd',
+  hasManualWordListSelection: false,
   hasStartedPracticeSession: false,
   lastSessionDate: null,
   lastSessionResult: null,
@@ -221,6 +223,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     ...source,
     selectedListIds: Array.isArray(source.selectedListIds) ? source.selectedListIds.filter(id => typeof id === 'string') : defaultStorage.selectedListIds,
     currentPathPosition: typeof source.currentPathPosition === 'string' ? source.currentPathPosition : defaultStorage.currentPathPosition,
+    hasManualWordListSelection: typeof source.hasManualWordListSelection === 'boolean' ? source.hasManualWordListSelection : defaultStorage.hasManualWordListSelection,
     hasStartedPracticeSession: typeof source.hasStartedPracticeSession === 'boolean' ? source.hasStartedPracticeSession : defaultStorage.hasStartedPracticeSession,
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
@@ -324,8 +327,18 @@ export function applyManualWordListSelection(storage: SpelioStorage, selectedLis
     ...storage,
     selectedListIds: selectedListId ? [selectedListId] : [],
     currentPathPosition: selectedListId ?? null,
+    hasManualWordListSelection: Boolean(selectedListId),
     lastSessionResult: null
   };
+}
+
+export function isFirstTimeManualWordListSelection(storage: SpelioStorage) {
+  return (
+    storage.hasManualWordListSelection === true &&
+    !storage.hasStartedPracticeSession &&
+    !storage.lastSessionDate &&
+    (storage.completedNormalSessionCount ?? 0) === 0
+  );
 }
 
 export function clearSpelioStorageData(storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage) {
