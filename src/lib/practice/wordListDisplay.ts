@@ -47,6 +47,18 @@ export function getCollectionDisplayName(
   return collection.name;
 }
 
+export function compareWordListCollectionsForDisplay(
+  a: Pick<WordListCollection, 'id' | 'name'> & { order?: number | null; nameCy?: string | null; name_cy?: string | null },
+  b: Pick<WordListCollection, 'id' | 'name'> & { order?: number | null; nameCy?: string | null; name_cy?: string | null },
+  interfaceLanguage?: InterfaceLanguage
+) {
+  const orderA = Number.isFinite(a.order) ? Number(a.order) : Number.POSITIVE_INFINITY;
+  const orderB = Number.isFinite(b.order) ? Number(b.order) : Number.POSITIVE_INFINITY;
+  return orderA - orderB ||
+    getCollectionDisplayName(a, interfaceLanguage).localeCompare(getCollectionDisplayName(b, interfaceLanguage)) ||
+    a.id.localeCompare(b.id);
+}
+
 export function getWelshFoundationsCollectionDisplayName(interfaceLanguage?: InterfaceLanguage) {
   return getCollectionDisplayName(
     {

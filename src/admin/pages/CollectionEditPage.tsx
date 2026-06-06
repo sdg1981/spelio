@@ -32,6 +32,10 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
 
   const intro = useMemo(() => normalizeCollectionIntroContent(collection?.introContent, collection?.id ?? id), [collection, id]);
 
+  function updateCollection(patch: Partial<AdminWordListCollection>) {
+    setCollection(previous => previous ? ({ ...previous, ...patch }) : previous);
+  }
+
   function updateIntro(patch: Partial<typeof intro>) {
     setCollection(previous => previous ? ({
       ...previous,
@@ -53,10 +57,10 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
         introContent: toCollectionIntroStorage(intro, collection.id)
       });
       setCollection({ ...saved, introContent: normalizeCollectionIntroContent(saved.introContent, saved.id) });
-      setStatusMessage('Collection intro saved.');
+      setStatusMessage('Collection saved.');
       return saved;
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not save collection intro.');
+      setErrorMessage(error instanceof Error ? error.message : 'Could not save collection.');
       return null;
     } finally {
       setSaving(false);
@@ -146,7 +150,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
     <>
       <AdminPageHeader
         title={collection ? `Edit ${collection.name}` : 'Edit collection'}
-        description="Minimal collection editing: only the learner introduction fields are editable for now."
+        description="Manage collection ordering and learner introduction content."
         actions={<AdminButton onClick={() => navigate('/admin/collections')}><ArrowLeft size={16} /> Back to collections</AdminButton>}
       />
 
@@ -163,6 +167,11 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
               <div className="font-mono text-xs text-slate-500">{collection.id}</div>
               <div className="text-lg font-black text-slate-950">{collection.name}</div>
               <div className="text-slate-600">{collection.description}</div>
+              <div className="max-w-xs">
+                <Field label="Order" helper="Controls public collection order. Lower numbers appear first.">
+                  <AdminInput type="number" min={0} value={collection.order} onChange={event => updateCollection({ order: Number(event.target.value) })} />
+                </Field>
+              </div>
               <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>
             </div>
           </AdminCard>
@@ -270,7 +279,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
 
               <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-5">
                 <AdminButton variant="primary" onClick={saveCollection} disabled={busy}>
-                  <Save size={16} /> {saving ? 'Saving...' : 'Save intro'}
+                  <Save size={16} /> {saving ? 'Saving...' : 'Save collection'}
                 </AdminButton>
               </div>
               <p className="text-xs leading-5 text-slate-500">ElevenLabs generation is not exposed here yet; the current reusable ElevenLabs path is tuned for Welsh word and primer audio, not English collection introductions.</p>

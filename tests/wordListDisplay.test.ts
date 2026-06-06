@@ -1,4 +1,4 @@
-import { getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -60,4 +60,29 @@ assertEqual(
   getWelshFoundationsCollectionDisplayName('cy'),
   'Sylfeini Sillafu Cymraeg',
   'Foundations collection fallback should preserve Welsh homepage context copy.'
+);
+
+const sortedCollections = [
+  { id: 'spelio_core_welsh', name: 'Spelio Core Welsh', nameCy: 'Spelio Cymraeg Craidd', order: 2 },
+  { id: 'missing_order_b', name: 'Beta Collection', order: null },
+  { id: 'missing_order_a', name: 'Alpha Collection', order: null },
+  { id: 'spelio_welsh_foundations', name: 'Welsh Spelling Foundations', nameCy: 'Sylfeini Sillafu Cymraeg', order: 1 }
+].sort((a, b) => compareWordListCollectionsForDisplay(a, b));
+
+assertEqual(
+  sortedCollections[0].id,
+  'spelio_welsh_foundations',
+  'Collection display sorting should put lower collection order first.'
+);
+
+assertEqual(
+  sortedCollections[1].id,
+  'spelio_core_welsh',
+  'Collection display sorting should put Spelio Core Welsh after Welsh Spelling Foundations when its order is 2.'
+);
+
+assertEqual(
+  sortedCollections[2].id,
+  'missing_order_a',
+  'Collection display sorting should fall back to collection name when order is missing.'
 );

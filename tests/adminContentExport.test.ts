@@ -232,6 +232,7 @@ assertEqual(payload.lists[0].isActive, true, 'export should preserve active list
 assertEqual(payload.lists[1].isActive, false, 'export should preserve inactive list status.');
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
+assertEqual(payload.collections[0].order, 2, 'collection order should be exported');
 assertEqual(payload.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'collection Welsh display name should be exported');
 assertEqual(payload.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'collection Welsh display description should be exported');
 assertEqual(payload.collections[0].introContent?.enabled, true, 'collection intro enabled state should be exported');
@@ -258,6 +259,7 @@ assertEqual(preview.content.lists[0].isActive, true, 'import validation should p
 assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
 assertEqual(preview.content.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'import validation should preserve collection Welsh display name.');
 assertEqual(preview.content.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'import validation should preserve collection Welsh display description.');
+assertEqual(preview.content.collections[0].order, 2, 'import validation should preserve collection order.');
 assertEqual(preview.content.collections[0].introContent?.titleEn, 'Collection Intro', 'import validation should preserve collection intro title.');
 assertEqual(preview.content.collections[0].introContent?.audioStatusEn, 'ready', 'import validation should preserve collection intro English audio status.');
 assertEqual(preview.content.collections[0].introContent?.audioStatusCy, 'ready', 'import validation should preserve collection intro Welsh audio status.');

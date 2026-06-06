@@ -25,7 +25,7 @@
       "curriculumKeyStage": null,
       "curriculumArea": null,
       "ownerType": "spelio",
-      "order": 1,
+      "order": 2,
       "isActive": true,
       "nameCy": "Spelio Cymraeg Craidd",
       "descriptionCy": "Rhestrau ymarfer sillafu Cymraeg craidd ar gyfer MVP Spelio."
@@ -41,7 +41,7 @@
       "curriculumKeyStage": null,
       "curriculumArea": null,
       "ownerType": "spelio",
-      "order": 2,
+      "order": 1,
       "isActive": true,
       "nameCy": "Sylfeini Sillafu Cymraeg",
       "descriptionCy": "Patrymau sillafu Cymraeg cyffredin i helpu sillafu i deimlo’n fwy cyfarwydd a rhagweladwy.",

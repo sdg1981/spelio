@@ -13,7 +13,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds } from '../lib/practice/storage';
-import { getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
+import { compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -63,6 +63,17 @@ type StruggleAssistGuidanceKind = 'shortcut' | 'mobile';
 type ShareDataNavigator = Navigator & {
   share?: (data: ShareData) => Promise<void>;
   canShare?: (data: ShareData) => boolean;
+};
+
+type WordListCollectionGroup = {
+  collection: {
+    id: string;
+    name: string;
+    nameCy?: string | null;
+    order?: number | null;
+  };
+  collectionName: string;
+  stageGroups: Record<string, WordList[]>;
 };
 
 const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
@@ -2146,16 +2157,31 @@ export function WordListSelectorPanel({
       return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
     });
   }, [interfaceLanguage, selectableLists, query]);
-  const groups = useMemo(() => {
-    return filteredLists.reduce<Record<string, Record<string, WordList[]>>>((acc, list) => {
+  const collectionGroups = useMemo(() => {
+    const groupsById = new Map<string, WordListCollectionGroup>();
+    filteredLists.forEach(list => {
+      const collectionId = list.collection?.id ?? list.collectionId;
       const collectionName = list.collection ? getCollectionDisplayName(list.collection, interfaceLanguage) : 'Spelio Core Welsh';
-      const collection = (acc[collectionName] ??= {});
-      (collection[getWordListStageDisplayName(list)] ??= []).push(list);
-      return acc;
-    }, {});
+      const collectionGroup = groupsById.get(collectionId) ?? {
+        collection: {
+          id: collectionId,
+          name: list.collection?.name ?? collectionName,
+          nameCy: list.collection?.nameCy,
+          order: list.collection?.order
+        },
+        collectionName,
+        stageGroups: {}
+      };
+      (collectionGroup.stageGroups[getWordListStageDisplayName(list)] ??= []).push(list);
+      groupsById.set(collectionId, collectionGroup);
+    });
+
+    return Array.from(groupsById.values()).sort((a, b) => (
+      compareWordListCollectionsForDisplay(a.collection, b.collection, interfaceLanguage)
+    ));
   }, [filteredLists, interfaceLanguage]);
-  const showCollections = Object.keys(groups).length > 1;
-  const singleCollectionStageGroups = Object.values(groups)[0] ?? {};
+  const showCollections = collectionGroups.length > 1;
+  const singleCollectionStageGroups = collectionGroups[0]?.stageGroups ?? {};
 
   const selectList = useCallback((listId: string) => {
     setSelectedIds(selectSingleWordList(listId));
@@ -2284,8 +2310,8 @@ export function WordListSelectorPanel({
               })}
             </div>
           ))}
-          {showCollections && Object.entries(groups).map(([collectionName, stageGroups]) => (
-            <div key={collectionName} className={showCollections ? 'collection-group' : undefined}>
+          {showCollections && collectionGroups.map(({ collection, collectionName, stageGroups }) => (
+            <div key={collection.id} className={showCollections ? 'collection-group' : undefined}>
               <h3 className="collection-title">{collectionName}</h3>
               {Object.entries(stageGroups).map(([group, groupLists]) => (
                 <div key={`${collectionName}-${group}`} className="stage-group">
