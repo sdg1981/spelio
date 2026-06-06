@@ -33,7 +33,7 @@ export function Logo({
   return (
     <button
       type="button"
-      className="border-0 bg-transparent p-0"
+      className="logo-link border-0 bg-transparent p-0"
       onClick={onClick}
       aria-label={backHomeLabel}
     >

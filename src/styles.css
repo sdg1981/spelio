@@ -875,6 +875,20 @@
   animation:logo-cursor-soft-blink 1.08s ease-in-out 3 both;
 }
 
+.logo-link{
+  border-radius:8px;
+}
+
+.logo-link:hover .logo-cursor-mark,
+.logo-link:focus-visible .logo-cursor-mark{
+  animation:logo-cursor-soft-blink 1.08s ease-in-out infinite both;
+}
+
+.logo-link:focus-visible{
+  outline:0;
+  box-shadow:0 0 0 3px var(--focus-ring, rgba(217,0,0,.16));
+}
+
 @keyframes logo-cursor-soft-blink{
   0%,100%{opacity:1;}
   48%{opacity:.28;}
@@ -1144,6 +1158,8 @@
   }
 
   .logo-cursor-intro .logo-cursor-mark,
+  .logo-link:hover .logo-cursor-mark,
+  .logo-link:focus-visible .logo-cursor-mark,
   .letter-slot.active:not(.mistake),
   .letter-slot.typed:not(.mistake),
   .letter-slot.revealed:not(.mistake),
@@ -4051,15 +4067,14 @@
   line-height:.78;
   letter-spacing:-.1em;
   opacity:.94;
-  transition:opacity .18s ease-out,transform .18s ease-out;
+  transition:opacity .18s ease-out;
 }
 
 .practice-home-logo button span span{
   display:inline-block;
   color:var(--red);
   letter-spacing:-.04em;
-  transform-origin:center bottom;
-  transition:color .18s ease-out,opacity .18s ease-out,transform .18s ease-out;
+  transition:color .18s ease-out,opacity .18s ease-out;
 }
 
 .practice-home-back:focus-visible,
@@ -4069,8 +4084,7 @@
   box-shadow:0 0 0 3px rgba(217,0,0,.16);
 }
 
-.practice-home-back:active,
-.practice-home-logo button:active{
+.practice-home-back:active{
   transform:scale(.98);
 }
 
@@ -4424,11 +4438,15 @@
 }
 
 @media (hover:hover) and (pointer:fine){
-  .practice-home-back:hover,
-  .practice-home-logo button:hover{
+  .practice-home-back:hover{
     color:#061724;
     opacity:1;
     transform:translateY(-1px) scale(1.02);
+  }
+
+  .practice-home-logo button:hover{
+    color:#061724;
+    opacity:1;
   }
 
   .practice-app .settings-cog:hover,
@@ -4935,7 +4953,7 @@
 }
 
 .end-logo button{
-  transition:opacity .16s ease,transform .16s ease;
+  transition:opacity .16s ease;
 }
 
 .end-logo button:focus-visible{
@@ -4947,7 +4965,6 @@
 @media (hover:hover) and (pointer:fine){
   .end-logo button:hover{
     opacity:.82;
-    transform:translateY(-1px);
   }
 }
 
