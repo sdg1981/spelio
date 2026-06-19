@@ -1,0 +1,31 @@
+{
+  "name": "Spelio",
+  "short_name": "Spelio",
+  "description": "A calm Welsh spelling practice app for listening, recall, and focused typing.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#d90000",
+  "background_color": "#f6f5f2",
+  "icons": [
+    {
+      "src": "/spelio-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/spelio-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/spelio-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
