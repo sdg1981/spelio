@@ -1,0 +1,17 @@
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">@color/spelio_theme</item>
+        <item name="android:navigationBarColor">@color/spelio_background</item>
+        <item name="android:statusBarColor">@color/spelio_theme</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="TwaTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:colorAccent">@color/spelio_theme</item>
+        <item name="android:navigationBarColor">@color/spelio_background</item>
+        <item name="android:statusBarColor">@color/spelio_theme</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

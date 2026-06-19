@@ -141,6 +141,13 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Android build output and local signing files
+android/.gradle/
+android/local.properties
+android/**/build/
+android/**/*.jks
+android/**/*.keystore
 designs/End Screen contine learning user Mobile.png
 designs/End Screen Continuing learner User Desktop.png
 designs/End Screen Struggling User Desktop.png
