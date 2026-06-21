@@ -2,6 +2,34 @@ plugins {
     id "com.android.application"
 }
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def requiredKeystoreProperties = ["storeFile", "storePassword", "keyAlias", "keyPassword"]
+
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
+def hasCompleteKeystoreProperties = keystorePropertiesFile.exists() &&
+    requiredKeystoreProperties.every { keystoreProperties[it] }
+
+gradle.taskGraph.whenReady { taskGraph ->
+    def releaseTaskRequested = taskGraph.allTasks.any { task ->
+        task.path == ":app:bundleRelease" || task.path == ":app:assembleRelease"
+    }
+
+    if (releaseTaskRequested) {
+        if (!keystorePropertiesFile.exists()) {
+            throw new GradleException("Missing android/keystore.properties. See android/README.md for release signing setup.")
+        }
+
+        def missingProperties = requiredKeystoreProperties.findAll { !keystoreProperties[it] }
+        if (!missingProperties.isEmpty()) {
+            throw new GradleException("Missing release signing properties: ${missingProperties.join(", ")}")
+        }
+    }
+}
+
 android {
     namespace "app.spelio.twa"
     compileSdk 36
@@ -12,6 +40,23 @@ android {
         targetSdk 35
         versionCode 1
         versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            if (hasCompleteKeystoreProperties) {
+                storeFile rootProject.file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
     }
 }
 

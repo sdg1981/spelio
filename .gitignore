@@ -145,6 +145,9 @@ vite.config.ts.timestamp-*
 # Android build output and local signing files
 android/.gradle/
 android/local.properties
+android/keystore.properties
+android/*.jks
+android/*.keystore
 android/**/build/
 android/**/*.jks
 android/**/*.keystore

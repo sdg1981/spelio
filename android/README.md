@@ -35,7 +35,7 @@ cd android
 ./gradlew assembleDebug
 ```
 
-For a release build suitable for internal testing, create or configure a signing key, then build an Android App Bundle:
+For a signed release build suitable for Play Console upload, configure the local upload key described in [Release Signing](#release-signing), then build an Android App Bundle:
 
 ```bash
 cd android
@@ -49,6 +49,68 @@ android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 If using Android Studio, open the `android/` folder and use **Build > Generate Signed Bundle / APK**.
+
+## Release Signing
+
+Google Play requires uploaded Android App Bundles to be signed. This project uses the standard Play App Signing model:
+
+- Google Play owns the final **app signing key** used for installs.
+- This repo uses a local **upload key** only to sign bundles before upload.
+- Digital Asset Links must use the Play **app signing key** SHA-256 certificate fingerprint, not the local upload key fingerprint, once Play App Signing is enabled.
+
+The local upload key is stored at:
+
+```text
+android/upload-keystore.jks
+```
+
+Gradle reads the signing credentials from:
+
+```text
+android/keystore.properties
+```
+
+Both files are local secrets and are ignored by Git. The committed template is:
+
+```text
+android/keystore.properties.example
+```
+
+The generated keystore uses alias:
+
+```text
+upload
+```
+
+Back up both `android/upload-keystore.jks` and `android/keystore.properties` outside Git in a secure password manager or encrypted secrets vault. Use one item named `Spelio Android upload key`, attach `upload-keystore.jks`, and store the four `keystore.properties` values with it. Losing the upload key can block Play Console uploads until Google approves an upload key reset.
+
+To create a replacement local upload key for a new checkout only when no existing Spelio upload key is available:
+
+```bash
+cd android
+cp keystore.properties.example keystore.properties
+keytool -genkeypair -v \
+  -keystore upload-keystore.jks \
+  -alias upload \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000
+```
+
+Then edit `keystore.properties` with the generated passwords. Do not commit `keystore.properties` or `upload-keystore.jks`.
+
+To rebuild a signed release bundle:
+
+```bash
+cd android
+./gradlew bundleRelease
+```
+
+The Play-uploadable signed bundle is:
+
+```text
+android/app/build/outputs/bundle/release/app-release.aab
+```
 
 ## Local Device Test
 
@@ -112,10 +174,10 @@ If Play App Signing is enabled, use the **App signing key certificate** SHA-256 
 Google Play Console > Spelio > Setup > App integrity > App signing key certificate > SHA-256 certificate fingerprint
 ```
 
-If testing a locally signed APK before Play App Signing, extract the local signing key fingerprint:
+If testing a locally signed APK before Play App Signing, extract the local upload key fingerprint:
 
 ```bash
-keytool -list -v -keystore path/to/upload-keystore.jks -alias upload
+keytool -list -v -keystore android/upload-keystore.jks -alias upload
 ```
 
 Copy the value shown as `SHA256:` into `sha256_cert_fingerprints`.
