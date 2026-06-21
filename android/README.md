@@ -19,8 +19,14 @@ The TWA opens the existing PWA. When Digital Asset Links verification succeeds, 
 Requirements:
 
 - Android Studio, or a local Android SDK
-- JDK compatible with Android Gradle Plugin 8.7.x
-- Android SDK Platform 35
+- JDK 17, compatible with Android Gradle Plugin 8.13.x
+- Android SDK Platform 36 or later
+
+If SDK Platform 36 is missing, install it from Android Studio SDK Manager, or run:
+
+```bash
+sdkmanager "platforms;android-36"
+```
 
 From the repo root:
 
