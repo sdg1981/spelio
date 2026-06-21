@@ -227,6 +227,15 @@ class MockAudio {
   }
 }
 
+class MockSpeechSynthesisUtterance {
+  lang = '';
+  onend: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  rate = 1;
+
+  constructor(public text: string) {}
+}
+
 async function runPrimerAudioTests() {
   const originalAudio = globalThis.Audio;
   const originalFetch = globalThis.fetch;
@@ -234,6 +243,8 @@ async function runPrimerAudioTests() {
   const originalRevokeObjectUrl = URL.revokeObjectURL;
   const originalLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const originalSpeechSynthesis = Object.getOwnPropertyDescriptor(globalThis, 'speechSynthesis');
+  const originalSpeechSynthesisUtterance = Object.getOwnPropertyDescriptor(globalThis, 'SpeechSynthesisUtterance');
   let fetchCalls = 0;
   let objectUrlCounter = 0;
 
@@ -311,6 +322,41 @@ async function runPrimerAudioTests() {
     assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one cached audio element across clicks.');
     assertEqual(MockAudio.instances[0].loadCalls, 1, 'Generated primer audio fallback should be loaded during preload.');
     assertEqual(MockAudio.instances[0].playCalls, 2, 'Generated primer audio fallback should replay the cached element on each click.');
+
+    clearPrimerAudioCacheForTests();
+    MockAudio.instances = [];
+    fetchCalls = 0;
+    const spokenItems: Array<{ text: string; lang: string; rate: number }> = [];
+    const mockSpeechSynthesis = {
+      cancelCalls: 0,
+      cancel() {
+        this.cancelCalls += 1;
+      },
+      speak(utterance: MockSpeechSynthesisUtterance) {
+        spokenItems.push({ text: utterance.text, lang: utterance.lang, rate: utterance.rate });
+        setTimeout(() => utterance.onend?.(), 0);
+      }
+    };
+    Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: MockSpeechSynthesisUtterance
+    });
+    Object.defineProperty(globalThis, 'speechSynthesis', {
+      configurable: true,
+      value: mockSpeechSynthesis
+    });
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: mockLocalStorage, speechSynthesis: mockSpeechSynthesis }
+    });
+
+    const speechFallbackPlayback = await playPrimerSound({ textToSpeak: 'gwen', audioStatus: 'missing' });
+    assert(speechFallbackPlayback, 'Missing primer audio should use direct speech synthesis when available.');
+    assertEqual(fetchCalls, 0, 'Speech synthesis primer fallback should not wait for Azure TTS generation.');
+    assertEqual(MockAudio.instances.length, 0, 'Speech synthesis primer fallback should not create a generated blob audio element.');
+    assertEqual(spokenItems.length, 1, 'Speech synthesis primer fallback should speak once per click.');
+    assertEqual(spokenItems[0].text, 'gwen', 'Speech synthesis primer fallback should preserve the primer text.');
+    assertEqual(spokenItems[0].lang, 'cy-GB', 'Speech synthesis primer fallback should request a Welsh voice.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
@@ -319,6 +365,10 @@ async function runPrimerAudioTests() {
     else delete (globalThis as unknown as { localStorage?: unknown }).localStorage;
     if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
     else delete (globalThis as unknown as { window?: unknown }).window;
+    if (originalSpeechSynthesis) Object.defineProperty(globalThis, 'speechSynthesis', originalSpeechSynthesis);
+    else delete (globalThis as unknown as { speechSynthesis?: unknown }).speechSynthesis;
+    if (originalSpeechSynthesisUtterance) Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', originalSpeechSynthesisUtterance);
+    else delete (globalThis as unknown as { SpeechSynthesisUtterance?: unknown }).SpeechSynthesisUtterance;
     URL.createObjectURL = originalCreateObjectUrl;
     URL.revokeObjectURL = originalRevokeObjectUrl;
   }
