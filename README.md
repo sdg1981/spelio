@@ -21,6 +21,16 @@ See [android/README.md](android/README.md) for build, local testing, signing, Di
 
 Azure TTS post-processing uses the bundled `@ffmpeg-installer/ffmpeg` binary in serverless routes. Set `FFMPEG_PATH` only if a deployment environment needs to override that binary path.
 
+The Azure route uses the server-only `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` env vars and sends the key with `Ocp-Apim-Subscription-Key`. It does not use a bearer-token flow. Legacy `VITE_AZURE_SPEECH_KEY` and `VITE_AZURE_SPEECH_REGION` names are still read as a fallback, but do not use client-prefixed names for new local, Vercel, or function deployments.
+
+For a small safe connectivity check, run:
+
+```bash
+npm run diagnose:azure-tts -- gwaith
+```
+
+The diagnostic reports which env vars are present, the region-derived Azure host, status code, Azure request id when returned, and success/failure without printing secret values.
+
 ## Included screens
 
 - First-time homepage

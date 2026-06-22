@@ -35,6 +35,12 @@ export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-24khz-16bit-mono-pcm';
 export const AZURE_TTS_USER_AGENT = 'SpelioAudioGeneration';
 export const AUDIO_PIPELINE_VERSION = 'wav-24khz-ffmpeg-v2';
 export const AZURE_TTS_ENDPOINT_PATH = '/cognitiveservices/v1';
+export const AZURE_SPEECH_KEY_ENV = 'AZURE_SPEECH_KEY';
+export const AZURE_SPEECH_REGION_ENV = 'AZURE_SPEECH_REGION';
+export const AZURE_SPEECH_ENDPOINT_ENV = 'AZURE_SPEECH_ENDPOINT';
+export const LEGACY_VITE_AZURE_SPEECH_KEY_ENV = 'VITE_AZURE_SPEECH_KEY';
+export const LEGACY_VITE_AZURE_SPEECH_REGION_ENV = 'VITE_AZURE_SPEECH_REGION';
+export const AZURE_TTS_AUTH_MODE = 'subscription_key_header';
 
 type AudioErrorStage =
   | 'ssml_construction'
@@ -59,6 +65,7 @@ type AudioRouteJsonResponse = {
   requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
+  azureRequestId?: string | null;
 };
 
 type AzureFetchResponse = {
@@ -66,6 +73,9 @@ type AzureFetchResponse = {
   status: number;
   arrayBuffer: () => Promise<ArrayBuffer>;
   text?: () => Promise<string>;
+  headers?: {
+    get: (name: string) => string | null;
+  };
 };
 
 type AzureFetch = (url: string, options: {
@@ -125,6 +135,22 @@ type AzureVoiceConfig = {
   voice: string;
 };
 
+type AzureSpeechConfig = {
+  key?: string;
+  region?: string;
+  keyEnvName?: string;
+  regionEnvName?: string;
+  requiredEnvPresent: Record<typeof AZURE_SPEECH_KEY_ENV | typeof AZURE_SPEECH_REGION_ENV, boolean>;
+  legacyEnvPresent: Record<typeof LEGACY_VITE_AZURE_SPEECH_KEY_ENV | typeof LEGACY_VITE_AZURE_SPEECH_REGION_ENV, boolean>;
+  missingRequiredEnv: string[];
+  configuredEndpointHost?: string;
+  configuredEndpointMatchesDerivedHost?: boolean;
+  synthesisEndpointHost?: string;
+  synthesisEndpointPath: typeof AZURE_TTS_ENDPOINT_PATH;
+  authMode: typeof AZURE_TTS_AUTH_MODE;
+  bearerTokenFlow: false;
+};
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   return handleAzureTtsRequest(request, response);
 }
@@ -164,11 +190,23 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     const config = getAzureSpeechConfig(env);
     const key = config.key;
     const region = config.region;
+    const endpointHost = config.synthesisEndpointHost;
     logInfo('Azure TTS configuration checked', {
       stage: 'azure_configuration',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
+      authMode: config.authMode,
+      bearerTokenFlow: config.bearerTokenFlow,
       keyConfigured: Boolean(key),
       regionConfigured: Boolean(region),
+      selectedKeyEnvName: config.keyEnvName ?? null,
+      selectedRegionEnvName: config.regionEnvName ?? null,
+      requiredEnvPresent: config.requiredEnvPresent,
+      legacyEnvPresent: config.legacyEnvPresent,
+      missingRequiredEnv: config.missingRequiredEnv,
+      configuredEndpointHost: config.configuredEndpointHost ?? null,
+      synthesisEndpointHost: config.synthesisEndpointHost ?? null,
+      synthesisEndpointPath: config.synthesisEndpointPath,
+      configuredEndpointMatchesDerivedHost: config.configuredEndpointMatchesDerivedHost ?? null,
       voice: voiceConfig.voice,
       locale: voiceConfig.locale,
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
@@ -177,7 +215,7 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       textLimit
     });
 
-    if (!key || !region) {
+    if (!key || !region || !endpointHost) {
       return sendJsonError(response, 500, 'Azure Speech is not configured.', 'azure_configuration');
     }
 
@@ -195,13 +233,13 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
     });
 
     const fetchImpl = dependencies.fetchImpl ?? fetch;
-    const endpointHost = `${region}.tts.speech.microsoft.com`;
-    const endpointUrl = `https://${endpointHost}${AZURE_TTS_ENDPOINT_PATH}`;
     logInfo('Azure TTS request starting', {
       stage: 'azure_request',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       endpointHost,
       endpointPath: AZURE_TTS_ENDPOINT_PATH,
+      authMode: config.authMode,
+      bearerTokenFlow: config.bearerTokenFlow,
       regionConfigured: true,
       keyConfigured: true,
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
@@ -212,13 +250,15 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
       audioPurpose
     });
 
-    const azureResponse = await requestAzureAudio(text, { key, region, fetchImpl, voiceConfig });
+    const azureResponse = await requestAzureAudio(text, { key, endpointHost, fetchImpl, voiceConfig });
+    const azureRequestId = getAzureRequestId(azureResponse);
 
     logInfo('Azure TTS response received', {
       stage: 'azure_response',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION,
       status: azureResponse.status,
       ok: azureResponse.ok,
+      azureRequestId,
       outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
       voice: voiceConfig.voice
     });
@@ -229,11 +269,16 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
         stage: 'azure_response',
         audioPipelineVersion: AUDIO_PIPELINE_VERSION,
         status: azureResponse.status,
+        azureRequestId,
+        authMode: config.authMode,
+        bearerTokenFlow: config.bearerTokenFlow,
+        endpointHost,
+        endpointPath: AZURE_TTS_ENDPOINT_PATH,
         outputFormat: AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
         voice: voiceConfig.voice,
         regionConfigured: true,
         ssmlLength: ssml.length,
-        azureError
+        azureErrorSnippet: azureError
       });
       return sendJsonError(
         response,
@@ -242,7 +287,8 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
         'azure_response',
         {
           azureStatus: azureResponse.status,
-          azureErrorBody: azureError
+          azureErrorBody: azureError,
+          azureRequestId
         }
       );
     }
@@ -305,10 +351,37 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
 }
 
 export function getAzureSpeechConfig(env: Record<string, string | undefined>) {
+  const key = selectAzureEnvValue(env, AZURE_SPEECH_KEY_ENV, LEGACY_VITE_AZURE_SPEECH_KEY_ENV);
+  const region = selectAzureEnvValue(env, AZURE_SPEECH_REGION_ENV, LEGACY_VITE_AZURE_SPEECH_REGION_ENV);
+  const synthesisEndpointHost = region.value ? `${region.value}.tts.speech.microsoft.com` : undefined;
+  const configuredEndpointHost = getConfiguredEndpointHost(env[AZURE_SPEECH_ENDPOINT_ENV]);
+
   return {
-    key: env.AZURE_SPEECH_KEY ?? env.VITE_AZURE_SPEECH_KEY,
-    region: env.AZURE_SPEECH_REGION ?? env.VITE_AZURE_SPEECH_REGION
-  };
+    key: key.value,
+    region: region.value,
+    keyEnvName: key.envName,
+    regionEnvName: region.envName,
+    requiredEnvPresent: {
+      [AZURE_SPEECH_KEY_ENV]: hasEnvValue(env[AZURE_SPEECH_KEY_ENV]),
+      [AZURE_SPEECH_REGION_ENV]: hasEnvValue(env[AZURE_SPEECH_REGION_ENV])
+    },
+    legacyEnvPresent: {
+      [LEGACY_VITE_AZURE_SPEECH_KEY_ENV]: hasEnvValue(env[LEGACY_VITE_AZURE_SPEECH_KEY_ENV]),
+      [LEGACY_VITE_AZURE_SPEECH_REGION_ENV]: hasEnvValue(env[LEGACY_VITE_AZURE_SPEECH_REGION_ENV])
+    },
+    missingRequiredEnv: [
+      key.value ? '' : AZURE_SPEECH_KEY_ENV,
+      region.value ? '' : AZURE_SPEECH_REGION_ENV
+    ].filter(Boolean),
+    configuredEndpointHost,
+    configuredEndpointMatchesDerivedHost: configuredEndpointHost && synthesisEndpointHost
+      ? configuredEndpointHost === synthesisEndpointHost
+      : undefined,
+    synthesisEndpointHost,
+    synthesisEndpointPath: AZURE_TTS_ENDPOINT_PATH,
+    authMode: AZURE_TTS_AUTH_MODE,
+    bearerTokenFlow: false
+  } satisfies AzureSpeechConfig;
 }
 
 export async function synthesizeAzureWelshMp3Bytes(
@@ -324,8 +397,10 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
   dependencies: Pick<HandlerDependencies, 'env' | 'fetchImpl' | 'postProcess'> = {}
 ): Promise<AzureWelshMp3Diagnostics> {
   const env = dependencies.env ?? process.env;
-  const { key, region } = getAzureSpeechConfig(env);
-  if (!key || !region) {
+  const config = getAzureSpeechConfig(env);
+  const { key } = config;
+  const endpointHost = config.synthesisEndpointHost;
+  if (!key || !endpointHost) {
     throw new AzureSynthesisError('Azure Speech is not configured.', { stage: 'azure_configuration' });
   }
 
@@ -333,7 +408,7 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
   try {
     azureResponse = await requestAzureAudio(text, {
       key,
-      region,
+      endpointHost,
       fetchImpl: dependencies.fetchImpl ?? fetch,
       voiceConfig: getAzureVoiceConfig('cy')
     });
@@ -379,11 +454,11 @@ export async function synthesizeAzureWelshMp3BytesWithDiagnostics(
 
 function requestAzureAudio(text: string, options: {
   key: string;
-  region: string;
+  endpointHost: string;
   fetchImpl: AzureFetch;
   voiceConfig: AzureVoiceConfig;
 }) {
-  const endpointUrl = `https://${options.region}.tts.speech.microsoft.com${AZURE_TTS_ENDPOINT_PATH}`;
+  const endpointUrl = `https://${options.endpointHost}${AZURE_TTS_ENDPOINT_PATH}`;
   return options.fetchImpl(endpointUrl, {
     method: 'POST',
     headers: {
@@ -446,9 +521,57 @@ async function readAzureErrorBody(azureResponse: AzureFetchResponse) {
   if (!azureResponse.text) return '';
 
   try {
-    return (await azureResponse.text()).trim().slice(0, 500);
+    return createSafeResponseBodySnippet(await azureResponse.text(), 500);
   } catch {
     return '';
+  }
+}
+
+function getAzureRequestId(azureResponse: AzureFetchResponse) {
+  if (!azureResponse.headers) return null;
+  return [
+    'x-ms-requestid',
+    'x-ms-request-id',
+    'apim-request-id',
+    'x-requestid'
+  ].map(name => azureResponse.headers?.get(name)?.trim()).find(Boolean) ?? null;
+}
+
+function createSafeResponseBodySnippet(value: string, maxLength: number) {
+  return value
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function hasEnvValue(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
+function selectAzureEnvValue(
+  env: Record<string, string | undefined>,
+  primaryName: string,
+  legacyName: string
+) {
+  const primary = env[primaryName]?.trim();
+  if (primary) return { value: primary, envName: primaryName };
+
+  const legacy = env[legacyName]?.trim();
+  if (legacy) return { value: legacy, envName: legacyName };
+
+  return { value: undefined, envName: undefined };
+}
+
+function getConfiguredEndpointHost(endpoint: string | undefined) {
+  const trimmed = endpoint?.trim().replace(/\/+$/, '');
+  if (!trimmed) return undefined;
+
+  try {
+    const parsed = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
+    return parsed.host;
+  } catch {
+    return 'invalid_endpoint_url';
   }
 }
 

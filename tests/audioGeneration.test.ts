@@ -4,9 +4,11 @@ import {
   AZURE_ENGLISH_VOICE,
   AZURE_SPEECH_PROSODY_RATE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
+  AZURE_TTS_AUTH_MODE,
   AzureSynthesisError,
   createEnglishSsml,
   createWelshSsml,
+  getAzureSpeechConfig,
   handleAzureTtsRequest,
   synthesizeAzureWelshMp3BytesWithDiagnostics
 } from '../api/azure-tts.js';
@@ -44,6 +46,7 @@ type TestResponseBody = Uint8Array | {
   requestedVoice?: string;
   azureStatus?: number;
   azureErrorBody?: string;
+  azureRequestId?: string | null;
 } | null;
 
 type TestResponse = {
@@ -230,6 +233,9 @@ async function runAsyncAssertions() {
   assertEqual(packageFfmpegPath, '/bundled/ffmpeg', 'FFmpeg resolution should fall back to bundled ffmpeg-static path.');
 
   let requestedOutputFormat = '';
+  let requestedAuthorizationHeader: string | undefined = '';
+  let requestedSubscriptionKeyHeader: string | undefined = '';
+  let requestedUrl = '';
   let requestedSsml = '';
   let postProcessCalled = false;
   const response = createResponse();
@@ -241,8 +247,11 @@ async function runAsyncAssertions() {
         AZURE_SPEECH_KEY: 'test-key',
         AZURE_SPEECH_REGION: 'uksouth'
       },
-      fetchImpl: async (_url, options) => {
+      fetchImpl: async (url, options) => {
+        requestedUrl = url;
         requestedOutputFormat = options.headers['X-Microsoft-OutputFormat'];
+        requestedAuthorizationHeader = options.headers.Authorization;
+        requestedSubscriptionKeyHeader = options.headers['Ocp-Apim-Subscription-Key'];
         requestedSsml = options.body;
         return {
           ok: true,
@@ -269,6 +278,9 @@ async function runAsyncAssertions() {
   assertEqual(response.headers['X-Spelio-Azure-Language'], 'cy', 'Welsh route responses should expose the selected language diagnostic.');
   assertEqual(response.headers['X-Spelio-Azure-Locale'], 'cy-GB', 'Welsh route responses should expose the selected Azure locale.');
   assertEqual(response.headers['X-Spelio-Azure-Voice'], 'cy-GB-NiaNeural', 'Welsh route responses should expose the selected Azure voice.');
+  assertEqual(requestedUrl, 'https://uksouth.tts.speech.microsoft.com/cognitiveservices/v1', 'Azure synthesis should use the region-derived TTS host.');
+  assertEqual(requestedSubscriptionKeyHeader, 'test-key', 'Azure synthesis should use the subscription key header directly.');
+  assertEqual(requestedAuthorizationHeader, undefined, 'Azure synthesis should not use a bearer Authorization header.');
   assertEqual(requestedOutputFormat, AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT, 'Azure should be asked for WAV intermediate audio.');
   assertEqual(requestedOutputFormat, 'riff-24khz-16bit-mono-pcm', 'Azure should use a supported RIFF/WAV intermediate output format.');
   assert(requestedSsml.includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">gwaith</prosody>`), 'Azure request should include subtle prosody rate SSML.');
@@ -407,6 +419,21 @@ async function runAsyncAssertions() {
     'The route should log the internal audio pipeline version marker.'
   );
 
+  const azureSpeechConfig = getAzureSpeechConfig({
+    AZURE_SPEECH_KEY: 'server-key',
+    AZURE_SPEECH_REGION: 'uksouth',
+    VITE_AZURE_SPEECH_KEY: 'legacy-key',
+    VITE_AZURE_SPEECH_REGION: 'westeurope',
+    AZURE_SPEECH_ENDPOINT: 'https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1'
+  });
+  assertEqual(azureSpeechConfig.keyEnvName, 'AZURE_SPEECH_KEY', 'Server-only Azure key env should take priority over legacy VITE env.');
+  assertEqual(azureSpeechConfig.regionEnvName, 'AZURE_SPEECH_REGION', 'Server-only Azure region env should take priority over legacy VITE env.');
+  assertEqual(azureSpeechConfig.synthesisEndpointHost, 'uksouth.tts.speech.microsoft.com', 'Azure synthesis host should be derived from the selected region.');
+  assertEqual(azureSpeechConfig.configuredEndpointHost, 'westeurope.tts.speech.microsoft.com', 'Configured endpoint diagnostics should expose only the endpoint host.');
+  assertEqual(azureSpeechConfig.configuredEndpointMatchesDerivedHost, false, 'Configured endpoint diagnostics should flag a region/host mismatch.');
+  assertEqual(azureSpeechConfig.authMode, AZURE_TTS_AUTH_MODE, 'Azure diagnostics should identify the direct subscription-key auth path.');
+  assertEqual(azureSpeechConfig.bearerTokenFlow, false, 'Azure diagnostics should make clear the route does not request bearer tokens.');
+
   let elevenLabsDirectText: unknown = null;
   let elevenLabsDirectModel: unknown = null;
   await synthesizeWelshTextWithElevenLabs(
@@ -476,6 +503,7 @@ async function runAsyncAssertions() {
   );
 
   const azureFailedResponse = createResponse();
+  const azureFailureLogs: Array<Record<string, unknown>> = [];
   let azureFailurePostProcessCalled = false;
   await handleAzureTtsRequest(
     { method: 'POST', body: { text: 'gwaith' } },
@@ -488,14 +516,19 @@ async function runAsyncAssertions() {
       fetchImpl: async () => ({
         ok: false,
         status: 500,
+        headers: {
+          get: name => name.toLowerCase() === 'x-ms-requestid' ? 'azure-request-123' : null
+        },
         arrayBuffer: async () => makeAudioBuffer(),
-        text: async () => 'Unsupported audio format'
+        text: async () => 'Unsupported\n audio\t format'
       }),
       postProcess: async () => {
         azureFailurePostProcessCalled = true;
         return new Uint8Array(128);
       },
-      logError: () => undefined,
+      logError: (_message, details) => {
+        azureFailureLogs.push(details);
+      },
       logInfo: () => undefined
     }
   );
@@ -505,7 +538,7 @@ async function runAsyncAssertions() {
   assert(
     isJsonErrorBody(azureFailedResponse.body) &&
       azureFailedResponse.body.error === 'Azure synthesis failed (500): Unsupported audio format',
-    'Azure failures should surface the Azure response body.'
+    'Azure failures should surface the sanitized Azure response body.'
   );
   assert(
     isJsonErrorBody(azureFailedResponse.body) &&
@@ -514,6 +547,20 @@ async function runAsyncAssertions() {
       azureFailedResponse.body.azureStatus === 500 &&
       azureFailedResponse.body.azureErrorBody === 'Unsupported audio format',
     'Azure failures should include structured route diagnostics.'
+  );
+  assert(
+    isJsonErrorBody(azureFailedResponse.body) &&
+      azureFailedResponse.body.azureRequestId === 'azure-request-123',
+    'Azure failures should include the Azure request id when Azure returns one.'
+  );
+  assert(
+    azureFailureLogs.some(entry =>
+      entry.azureRequestId === 'azure-request-123' &&
+      entry.azureErrorSnippet === 'Unsupported audio format' &&
+      entry.authMode === AZURE_TTS_AUTH_MODE &&
+      entry.endpointHost === 'uksouth.tts.speech.microsoft.com'
+    ),
+    'Azure failure logs should include safe auth, host, request id, and body-snippet diagnostics.'
   );
 
   const failedResponse = createResponse();
