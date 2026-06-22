@@ -4,6 +4,30 @@
       "includeFiles": "node_modules/ffmpeg-static/ffmpeg"
     }
   },
+  "headers": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json; charset=utf-8"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/((?!\\.well-known/assetlinks\\.json$).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "spelio.app"
+        }
+      ],
+      "destination": "https://www.spelio.app/$1",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
