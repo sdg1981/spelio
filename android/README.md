@@ -151,7 +151,7 @@ Use `android/assetlinks.template.json` as the starting point:
       "namespace": "android_app",
       "package_name": "app.spelio.twa",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_PLAY_APP_SIGNING_SHA256_FINGERPRINT"
+        "1B:8C:A8:17:37:90:0C:FA:16:F9:54:9D:76:DA:9F:87:89:CF:14:CF:E7:51:53"
       ]
     }
   }
@@ -172,6 +172,12 @@ If Play App Signing is enabled, use the **App signing key certificate** SHA-256 
 
 ```text
 Google Play Console > Spelio > Setup > App integrity > App signing key certificate > SHA-256 certificate fingerprint
+```
+
+For the current Play listing, that fingerprint is:
+
+```text
+1B:8C:A8:17:37:90:0C:FA:16:F9:54:9D:76:DA:9F:87:89:CF:14:CF:E7:51:53
 ```
 
 If testing a locally signed APK before Play App Signing, extract the local upload key fingerprint:
