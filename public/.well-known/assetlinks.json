@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.spelio.twa",
+      "sha256_cert_fingerprints": [
+        "1C:59:96:02:36:9D:42:B8:26:79:5A:5E:36:2F:98:D6:CE:07:28:17:2D:DB:75:1D:B2:29:9F:0B:E2:53:EF:18"
+      ]
+    }
+  }
+]
