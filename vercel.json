@@ -17,15 +17,15 @@
   ],
   "redirects": [
     {
-      "source": "/((?!\\.well-known/assetlinks\\.json$).*)",
+      "source": "/(.*)",
       "has": [
         {
           "type": "host",
-          "value": "spelio.app"
+          "value": "www.spelio.app"
         }
       ],
-      "destination": "https://www.spelio.app/$1",
-      "permanent": false
+      "destination": "https://spelio.app/$1",
+      "permanent": true
     }
   ],
   "rewrites": [
