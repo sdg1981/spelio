@@ -276,6 +276,7 @@ export const cy = {
     strict: 'Llym',
     strictNote: 'Angen acenion a nodau cywir.',
     welshStyle: 'Arddull Cymraeg',
+    welshStyleNote: 'Mae’n dewis pa ffurfiau Cymraeg rydych chi’n eu hymarfer pan fo ffurfiau rhanbarthol yn wahanol. Gall ynganiad y sain amrywio o hyd.',
     mixedWelsh: 'Cymraeg cymysg',
     northWales: 'Gogledd Cymru',
     southStandard: 'De Cymru / Safonol',

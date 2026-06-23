@@ -276,6 +276,7 @@ export const en = {
     strict: 'Strict',
     strictNote: 'Requires correct accents and diacritics.',
     welshStyle: 'Welsh style',
+    welshStyleNote: 'Chooses which Welsh word forms you practise where regional forms differ. Audio pronunciation may still vary.',
     mixedWelsh: 'Mixed Welsh',
     northWales: 'North Wales',
     southStandard: 'South Wales / Standard',

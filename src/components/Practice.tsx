@@ -1801,6 +1801,7 @@ export function SettingsModal({
 
           <div className="settings-section">
             <h3 className="text-[16px] md:text-[15px] font-extrabold">{t('settings.welshStyle')}</h3>
+            <p className="mt-2 field-note">{t('settings.welshStyleNote')}</p>
 
             <div className="mt-7 space-y-7">
               <button className="flex gap-5 text-left" onClick={() => handleDialectPreferenceChange('mixed')}>
