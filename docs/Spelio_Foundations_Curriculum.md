@@ -76,6 +76,9 @@ In the final syllable of a word — and often in one-syllable words — it more 
 ### Final syllable / one-syllable examples
 
 * byd — world
+
+  * Useful note: Listen to how Y sounds at the end of this word.
+
 * hyd — length
 * tŷ — house
 * dyn — man
@@ -84,7 +87,7 @@ In the final syllable of a word — and often in one-syllable words — it more 
 
 * dynes — woman
 
-  * Useful note: Here, Y sounds different because it appears earlier in the word.
+  * Useful note: Listen to how Y sounds earlier in this word.
 
 * yma — here
 * yn — in
@@ -131,7 +134,7 @@ In Welsh:
 
 * coffi — coffee
 
-  * Useful note: FF often sounds like a typical English F.
+  * Useful note: Notice how FF sounds like the English F.
 
 * ffrind — friend
 * ffôn — phone
@@ -171,7 +174,7 @@ When W comes before a vowel, it often sounds more like the W in the English word
 
 * gwen — white / fair
 
-  * Useful note: Notice how W behaves differently before a vowel.
+  * Useful note: Listen to how W sounds before the vowel.
 
 * gwas — servant / lad
 * gwerth — value / worth
