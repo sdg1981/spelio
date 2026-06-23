@@ -69,6 +69,7 @@ export interface SpelioStorage {
   currentPathPosition: string | null;
   hasManualWordListSelection: boolean;
   hasStartedPracticeSession: boolean;
+  hasSeenFirstPracticeHint: boolean;
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
   completedNormalSessionCount?: number;
@@ -134,6 +135,7 @@ export const defaultStorage: SpelioStorage = {
   currentPathPosition: 'foundation_patterns_d_dd',
   hasManualWordListSelection: false,
   hasStartedPracticeSession: false,
+  hasSeenFirstPracticeHint: false,
   lastSessionDate: null,
   lastSessionResult: null,
   completedNormalSessionCount: 0,
@@ -225,6 +227,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     currentPathPosition: typeof source.currentPathPosition === 'string' ? source.currentPathPosition : defaultStorage.currentPathPosition,
     hasManualWordListSelection: typeof source.hasManualWordListSelection === 'boolean' ? source.hasManualWordListSelection : defaultStorage.hasManualWordListSelection,
     hasStartedPracticeSession: typeof source.hasStartedPracticeSession === 'boolean' ? source.hasStartedPracticeSession : defaultStorage.hasStartedPracticeSession,
+    hasSeenFirstPracticeHint: typeof source.hasSeenFirstPracticeHint === 'boolean' ? source.hasSeenFirstPracticeHint : defaultStorage.hasSeenFirstPracticeHint,
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
     completedNormalSessionCount: typeof source.completedNormalSessionCount === 'number' ? source.completedNormalSessionCount : 0,
@@ -339,6 +342,18 @@ export function isFirstTimeManualWordListSelection(storage: SpelioStorage) {
     !storage.lastSessionDate &&
     (storage.completedNormalSessionCount ?? 0) === 0
   );
+}
+
+export function shouldShowFirstPracticeHint(storage: SpelioStorage) {
+  return !storage.hasSeenFirstPracticeHint;
+}
+
+export function markFirstPracticeHintSeen(storage: SpelioStorage): SpelioStorage {
+  if (storage.hasSeenFirstPracticeHint) return storage;
+  return {
+    ...storage,
+    hasSeenFirstPracticeHint: true
+  };
 }
 
 export function clearSpelioStorageData(storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage) {

@@ -4213,6 +4213,27 @@
   margin-top:92px;
 }
 
+.practice-app .first-practice-hint{
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 18px);
+  width:max-content;
+  max-width:min(360px, calc(100vw - 72px));
+  transform:translateX(-50%);
+  color:#8b95a1;
+  font-size:13px;
+  font-weight:650;
+  line-height:1.3;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s ease;
+}
+
+.practice-app .first-practice-hint.visible{
+  opacity:1;
+}
+
 .practice-app .letter-grid,
 .practice-app .word-insight ~ .letter-input-tap-zone .letter-grid{
   margin-top:0;
@@ -5777,6 +5798,7 @@
 .end-progress-line,
 .action-row-count,
 .practice-app .audio-fallback-label,
+.practice-app .first-practice-hint,
 .practice-app .learner-note.pattern-hint{
   color:var(--text-secondary);
 }

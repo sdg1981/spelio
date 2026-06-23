@@ -12,7 +12,7 @@ import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
-import { getFullyCompletedListIds, getInProgressListIds } from '../lib/practice/storage';
+import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
 import { compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
@@ -245,6 +245,8 @@ export function Practice({
   const spellingHintAudioReplayTimerRef = useRef<number | null>(null);
   const shownSpellingHintsRef = useRef(new Set<string>());
   const [spellingHint, setSpellingHint] = useState<SpellingPatternHint | null>(null);
+  const [firstPracticeHintVisible, setFirstPracticeHintVisible] = useState(false);
+  const firstPracticeHintWordIdRef = useRef<string | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
   const [isEnglishPromptPeeking, setIsEnglishPromptPeeking] = useState(false);
   const [postAnswerEnglishConfirmationWordId, setPostAnswerEnglishConfirmationWordId] = useState<string | null>(null);
@@ -522,6 +524,9 @@ export function Practice({
   }, [clearScheduledSpellingHintAudioReplay]);
 
   const handlePracticeInput = useCallback((input: string) => {
+    if (Array.from(input).some(char => !/\s/.test(char))) {
+      setFirstPracticeHintVisible(false);
+    }
     const result = handleInput(input);
     if (result.type !== 'incorrect' || !currentWord) return;
 
@@ -621,6 +626,25 @@ export function Practice({
     practiceAnswer,
     storage.settings.audioPrompts
   ]);
+
+  useEffect(() => {
+    if (!currentWord || isComplete) {
+      setFirstPracticeHintVisible(false);
+      return;
+    }
+
+    if (firstPracticeHintWordIdRef.current === currentWord.id) return;
+
+    if (!shouldShowFirstPracticeHint(storage)) {
+      setFirstPracticeHintVisible(false);
+      return;
+    }
+
+    firstPracticeHintWordIdRef.current = currentWord.id;
+    setFirstPracticeHintVisible(true);
+    const nextStorage = markFirstPracticeHintSeen(storage);
+    if (nextStorage !== storage) onStorageChange(nextStorage);
+  }, [currentWord?.id, isComplete, onStorageChange, storage, storage.hasSeenFirstPracticeHint]);
 
   function isKeyboardShortcutHintCapable() {
     if (typeof window === 'undefined') return false;
@@ -1398,6 +1422,9 @@ export function Practice({
           onClick={shouldShowCustomKeyboard ? undefined : focusMobileInput}
           className="letter-input-tap-zone"
         >
+          <div className={`first-practice-hint ${firstPracticeHintVisible ? 'visible' : ''}`.trim()} aria-live="polite">
+            {firstPracticeHintVisible ? t('practice.firstPracticeHint') : ''}
+          </div>
           <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
           <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>

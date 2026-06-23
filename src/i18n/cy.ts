@@ -221,6 +221,7 @@ export const cy = {
     backToHome: 'Yn ol i’r hafan',
     selectListToBegin: 'Dewiswch restr eiriau i ddechrau',
     typeAnswer: 'Teipiwch yr ateb',
+    firstPracticeHint: 'Teipiwch y sillafiad Cymraeg',
     struggleAssistDesktopHint: 'I gael help, defnyddiwch wrando eto neu ddatgelu.',
     struggleAssistShortcutHint: '↑ gwrando eto · → datgelu',
     struggleAssistMobileHint: 'Defnyddiwch wrando eto neu ddatgelu am help.',

@@ -14,7 +14,7 @@ import { classifySession, createPracticeSession, selectPreSessionRecapWord } fro
 import type { SessionWord } from '../lib/practice/sessionEngine';
 import { findNextSequentialRecommendationList, isListProgressionComplete } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
-import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
+import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, markFirstPracticeHintSeen, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
 import { getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
@@ -429,6 +429,15 @@ export function usePracticeSession({
     onStorageChange(nextStorage);
   }
 
+  function persistFirstPracticeHintSeen() {
+    const nextStorage = markFirstPracticeHintSeen(storageRef.current);
+    if (nextStorage === storageRef.current) return;
+
+    storageRef.current = nextStorage;
+    if (detached) return;
+    onStorageChange(nextStorage);
+  }
+
   const finishSession = useCallback((finalStats = stats) => {
     const endedAt = Date.now();
     const cleanCorrectWords = Math.max(
@@ -575,6 +584,7 @@ export function usePracticeSession({
     if (!currentWord || isComplete || inputLockedRef.current) return { type: 'ignored' };
 
     if (!Array.from(rawInput).some(char => !/\s/.test(char))) return { type: 'ignored' };
+    persistFirstPracticeHintSeen();
     recordPracticeInteraction();
 
     const answer = getPracticeAnswer(currentWord);
