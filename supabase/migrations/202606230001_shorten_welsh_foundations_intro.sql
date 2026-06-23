@@ -22,7 +22,3 @@ set intro_content = (
   )
 )
 where id = 'spelio_welsh_foundations';
-
-delete from storage.objects
-where bucket_id = 'audio'
-  and name like 'collection-intros/azure/spelio-welsh-foundations/%';
