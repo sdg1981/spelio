@@ -512,9 +512,7 @@ Learning to hear the difference makes many Welsh words easier to recognise and s
 
 Mixed Confidence 1
 
-This review combines several patterns you have already practised.
-There are no new rules here.
-Simply notice how familiar patterns start working together.
+This review brings together the D / DD, Y, F / FF, and W patterns you’ve just practised.
 
 ## Words
 

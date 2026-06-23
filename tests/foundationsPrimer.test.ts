@@ -125,7 +125,19 @@ assertEqual(getFoundationsPrimer({
 
 const mixedPrimer = getFoundationsPrimer('foundation_patterns_mixed_confidence_1', 'en');
 assert(mixedPrimer, 'Mixed Confidence list should resolve primer body even without sound buttons.');
+assertEqual(
+  mixedPrimer.body,
+  'This review brings together the D / DD, Y, F / FF, and W patterns you’ve just practised.',
+  'Mixed Confidence 1 English primer should stay pattern-focused.'
+);
 assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons should expose an empty sound item list.');
+const mixedPrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence_1', 'cy');
+assert(mixedPrimerCy, 'Mixed Confidence 1 should resolve a Welsh primer body.');
+assertEqual(
+  mixedPrimerCy.body,
+  "Mae'r adolygiad hwn yn dod â'r patrymau D / DD, Y, F / FF a W rydych chi newydd eu hymarfer ynghyd.",
+  'Mixed Confidence 1 Welsh primer should stay pattern-focused.'
+);
 const mixedConfidence2Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'en');
 assert(mixedConfidence2Primer, 'Mixed Confidence 2 should resolve a primer body.');
 assertEqual(
