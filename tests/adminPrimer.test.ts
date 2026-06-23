@@ -70,7 +70,7 @@ async function run() {
         primerBodyCy: 'Corff preimiwr wedi ei fewnforio gyda bwlch.',
         primerSoundItems: [
           { label: 'LL', labelCy: 'LL', audioText: 'lle', audioUrl: 'https://example.test/ll.mp3', audioStatus: 'ready', audioSource: 'manual' },
-          { label: 'RH', textToSpeak: 'rhif' }
+          { label: 'RH', textToSpeak: 'rhad' }
         ]
       }
     },
@@ -109,6 +109,7 @@ async function run() {
   assertEqual(importedPrimer.soundItems[0].audioUrl, 'https://example.test/ll.mp3', 'Importer should preserve existing primer audio URL.');
   assertEqual(importedPrimer.soundItems[0].audioStatus, 'ready', 'Importer should preserve existing primer audio status.');
   assertEqual(importedPrimer.soundItems[0].audioSource, 'manual', 'Importer should preserve existing primer audio source.');
+  assertEqual(importedPrimer.soundItems[1].textToSpeak, 'rhad', 'Importer should preserve updated RH primer audio text.');
   assertEqual(importedPrimer.soundItems[1].audioStatus, 'missing', 'Importer should default missing primer audio status to missing.');
   assertEqual(importedPrimer.soundItems[1].audioSource, 'unknown', 'Importer should default missing primer audio source to unknown.');
 

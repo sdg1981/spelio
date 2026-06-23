@@ -27,6 +27,15 @@ assertEqual(dDdPrimer.soundItems[1].label, 'DD', 'Second sound button should kee
 assertEqual(dDdPrimer.soundItems[1].audioText, 'hedd', 'DD sound button should use a Welsh exemplar instead of speaking the letters.');
 assertEqual(getPrimerAudioText('DD'), 'hedd', 'DD primer audio override should be stable.');
 assertEqual(getPrimerAudioText('LL'), 'lle', 'LL primer audio override should use a Welsh exemplar.');
+assertEqual(getPrimerAudioText('RH'), 'rhad', 'RH primer audio override should use the clearer rhad exemplar.');
+
+const rhPrimer = getFoundationsPrimer('foundation_patterns_rh', 'en');
+assert(rhPrimer, 'RH Foundations list should resolve a primer.');
+assertEqual(rhPrimer.soundItems.length, 1, 'RH primer should keep one sound button.');
+assertEqual(rhPrimer.soundItems[0].label, 'RH', 'RH primer sound button should keep its label.');
+assertEqual(rhPrimer.soundItems[0].audioText, 'rhad', 'RH primer sound button should use rhad for generated audio.');
+assertEqual(rhPrimer.soundItems[0].audioUrl, undefined, 'RH primer audio should be reset until rhad audio is generated.');
+assertEqual(rhPrimer.soundItems[0].audioStatus, 'missing', 'RH primer audio should be marked missing until regenerated.');
 
 const welshYPrimerFromDraft = getFoundationsPrimer('foundation_patterns_y', 'cy');
 assert(welshYPrimerFromDraft, 'Welsh interface should resolve Y primer from bundled primerDrafts when DB content is absent.');

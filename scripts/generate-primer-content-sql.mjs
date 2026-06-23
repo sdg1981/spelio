@@ -25,7 +25,7 @@ function audioTextForLabel(label) {
     FF: 'coffi',
     CH: 'bach',
     LL: 'lle',
-    RH: 'rhif',
+    RH: 'rhad',
     TH: 'peth',
     C: 'cath',
     G: 'gardd',

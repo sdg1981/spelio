@@ -76,7 +76,7 @@ const PRIMER_AUDIO_TEXT_OVERRIDES: Record<string, string> = {
   FF: 'coffi',
   CH: 'bach',
   LL: 'lle',
-  RH: 'rhif',
+  RH: 'rhad',
   TH: 'peth',
   C: 'cath',
   G: 'gardd',
