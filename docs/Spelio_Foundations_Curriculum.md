@@ -564,7 +564,7 @@ Try noticing how those patterns become easier to recognise.
 
 Mixed Confidence 3
 
-This review combines many of the patterns introduced throughout Foundations.
+This review brings together the WY, YW, OE, AU, and AW patterns you’ve just practised.
 
 ## Words
 
