@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Copy, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
+import { FirstPracticeHint } from './FirstPracticeHint';
 import { SpelioTouchKeyboard } from './SpelioTouchKeyboard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
@@ -1422,9 +1423,11 @@ export function Practice({
           onClick={shouldShowCustomKeyboard ? undefined : focusMobileInput}
           className="letter-input-tap-zone"
         >
-          <div className={`first-practice-hint ${firstPracticeHintVisible ? 'visible' : ''}`.trim()} aria-live="polite">
-            {firstPracticeHintVisible ? t('practice.firstPracticeHint') : ''}
-          </div>
+          <FirstPracticeHint
+            visible={firstPracticeHintVisible}
+            primaryText={t('practice.firstPracticeHint')}
+            replayText={t('practice.firstPracticeReplayHint')}
+          />
           <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
           <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
