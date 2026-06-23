@@ -441,7 +441,7 @@ export const en = {
     privacyBody1: 'Spelio is designed to work without an account.',
     privacyBody2: 'Your spelling progress, settings, difficult words, and session history are stored locally on your device using your browser’s storage. This helps Spelio remember what you have practised and recommend what to do next.',
     privacyBody3: 'You can delete this local progress at any time using Reset progress in Settings.',
-    privacyBody4: 'Spelio may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed, word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is useful and what needs improving.',
+    privacyBody4: 'Spelio. may collect anonymous usage information during the beta to help improve the app, such as sessions started, sessions completed, word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is useful and what needs improving.',
     privacyBody5: 'Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.',
     aboutBody1: 'Beta version 0.2. Built by Sam Gerrard.',
     aboutBody2: 'Spelio is a focused Welsh spelling practice app.',
