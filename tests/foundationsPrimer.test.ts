@@ -36,6 +36,15 @@ assertEqual(rhPrimer.soundItems[0].label, 'RH', 'RH primer sound button should k
 assertEqual(rhPrimer.soundItems[0].audioText, 'rhad', 'RH primer sound button should use rhad for generated audio.');
 assertEqual(rhPrimer.soundItems[0].audioUrl, undefined, 'RH primer audio should be reset until rhad audio is generated.');
 assertEqual(rhPrimer.soundItems[0].audioStatus, 'missing', 'RH primer audio should be marked missing until regenerated.');
+assertEqual(getPrimerAudioText('WY'), 'mwyn', 'WY primer audio override should use the clearer mwyn exemplar.');
+
+const wyPrimer = getFoundationsPrimer('foundation_patterns_wy', 'en');
+assert(wyPrimer, 'WY Foundations list should resolve a primer.');
+assertEqual(wyPrimer.soundItems.length, 1, 'WY primer should keep one sound button.');
+assertEqual(wyPrimer.soundItems[0].label, 'WY', 'WY primer sound button should keep its label.');
+assertEqual(wyPrimer.soundItems[0].audioText, 'mwyn', 'WY primer sound button should use mwyn for generated audio.');
+assertEqual(wyPrimer.soundItems[0].audioUrl, undefined, 'WY primer audio should be reset until mwyn audio is generated.');
+assertEqual(wyPrimer.soundItems[0].audioStatus, 'missing', 'WY primer audio should be marked missing until regenerated.');
 
 const welshYPrimerFromDraft = getFoundationsPrimer('foundation_patterns_y', 'cy');
 assert(welshYPrimerFromDraft, 'Welsh interface should resolve Y primer from bundled primerDrafts when DB content is absent.');

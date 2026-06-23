@@ -83,7 +83,7 @@ const PRIMER_AUDIO_TEXT_OVERRIDES: Record<string, string> = {
   U: 'du',
   AI: 'tai',
   AE: 'cae',
-  WY: 'wy',
+  WY: 'mwyn',
   YW: 'yw',
   OE: 'oer',
   AU: 'haul',

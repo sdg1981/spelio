@@ -32,7 +32,7 @@ function audioTextForLabel(label) {
     U: 'du',
     AI: 'tai',
     AE: 'cae',
-    WY: 'wy',
+    WY: 'mwyn',
     YW: 'yw',
     OE: 'oer',
     AU: 'haul',
