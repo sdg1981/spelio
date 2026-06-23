@@ -590,9 +590,7 @@ The goal is to recognise them naturally when they appear together.
 
 Mixed Confidence 4
 
-These words introduce a broader range of familiar Welsh spelling patterns.
-There are no new rules to learn.
-Instead, use them as an opportunity to recognise patterns you have already practised.
+This review brings together the U, C, G, and TH vs DD patterns you’ve just practised.
 
 ## Words
 
