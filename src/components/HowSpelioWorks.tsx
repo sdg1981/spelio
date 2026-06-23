@@ -247,6 +247,7 @@ export function HowSpelioWorks({
         </button>
       </section>
 
+      <SpelioSocialLinks t={t} />
       <Footer
         className="home-footer"
         variant="home"
@@ -254,7 +255,6 @@ export function HowSpelioWorks({
         onInterfaceLanguageChange={onInterfaceLanguageChange}
         t={t}
       />
-      <SpelioSocialLinks t={t} />
     </main>
   );
 }

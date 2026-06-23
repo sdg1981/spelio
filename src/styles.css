@@ -2523,11 +2523,10 @@
 .spelio-social-links h2{
   margin:0;
   color:var(--text-secondary, #5f6b78);
-  font-size:13px;
-  font-weight:850;
-  letter-spacing:.06em;
+  font-size:14px;
+  font-weight:760;
+  letter-spacing:0;
   line-height:1.2;
-  text-transform:uppercase;
 }
 
 .spelio-social-links-row{
@@ -2535,7 +2534,7 @@
   align-items:center;
   justify-content:center;
   gap:8px;
-  margin-top:14px;
+  margin-top:8px;
 }
 
 .spelio-social-link{
@@ -2569,6 +2568,11 @@
 
 .spelio-social-link:active{
   transform:scale(.96);
+}
+
+.spelio-social-links + .home-footer{
+  margin-top:clamp(22px,4vw,34px);
+  padding-top:0;
 }
 
 .spelling-basics-page{

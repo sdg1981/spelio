@@ -8,7 +8,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 
 type PublicPageShellProps = {
   children: ReactNode;
-  afterFooter?: ReactNode;
+  beforeFooter?: ReactNode;
   contentClassName?: string;
   interfaceLanguage: InterfaceLanguage;
   onBack: () => void;
@@ -19,7 +19,7 @@ type PublicPageShellProps = {
 };
 
 export function PublicPageShell({
-  afterFooter,
+  beforeFooter,
   children,
   contentClassName = '',
   interfaceLanguage,
@@ -51,6 +51,7 @@ export function PublicPageShell({
         {children}
       </section>
 
+      {beforeFooter}
       <Footer
         className="home-footer public-info-footer"
         variant="home"
@@ -58,7 +59,6 @@ export function PublicPageShell({
         onInterfaceLanguageChange={onInterfaceLanguageChange}
         t={t}
       />
-      {afterFooter}
     </main>
   );
 }
@@ -148,7 +148,7 @@ export function AboutPage({
 }) {
   return (
     <PublicPageShell
-      afterFooter={<SpelioSocialLinks t={t} />}
+      beforeFooter={<SpelioSocialLinks t={t} />}
       interfaceLanguage={interfaceLanguage}
       onBack={onBack}
       onHome={onHome}
