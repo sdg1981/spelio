@@ -2514,6 +2514,63 @@
   margin:0;
 }
 
+.spelio-social-links{
+  width:min(100%,520px);
+  margin:clamp(32px,6vw,52px) auto 0;
+  text-align:center;
+}
+
+.spelio-social-links h2{
+  margin:0;
+  color:var(--text-secondary, #5f6b78);
+  font-size:13px;
+  font-weight:850;
+  letter-spacing:.06em;
+  line-height:1.2;
+  text-transform:uppercase;
+}
+
+.spelio-social-links-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:14px;
+}
+
+.spelio-social-link{
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  color:var(--text-secondary, #5f6b78);
+  opacity:.66;
+  transition:background .16s ease-out,color .16s ease-out,opacity .16s ease-out,transform .16s ease-out,box-shadow .18s ease-out;
+}
+
+.spelio-social-link svg{
+  width:18px;
+  height:18px;
+  fill:currentColor;
+}
+
+.spelio-social-link:hover,
+.spelio-social-link:focus-visible{
+  background:rgba(7,21,34,.045);
+  color:var(--text-primary, #071522);
+  opacity:.92;
+  outline:0;
+}
+
+.spelio-social-link:focus-visible{
+  box-shadow:0 0 0 3px var(--focus-ring, rgba(217,0,0,.16));
+}
+
+.spelio-social-link:active{
+  transform:scale(.96);
+}
+
 .spelling-basics-page{
   width:min(100%,820px);
   margin:0 auto;

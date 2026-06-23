@@ -3,10 +3,12 @@ import type { ReactNode } from 'react';
 import { FeedbackFormContent, Footer, getFeedbackLearningMethodOptions, getFeedbackSignalOptions } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
+import { SpelioSocialLinks } from './SpelioSocialLinks';
 import type { InterfaceLanguage, Translate } from '../i18n';
 
 type PublicPageShellProps = {
   children: ReactNode;
+  afterFooter?: ReactNode;
   contentClassName?: string;
   interfaceLanguage: InterfaceLanguage;
   onBack: () => void;
@@ -17,6 +19,7 @@ type PublicPageShellProps = {
 };
 
 export function PublicPageShell({
+  afterFooter,
   children,
   contentClassName = '',
   interfaceLanguage,
@@ -55,6 +58,7 @@ export function PublicPageShell({
         onInterfaceLanguageChange={onInterfaceLanguageChange}
         t={t}
       />
+      {afterFooter}
     </main>
   );
 }
@@ -144,6 +148,7 @@ export function AboutPage({
 }) {
   return (
     <PublicPageShell
+      afterFooter={<SpelioSocialLinks t={t} />}
       interfaceLanguage={interfaceLanguage}
       onBack={onBack}
       onHome={onHome}

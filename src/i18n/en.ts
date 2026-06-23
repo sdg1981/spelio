@@ -468,6 +468,13 @@ export const en = {
     unsupportedTitle: 'Browser Not Fully Supported',
     unsupportedBody: 'Spelio may not work correctly on this browser or device. Please try updating your browser or using a recent version of Chrome, Safari, Edge, or Firefox.'
   },
+  social: {
+    heading: 'Follow Spelio',
+    xLabel: 'Follow Spelio on X',
+    instagramLabel: 'Follow Spelio on Instagram',
+    facebookLabel: 'Follow Spelio on Facebook',
+    youtubeLabel: 'Follow Spelio on YouTube'
+  },
   spellingHints: {
     cy: {
       dd: {

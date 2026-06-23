@@ -29,6 +29,7 @@ import {
 import { Footer } from './Footer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
+import { SpelioSocialLinks } from './SpelioSocialLinks';
 import type { InterfaceLanguage, Translate, TranslationKey } from '../i18n';
 
 type IconComponent = ComponentType<{ size?: number; strokeWidth?: number; 'aria-hidden'?: boolean }>;
@@ -253,6 +254,7 @@ export function HowSpelioWorks({
         onInterfaceLanguageChange={onInterfaceLanguageChange}
         t={t}
       />
+      <SpelioSocialLinks t={t} />
     </main>
   );
 }

@@ -468,6 +468,13 @@ export const cy = {
     unsupportedTitle: 'Nid yw’r porwr yn cael ei gefnogi’n llawn',
     unsupportedBody: 'Efallai na fydd Spelio yn gweithio’n gywir ar y porwr neu’r ddyfais hon. Ceisiwch ddiweddaru eich porwr neu ddefnyddio fersiwn diweddar o Chrome, Safari, Edge neu Firefox.'
   },
+  social: {
+    heading: 'Dilynwch Spelio',
+    xLabel: 'Dilynwch Spelio ar X',
+    instagramLabel: 'Dilynwch Spelio ar Instagram',
+    facebookLabel: 'Dilynwch Spelio ar Facebook',
+    youtubeLabel: 'Dilynwch Spelio ar YouTube'
+  },
   spellingHints: {
     cy: {
       dd: {
