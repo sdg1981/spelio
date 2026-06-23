@@ -204,7 +204,7 @@ It often sounds like the CH in the Scottish word “loch”.
 * achos — because / cause
 * diolch — thanks
 
-  * Useful note: Notice the L before CH.
+  * Useful note: Look out for the quiet L before CH in this word.
 
 ## Teaching Context
 
