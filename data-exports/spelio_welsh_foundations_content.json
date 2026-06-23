@@ -47,18 +47,18 @@
       "descriptionCy": "Patrymau sillafu Cymraeg cyffredin i helpu sillafu i deimlo’n fwy cyfarwydd a rhagweladwy.",
       "introContent": {
         "enabled": true,
-        "titleEn": "Welsh Spelling Foundations",
-        "titleCy": "",
-        "bodyEn": "Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.\n\nIn this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.\n\nListen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.",
-        "bodyCy": "",
+        "titleEn": "Welcome to Welsh Spelling Foundations.",
+        "titleCy": "Croeso i Sylfeini Sillafu Cymraeg.",
+        "bodyEn": "Welsh spelling follows patterns.\n\nOver the next few short exercises, you'll begin to recognise some of the sounds and spelling patterns that appear throughout Welsh.\n\nBecoming familiar with these patterns can make Welsh spelling feel much more predictable.",
+        "bodyCy": "Mae sillafu Cymraeg yn dilyn patrymau.\n\nDros yr ymarferion byr hyn, byddwch yn dechrau adnabod rhai o'r seiniau a'r patrymau sillafu sy'n ymddangos drwy'r Gymraeg.\n\nGall dod yn gyfarwydd â'r patrymau hyn wneud i sillafu Cymraeg deimlo'n llawer mwy rhagweladwy.",
         "audioUrlEn": "",
         "audioStatusEn": "missing",
         "audioSourceEn": "unknown",
         "audioUrlCy": "",
         "audioStatusCy": "missing",
         "audioSourceCy": "unknown",
-        "version": "2026-06-03",
-        "seenKey": "spelio-collection-intro:spelio_welsh_foundations:2026-06-03"
+        "version": "2026-06-23",
+        "seenKey": "spelio-collection-intro:spelio_welsh_foundations:2026-06-23"
       }
     },
     {

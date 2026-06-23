@@ -1,6 +1,7 @@
 import { mockAdminRepository } from '../src/admin/repositories/mockAdminRepository';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 import { applyPrimerContentDraftUpdate, createNeutralPrimerSoundItem } from '../src/admin/services/primerEditor';
+import { createDefaultFoundationsIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
 import { getFoundationsPrimer, normalizePrimerContent } from '../src/content/foundationsPrimer';
 import type { WordListPrimerContent } from '../src/data/wordLists';
 
@@ -299,6 +300,33 @@ async function run() {
   assert(databasePrimer, 'Learner primer should resolve database primer content.');
   assertEqual(databasePrimer.title, 'Database primer title', 'Database primer content should override JSON primerDraft fallback.');
   assertEqual(databasePrimer.soundItems[0].audioUrl, afterRegenerate.primerContent?.soundItems[0].audioUrl, 'Learner primer should expose the regenerated stored primer audio URL before dynamic fallback.');
+
+  const sourceCollection = await mockAdminRepository.getCollection('spelio_core_welsh');
+  assert(sourceCollection, 'Expected source collection for collection intro audio test.');
+  await mockAdminRepository.createCollection({
+    ...sourceCollection,
+    id: WELSH_FOUNDATIONS_COLLECTION_ID,
+    slug: 'spelio-welsh-foundations',
+    name: 'Welsh Spelling Foundations',
+    nameCy: 'Sylfeini Sillafu Cymraeg',
+    order: 50,
+    introContent: createDefaultFoundationsIntroContent()
+  });
+  const generatedWelshIntroAudio = await mockAdminRepository.generateCollectionIntroAudio(WELSH_FOUNDATIONS_COLLECTION_ID, 'cy', 'azure');
+  assert(generatedWelshIntroAudio.ok, 'Collection intro Welsh Azure generation should succeed in mock repository.');
+  assertEqual(generatedWelshIntroAudio.audioStatus, 'ready', 'Collection intro Azure generation should mark audio ready.');
+  assertEqual(generatedWelshIntroAudio.audioSource, 'azure', 'Collection intro Azure generation should update source.');
+  assert(
+    generatedWelshIntroAudio.audioUrl.includes('/collection-intros/azure/spelio-welsh-foundations/cy/'),
+    'Collection intro Azure generation should store regenerated audio at a versioned collection-intro object path.'
+  );
+  const afterIntroAudio = await mockAdminRepository.getCollection(WELSH_FOUNDATIONS_COLLECTION_ID);
+  assertEqual(afterIntroAudio?.introContent?.audioUrlCy, generatedWelshIntroAudio.audioUrl, 'Collection intro should persist regenerated Welsh audio URL.');
+  const clearedIntroAudio = await mockAdminRepository.clearCollectionIntroAudio(WELSH_FOUNDATIONS_COLLECTION_ID, 'cy');
+  assert(clearedIntroAudio.ok, 'Collection intro audio clearing should succeed in mock repository.');
+  assertEqual(clearedIntroAudio.audioUrl, '', 'Collection intro audio clearing should reset stale Welsh audio URL.');
+  assertEqual(clearedIntroAudio.audioStatus, 'missing', 'Collection intro audio clearing should mark Welsh audio missing.');
+  assertEqual(clearedIntroAudio.audioSource, 'unknown', 'Collection intro audio clearing should remove generated Welsh source marker.');
 
   const wordAudioResult = await mockAdminRepository.generateAudioForWord(afterRegenerate.words[0].id);
   assert(wordAudioResult.ok, 'Normal word audio generation should still work.');

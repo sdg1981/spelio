@@ -39,17 +39,4 @@ where intro_content is not null
     or not (intro_content ? 'audioUrlCy')
     or not (intro_content ? 'audioStatusCy')
     or not (intro_content ? 'audioSourceCy')
-  );
-
-update public.word_list_collections
-set intro_content = jsonb_set(
-  intro_content,
-  '{bodyEn}',
-  to_jsonb(replace(
-    intro_content->>'bodyEn',
-    'The aim is not to memorise rules',
-    'The aim is not to memorise words and rules'
-  ))
-)
-where id = 'spelio_welsh_foundations'
-  and intro_content->>'bodyEn' like '%The aim is not to memorise rules%';
+);

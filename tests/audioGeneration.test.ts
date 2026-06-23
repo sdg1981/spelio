@@ -36,7 +36,7 @@ import {
   getContextExtractionWindowSeconds,
   resolveFfmpegPath
 } from '../api/audioPostProcessing.js';
-import { createAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
+import { createAudioStoragePath, createCollectionIntroAudioStoragePath, createInterfaceAudioStoragePath, createPrimerAudioObjectVersion, createPrimerAudioStoragePath, createWelshSsml as createAdminWelshSsml } from '../src/admin/services/audioGeneration';
 import { AZURE_TTS_COLLECTION_INTRO_TEXT_LIMIT, AZURE_TTS_DEFAULT_TEXT_LIMIT } from '../src/lib/azureTtsLimits';
 
 type TestResponseBody = Uint8Array | {
@@ -172,6 +172,11 @@ assertEqual(
   createPrimerAudioStoragePath('foundation_patterns_d_dd', 'dd_sound', 'azure', createPrimerAudioObjectVersion(new Date('2026-05-29T12:34:56.789Z'), 'regen')),
   'cy-primer/foundation-patterns-d-dd/dd-sound/20260529123456789-regen.mp3',
   'Regenerated primer Azure audio should support a versioned object path so the public URL changes.'
+);
+assertEqual(
+  createCollectionIntroAudioStoragePath('spelio_welsh_foundations', 'azure', 'cy', createPrimerAudioObjectVersion(new Date('2026-06-23T12:34:56.789Z'), 'regen')),
+  'collection-intros/azure/spelio-welsh-foundations/cy/20260623123456789-regen.mp3',
+  'Regenerated collection intro Azure audio should use a versioned collection-intro object path.'
 );
 assertEqual(
   createAudioStoragePath({ listId: 'foundations_first_words', id: 'foundations_first_words_001' }),
@@ -383,11 +388,12 @@ async function runAsyncAssertions() {
   );
 
   const collectionIntroText = [
-    'Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.',
-    "In this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.",
-    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.',
-    'Keep listening for the patterns as you practise.',
-    'Some spellings will feel new at first, and that is fine. Each short practice round is a chance to connect what you hear with what you see on the page.'
+    'Welcome to Welsh Spelling Foundations.',
+    'Welsh spelling follows patterns.',
+    "Over the next few short exercises, you'll begin to recognise some of the sounds and spelling patterns that appear throughout Welsh.",
+    'Becoming familiar with these patterns can make Welsh spelling feel much more predictable.',
+    'This extra sentence keeps the route test above the short-audio limit without changing the approved introduction copy.',
+    'The collection-intro route should still allow narration-length text while preserving the requested voice settings.'
   ].join('\n\n');
   assert(collectionIntroText.length > AZURE_TTS_DEFAULT_TEXT_LIMIT, 'Collection intro test text should exceed the default short-audio limit.');
   assert(collectionIntroText.length < AZURE_TTS_COLLECTION_INTRO_TEXT_LIMIT, 'Collection intro test text should remain inside the narration limit.');
@@ -423,10 +429,10 @@ async function runAsyncAssertions() {
   assertEqual(collectionIntroResponse.statusCode, 200, 'Collection intro narration should be allowed beyond the short helper limit.');
   assertEqual(collectionIntroResponse.headers['X-Spelio-Azure-Language'], 'en', 'Collection intro generation should preserve the requested English voice route.');
   assert(
-    collectionIntroRequestedSsml.includes('Welsh spelling can look unfamiliar') &&
-      collectionIntroRequestedSsml.includes('Keep listening for the patterns') &&
+    collectionIntroRequestedSsml.includes('Welcome to Welsh Spelling Foundations.') &&
+      collectionIntroRequestedSsml.includes('Welsh spelling follows patterns.') &&
       collectionIntroRequestedSsml.includes(`name="${AZURE_ENGLISH_VOICE}"`),
-    'Collection intro generation should send the full body-only narration text with English Azure settings.'
+    'Collection intro generation should send the full narration text with English Azure settings.'
   );
 
   const pipelineLogs: Array<Record<string, unknown>> = [];

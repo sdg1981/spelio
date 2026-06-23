@@ -4,7 +4,7 @@ import type { AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
-import { createAudioQueueSnapshot, createMockAudioUrl, createPrimerAudioObjectVersion, createPrimerAudioStoragePath } from '../services/audioGeneration';
+import { createAudioQueueSnapshot, createCollectionIntroAudioStoragePath, createMockAudioUrl, createPrimerAudioObjectVersion, createPrimerAudioStoragePath } from '../services/audioGeneration';
 import type { AdminAudioSettings } from './adminRepository';
 import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { getCollectionIntroAudioGenerationText } from '../../content/collectionIntro';
@@ -271,7 +271,7 @@ export const mockAdminRepository: AdminRepository = {
     if (!text) throw new Error(language === 'cy' ? 'Collection intro Welsh body is empty.' : 'Collection intro English body is empty.');
     const textLimit = getAzureTtsTextLimit('collection_intro');
     if (text.length > textLimit) throw new Error(`Collection intro ${language === 'cy' ? 'Welsh' : 'English'} body is too long for Azure generation (${text.length}/${textLimit} characters).`);
-    const audioUrl = `https://example.test/storage/v1/object/public/audio/collection-intros/azure/${collection.id}/${language}/${createPrimerAudioObjectVersion()}.mp3`;
+    const audioUrl = `https://example.test/storage/v1/object/public/audio/${createCollectionIntroAudioStoragePath(collection.id, 'azure', language, createPrimerAudioObjectVersion())}`;
     const readyIntro = {
       ...collection.introContent,
       ...(language === 'cy'

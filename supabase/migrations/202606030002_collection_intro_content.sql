@@ -4,17 +4,19 @@ alter table public.word_list_collections
 update public.word_list_collections
 set intro_content = jsonb_build_object(
   'enabled', true,
-  'titleEn', 'Welsh Spelling Foundations',
-  'titleCy', '',
-  'bodyEn', 'Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.' || E'\n\n' ||
-    'In this Foundations path, you''ll practise the sounds and letter combinations that appear again and again in everyday Welsh.' || E'\n\n' ||
-    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise rules, but to make Welsh spelling feel more predictable.',
-  'bodyCy', '',
+  'titleEn', 'Welcome to Welsh Spelling Foundations.',
+  'titleCy', 'Croeso i Sylfeini Sillafu Cymraeg.',
+  'bodyEn', 'Welsh spelling follows patterns.' || E'\n\n' ||
+    'Over the next few short exercises, you''ll begin to recognise some of the sounds and spelling patterns that appear throughout Welsh.' || E'\n\n' ||
+    'Becoming familiar with these patterns can make Welsh spelling feel much more predictable.',
+  'bodyCy', 'Mae sillafu Cymraeg yn dilyn patrymau.' || E'\n\n' ||
+    'Dros yr ymarferion byr hyn, byddwch yn dechrau adnabod rhai o''r seiniau a''r patrymau sillafu sy''n ymddangos drwy''r Gymraeg.' || E'\n\n' ||
+    'Gall dod yn gyfarwydd â''r patrymau hyn wneud i sillafu Cymraeg deimlo''n llawer mwy rhagweladwy.',
   'audioUrl', coalesce(intro_content->>'audioUrl', ''),
   'audioStatus', coalesce(nullif(intro_content->>'audioStatus', ''), 'missing'),
   'audioSource', coalesce(nullif(intro_content->>'audioSource', ''), 'unknown'),
-  'version', coalesce(nullif(intro_content->>'version', ''), '2026-06-03'),
-  'seenKey', coalesce(nullif(intro_content->>'seenKey', ''), 'spelio-collection-intro:spelio_welsh_foundations:2026-06-03')
+  'version', coalesce(nullif(intro_content->>'version', ''), '2026-06-23'),
+  'seenKey', coalesce(nullif(intro_content->>'seenKey', ''), 'spelio-collection-intro:spelio_welsh_foundations:2026-06-23')
 )
 where id = 'spelio_welsh_foundations'
   and (

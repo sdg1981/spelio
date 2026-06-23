@@ -112,27 +112,43 @@ assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons shou
 assert(hasFoundationsPrimer('foundation_patterns_y'), 'Known Foundations list should report primer availability.');
 assertEqual(getFoundationsPrimer('foundations_first_words', 'en'), null, 'Lists without primerDrafts should not show a primer.');
 
+const foundationsIntroTitleEn = 'Welcome to Welsh Spelling Foundations.';
+const foundationsIntroTitleCy = 'Croeso i Sylfeini Sillafu Cymraeg.';
+const foundationsIntroBodyEn = [
+  'Welsh spelling follows patterns.',
+  "Over the next few short exercises, you'll begin to recognise some of the sounds and spelling patterns that appear throughout Welsh.",
+  'Becoming familiar with these patterns can make Welsh spelling feel much more predictable.'
+].join('\n\n');
+const foundationsIntroBodyCy = [
+  'Mae sillafu Cymraeg yn dilyn patrymau.',
+  "Dros yr ymarferion byr hyn, byddwch yn dechrau adnabod rhai o'r seiniau a'r patrymau sillafu sy'n ymddangos drwy'r Gymraeg.",
+  "Gall dod yn gyfarwydd â'r patrymau hyn wneud i sillafu Cymraeg deimlo'n llawer mwy rhagweladwy."
+].join('\n\n');
+
 const foundationsIntroContent = normalizeCollectionIntroContent(undefined, WELSH_FOUNDATIONS_COLLECTION_ID);
 assertEqual(foundationsIntroContent.enabled, true, 'Foundations collection should have a default enabled introduction.');
-assertEqual(foundationsIntroContent.titleEn, 'Welsh Spelling Foundations', 'Foundations collection intro should carry the approved English title.');
-assertEqual(foundationsIntroContent.titleCy, '', 'Foundations collection intro Welsh title should remain empty until reviewed.');
+assertEqual(foundationsIntroContent.titleEn, foundationsIntroTitleEn, 'Foundations collection intro should carry the approved English title.');
+assertEqual(foundationsIntroContent.titleCy, foundationsIntroTitleCy, 'Foundations collection intro should carry the approved Welsh title.');
+assertEqual(foundationsIntroContent.bodyEn, foundationsIntroBodyEn, 'Foundations collection intro should carry the shortened English body.');
+assertEqual(foundationsIntroContent.bodyCy, foundationsIntroBodyCy, 'Foundations collection intro should carry the approved Welsh body.');
+assertEqual(foundationsIntroContent.version, '2026-06-23', 'Foundations collection intro should use a fresh seen-state version.');
+assertEqual(foundationsIntroContent.audioStatusEn, 'missing', 'Shortened English intro should not keep stale generated audio.');
+assertEqual(foundationsIntroContent.audioStatusCy, 'missing', 'Welsh intro should not keep stale generated audio.');
 const foundationsIntro = getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: foundationsIntroContent }, 'en');
 assert(foundationsIntro, 'Enabled Foundations collection intro should resolve for learners.');
-assert(
-  foundationsIntro.body.includes('Welsh spelling can look unfamiliar at first'),
-  'Foundations collection intro should include the approved English body.'
-);
-assert(
-  foundationsIntro.body.includes('memorise words and rules'),
-  'Foundations collection intro should include the approved updated English body copy.'
-);
+assertEqual(foundationsIntro.title, foundationsIntroTitleEn, 'English interface should display the shortened English intro title.');
+assertEqual(foundationsIntro.body, foundationsIntroBodyEn, 'English interface should display the shortened English intro body.');
 assertEqual(foundationsIntro.displayLanguage, 'en', 'English interface should display English intro content.');
 assertEqual(getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: { ...foundationsIntroContent, enabled: false } }, 'en'), null, 'Disabled collection intro should not resolve.');
 
+const defaultWelshCollectionIntro = getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: foundationsIntroContent }, 'cy');
+assert(defaultWelshCollectionIntro, 'Welsh interface should resolve the default collection intro content.');
+assertEqual(defaultWelshCollectionIntro.displayLanguage, 'cy', 'Welsh interface should display Welsh intro content by default.');
+assertEqual(defaultWelshCollectionIntro.title, foundationsIntroTitleCy, 'Welsh interface should display the Welsh intro title.');
+assertEqual(defaultWelshCollectionIntro.body, foundationsIntroBodyCy, 'Welsh interface should display the Welsh intro body.');
+
 const bilingualCollectionIntro = {
   ...foundationsIntroContent,
-  titleCy: 'Sylfeini Sillafu Cymraeg',
-  bodyCy: 'Corff cyflwyniad Cymraeg.',
   audioUrlEn: 'https://example.test/collection-intro-en.mp3',
   audioStatusEn: 'ready' as const,
   audioSourceEn: 'manual' as const,
@@ -143,18 +159,18 @@ const bilingualCollectionIntro = {
 const welshCollectionIntro = getCollectionIntro({ id: WELSH_FOUNDATIONS_COLLECTION_ID, introContent: bilingualCollectionIntro }, 'cy');
 assert(welshCollectionIntro, 'Welsh interface should resolve collection intro content.');
 assertEqual(welshCollectionIntro.displayLanguage, 'cy', 'Welsh interface should display Welsh intro content when reviewed Welsh copy exists.');
-assertEqual(welshCollectionIntro.title, 'Sylfeini Sillafu Cymraeg', 'Welsh interface should use Welsh intro title when present.');
-assertEqual(welshCollectionIntro.body, 'Corff cyflwyniad Cymraeg.', 'Welsh interface should use Welsh intro body when present.');
+assertEqual(welshCollectionIntro.title, foundationsIntroTitleCy, 'Welsh interface should use Welsh intro title when present.');
+assertEqual(welshCollectionIntro.body, foundationsIntroBodyCy, 'Welsh interface should use Welsh intro body when present.');
 assertEqual(welshCollectionIntro.audioUrl, 'https://example.test/collection-intro-cy.mp3', 'Welsh interface should use Welsh intro audio when available.');
 assertEqual(
   getCollectionIntroAudioGenerationText(bilingualCollectionIntro, 'en'),
-  foundationsIntroContent.bodyEn,
-  'English collection intro audio generation should use body text only, without the visible title.'
+  `${foundationsIntroTitleEn}\n\n${foundationsIntroBodyEn}`,
+  'English collection intro audio generation should match the displayed introduction copy.'
 );
 assertEqual(
   getCollectionIntroAudioGenerationText(bilingualCollectionIntro, 'cy'),
-  'Corff cyflwyniad Cymraeg.',
-  'Welsh collection intro audio generation should use body text only, without the visible title.'
+  `${foundationsIntroTitleCy}\n\n${foundationsIntroBodyCy}`,
+  'Welsh collection intro audio generation should match the displayed introduction copy.'
 );
 
 const welshTextWithoutWelshAudioIntro = getCollectionIntro({

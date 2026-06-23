@@ -16,18 +16,22 @@ export type CollectionIntro = {
   seenKey: string;
 };
 
-const DEFAULT_FOUNDATIONS_INTRO_VERSION = '2026-06-03';
+const DEFAULT_FOUNDATIONS_INTRO_VERSION = '2026-06-23';
 
 const DEFAULT_FOUNDATIONS_INTRO: WordListCollectionIntroContent = {
   enabled: true,
-  titleEn: 'Welsh Spelling Foundations',
-  titleCy: '',
+  titleEn: 'Welcome to Welsh Spelling Foundations.',
+  titleCy: 'Croeso i Sylfeini Sillafu Cymraeg.',
   bodyEn: [
-    'Welsh spelling can look unfamiliar at first, but it becomes much easier when you learn a few common patterns.',
-    "In this Foundations path, you'll practise the sounds and letter combinations that appear again and again in everyday Welsh.",
-    'Listen carefully, notice the patterns, and take your time. The aim is not to memorise words and rules, but to make Welsh spelling feel more predictable.'
+    'Welsh spelling follows patterns.',
+    "Over the next few short exercises, you'll begin to recognise some of the sounds and spelling patterns that appear throughout Welsh.",
+    'Becoming familiar with these patterns can make Welsh spelling feel much more predictable.'
   ].join('\n\n'),
-  bodyCy: '',
+  bodyCy: [
+    'Mae sillafu Cymraeg yn dilyn patrymau.',
+    "Dros yr ymarferion byr hyn, byddwch yn dechrau adnabod rhai o'r seiniau a'r patrymau sillafu sy'n ymddangos drwy'r Gymraeg.",
+    "Gall dod yn gyfarwydd â'r patrymau hyn wneud i sillafu Cymraeg deimlo'n llawer mwy rhagweladwy."
+  ].join('\n\n'),
   audioUrlEn: '',
   audioStatusEn: 'missing',
   audioSourceEn: 'unknown',
@@ -140,7 +144,12 @@ export function getCollectionIntroForPracticeStart(list: WordList | null | undef
 
 export function getCollectionIntroAudioGenerationText(content: WordListCollectionIntroContent, language: 'en' | 'cy') {
   const normalized = normalizeCollectionIntroContent(content);
-  return (language === 'cy' ? normalized.bodyCy : normalized.bodyEn).trim();
+  const title = language === 'cy' ? normalized.titleCy : normalized.titleEn;
+  const body = language === 'cy' ? normalized.bodyCy : normalized.bodyEn;
+  return [title, body]
+    .map(part => part.trim())
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 export function hasSeenCollectionIntro(intro: Pick<CollectionIntro, 'seenKey'>) {
