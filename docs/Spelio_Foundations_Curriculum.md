@@ -540,7 +540,7 @@ The goal is confidence, not perfection.
 
 Mixed Confidence 2
 
-This review introduces longer words and a wider mixture of familiar spelling patterns.
+This review brings together the CH, LL, RH, and AE / AI patterns you’ve just practised.
 
 ## Words
 

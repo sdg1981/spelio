@@ -126,6 +126,20 @@ assertEqual(getFoundationsPrimer({
 const mixedPrimer = getFoundationsPrimer('foundation_patterns_mixed_confidence_1', 'en');
 assert(mixedPrimer, 'Mixed Confidence list should resolve primer body even without sound buttons.');
 assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons should expose an empty sound item list.');
+const mixedConfidence2Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'en');
+assert(mixedConfidence2Primer, 'Mixed Confidence 2 should resolve a primer body.');
+assertEqual(
+  mixedConfidence2Primer.body,
+  'This review brings together the CH, LL, RH, and AE / AI patterns you’ve just practised.',
+  'Mixed Confidence 2 English primer should stay pattern-focused.'
+);
+const mixedConfidence2PrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'cy');
+assert(mixedConfidence2PrimerCy, 'Mixed Confidence 2 should resolve a Welsh primer body.');
+assertEqual(
+  mixedConfidence2PrimerCy.body,
+  "Mae'r adolygiad hwn yn dod â'r patrymau CH, LL, RH ac AE / AI rydych chi newydd eu hymarfer ynghyd.",
+  'Mixed Confidence 2 Welsh primer should stay pattern-focused.'
+);
 
 assert(hasFoundationsPrimer('foundation_patterns_y'), 'Known Foundations list should report primer availability.');
 assertEqual(getFoundationsPrimer('foundations_first_words', 'en'), null, 'Lists without primerDrafts should not show a primer.');
