@@ -180,6 +180,20 @@ assertEqual(
   "Mae'r adolygiad hwn yn dod â'r patrymau U, C, G a TH vs DD rydych chi newydd eu hymarfer ynghyd.",
   'Mixed Confidence 4 Welsh primer should stay pattern-focused.'
 );
+const mixedConfidence5Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_5', 'en');
+assert(mixedConfidence5Primer, 'Mixed Confidence 5 should resolve a primer body.');
+assertEqual(
+  mixedConfidence5Primer.body,
+  "This final review brings together many of the Welsh spelling patterns you've practised throughout Foundations.\n\nUse it as an opportunity to recognise those patterns working together in real words.",
+  'Mixed Confidence 5 English primer should stay reflective and confidence-building.'
+);
+const mixedConfidence5PrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence_5', 'cy');
+assert(mixedConfidence5PrimerCy, 'Mixed Confidence 5 should resolve a Welsh primer body.');
+assertEqual(
+  mixedConfidence5PrimerCy.body,
+  "Mae'r adolygiad olaf hwn yn dod â llawer o'r patrymau sillafu Cymraeg rydych wedi'u hymarfer drwy gydol Sylfeini ynghyd.\n\nDefnyddiwch ef fel cyfle i adnabod y patrymau hynny'n gweithio gyda'i gilydd mewn geiriau go iawn.",
+  'Mixed Confidence 5 Welsh primer should stay reflective and confidence-building.'
+);
 
 assert(hasFoundationsPrimer('foundation_patterns_y'), 'Known Foundations list should report primer availability.');
 assertEqual(getFoundationsPrimer('foundations_first_words', 'en'), null, 'Lists without primerDrafts should not show a primer.');
