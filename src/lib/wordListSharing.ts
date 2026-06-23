@@ -1,4 +1,5 @@
 import type { WordList } from '../data/wordLists';
+import { getPublicOrigin } from './nativeOrigin';
 import type { SessionResult, SpelioStorage } from './practice/storage';
 
 export const WORD_LIST_ROUTE_PREFIX = '/list/';
@@ -48,7 +49,7 @@ export function getWordListCanonicalUrl(
   origin?: string,
   options: { practiceTest?: boolean } = {}
 ) {
-  const baseOrigin = (origin ?? (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/+$/, '');
+  const baseOrigin = getPublicOrigin(origin).replace(/\/+$/, '');
   return `${baseOrigin}${getWordListPath(list)}${options.practiceTest ? `?mode=${PRACTICE_TEST_MODE}` : ''}`;
 }
 

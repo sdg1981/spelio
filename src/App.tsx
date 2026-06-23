@@ -35,6 +35,7 @@ import { getFoundationsPrimer } from './content/foundationsPrimer';
 import { getCollectionIntroForPracticeStart, hasSeenCollectionIntro, WELSH_FOUNDATIONS_COLLECTION_ID } from './content/collectionIntro';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from './lib/audioProvider';
 import { createDefaultInterfaceAudioClips, createInterfaceAudioRegistry, type InterfaceAudioClipRegistry } from './lib/interfaceAudio';
+import { getPublicOrigin } from './lib/nativeOrigin';
 
 type Screen = PublicScreen;
 
@@ -1057,7 +1058,7 @@ export default function App() {
   return (
     <div className={publicAppClassName} data-theme={storage.settings.theme}>
       <PublicMetadata
-        origin={window.location.origin}
+        origin={getPublicOrigin()}
         pathname={window.location.pathname}
         search={window.location.search}
         interfaceLanguage={interfaceLanguage}

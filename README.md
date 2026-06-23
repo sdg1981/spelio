@@ -1,6 +1,6 @@
 # Spelio — Welsh spelling practice app
 
-React + TypeScript + Tailwind web app for Welsh spelling practice. Spelio is an installable PWA, with the Android Trusted Web Activity wrapper kept in `android/`.
+React + TypeScript + Tailwind web app for Welsh spelling practice. Spelio is an installable PWA, with the Android Trusted Web Activity wrapper kept in `android/` and the iOS Capacitor wrapper kept in `ios/`.
 
 ## Run
 
@@ -16,6 +16,14 @@ The Android wrapper for Google Play internal testing lives in `android/`.
 It is a minimal Trusted Web Activity for the existing PWA at `https://spelio.app` using package name `app.spelio.twa`. It does not add native login, sync, analytics, ads, subscriptions, push notifications, or native-only behaviour.
 
 See [android/README.md](android/README.md) for build, local testing, signing, Digital Asset Links, and Play Console steps.
+
+## iOS Capacitor App
+
+The iOS wrapper for App Store Connect/TestFlight submission lives in `ios/`.
+
+It is a minimal Capacitor app for the existing Spelio web build using bundle identifier `app.spelio.ios`. It does not add native login, analytics, push notifications, in-app purchases, or native-only behaviour.
+
+See [ios/README.md](ios/README.md) for build, sync, Xcode signing, archive, upload, and App Store review notes.
 
 ## Audio generation
 

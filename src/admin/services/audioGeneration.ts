@@ -10,7 +10,8 @@ import {
   createWelshSsml as createSharedWelshSsml,
   getAzureVoiceConfig
 } from '../../lib/azureSpeech';
-import { AZURE_TTS_ROUTE, createAzureTtsRequestPayload } from '../../lib/azureTtsRequest';
+import { createAzureTtsRequestPayload, getAzureTtsRoute } from '../../lib/azureTtsRequest';
+import { getApiUrl } from '../../lib/nativeOrigin';
 
 export {
   AZURE_WELSH_VOICE,
@@ -135,7 +136,7 @@ export async function synthesizeCollectionIntroAudioMp3(text: string, language: 
 }
 
 async function synthesizeAzureMp3(text: string, language: 'en' | 'cy', purpose: AzureTtsPurpose = 'default'): Promise<InterfaceAudioBlob> {
-  const response = await fetch(AZURE_TTS_ROUTE, {
+  const response = await fetch(getAzureTtsRoute(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -191,7 +192,7 @@ export async function transformAzureMp3WithElevenLabs(audioUrl: string): Promise
 }
 
 async function requestElevenLabsMp3(payload: { mode: ElevenLabsGenerationMode; text?: string; audioUrl?: string; extractChunkCount?: 1 | 2 | 3; extractStartOffsetMs?: 80 | 140 | 220 }): Promise<ElevenLabsAudioBlob> {
-  const response = await fetch('/api/elevenlabs-transform', {
+  const response = await fetch(getApiUrl('/api/elevenlabs-transform'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

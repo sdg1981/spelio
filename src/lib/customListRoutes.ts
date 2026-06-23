@@ -1,3 +1,5 @@
+import { getPublicOrigin } from './nativeOrigin';
+
 export const CUSTOM_LIST_ROUTE_PREFIX = '/custom/';
 
 export function getCustomListPath(publicId: string, options: { practiceTest?: boolean } = {}) {
@@ -9,12 +11,12 @@ export function getCustomListSharePath(publicId: string) {
 }
 
 export function getCustomListCanonicalUrl(publicId: string, origin?: string, options: { practiceTest?: boolean } = {}) {
-  const baseOrigin = (origin ?? (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/+$/, '');
+  const baseOrigin = getPublicOrigin(origin).replace(/\/+$/, '');
   return `${baseOrigin}${getCustomListPath(publicId, options)}`;
 }
 
 export function getCustomListShareUrl(publicId: string, origin?: string) {
-  const baseOrigin = (origin ?? (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/+$/, '');
+  const baseOrigin = getPublicOrigin(origin).replace(/\/+$/, '');
   return `${baseOrigin}${getCustomListSharePath(publicId)}`;
 }
 

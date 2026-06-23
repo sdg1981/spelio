@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Heart } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
+import { getApiUrl, getPublicOrigin } from '../lib/nativeOrigin';
 
 type FooterProps = {
   className?: string;
@@ -18,7 +19,7 @@ type ShareStatus = 'shared' | 'copied';
 export async function shareCurrentPublicPage(t: Translate, showShareStatus: (status: ShareStatus) => void) {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
 
-  const shareUrl = window.location.href;
+  const shareUrl = `${getPublicOrigin()}${window.location.pathname}${window.location.search}${window.location.hash}`;
   if (typeof navigator.share === 'function') {
     try {
       await navigator.share({
@@ -229,7 +230,7 @@ export function FeedbackFormContent({
     setState('sending');
 
     try {
-      const response = await fetch('/api/feedback', {
+      const response = await fetch(getApiUrl('/api/feedback'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

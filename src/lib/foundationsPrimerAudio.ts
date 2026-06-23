@@ -1,5 +1,5 @@
 import { getPlayableAudioUrl } from './audioPlayback';
-import { AZURE_TTS_ROUTE, createWelshAzureTtsRequestPayload } from './azureTtsRequest';
+import { createWelshAzureTtsRequestPayload, getAzureTtsRoute } from './azureTtsRequest';
 
 let currentPrimerAudio: HTMLAudioElement | null = null;
 const primerAudioCache = new Map<string, HTMLAudioElement>();
@@ -104,7 +104,7 @@ async function getCachedGeneratedPrimerAudio(text: string) {
 async function fetchGeneratedPrimerAudio(text: string) {
   if (typeof fetch !== 'function') return null;
 
-  const response = await fetch(AZURE_TTS_ROUTE, {
+  const response = await fetch(getAzureTtsRoute(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(createWelshAzureTtsRequestPayload(text))

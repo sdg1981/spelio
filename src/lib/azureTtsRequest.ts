@@ -1,7 +1,12 @@
 import type { AzureTtsPurpose } from './azureTtsLimits';
 import type { AzureSpeechLanguage } from './azureSpeech';
+import { getApiUrl } from './nativeOrigin';
 
 export const AZURE_TTS_ROUTE = '/api/azure-tts';
+
+export function getAzureTtsRoute() {
+  return getApiUrl(AZURE_TTS_ROUTE);
+}
 
 export type AzureTtsRequestPayload = {
   text: string;

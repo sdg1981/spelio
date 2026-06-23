@@ -27,6 +27,7 @@ import {
   type CustomListValidationError
 } from '../lib/customLists';
 import { saveRecentCustomList } from '../lib/customListRecent';
+import { getApiUrl } from '../lib/nativeOrigin';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { isPracticeTestShareMode } from '../lib/wordListSharing';
 
@@ -170,7 +171,7 @@ export function CustomListCreatePage({
     logCustomListEvent('custom_list_create_started');
 
     try {
-      const result = await fetch('/api/custom-lists', {
+      const result = await fetch(getApiUrl('/api/custom-lists'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

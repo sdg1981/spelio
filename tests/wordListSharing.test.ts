@@ -55,6 +55,12 @@ assertEqual(
 );
 
 assertEqual(
+  getWordListCanonicalUrl(firstVerbs, 'capacitor://localhost'),
+  'https://spelio.app/list/first-verbs-core-actions',
+  'Native iOS share URLs should use the public website origin.'
+);
+
+assertEqual(
   isPracticeTestShareMode('?mode=practice-test'),
   true,
   'Practice test share mode should be detected from the query string.'

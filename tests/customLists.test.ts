@@ -173,6 +173,7 @@ function recentReference(publicId: string, title: string, expiresAt = '2099-01-0
   const publicId = 'cl_testtoken1234567890';
   assertEqual(getCustomListPath(publicId), '/custom/cl_testtoken1234567890', 'Custom list paths should use the non-guessable public ID.');
   assertEqual(getCustomListCanonicalUrl(publicId, 'https://spelio.cymru', { practiceTest: true }), 'https://spelio.cymru/custom/cl_testtoken1234567890?mode=practice-test', 'Practice-test URLs should be query-scoped.');
+  assertEqual(getCustomListCanonicalUrl(publicId, 'capacitor://localhost'), 'https://spelio.app/custom/cl_testtoken1234567890', 'Native iOS custom-list URLs should use the public website origin.');
   assertEqual(getCustomPublicIdFromPath('/custom/cl_testtoken1234567890'), publicId, 'Public ID should parse from custom route.');
   assertEqual(isPracticeTestShareMode('?mode=practice-test'), true, 'Practice-test mode should be detected from query string.');
 }
