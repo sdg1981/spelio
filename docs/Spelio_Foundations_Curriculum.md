@@ -84,7 +84,7 @@ In the final syllable of a word — and often in one-syllable words — it more 
 
 * dynes — woman
 
-  * Useful note: Notice how Y behaves differently here.
+  * Useful note: Here, Y sounds different because it appears earlier in the word.
 
 * yma — here
 * yn — in
