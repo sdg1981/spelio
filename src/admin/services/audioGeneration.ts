@@ -1,13 +1,26 @@
 import type { AdminWord, AudioStatus, ElevenLabsGenerationMode } from '../types';
 import type { WordListPrimerSoundItem } from '../../data/wordLists';
 import type { AzureTtsPurpose } from '../../lib/azureTtsLimits';
+import {
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
+  AZURE_SPEECH_LOCALE,
+  AZURE_SPEECH_PROSODY_RATE,
+  AZURE_WELSH_VOICE,
+  createWelshSsml as createSharedWelshSsml,
+  getAzureVoiceConfig
+} from '../../lib/azureSpeech';
+import { AZURE_TTS_ROUTE, createAzureTtsRequestPayload } from '../../lib/azureTtsRequest';
 
-export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
-export const AZURE_SPEECH_LOCALE = 'cy-GB';
-export const AZURE_ENGLISH_VOICE = 'en-GB-SoniaNeural';
-export const AZURE_ENGLISH_SPEECH_LOCALE = 'en-GB';
+export {
+  AZURE_WELSH_VOICE,
+  AZURE_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_SPEECH_PROSODY_RATE
+} from '../../lib/azureSpeech';
+
 export const AZURE_MP3_OUTPUT_FORMAT = 'audio-16khz-32kbitrate-mono-mp3';
-export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const ELEVENLABS_DEFAULT_VOICE_NAME = 'Sam - Soft, Slightly Welsh and Friendly';
 export const FALLBACK_ELEVENLABS_DEFAULT_VOICE_ID = 'DikmR0aoFXAp1A3NcovW';
 export const ELEVENLABS_DIRECT_TTS_MODEL_ID = 'eleven_v3';
@@ -122,12 +135,12 @@ export async function synthesizeCollectionIntroAudioMp3(text: string, language: 
 }
 
 async function synthesizeAzureMp3(text: string, language: 'en' | 'cy', purpose: AzureTtsPurpose = 'default'): Promise<InterfaceAudioBlob> {
-  const response = await fetch('/api/azure-tts', {
+  const response = await fetch(AZURE_TTS_ROUTE, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ text, language, purpose })
+    body: JSON.stringify(createAzureTtsRequestPayload(text, language, purpose))
   });
 
   if (!response.ok) {
@@ -246,11 +259,11 @@ function readAzureLanguageHeader(value: string | null, fallback: 'en' | 'cy') {
 }
 
 function getFallbackAzureLocale(language: 'en' | 'cy') {
-  return language === 'en' ? AZURE_ENGLISH_SPEECH_LOCALE : AZURE_SPEECH_LOCALE;
+  return getAzureVoiceConfig(language).locale;
 }
 
 function getFallbackAzureVoice(language: 'en' | 'cy') {
-  return language === 'en' ? AZURE_ENGLISH_VOICE : AZURE_WELSH_VOICE;
+  return getAzureVoiceConfig(language).voice;
 }
 
 export function createAudioStoragePath(word: Pick<AdminWord, 'id' | 'listId'>) {
@@ -295,18 +308,7 @@ export function createMockAudioUrl(word: Pick<AdminWord, 'id'>) {
 }
 
 export function createWelshSsml(text: string) {
-  // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
-  const safeText = escapeXml(text.trim());
-  return `<speak version="1.0" xml:lang="${AZURE_SPEECH_LOCALE}"><voice xml:lang="${AZURE_SPEECH_LOCALE}" name="${AZURE_WELSH_VOICE}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${safeText}</prosody></voice></speak>`;
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+  return createSharedWelshSsml(text);
 }
 
 function slugify(value: string) {

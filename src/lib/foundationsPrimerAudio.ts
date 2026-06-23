@@ -1,7 +1,7 @@
 import { getPlayableAudioUrl } from './audioPlayback';
+import { AZURE_TTS_ROUTE, createWelshAzureTtsRequestPayload } from './azureTtsRequest';
 
 let currentPrimerAudio: HTMLAudioElement | null = null;
-let currentPrimerSpeech: SpeechSynthesisUtterance | null = null;
 const primerAudioCache = new Map<string, HTMLAudioElement>();
 const generatedPrimerAudioCache = new Map<string, { audio: HTMLAudioElement; objectUrl: string }>();
 const generatedPrimerAudioPromises = new Map<string, Promise<HTMLAudioElement | null>>();
@@ -54,12 +54,6 @@ export async function playPrimerSound(item: PrimerSoundPlaybackItem) {
   const text = getPrimerSoundText(item);
   if (!text) return false;
 
-  const speechPlayed = await playPrimerSpeech(text);
-  if (speechPlayed !== null) {
-    if (speechPlayed) return true;
-    logPrimerAudioDiagnostic('speech synthesis fallback failed', { text });
-  }
-
   const audio = await getCachedGeneratedPrimerAudio(text);
   return audio ? playPrimerAudioElement(audio) : false;
 }
@@ -110,10 +104,10 @@ async function getCachedGeneratedPrimerAudio(text: string) {
 async function fetchGeneratedPrimerAudio(text: string) {
   if (typeof fetch !== 'function') return null;
 
-  const response = await fetch('/api/azure-tts', {
+  const response = await fetch(AZURE_TTS_ROUTE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, language: 'cy' })
+    body: JSON.stringify(createWelshAzureTtsRequestPayload(text))
   });
 
   if (!response.ok) return null;
@@ -160,11 +154,6 @@ function stopCurrentPrimerAudio() {
     currentPrimerAudio.pause();
     currentPrimerAudio = null;
   }
-
-  if (currentPrimerSpeech) {
-    getPrimerSpeechSynthesis()?.cancel();
-    currentPrimerSpeech = null;
-  }
 }
 
 function getPrimerSoundText(item: PrimerSoundPlaybackItem) {
@@ -173,54 +162,4 @@ function getPrimerSoundText(item: PrimerSoundPlaybackItem) {
 
 function getGeneratedPrimerAudioCacheKey(text: string) {
   return text.trim().toLocaleLowerCase('cy');
-}
-
-function playPrimerSpeech(text: string): Promise<boolean> | null {
-  const synthesis = getPrimerSpeechSynthesis();
-  const Utterance = getPrimerSpeechUtteranceConstructor();
-  if (!synthesis || !Utterance) return null;
-
-  stopCurrentPrimerAudio();
-
-  const utterance = new Utterance(text);
-  utterance.lang = 'cy-GB';
-  utterance.rate = 0.9;
-  currentPrimerSpeech = utterance;
-
-  return new Promise(resolve => {
-    let settled = false;
-    let finishedTimer: ReturnType<typeof setTimeout> | null = null;
-    const settle = (played: boolean) => {
-      if (settled) return;
-      settled = true;
-      if (finishedTimer) clearTimeout(finishedTimer);
-      if (currentPrimerSpeech === utterance) currentPrimerSpeech = null;
-      resolve(played);
-    };
-
-    utterance.onend = () => settle(true);
-    utterance.onerror = () => settle(false);
-
-    try {
-      synthesis.cancel();
-      synthesis.speak(utterance);
-      finishedTimer = setTimeout(() => settle(true), 3000);
-    } catch (error) {
-      logPrimerAudioDiagnostic('speech synthesis speak threw', { text, error });
-      settle(false);
-    }
-  });
-}
-
-function getPrimerSpeechSynthesis() {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
-}
-
-function getPrimerSpeechUtteranceConstructor() {
-  return typeof SpeechSynthesisUtterance !== 'undefined' ? SpeechSynthesisUtterance : null;
-}
-
-function logPrimerAudioDiagnostic(message: string, details: Record<string, unknown>) {
-  if (typeof console === 'undefined') return;
-  console.warn(`[foundationsPrimerAudio] ${message}`, details);
 }

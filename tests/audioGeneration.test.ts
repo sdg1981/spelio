@@ -2,7 +2,9 @@ import {
   AUDIO_PIPELINE_VERSION,
   AZURE_ENGLISH_SPEECH_LOCALE,
   AZURE_ENGLISH_VOICE,
+  AZURE_SPEECH_LOCALE,
   AZURE_SPEECH_PROSODY_RATE,
+  AZURE_WELSH_VOICE,
   AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT,
   AZURE_TTS_AUTH_MODE,
   AzureSynthesisError,
@@ -12,6 +14,7 @@ import {
   handleAzureTtsRequest,
   synthesizeAzureWelshMp3BytesWithDiagnostics
 } from '../api/azure-tts.js';
+import { createWelshAzureTtsRequestPayload } from '../src/lib/azureTtsRequest';
 import {
   ELEVENLABS_DIRECT_TTS_MODEL_ID,
   ELEVENLABS_DIRECT_TTS_PROMPT,
@@ -286,6 +289,40 @@ async function runAsyncAssertions() {
   assert(requestedSsml.includes(`<prosody rate="${AZURE_SPEECH_PROSODY_RATE}">gwaith</prosody>`), 'Azure request should include subtle prosody rate SSML.');
   assert(postProcessCalled, 'The route should post-process Azure audio before returning it for upload.');
   assert(response.body instanceof Uint8Array && response.body[0] === 0x49, 'The route should send the processed MP3 bytes.');
+
+  let primerRequestedSsml = '';
+  const primerResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'POST', body: createWelshAzureTtsRequestPayload('lle') },
+    primerResponse,
+    {
+      env: {
+        AZURE_SPEECH_KEY: 'test-key',
+        AZURE_SPEECH_REGION: 'uksouth'
+      },
+      fetchImpl: async (_url, options) => {
+        primerRequestedSsml = options.body;
+        return {
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => makeAudioBuffer()
+        };
+      },
+      postProcess: async () => {
+        const mp3Bytes = new Uint8Array(128);
+        mp3Bytes[0] = 0x49;
+        mp3Bytes[1] = 0x44;
+        mp3Bytes[2] = 0x33;
+        return mp3Bytes;
+      },
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(primerResponse.headers['X-Spelio-Azure-Language'], 'cy', 'Primer generation should use the Welsh Azure route.');
+  assertEqual(primerResponse.headers['X-Spelio-Azure-Locale'], AZURE_SPEECH_LOCALE, 'Primer generation should use the shared Welsh Azure locale.');
+  assertEqual(primerResponse.headers['X-Spelio-Azure-Voice'], AZURE_WELSH_VOICE, 'Primer generation should use the shared Welsh Azure voice.');
+  assertEqual(primerRequestedSsml, createWelshSsml('lle'), 'Primer generation should use the same Welsh SSML as standard Welsh audio generation.');
 
   let englishRequestedSsml = '';
   const englishResponse = createResponse();

@@ -227,15 +227,6 @@ class MockAudio {
   }
 }
 
-class MockSpeechSynthesisUtterance {
-  lang = '';
-  onend: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  rate = 1;
-
-  constructor(public text: string) {}
-}
-
 async function runPrimerAudioTests() {
   const originalAudio = globalThis.Audio;
   const originalFetch = globalThis.fetch;
@@ -243,14 +234,14 @@ async function runPrimerAudioTests() {
   const originalRevokeObjectUrl = URL.revokeObjectURL;
   const originalLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
-  const originalSpeechSynthesis = Object.getOwnPropertyDescriptor(globalThis, 'speechSynthesis');
-  const originalSpeechSynthesisUtterance = Object.getOwnPropertyDescriptor(globalThis, 'SpeechSynthesisUtterance');
   let fetchCalls = 0;
+  const fetchBodies: unknown[] = [];
   let objectUrlCounter = 0;
 
   (globalThis as unknown as { Audio: typeof MockAudio }).Audio = MockAudio;
-  (globalThis as unknown as { fetch: typeof fetch }).fetch = async () => {
+  (globalThis as unknown as { fetch: typeof fetch }).fetch = async (_input, init) => {
     fetchCalls += 1;
+    fetchBodies.push(JSON.parse(String(init?.body ?? '{}')));
     return new Response(new Blob(['mock audio'], { type: 'audio/mpeg' }), { status: 200 });
   };
   URL.createObjectURL = () => `blob:primer-audio-${objectUrlCounter += 1}`;
@@ -319,44 +310,17 @@ async function runPrimerAudioTests() {
     const secondFallbackPlayback = await playPrimerSound(fallbackItem);
     assert(firstFallbackPlayback && secondFallbackPlayback, 'Primer audio should fall back to Azure TTS when no stored URL exists.');
     assertEqual(fetchCalls, 1, 'Azure TTS fallback should be preloaded once and reused across clicks for a missing stored URL.');
+    assertEqual(fetchBodies.length, 1, 'Primer Azure fallback should send exactly one generation request.');
+    assert(
+      typeof fetchBodies[0] === 'object' &&
+        fetchBodies[0] !== null &&
+        (fetchBodies[0] as { text?: unknown }).text === 'lle' &&
+        (fetchBodies[0] as { language?: unknown }).language === 'cy',
+      'Primer Azure fallback should request Welsh generation for the primer text.'
+    );
     assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one cached audio element across clicks.');
     assertEqual(MockAudio.instances[0].loadCalls, 1, 'Generated primer audio fallback should be loaded during preload.');
     assertEqual(MockAudio.instances[0].playCalls, 2, 'Generated primer audio fallback should replay the cached element on each click.');
-
-    clearPrimerAudioCacheForTests();
-    MockAudio.instances = [];
-    fetchCalls = 0;
-    const spokenItems: Array<{ text: string; lang: string; rate: number }> = [];
-    const mockSpeechSynthesis = {
-      cancelCalls: 0,
-      cancel() {
-        this.cancelCalls += 1;
-      },
-      speak(utterance: MockSpeechSynthesisUtterance) {
-        spokenItems.push({ text: utterance.text, lang: utterance.lang, rate: utterance.rate });
-        setTimeout(() => utterance.onend?.(), 0);
-      }
-    };
-    Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
-      configurable: true,
-      value: MockSpeechSynthesisUtterance
-    });
-    Object.defineProperty(globalThis, 'speechSynthesis', {
-      configurable: true,
-      value: mockSpeechSynthesis
-    });
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: { localStorage: mockLocalStorage, speechSynthesis: mockSpeechSynthesis }
-    });
-
-    const speechFallbackPlayback = await playPrimerSound({ textToSpeak: 'gwen', audioStatus: 'missing' });
-    assert(speechFallbackPlayback, 'Missing primer audio should use direct speech synthesis when available.');
-    assertEqual(fetchCalls, 0, 'Speech synthesis primer fallback should not wait for Azure TTS generation.');
-    assertEqual(MockAudio.instances.length, 0, 'Speech synthesis primer fallback should not create a generated blob audio element.');
-    assertEqual(spokenItems.length, 1, 'Speech synthesis primer fallback should speak once per click.');
-    assertEqual(spokenItems[0].text, 'gwen', 'Speech synthesis primer fallback should preserve the primer text.');
-    assertEqual(spokenItems[0].lang, 'cy-GB', 'Speech synthesis primer fallback should request a Welsh voice.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
@@ -365,10 +329,6 @@ async function runPrimerAudioTests() {
     else delete (globalThis as unknown as { localStorage?: unknown }).localStorage;
     if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
     else delete (globalThis as unknown as { window?: unknown }).window;
-    if (originalSpeechSynthesis) Object.defineProperty(globalThis, 'speechSynthesis', originalSpeechSynthesis);
-    else delete (globalThis as unknown as { speechSynthesis?: unknown }).speechSynthesis;
-    if (originalSpeechSynthesisUtterance) Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', originalSpeechSynthesisUtterance);
-    else delete (globalThis as unknown as { SpeechSynthesisUtterance?: unknown }).SpeechSynthesisUtterance;
     URL.createObjectURL = originalCreateObjectUrl;
     URL.revokeObjectURL = originalRevokeObjectUrl;
   }

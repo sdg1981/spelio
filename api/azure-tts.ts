@@ -20,17 +20,34 @@ declare const Buffer: {
 
 import { postProcessAzureWavToMp3 } from './audioPostProcessing.js';
 import { getAzureTtsTextLimit, normalizeAzureTtsPurpose, type AzureTtsPurpose } from '../src/lib/azureTtsLimits.js';
+import {
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
+  AZURE_SPEECH_LOCALE,
+  AZURE_SPEECH_PROSODY_RATE,
+  AZURE_WELSH_VOICE,
+  createAzureSsml,
+  getAzureVoiceConfig,
+  type AzureSpeechLanguage,
+  type AzureVoiceConfig
+} from '../src/lib/azureSpeech.js';
+
+export {
+  AZURE_ENGLISH_SPEECH_LOCALE,
+  AZURE_ENGLISH_VOICE,
+  AZURE_SPEECH_LOCALE,
+  AZURE_SPEECH_PROSODY_RATE,
+  AZURE_WELSH_VOICE,
+  createEnglishSsml,
+  createWelshSsml,
+  getAzureVoiceConfig
+} from '../src/lib/azureSpeech.js';
 
 console.info('audioPostProcessing helper loaded successfully', {
   helper: 'audioPostProcessing',
   importSpecifier: './audioPostProcessing.js'
 });
 
-export const AZURE_WELSH_VOICE = 'cy-GB-NiaNeural';
-export const AZURE_SPEECH_LOCALE = 'cy-GB';
-export const AZURE_ENGLISH_VOICE = 'en-GB-SoniaNeural';
-export const AZURE_ENGLISH_SPEECH_LOCALE = 'en-GB';
-export const AZURE_SPEECH_PROSODY_RATE = '-4%';
 export const AZURE_WAV_INTERMEDIATE_OUTPUT_FORMAT = 'riff-24khz-16bit-mono-pcm';
 export const AZURE_TTS_USER_AGENT = 'SpelioAudioGeneration';
 export const AUDIO_PIPELINE_VERSION = 'wav-24khz-ffmpeg-v2';
@@ -125,14 +142,6 @@ type HandlerDependencies = {
   postProcess?: (wavAudio: ArrayBuffer) => Promise<Uint8Array>;
   logError?: (message: string, details: Record<string, unknown>) => void;
   logInfo?: (message: string, details: Record<string, unknown>) => void;
-};
-
-type AzureSpeechLanguage = 'cy' | 'en';
-
-type AzureVoiceConfig = {
-  language: AzureSpeechLanguage;
-  locale: string;
-  voice: string;
 };
 
 type AzureSpeechConfig = {
@@ -488,35 +497,6 @@ function parseBody(body: unknown): { text?: unknown; language?: unknown; purpose
   return null;
 }
 
-export function createWelshSsml(text: string) {
-  // TODO: Add dialect-specific voice selection if Azure Welsh regional voices become practical.
-  return createAzureSsml(text, getAzureVoiceConfig('cy'));
-}
-
-export function createEnglishSsml(text: string) {
-  return createAzureSsml(text, getAzureVoiceConfig('en'));
-}
-
-function createAzureSsml(text: string, voiceConfig: AzureVoiceConfig) {
-  return `<speak version="1.0" xml:lang="${voiceConfig.locale}"><voice xml:lang="${voiceConfig.locale}" name="${voiceConfig.voice}"><prosody rate="${AZURE_SPEECH_PROSODY_RATE}">${escapeXml(text.trim())}</prosody></voice></speak>`;
-}
-
-function getAzureVoiceConfig(language: unknown): AzureVoiceConfig {
-  if (language === 'en') {
-    return {
-      language: 'en',
-      locale: AZURE_ENGLISH_SPEECH_LOCALE,
-      voice: AZURE_ENGLISH_VOICE
-    };
-  }
-
-  return {
-    language: 'cy',
-    locale: AZURE_SPEECH_LOCALE,
-    voice: AZURE_WELSH_VOICE
-  };
-}
-
 async function readAzureErrorBody(azureResponse: AzureFetchResponse) {
   if (!azureResponse.text) return '';
 
@@ -594,13 +574,4 @@ function sendJsonError(
     audioPipelineVersion: AUDIO_PIPELINE_VERSION,
     ...extra
   });
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
 }
