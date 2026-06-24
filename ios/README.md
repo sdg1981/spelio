@@ -80,5 +80,6 @@ Before submission, test on a real iPhone and confirm:
 - External share links point to `https://spelio.app`, not `capacitor://localhost`.
 - The app does not expose broken install-PWA prompts inside the native shell.
 - App Store metadata, screenshots, privacy answers, and review notes describe the educational spelling-practice functionality, not just the website wrapper.
+- App Store privacy answers match the published June 2026 declaration in [`docs/apple_app_store_privacy_declaration.md`](../docs/apple_app_store_privacy_declaration.md).
 
 Apple may reject apps that are merely repackaged websites or have insufficient native/app-like value. Spelio should be positioned and tested as an interactive Welsh spelling practice app with real learning content and a focused app flow.
