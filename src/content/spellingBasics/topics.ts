@@ -296,8 +296,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       examples: [
         { welsh: 'bach', meaning: { en: 'small', cy: 'bach' } },
-        { welsh: 'chwech', meaning: { en: 'six', cy: 'chwech' } },
-        { welsh: 'iechyd', meaning: { en: 'health', cy: 'iechyd' } }
+        { welsh: 'chwech', meaning: { en: 'six', cy: 'chwech' } }
       ]
     }
   },
