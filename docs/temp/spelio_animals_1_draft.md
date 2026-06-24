@@ -51,6 +51,8 @@ Horse, duck, sheep, chicken, fox, frog, owl, and tiger were difficult to place. 
 
 Bee and butterfly were included despite Moderate spelling load because they are highly recognisable and help the list avoid being dominated by mammals. Badger was included because it gives British wildlife a strong representative presence and introduces a transparent multi-word spelling pattern.
 
+This first draft revealed that Representative Role was over-weighted. The next revision should allow Animals 1 to lean more naturally toward highly expected learner and teacher vocabulary, even if that makes the list more farm- and wildlife-heavy.
+
 ### Possible Animals 2 Moves
 
 Mochyn daear, Gwenynen, Pili-pala, Malwen, Madfall, Brân, Alarch, Pysgodyn, and Llew may move to Animals 2 after further review if Animals 1 needs to become lighter overall. The current draft keeps them because Animals 1 should not feel like a list of only the shortest or easiest forms.

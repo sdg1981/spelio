@@ -159,6 +159,16 @@ Spelling-load classification is relative within the topic and is an editorial ai
 
 Representative Role helps editors balance lists so each Topic Collection feels varied, representative, and satisfying rather than simply sorted by spelling load.
 
+Representative Role is a balancing aid, not a primary selection driver. Selection weighting should normally be:
+
+1. Topic expectation / learner usefulness
+2. Spelling accessibility
+3. Representative balance
+
+Representative Role should prevent a list becoming too narrow, but it should not force every introductory list to include every subcategory. A Topic 1 list may be naturally weighted toward the most expected vocabulary if that better serves learners and teachers. Balance should improve the list, not make it feel artificial, and important expected words should not be excluded solely to satisfy category spread.
+
+A few moderate spelling-load words may belong in Topic 1 if they are central to the topic. For example, Animals 1 should probably include highly expected words such as horse, sheep, duck, and fox even if that makes the list more farm/wildlife-heavy, because those words better match learner and teacher expectations than a perfectly even spread across pets, farm animals, birds, insects, reptiles, sea life, and zoo animals.
+
 ---
 
 ## 9. Every List Should Feel Complete
