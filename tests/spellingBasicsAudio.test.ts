@@ -188,8 +188,8 @@ assert(
 );
 const rhTopic = getSpellingBasicsTopic('rh');
 assert(rhTopic?.kind === 'single', 'RH topic should be a single spelling-basics topic.');
-assertEqual(rhTopic.card.examples?.some(example => example.welsh === 'rhiain'), false, 'RH examples should not include obscure rhiain.');
-assertEqual(rhTopic.card.examples?.some(example => example.welsh === 'rhaid'), true, 'RH examples should use the more useful rhaid example.');
+assertEqual(rhTopic.card.examples?.map(example => example.welsh).join('|'), 'rhedeg|rhaid', 'RH examples should use the current public page examples.');
+assertEqual(rhTopic.card.examples?.map(example => example.meaning?.en).join('|'), 'to run|must', 'RH example meanings should match the current public page examples.');
 const chTopic = getSpellingBasicsTopic('ch');
 assert(chTopic?.kind === 'single', 'CH topic should be a single spelling-basics topic.');
 assertEqual(chTopic.card.examples?.map(example => example.welsh).join('|'), 'bach|chwech', 'CH examples should not include iechyd.');

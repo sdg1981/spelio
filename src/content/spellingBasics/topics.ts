@@ -327,8 +327,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         cy: 'Triniwch rh fel patrwm sain Cymraeg ei hun.'
       },
       examples: [
-        { welsh: 'rhydd', meaning: { en: 'free', cy: 'rhydd' } },
-        { welsh: 'rhyw', meaning: { en: 'some / kind', cy: 'rhyw' } },
+        { welsh: 'rhedeg', meaning: { en: 'to run', cy: 'rhedeg' } },
         { welsh: 'rhaid', meaning: { en: 'must', cy: 'rhaid' } }
       ]
     }
