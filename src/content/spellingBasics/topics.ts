@@ -360,11 +360,28 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           cy: 'Unwaith rydych chi’n dechrau clywed w fel llafariad, mae geiriau fel dŵr, cwm, twr, a sŵn yn dechrau gwneud mwy o synnwyr.'
         }
       ],
-      examples: [
-        { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } },
-        { welsh: 'cwm', meaning: { en: 'valley', cy: 'cwm' } },
-        { welsh: 'twr', meaning: { en: 'tower', cy: 'twr' } },
-        { welsh: 'sŵn', meaning: { en: 'sound', cy: 'sŵn' } }
+      exampleGroups: [
+        {
+          title: {
+            en: 'Listen to examples where W is used as a vowel',
+            cy: 'Gwrandewch ar enghreifftiau lle mae W yn llafariad'
+          },
+          examples: [
+            { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } },
+            { welsh: 'cwm', meaning: { en: 'valley', cy: 'cwm' } },
+            { welsh: 'twr', meaning: { en: 'tower', cy: 'twr' } },
+            { welsh: 'sŵn', meaning: { en: 'sound', cy: 'sŵn' } }
+          ]
+        },
+        {
+          title: {
+            en: 'Listen to an example where W comes before a vowel',
+            cy: 'Gwrandewch ar enghraifft lle mae W yn dod cyn llafariad'
+          },
+          examples: [
+            { welsh: 'gwên', meaning: { en: 'smile', cy: 'gwên' } }
+          ]
+        }
       ]
     }
   },

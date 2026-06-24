@@ -126,7 +126,27 @@ assertEqual(
 );
 const wTopic = getSpellingBasicsTopic('w');
 assert(wTopic?.kind === 'single', 'W topic should be a single spelling-basics topic.');
-assertEqual(wTopic.card.examples?.map(example => example.welsh).join('|'), 'dŵr|cwm|twr|sŵn', 'W examples should not include byw or bwrdd.');
+assertEqual(wTopic.card.examples, undefined, 'W topic should use grouped examples instead of the old flat list.');
+assertEqual(
+  wTopic.card.exampleGroups?.map(group => group.title.en).join('|'),
+  'Listen to examples where W is used as a vowel|Listen to an example where W comes before a vowel',
+  'W topic should split examples into the requested groups.'
+);
+assertEqual(
+  wTopic.card.exampleGroups?.map(group => group.title.cy).join('|'),
+  'Gwrandewch ar enghreifftiau lle mae W yn llafariad|Gwrandewch ar enghraifft lle mae W yn dod cyn llafariad',
+  'W topic should include the requested Welsh example group headings.'
+);
+assertEqual(
+  wTopic.card.exampleGroups?.map(group => group.examples.map(example => example.welsh).join(',')).join('|'),
+  'dŵr,cwm,twr,sŵn|gwên',
+  'W grouped examples should keep the W-as-vowel examples and add gwên.'
+);
+assertEqual(
+  wTopic.card.exampleGroups?.flatMap(group => group.examples).map(example => example.meaning?.en).join('|'),
+  'water|valley|tower|sound|smile',
+  'W grouped example meanings should match the public page copy.'
+);
 assertEqual(wTopic.card.body.some(copy => copy.en.includes('byw') || copy.en.includes('bwrdd') || copy.cy.includes('byw') || copy.cy.includes('bwrdd')), false, 'W explanatory copy should not reference removed examples.');
 const phoneticTopic = getSpellingBasicsTopic('phonetic');
 assert(phoneticTopic?.kind === 'single' && phoneticTopic.phoneticOrientation, 'Phonetic topic should expose sound anchors.');
@@ -297,6 +317,15 @@ const readySupportExamples = makeList({
       audioUrl: 'https://example.com/audio/foundations/ysgol.mp3',
       audioStatus: 'ready',
       order: 6
+    }),
+    makeWord({
+      id: 'foundation_patterns_accents_003',
+      listId: 'foundation_patterns_accents',
+      welshAnswer: 'gwên',
+      englishPrompt: 'smile',
+      audioUrl: 'https://example.com/audio/foundations/gwen-accent.mp3',
+      audioStatus: 'ready',
+      order: 3
     })
   ]
 });
@@ -334,6 +363,11 @@ assertEqual(
   resolveSpellingBasicsExampleAudio('ysgol', [readySupportExamples], 'support_y').audioUrl,
   'https://example.com/audio/foundations/ysgol.mp3',
   'Y page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('gwên', [readySupportExamples], 'support_w').audioUrl,
+  'https://example.com/audio/foundations/gwen-accent.mp3',
+  'W page examples should reuse existing generated word audio for gwên when support-list audio is not present.'
 );
 
 void runAsyncAssertions();
