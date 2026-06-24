@@ -174,15 +174,6 @@ Welsh uses different spelling patterns, not random spelling.
 
 ---
 
-### How Spelio helps you practise
-Purpose:
-Explain the recall/listening philosophy.
-
-Core message:
-Short focused practice improves confidence gradually.
-
----
-
 ## Welsh sounds
 
 ### ff
@@ -543,26 +534,7 @@ Welsh uses different spelling patterns, not “random” spelling.
 
 ---
 
-# 5.9 How Spelio helps you practise
-
-## Purpose
-
-Explain the product philosophy.
-
----
-
-## Key ideas
-
-- short focused sessions
-- listening first
-- recall before reveal
-- gradual reinforcement
-- difficult-word review
-- gentle recap
-
----
-
-# 5.10 Accents and long vowels
+# 5.9 Accents and long vowels
 
 ## Purpose
 
@@ -766,7 +738,6 @@ Recommended first public launch:
 ## Topics
 - Welsh is mostly phonetic
 - Why Welsh looks different from English
-- How Spelio helps you practise
 - ff
 - dd
 - ll

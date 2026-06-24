@@ -236,7 +236,6 @@ Recommended indexed pages:
 - `/spelling-basics`
 - `/spelling-basics/phonetic`
 - `/spelling-basics/why-welsh-looks-different`
-- `/spelling-basics/how-spelio-helps`
 - `/spelling-basics/ff`
 - `/spelling-basics/dd`
 - `/spelling-basics/ll`
@@ -266,7 +265,6 @@ Example metadata:
 | `/spelling-basics` | `Welsh spelling basics - Spelio` | `Simple Welsh spelling notes for adults, covering sounds, accents, and patterns that help with focused practice.` |
 | `/spelling-basics/phonetic` | `Welsh is mostly phonetic - Spelio` | `A short guide to why Welsh spelling is often more regular than it first looks, with sounds and examples for practice.` |
 | `/spelling-basics/why-welsh-looks-different` | `Why Welsh looks different from English - Spelio` | `A calm explanation of Welsh spelling patterns such as dd, ll, ch, rh, ff, w, and y.` |
-| `/spelling-basics/how-spelio-helps` | `How Spelio helps with Welsh spelling` | `How Spelio uses listening, recall, typing, and focused repetition to support Welsh spelling.` |
 | `/spelling-basics/ff` | `Welsh ff sound and spelling - Spelio` | `Learn how Welsh ff works, why it differs from single f, and practise recognising it in common Welsh words.` |
 | `/spelling-basics/dd` | `Welsh dd sound and spelling - Spelio` | `A short guide to the Welsh dd sound, with examples and focused spelling practice.` |
 | `/spelling-basics/ll` | `Welsh ll sound and spelling - Spelio` | `Learn to recognise the Welsh ll sound pattern in common words and practise spelling it with Spelio.` |

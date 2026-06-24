@@ -7,7 +7,6 @@ export type SpellingBasicsCategoryId = 'start' | 'sounds' | 'accents';
 export type SpellingBasicsTopicSlug =
   | 'phonetic'
   | 'why-welsh-looks-different'
-  | 'how-spelio-helps'
   | 'ff'
   | 'dd'
   | 'll'
@@ -17,7 +16,7 @@ export type SpellingBasicsTopicSlug =
   | 'y'
   | 'accents';
 
-export type SpellingBasicsIconKey = 'ear' | 'book' | 'lightbulb';
+export type SpellingBasicsIconKey = 'ear' | 'book';
 
 export type SpellingBasicsExample = {
   welsh: string;

@@ -80,7 +80,6 @@ const staticPages: Record<string, { title: string; description: string; robots?:
 const spellingBasicsDescriptions: Record<string, string> = {
   phonetic: 'A short guide to why Welsh spelling is often more regular than it first looks, with sounds and examples for practice.',
   'why-welsh-looks-different': 'A calm explanation of Welsh spelling patterns such as dd, ll, ch, rh, ff, w, and y.',
-  'how-spelio-helps': 'How Spelio uses listening, recall, typing, and focused repetition to support Welsh spelling.',
   ff: 'Learn how Welsh ff works, why it differs from single f, and practise recognising it in common Welsh words.',
   dd: 'A short guide to the Welsh dd sound, with examples and focused spelling practice.',
   ll: 'Learn to recognise the Welsh ll sound pattern in common words and practise spelling it with Spelio.',
@@ -94,7 +93,6 @@ const spellingBasicsDescriptions: Record<string, string> = {
 const spellingBasicsWelshDescriptions: Record<string, string> = {
   phonetic: 'Nodyn byr ar pam mae sillafu Cymraeg yn aml yn fwy rheolaidd nag y mae’n edrych ar y dechrau.',
   'why-welsh-looks-different': 'Esboniad tawel o batrymau sillafu Cymraeg fel dd, ll, ch, rh, ff, w, ac y.',
-  'how-spelio-helps': 'Sut mae Spelio yn defnyddio gwrando, cofio, teipio, ac ailadrodd ffocysedig i gefnogi sillafu Cymraeg.',
   ff: 'Dysgwch sut mae ff yn gweithio yn Gymraeg, a sut i’w adnabod mewn geiriau cyffredin.',
   dd: 'Nodyn byr ar y sain dd Gymraeg, gydag enghreifftiau ac ymarfer sillafu ffocysedig.',
   ll: 'Dysgwch adnabod y patrwm ll mewn geiriau Cymraeg cyffredin.',
@@ -279,7 +277,6 @@ function getSpellingBasicsTitle(topic: SpellingBasicsTopic, language: InterfaceL
   const localizedTitle = topic.overviewTitle[language] ?? topic.overviewTitle.en;
   if (language === 'cy') return `${localizedTitle} - ${SITE_NAME}`;
 
-  if (topic.slug === 'how-spelio-helps') return `How Spelio helps with Welsh spelling`;
   if (topic.slug === 'w') return `Welsh w as a vowel - ${SITE_NAME}`;
   if (topic.slug === 'y') return `Welsh y as a vowel - ${SITE_NAME}`;
   if (topic.symbol && topic.slug !== 'accents') return `Welsh ${topic.symbol} sound and spelling - ${SITE_NAME}`;

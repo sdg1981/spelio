@@ -39,8 +39,7 @@ type IconComponent = ComponentType<{ size?: number; strokeWidth?: number; 'aria-
 
 const iconMap: Record<SpellingBasicsIconKey, IconComponent> = {
   ear: Ear,
-  book: BookOpen,
-  lightbulb: Lightbulb
+  book: BookOpen
 };
 
 function localize(value: LocalizedString, language: InterfaceLanguage) {

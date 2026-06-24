@@ -7,7 +7,7 @@ export const spellingBasicsCategories: SpellingBasicsCategory[] = [
       en: 'Start here',
       cy: 'Dechrau yma'
     },
-    topicSlugs: ['phonetic', 'why-welsh-looks-different', 'how-spelio-helps']
+    topicSlugs: ['phonetic', 'why-welsh-looks-different']
   },
   {
     id: 'sounds',
@@ -140,36 +140,6 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         { welsh: 'chwech', meaning: { en: 'six', cy: 'chwech' } },
         { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } }
       ]
-    }
-  },
-  {
-    slug: 'how-spelio-helps',
-    categoryId: 'start',
-    kind: 'single',
-    iconKey: 'lightbulb',
-    overviewTitle: {
-      en: 'How Spelio helps you practise',
-      cy: 'Sut mae Spelio yn eich helpu i ymarfer'
-    },
-    card: {
-      subtitle: {
-        en: 'Short sessions that build recall.',
-        cy: 'Sesiynau byr sy’n meithrin cofio.'
-      },
-      body: [
-        {
-          en: 'Spelio helps you hear a Welsh word, recall the spelling, and type it carefully. The aim is not to rush, but to build confidence through focused repetition.',
-          cy: 'Mae Spelio yn eich helpu i glywed gair Cymraeg, cofio’r sillafiad, a’i deipio’n ofalus. Nid rhuthro yw’r nod, ond meithrin hyder drwy ailadrodd ffocysedig.'
-        },
-        {
-          en: 'Difficult words quietly return later, giving you another calm chance to practise them.',
-          cy: 'Mae geiriau anodd yn dod yn ôl yn dawel yn nes ymlaen, gan roi cyfle tawel arall i chi eu hymarfer.'
-        }
-      ],
-      tip: {
-        en: 'Listening first helps connect the sound of Welsh with the written form.',
-        cy: 'Mae gwrando yn gyntaf yn helpu i gysylltu sain y Gymraeg â’r ffurf ysgrifenedig.'
-      }
     }
   },
   {

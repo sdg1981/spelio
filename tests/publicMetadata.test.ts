@@ -140,3 +140,16 @@ assertEqual(
   'https://spelio.app/spelling-basics/not-a-topic',
   'Invalid spelling basics topic routes should keep a deterministic non-homepage canonical.'
 );
+
+const removedSpellingBasicsTopic = resolvePublicMetadata({
+  origin,
+  pathname: '/spelling-basics/how-spelio-helps',
+  interfaceLanguage: 'en',
+  wordLists
+});
+assertEqual(removedSpellingBasicsTopic.robots, 'noindex, follow', 'Removed spelling basics topic routes should be noindex.');
+assertEqual(
+  removedSpellingBasicsTopic.canonicalUrl,
+  'https://spelio.app/spelling-basics/how-spelio-helps',
+  'Removed spelling basics topic routes should not canonicalise to an active topic.'
+);

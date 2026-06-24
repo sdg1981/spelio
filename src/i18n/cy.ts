@@ -182,7 +182,6 @@ export const cy = {
       accentsHeading: 'Acenion',
       mostlyPhonetic: 'Mae Cymraeg yn weddol ffonetig',
       looksDifferent: 'Pam mae Cymraeg yn edrych yn wahanol i Saesneg',
-      howSpelioHelps: 'Sut mae Spelio yn eich helpu i ymarfer',
       accentsTitle: 'Acenion a llafariaid hir',
       accentsBody: 'Pam mae’r marciau bach yn bwysig',
       accentsCount: '2 gerdyn cyflym',

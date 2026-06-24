@@ -129,7 +129,6 @@ Examples:
 
 - Welsh is mostly phonetic
 - Why Welsh looks different from English
-- How Spelio helps you practise
 
 ---
 

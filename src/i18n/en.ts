@@ -182,7 +182,6 @@ export const en = {
       accentsHeading: 'Accents',
       mostlyPhonetic: 'Welsh is mostly phonetic',
       looksDifferent: 'Why Welsh looks different from English',
-      howSpelioHelps: 'How Spelio helps you practise',
       accentsTitle: 'Accents and long vowels',
       accentsBody: 'Why the little marks matter',
       accentsCount: '2 quick cards',

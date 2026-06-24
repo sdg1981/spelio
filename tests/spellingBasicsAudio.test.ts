@@ -102,6 +102,11 @@ assertEqual(
 assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/w'), 'w', 'W as a vowel should have a spelling basics route.');
 assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/y'), 'y', 'Y as a vowel should have a spelling basics route.');
 assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/wy'), 'w', 'The old wy route should resolve to the W topic for compatibility.');
+assertEqual(getSpellingBasicsTopicSlugFromPath('/spelling-basics/how-spelio-helps'), null, 'Removed How Spelio Helps topic should not resolve as a spelling basics route.');
+assertEqual(getSpellingBasicsTopic('how-spelio-helps'), null, 'Removed How Spelio Helps topic should not exist in the topic registry.');
+const startCategory = spellingBasicsCategories.find(category => category.id === 'start');
+assert(startCategory, 'Spelling basics should have a start category.');
+assertEqual(startCategory.topicSlugs.join('|'), 'phonetic|why-welsh-looks-different', 'Start here should only include the two remaining educational topics.');
 const soundCategory = spellingBasicsCategories.find(category => category.id === 'sounds');
 assert(soundCategory, 'Spelling basics should have a Welsh sounds category.');
 assertEqual(soundCategory.topicSlugs.includes('w'), true, 'Overview should include a separate w tile.');
