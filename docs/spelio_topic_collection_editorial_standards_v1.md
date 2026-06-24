@@ -135,7 +135,21 @@ Most Common lists should complement Topic 1-3 rather than replace them.
 
 ---
 
-## 8. Every List Should Feel Complete
+## 8. Practical Collection Workflow
+
+When creating a new Topic Collection, use a staged editorial workflow:
+
+1. Generate a broad vocabulary pool.
+2. Add Welsh forms and notes.
+3. Classify each candidate by spelling load.
+4. Mark editorial status.
+5. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
+
+Spelling-load classification is an editorial aid, not a rigid formula. It helps editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
+
+---
+
+## 9. Every List Should Feel Complete
 
 Every Topic Collection should feel satisfying on its own.
 
@@ -145,7 +159,7 @@ Each list should contain a balanced and representative selection that provides g
 
 ---
 
-## 9. Spelling Progression
+## 10. Spelling Progression
 
 Spelling progression may consider factors such as:
 
@@ -163,7 +177,7 @@ A common word may be difficult to spell. An uncommon word may be easy to spell. 
 
 ---
 
-## 10. Spelling Load
+## 11. Spelling Load
 
 Spelling load is an editorial judgement, not a strict numerical score.
 
@@ -184,7 +198,7 @@ Editors should balance spelling complexity with usefulness, recognisability, top
 
 ---
 
-## 11. Topic Integrity
+## 12. Topic Integrity
 
 Every word should belong naturally inside its topic.
 
@@ -194,7 +208,7 @@ A learner should immediately understand why every word belongs in the collection
 
 ---
 
-## 12. Audience
+## 13. Audience
 
 Topic Collections are primarily designed for adult learners.
 
@@ -211,7 +225,7 @@ Child-friendly vocabulary is acceptable when it genuinely belongs to the topic, 
 
 ---
 
-## 13. Teacher Usefulness
+## 14. Teacher Usefulness
 
 A teacher should be able to understand why a list exists, when to assign it, and how it differs from the neighbouring lists.
 
@@ -226,7 +240,7 @@ Useful teacher-facing questions include:
 
 ---
 
-## 14. Future Expansion
+## 15. Future Expansion
 
 Future expansion should normally favour meaningful specialist collections rather than endless numbered lists.
 
@@ -246,7 +260,7 @@ However, Topic 4 or Topic 5 may still be appropriate where educationally justifi
 
 ---
 
-## 15. Editorial Review Questions
+## 16. Editorial Review Questions
 
 Before approving any Topic Collection, ask:
 
@@ -261,7 +275,7 @@ Before approving any Topic Collection, ask:
 
 ---
 
-## 16. Editorial Flexibility
+## 17. Editorial Flexibility
 
 These standards guide editorial judgement rather than replace it.
 
@@ -269,7 +283,7 @@ They should not be treated as a rigid scoring system. Future contributors should
 
 ---
 
-## 17. Final Editorial Principle
+## 18. Final Editorial Principle
 
 The goal is not to create the largest Welsh vocabulary catalogue.
 
