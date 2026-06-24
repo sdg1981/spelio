@@ -4782,9 +4782,18 @@
     margin-top:24px;
   }
 
+  .practice-app .letter-input-tap-zone.first-practice-hint-active{
+    margin-top:clamp(68px, 10svh, 86px);
+  }
+
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
     margin-top:24px;
+  }
+
+  .practice-app .dialect-label + .letter-input-tap-zone.first-practice-hint-active,
+  .practice-app .word-insight + .letter-input-tap-zone.first-practice-hint-active{
+    margin-top:clamp(68px, 10svh, 86px);
   }
 
   .practice-app .letter-grid,
@@ -4929,9 +4938,18 @@
     margin-top:20px;
   }
 
+  .practice-app .letter-input-tap-zone.first-practice-hint-active{
+    margin-top:clamp(58px, 9svh, 72px);
+  }
+
   .practice-app .dialect-label + .letter-input-tap-zone,
   .practice-app .word-insight + .letter-input-tap-zone{
     margin-top:20px;
+  }
+
+  .practice-app .dialect-label + .letter-input-tap-zone.first-practice-hint-active,
+  .practice-app .word-insight + .letter-input-tap-zone.first-practice-hint-active{
+    margin-top:clamp(58px, 9svh, 72px);
   }
 
   .practice-app .letter-grid{

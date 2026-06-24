@@ -1421,7 +1421,7 @@ export function Practice({
 
         <div
           onClick={shouldShowCustomKeyboard ? undefined : focusMobileInput}
-          className="letter-input-tap-zone"
+          className={`letter-input-tap-zone ${firstPracticeHintVisible ? 'first-practice-hint-active' : ''}`.trim()}
         >
           <FirstPracticeHint
             visible={firstPracticeHintVisible}
