@@ -24,6 +24,11 @@ export type SpellingBasicsExample = {
   meaning?: LocalizedString;
 };
 
+export type SpellingBasicsExampleGroup = {
+  title: LocalizedString;
+  examples: SpellingBasicsExample[];
+};
+
 export type SpellingBasicsTopicCard = {
   title?: LocalizedString;
   subtitle?: LocalizedString;
@@ -33,6 +38,7 @@ export type SpellingBasicsTopicCard = {
     body: LocalizedString[];
   };
   examples?: SpellingBasicsExample[];
+  exampleGroups?: SpellingBasicsExampleGroup[];
   tip?: LocalizedString;
 };
 

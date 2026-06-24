@@ -382,47 +382,43 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       body: [
         {
-          en: 'Welsh y often works as a vowel, but its sound can change depending on the word.',
-          cy: 'Mae y Gymraeg yn aml yn gweithio fel llafariad, ond gall ei sain newid yn ôl y gair.'
+          en: 'The letter Y can make different sounds in Welsh.',
+          cy: 'Gall y llythyren y wneud synau gwahanol yn Gymraeg.'
         },
         {
-          en: 'It can sound a little like the “ee” in English words like see, or softer like the “u” in English words like up.',
-          cy: 'Gall swnio ychydig fel yr “ee” mewn geiriau Saesneg fel see, neu’n feddalach fel yr “u” mewn geiriau Saesneg fel up.'
+          en: 'Earlier in a word, it often sounds a little like the “u” in the English word cut.',
+          cy: 'Yn gynharach mewn gair, mae’n aml yn swnio ychydig fel yr “u” yn y gair Saesneg cut.'
         },
         {
-          en: 'That can feel unfamiliar at first, because English readers are not used to y behaving this way.',
-          cy: 'Gall hynny deimlo’n anghyfarwydd ar y dechrau, oherwydd nid yw darllenwyr Saesneg wedi arfer â y yn ymddwyn fel hyn.'
-        },
-        {
-          en: 'Once you start noticing y in words like tŷ, dydd, mynydd, and llyfr, Welsh spelling starts to feel more predictable.',
-          cy: 'Unwaith rydych chi’n dechrau sylwi ar y mewn geiriau fel tŷ, dydd, mynydd, a llyfr, mae sillafu Cymraeg yn dechrau teimlo’n fwy rhagweladwy.'
+          en: 'In the final syllable of a word — and often in one-syllable words — it more commonly sounds like the “ee” in the English word beet.',
+          cy: 'Yn sillaf olaf gair — ac yn aml mewn geiriau un sillaf — mae’n amlach yn swnio fel yr “ee” yn y gair Saesneg beet.'
         }
       ],
-      observation: {
-        title: {
-          en: 'Helpful pattern to notice:',
-          cy: 'Patrwm defnyddiol i sylwi arno:'
-        },
-        body: [
-          {
-            en: 'Y near the end of short words often sounds more like “ee”.',
-            cy: 'Mae y ger diwedd geiriau byr yn aml yn swnio’n fwy fel “ee”.'
-          },
-          {
-            en: 'Earlier in longer words it is often softer.',
-            cy: 'Mewn geiriau hirach, mae’n aml yn swnio’n feddalach.'
-          }
-        ]
-      },
       tip: {
         en: 'Welsh y is worth noticing carefully because it appears in many common words.',
         cy: 'Mae y Gymraeg yn werth sylwi arni’n ofalus oherwydd mae’n ymddangos mewn llawer o eiriau cyffredin.'
       },
-      examples: [
-        { welsh: 'tŷ', meaning: { en: 'house', cy: 'tŷ' } },
-        { welsh: 'dydd', meaning: { en: 'day', cy: 'dydd' } },
-        { welsh: 'mynydd', meaning: { en: 'mountain', cy: 'mynydd' } },
-        { welsh: 'llyfr', meaning: { en: 'book', cy: 'llyfr' } }
+      exampleGroups: [
+        {
+          title: {
+            en: 'Listen to examples where Y is final or one syllable',
+            cy: 'Gwrandewch ar enghreifftiau lle mae y ar y diwedd neu mewn gair un sillaf'
+          },
+          examples: [
+            { welsh: 'tŷ', meaning: { en: 'house', cy: 'tŷ' } },
+            { welsh: 'dyn', meaning: { en: 'man', cy: 'dyn' } }
+          ]
+        },
+        {
+          title: {
+            en: 'Listen to examples where Y is earlier in the word',
+            cy: 'Gwrandewch ar enghreifftiau lle mae y yn gynharach yn y gair'
+          },
+          examples: [
+            { welsh: 'yma', meaning: { en: 'here', cy: 'yma' } },
+            { welsh: 'ysgol', meaning: { en: 'school', cy: 'ysgol' } }
+          ]
+        }
       ]
     }
   },

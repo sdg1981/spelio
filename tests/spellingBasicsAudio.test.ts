@@ -166,12 +166,34 @@ assert(llTopic?.kind === 'single', 'LL topic should be a single spelling-basics 
 assertEqual(llTopic.card.examples?.map(example => example.welsh).join('|'), 'lle|llaw', 'LL examples should not include llyfr.');
 const yTopic = getSpellingBasicsTopic('y');
 assert(yTopic?.kind === 'single', 'Y topic should be a single spelling-basics topic.');
-assertEqual(yTopic.card.observation?.title.en, 'Helpful pattern to notice:', 'Y topic should include a lightweight observation heading.');
-assertEqual(yTopic.card.observation?.body.map(copy => copy.en).join('|'), 'Y near the end of short words often sounds more like “ee”.|Earlier in longer words it is often softer.', 'Y topic observation should give a practical non-technical clue.');
-assertEqual(yTopic.card.observation?.title.cy, 'Patrwm defnyddiol i sylwi arno:', 'Y topic should include the Welsh observation heading.');
-assertEqual(yTopic.card.observation?.body.map(copy => copy.cy).join('|'), 'Mae y ger diwedd geiriau byr yn aml yn swnio’n fwy fel “ee”.|Mewn geiriau hirach, mae’n aml yn swnio’n feddalach.', 'Y topic observation should include the Welsh wording.');
-assertEqual(yTopic.card.examples?.map(example => example.welsh).join('|'), 'tŷ|dydd|mynydd|llyfr', 'Y topic examples should remain unchanged.');
-assertEqual(spellingBasicsTopics.filter(topic => topic.kind === 'single' && topic.card.observation).map(topic => topic.slug).join('|'), 'y', 'Only the Y page should gain the new observation block.');
+assertEqual(
+  yTopic.card.body.map(copy => copy.en).join('|'),
+  'The letter Y can make different sounds in Welsh.|Earlier in a word, it often sounds a little like the “u” in the English word cut.|In the final syllable of a word — and often in one-syllable words — it more commonly sounds like the “ee” in the English word beet.',
+  'Y topic should use the concise primer-style English explanation.'
+);
+assertEqual(
+  yTopic.card.body.some(copy => copy.en.includes('tŷ, dydd, mynydd') || copy.en.includes('llyfr')),
+  false,
+  'Y topic explanation should not reference the removed examples.'
+);
+assertEqual(yTopic.card.observation, undefined, 'Y topic should not keep the older observation block.');
+assertEqual(yTopic.card.examples, undefined, 'Y topic should use grouped examples instead of the old flat list.');
+assertEqual(
+  yTopic.card.exampleGroups?.map(group => group.title.en).join('|'),
+  'Listen to examples where Y is final or one syllable|Listen to examples where Y is earlier in the word',
+  'Y topic should split examples into the requested groups.'
+);
+assertEqual(
+  yTopic.card.exampleGroups?.map(group => group.examples.map(example => example.welsh).join(',')).join('|'),
+  'tŷ,dyn|yma,ysgol',
+  'Y grouped examples should match the requested Y examples.'
+);
+assertEqual(
+  yTopic.card.exampleGroups?.flatMap(group => group.examples).some(example => ['dydd', 'mynydd', 'llyfr'].includes(example.welsh)),
+  false,
+  'Y grouped examples should not include removed examples.'
+);
+assertEqual(spellingBasicsTopics.filter(topic => topic.kind === 'single' && topic.card.observation).map(topic => topic.slug).join('|'), '', 'Single spelling-basics topics should not keep the older observation block.');
 
 const supportResolution = resolveSpellingBasicsExampleAudio('ffrwyth', [normalList, supportList], 'support_ff');
 assertEqual(supportResolution.word?.id, 'support_ff_006', 'Support topic examples should resolve through the support-list word first.');
@@ -223,6 +245,42 @@ const readySupportExamples = makeList({
       audioUrl: 'https://example.com/audio/foundations/meddal.mp3',
       audioStatus: 'ready',
       order: 8
+    }),
+    makeWord({
+      id: 'foundation_patterns_y_001',
+      listId: 'foundation_patterns_y',
+      welshAnswer: 'tŷ',
+      englishPrompt: 'house',
+      audioUrl: 'https://example.com/audio/foundations/ty.mp3',
+      audioStatus: 'ready',
+      order: 1
+    }),
+    makeWord({
+      id: 'foundation_patterns_y_002',
+      listId: 'foundation_patterns_y',
+      welshAnswer: 'dyn',
+      englishPrompt: 'man',
+      audioUrl: 'https://example.com/audio/foundations/dyn.mp3',
+      audioStatus: 'ready',
+      order: 2
+    }),
+    makeWord({
+      id: 'foundation_patterns_y_004',
+      listId: 'foundation_patterns_y',
+      welshAnswer: 'yma',
+      englishPrompt: 'here',
+      audioUrl: 'https://example.com/audio/foundations/yma.mp3',
+      audioStatus: 'ready',
+      order: 4
+    }),
+    makeWord({
+      id: 'foundation_patterns_y_006',
+      listId: 'foundation_patterns_y',
+      welshAnswer: 'ysgol',
+      englishPrompt: 'school',
+      audioUrl: 'https://example.com/audio/foundations/ysgol.mp3',
+      audioStatus: 'ready',
+      order: 6
     })
   ]
 });
@@ -240,6 +298,26 @@ assertEqual(
   resolveSpellingBasicsExampleAudio('meddal', [readySupportExamples], 'support_dd').audioUrl,
   'https://example.com/audio/foundations/meddal.mp3',
   'DD page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('tŷ', [readySupportExamples], 'support_y').audioUrl,
+  'https://example.com/audio/foundations/ty.mp3',
+  'Y page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('dyn', [readySupportExamples], 'support_y').audioUrl,
+  'https://example.com/audio/foundations/dyn.mp3',
+  'Y page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('yma', [readySupportExamples], 'support_y').audioUrl,
+  'https://example.com/audio/foundations/yma.mp3',
+  'Y page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('ysgol', [readySupportExamples], 'support_y').audioUrl,
+  'https://example.com/audio/foundations/ysgol.mp3',
+  'Y page examples should reuse existing generated word audio when support-list audio is not present.'
 );
 
 void runAsyncAssertions();

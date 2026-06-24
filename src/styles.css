@@ -2934,6 +2934,22 @@
   margin-top:18px;
 }
 
+.spelling-basics-example-group{
+  margin-top:22px;
+}
+
+.spelling-basics-example-group h3{
+  margin:0;
+  color:var(--text-primary, #071522);
+  font-size:16px;
+  font-weight:850;
+  line-height:1.35;
+}
+
+.spelling-basics-example-group .spelling-basics-example-list{
+  margin-top:10px;
+}
+
 .spelling-basics-example-row{
   display:grid;
   grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) auto;

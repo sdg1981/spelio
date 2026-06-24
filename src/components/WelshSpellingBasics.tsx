@@ -6,6 +6,7 @@ import {
   spellingBasicsCategories,
   spellingBasicsTopics,
   type LocalizedString,
+  type SpellingBasicsExample,
   type SpellingBasicsIconKey,
   type SpellingBasicsPhoneticOrientation,
   type SpellingBasicsTopic,
@@ -322,6 +323,25 @@ function TopicCardContent({
   wordLists: WordList[];
   t: Translate;
 }) {
+  const renderExample = (example: SpellingBasicsExample) => {
+    const showMeaning = interfaceLanguage !== 'cy' && Boolean(example.meaning);
+    const audio = resolveSpellingBasicsExampleAudio(example.welsh, wordLists, preferredPracticeListId);
+
+    return (
+      <div className={`spelling-basics-example-row ${showMeaning ? '' : 'no-meaning'}`} key={example.welsh}>
+        <strong>{example.welsh}</strong>
+        {showMeaning && example.meaning && <span>{localize(example.meaning, interfaceLanguage)}</span>}
+        <SpellingBasicsAudioButton
+          audio={audio}
+          interfaceLanguage={interfaceLanguage}
+          labelWord={example.welsh}
+          size={23}
+          t={t}
+        />
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="spelling-basics-topic-body">
@@ -340,29 +360,22 @@ function TopicCardContent({
         )}
       </div>
 
-      {card.examples && card.examples.length > 0 && (
+      {((card.examples && card.examples.length > 0) || (card.exampleGroups && card.exampleGroups.length > 0)) && (
         <section className="spelling-basics-examples-card" aria-labelledby="spelling-basics-topic-examples">
           <h2 id="spelling-basics-topic-examples">{t('spellingBasics.topic.examplesHeading')}</h2>
-          <div className="spelling-basics-example-list">
-            {card.examples.map(example => {
-              const showMeaning = interfaceLanguage !== 'cy' && Boolean(example.meaning);
-              const audio = resolveSpellingBasicsExampleAudio(example.welsh, wordLists, preferredPracticeListId);
-
-              return (
-                <div className={`spelling-basics-example-row ${showMeaning ? '' : 'no-meaning'}`} key={example.welsh}>
-                  <strong>{example.welsh}</strong>
-                  {showMeaning && example.meaning && <span>{localize(example.meaning, interfaceLanguage)}</span>}
-                  <SpellingBasicsAudioButton
-                    audio={audio}
-                    interfaceLanguage={interfaceLanguage}
-                    labelWord={example.welsh}
-                    size={23}
-                    t={t}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          {card.examples && card.examples.length > 0 && (
+            <div className="spelling-basics-example-list">
+              {card.examples.map(renderExample)}
+            </div>
+          )}
+          {card.exampleGroups?.map(group => (
+            <div className="spelling-basics-example-group" key={group.title.en}>
+              <h3>{localize(group.title, interfaceLanguage)}</h3>
+              <div className="spelling-basics-example-list">
+                {group.examples.map(renderExample)}
+              </div>
+            </div>
+          ))}
         </section>
       )}
 

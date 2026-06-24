@@ -7,6 +7,7 @@ export type {
   SpellingBasicsCategory,
   SpellingBasicsCategoryId,
   SpellingBasicsExample,
+  SpellingBasicsExampleGroup,
   SpellingBasicsIconKey,
   SpellingBasicsPhoneticOrientation,
   SpellingBasicsSeriesTopic,
