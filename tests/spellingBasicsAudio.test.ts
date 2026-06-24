@@ -1,6 +1,7 @@
 import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { createSupportWordLists } from '../src/data/supportWordLists';
 import { getSpellingBasicsTopic, getSpellingBasicsTopicSlugFromPath, spellingBasicsCategories, spellingBasicsTopics } from '../src/content/spellingBasics';
+import { getSpellingBasicsPracticeCtaLabel } from '../src/content/spellingBasics/practiceCta';
 import { createSupportPracticeRoute, handleSpellingBasicsExampleAudioClick, resolveSpellingBasicsExampleAudio } from '../src/lib/spellingBasicsAudio';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -108,6 +109,21 @@ assertEqual(soundCategory.topicSlugs.includes('y'), true, 'Overview should inclu
 assertEqual(soundCategory.topicSlugs.includes('wy' as never), false, 'Overview should not show the retired combined wy tile.');
 assertEqual(getSpellingBasicsTopic('w')?.practiceListId, 'support_w', 'W topic should launch support_w practice.');
 assertEqual(getSpellingBasicsTopic('y')?.practiceListId, 'support_y', 'Y topic should launch support_y practice.');
+assertEqual(
+  getSpellingBasicsPracticeCtaLabel('w', 'en', () => 'Practise this pattern'),
+  'Practise this pattern (W as a vowel)',
+  'W topic English practice CTA should clarify the support practice focus.'
+);
+assertEqual(
+  getSpellingBasicsPracticeCtaLabel('w', 'cy', () => 'Ymarfer y patrwm hwn'),
+  'Ymarferwch y patrwm hwn (W fel llafariad)',
+  'W topic Welsh practice CTA should clarify the support practice focus.'
+);
+assertEqual(
+  getSpellingBasicsPracticeCtaLabel('ff', 'en', () => 'Practise this pattern'),
+  'Practise this pattern',
+  'Other Spelling Basics topics should keep the shared practice CTA.'
+);
 const wTopic = getSpellingBasicsTopic('w');
 assert(wTopic?.kind === 'single', 'W topic should be a single spelling-basics topic.');
 assertEqual(wTopic.card.examples?.map(example => example.welsh).join('|'), 'dŵr|cwm|twr|sŵn', 'W examples should not include byw or bwrdd.');

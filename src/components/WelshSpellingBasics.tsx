@@ -13,6 +13,7 @@ import {
   type SpellingBasicsTopicCard,
   type SpellingBasicsTopicSlug
 } from '../content/spellingBasics';
+import { getSpellingBasicsPracticeCtaLabel } from '../content/spellingBasics/practiceCta';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { WordList } from '../data/wordLists';
 import {
@@ -273,7 +274,7 @@ export function WelshSpellingBasicsTopicPage({
             data-href={practiceRoute ?? undefined}
           >
             <span className="spelling-basics-mini-symbol" aria-hidden="true">{topic.symbol}</span>
-            <span>{t('spellingBasics.topic.practicePattern')}</span>
+            <span>{getSpellingBasicsPracticeCtaLabel(topic.slug, interfaceLanguage, t)}</span>
             <ChevronRight size={24} strokeWidth={2.2} aria-hidden="true" />
           </button>
         )}
