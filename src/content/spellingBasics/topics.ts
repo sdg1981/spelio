@@ -199,7 +199,6 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         cy: 'Os ydych yn clywed sain fel “f” Saesneg mewn Cymraeg, chwiliwch am ff.'
       },
       examples: [
-        { welsh: 'ffordd', meaning: { en: 'road', cy: 'ffordd' } },
         { welsh: 'coffi', meaning: { en: 'coffee', cy: 'coffi' } },
         { welsh: 'ffrind', meaning: { en: 'friend', cy: 'ffrind' } }
       ]
