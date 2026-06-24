@@ -352,8 +352,8 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           cy: 'Yn Gymraeg, mae w yn aml yn cael ei defnyddio fel sain llafariad — yn aml ychydig fel y sain “oo” mewn geiriau Saesneg fel food.'
         },
         {
-          en: 'This is one reason Welsh words can look surprising if you are reading them through English habits.',
-          cy: 'Dyma un rheswm pam gall geiriau Cymraeg edrych yn annisgwyl os ydych yn eu darllen drwy arferion Saesneg.'
+          en: 'When W comes before a vowel, it often sounds more like the W in the English word “wet”.',
+          cy: 'Pan ddaw W cyn llafariad, mae’n aml yn swnio’n fwy fel W yn y gair Saesneg “wet”.'
         },
         {
           en: 'Once you start hearing w as a vowel, words like dŵr, cwm, twr, and sŵn start to make more sense.',
