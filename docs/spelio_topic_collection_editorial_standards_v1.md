@@ -163,7 +163,28 @@ A common word may be difficult to spell. An uncommon word may be easy to spell. 
 
 ---
 
-## 10. Topic Integrity
+## 10. Spelling Load
+
+Spelling load is an editorial judgement, not a strict numerical score.
+
+Editors may consider factors such as:
+
+- number of letters
+- number of Welsh digraphs
+- uncommon vowel combinations
+- accents
+- apostrophes
+- multi-word answers
+- multiple spelling features occurring together
+- mutation-related spelling changes where appropriate
+
+No single factor determines spelling load. A short word can still be difficult, and a longer word can still be appropriate if it is useful, recognisable, and clearly belongs in the topic.
+
+Editors should balance spelling complexity with usefulness, recognisability, topic fit, and teacher usefulness.
+
+---
+
+## 11. Topic Integrity
 
 Every word should belong naturally inside its topic.
 
@@ -173,23 +194,24 @@ A learner should immediately understand why every word belongs in the collection
 
 ---
 
-## 11. Audience
+## 12. Audience
 
-Topic Collections should work naturally for:
+Topic Collections are primarily designed for adult learners.
 
-- adult learners
+They should also work naturally for important secondary or overlapping audiences:
+
 - GCSE learners
 - teachers
 - independent learners
 - older school pupils
 
-The tone should remain adult-neutral. Avoid vocabulary that feels designed exclusively for young children.
+The tone should remain adult-neutral and teacher-friendly. Avoid vocabulary that feels designed exclusively for young children.
 
-Child-friendly vocabulary is acceptable when it genuinely belongs to the topic, but the overall collection should respect adult learners.
+Child-friendly vocabulary is acceptable when it genuinely belongs to the topic, but the overall collection should respect adult learners. Topic Collections should not feel school-only or child-first.
 
 ---
 
-## 12. Teacher Usefulness
+## 13. Teacher Usefulness
 
 A teacher should be able to understand why a list exists, when to assign it, and how it differs from the neighbouring lists.
 
@@ -204,7 +226,7 @@ Useful teacher-facing questions include:
 
 ---
 
-## 13. Future Expansion
+## 14. Future Expansion
 
 Future expansion should normally favour meaningful specialist collections rather than endless numbered lists.
 
@@ -224,7 +246,7 @@ However, Topic 4 or Topic 5 may still be appropriate where educationally justifi
 
 ---
 
-## 14. Editorial Review Questions
+## 15. Editorial Review Questions
 
 Before approving any Topic Collection, ask:
 
@@ -239,7 +261,15 @@ Before approving any Topic Collection, ask:
 
 ---
 
-## 15. Final Editorial Principle
+## 16. Editorial Flexibility
+
+These standards guide editorial judgement rather than replace it.
+
+They should not be treated as a rigid scoring system. Future contributors should use them to make consistent, defensible editorial decisions while still considering the needs of the topic, the learner, and the teacher.
+
+---
+
+## 17. Final Editorial Principle
 
 The goal is not to create the largest Welsh vocabulary catalogue.
 
