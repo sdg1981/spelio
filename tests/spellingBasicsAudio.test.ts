@@ -153,6 +153,10 @@ assertEqual(rhTopic.card.examples?.some(example => example.welsh === 'rhaid'), t
 const ffTopic = getSpellingBasicsTopic('ff');
 assert(ffTopic?.kind === 'single', 'FF topic should be a single spelling-basics topic.');
 assertEqual(ffTopic.card.examples?.map(example => example.welsh).join('|'), 'coffi|ffrind', 'FF examples should not include ffordd.');
+const ddTopic = getSpellingBasicsTopic('dd');
+assert(ddTopic?.kind === 'single', 'DD topic should be a single spelling-basics topic.');
+assertEqual(ddTopic.card.examples?.map(example => example.welsh).join('|'), 'bardd|meddal', 'DD examples should use the current public page examples.');
+assertEqual(ddTopic.card.examples?.map(example => example.meaning?.en).join('|'), 'poet|soft', 'DD example meanings should match the current public page examples.');
 const yTopic = getSpellingBasicsTopic('y');
 assert(yTopic?.kind === 'single', 'Y topic should be a single spelling-basics topic.');
 assertEqual(yTopic.card.observation?.title.en, 'Helpful pattern to notice:', 'Y topic should include a lightweight observation heading.');
@@ -196,13 +200,22 @@ const readySupportExamples = makeList({
       audioStatus: 'ready'
     }),
     makeWord({
-      id: 'support_dd_002',
-      listId: 'support_dd',
-      welshAnswer: 'heddiw',
-      englishPrompt: 'today',
-      audioUrl: 'https://example.com/audio/support/heddiw.mp3',
+      id: 'foundation_patterns_d_dd_006',
+      listId: 'foundation_patterns_d_dd',
+      welshAnswer: 'bardd',
+      englishPrompt: 'poet',
+      audioUrl: 'https://example.com/audio/foundations/bardd.mp3',
       audioStatus: 'ready',
       order: 6
+    }),
+    makeWord({
+      id: 'foundation_patterns_d_dd_008',
+      listId: 'foundation_patterns_d_dd',
+      welshAnswer: 'meddal',
+      englishPrompt: 'soft',
+      audioUrl: 'https://example.com/audio/foundations/meddal.mp3',
+      audioStatus: 'ready',
+      order: 8
     })
   ]
 });
@@ -212,9 +225,14 @@ assertEqual(
   'Phonetic sound examples should play support example audio once generated.'
 );
 assertEqual(
-  resolveSpellingBasicsExampleAudio('heddiw', [readySupportExamples]).audioUrl,
-  'https://example.com/audio/support/heddiw.mp3',
-  'Pattern breakdown examples should play support example audio once generated.'
+  resolveSpellingBasicsExampleAudio('bardd', [readySupportExamples], 'support_dd').audioUrl,
+  'https://example.com/audio/foundations/bardd.mp3',
+  'DD page examples should reuse existing generated word audio when support-list audio is not present.'
+);
+assertEqual(
+  resolveSpellingBasicsExampleAudio('meddal', [readySupportExamples], 'support_dd').audioUrl,
+  'https://example.com/audio/foundations/meddal.mp3',
+  'DD page examples should reuse existing generated word audio when support-list audio is not present.'
 );
 
 void runAsyncAssertions();

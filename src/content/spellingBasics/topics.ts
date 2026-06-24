@@ -231,9 +231,8 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         cy: 'Pan welwch dd mewn gair, meddyliwch am y sain “th” yn y gair Saesneg this.'
       },
       examples: [
-        { welsh: 'dydd', meaning: { en: 'day', cy: 'dydd' } },
-        { welsh: 'heddiw', meaning: { en: 'today', cy: 'heddiw' } },
-        { welsh: 'mynydd', meaning: { en: 'mountain', cy: 'mynydd' } }
+        { welsh: 'bardd', meaning: { en: 'poet', cy: 'bardd' } },
+        { welsh: 'meddal', meaning: { en: 'soft', cy: 'meddal' } }
       ]
     }
   },

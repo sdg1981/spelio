@@ -297,9 +297,8 @@ Mae'n un o'r seiniau mwyaf cyffredin yn Gymraeg ac mae'n ymddangos mewn llawer o
 
 ## Example words
 
-- dydd
-- heddiw
-- brawd
+- bardd
+- meddal
 
 ---
 
@@ -637,9 +636,8 @@ Avoid:
 Do not translate the actual Welsh spelling examples themselves.
 
 Example:
-- dydd
-- heddiw
-- brawd
+- bardd
+- meddal
 
 remain unchanged in both language modes.
 
