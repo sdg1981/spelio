@@ -221,7 +221,7 @@ Spelio exists to reduce that gap.
 
 Spelio is increasingly becoming:
 
-> a carefully designed Welsh spelling mastery system.
+> a Welsh spelling mastery system with an expandable practice library.
 
 This should feel closer to:
 
@@ -239,11 +239,11 @@ A short, carefully designed path for Welsh spelling confidence.
 
 `Practise`
 
-A broad, expandable library for continued spelling reinforcement.
+A finite Core Practice library followed by optional Extension Collections for continued spelling reinforcement.
 
 The key product distinction is:
 
-> The learning path is finite. The practice library can be expansive.
+> Learn and Core Practice are completable. Extensions can expand sideways.
 
 The product should keep asking:
 
@@ -560,17 +560,19 @@ Spelio's long-term educational structure may increasingly separate mastery progr
 
 This should not redesign MVP behaviour, introduce dashboards, formal course trees, compulsory progression gates, or remove existing content systems. It is a direction for curriculum thinking.
 
-The clearest architecture is two product layers plus optional future advanced material:
+The clearest architecture is:
 
-- Learn / Core Path: the deliberately short, curated progression path.
-- Practise / Content Library: the broader optional practice layer.
-- Advanced Topics: optional deeper material, not a required third curriculum stage.
+- Learn: a finite, curated spelling-confidence path.
+- Practise / Core Practice Collections: a finite representative practice library.
+- Practise / Extension Collections: optional expandable collections for interests, domains, schools, and specialist vocabulary.
 
-Learn should contain Welsh Foundations, carefully selected representative practice, mixed confidence milestones, and just enough required exposure for the learner to understand the pattern and feel ready to move on.
+Learn should contain Welsh Foundations, possible future advanced foundations, mixed confidence milestones, and just enough required exposure for the learner to understand the pattern and feel ready to move on.
 
-Practise may include numbers, time, food and drink, places, Welsh place names, travel, everyday actions, common phrases, Duolingo- or SSiW-aligned vocabulary, GCSE practice, teacher-created lists, custom lists, and expanded topic libraries.
+Core Practice should reinforce spelling confidence, provide broad exposure to useful Welsh vocabulary, and support adult learners, teachers, and GCSE learners through representative categories such as Everyday Welsh, People & Home, Food & Drink, Nature & Animals, and Places.
 
-The core path should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. The learner should be able to complete it. The broader practice library may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, or everyday Welsh life, but that broader library should not define required progression.
+Extension Collections may include Welsh place names, GCSE Welsh, healthcare Welsh, education Welsh, tourism Welsh, Church & Faith, Welsh history, birds, British wildlife, teacher-created lists, custom lists, and expanded topic libraries.
+
+Learn and Core Practice should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. The learner should be able to complete them. Extensions may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, personal interests, or everyday Welsh life, but extensions should expand sideways rather than define required progression.
 
 ## Learn — Welsh Foundations and Representative Transfer
 
@@ -603,11 +605,27 @@ Goals:
 
 This layer should remain highly curated and intentionally compact.
 
-## Practise — Applied Welsh and Broader Practice Library
+## Practise — Core Practice and Extensions
 
 Purpose:
 
 > Reinforce spelling confidence across useful Welsh words and topics.
+
+Core Practice is finite. It should provide a coherent, representative library of useful Welsh spelling practice after Foundations.
+
+Example Core Practice categories include:
+
+- Everyday Welsh
+- People & Home
+- Food and drink
+- Nature and animals
+- Places
+
+Core Practice lists should use accessible, useful, representative, recognisable vocabulary that fits the topic naturally. They should not be restricted to the absolute easiest possible spellings, and they should not become obscure specialist vocabulary merely because a numbered list is later in the sequence.
+
+Numbered lists should still progress moderately by spelling complexity. Animals 1 should generally carry a lower spelling load than Animals 2, but Animals 2 should still feel useful, representative, and adult-appropriate.
+
+Extension Collections are optional and expandable. They should expand sideways into interests, domains, school needs, or specialist vocabulary rather than creating endless numbered ladders.
 
 Examples include:
 
@@ -621,7 +639,6 @@ Examples include:
 - common phrases
 - messaging
 - everyday written Welsh
-- Duolingo- or SSiW-aligned vocabulary
 - GCSE practice
 - teacher-created lists
 - custom lists
@@ -629,9 +646,9 @@ Examples include:
 
 The goal is not exhaustive vocabulary coverage.
 
-The goal is demonstrating that the foundations transfer into real Welsh usage.
+The goal is demonstrating that the foundations transfer into real Welsh usage and giving learners somewhere useful to keep practising after the core journey is complete.
 
-Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, and partly as broader optional practice in the Practise library. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, partly as finite Core Practice, and partly as broader optional Extension Collections. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
 
 ## Advanced Topics
 
@@ -674,7 +691,7 @@ The progression path should be:
 - intentional
 - mastery-oriented
 
-It should include carefully chosen representative practice and mixed confidence milestones, not every possible word in every category.
+It should include Welsh Foundations, possible future advanced foundations, carefully chosen representative practice, and mixed confidence milestones, not every possible word in every category.
 
 The learner should feel:
 
@@ -682,7 +699,9 @@ The learner should feel:
 
 Progression should remain visually simple and understandable.
 
-Separate from progression, the practice layer may become:
+Core Practice should also be finite and completable. It should give learners a coherent sense that they have completed the core Spelio spelling journey, while still leaving room to explore additional collections.
+
+Separate from Learn and Core Practice, Extension Collections may become:
 
 - broader
 - revisitable
@@ -700,7 +719,7 @@ Examples include:
 - custom lists
 - adaptive practice
 
-The practice layer exists to reinforce learning, not define the required curriculum.
+Extensions exist to reinforce learning, support interests and specialist domains, and provide more practice. They should not define the required curriculum.
 
 The pattern mastery principle is:
 
@@ -708,9 +727,9 @@ The pattern mastery principle is:
 
 Additional practice should remain available but optional. Progression should not require exhaustive repetition once confidence is demonstrated. The educational goal is mastery of the pattern, not exposure to every possible example.
 
-Large collections should be split mentally into:
+Large topics should be split mentally into:
 
-- a short representative core path
+- a short representative Core Practice set where appropriate
 - optional expanded practice
 
 For example, a Numbers topic should not require the learner to spell every number from 1-100 before moving on. The core path should teach the structure and spelling feel of Welsh numbers through a carefully selected set of examples. Expanded practice can then offer many additional numbers for learners who want more repetition.
@@ -729,7 +748,7 @@ Word-list UI should avoid framing large collections only as discouraging counter
 - Additional practice available
 - More words in this topic
 
-Progress should feel calm and achievable, not like an infinite backlog.
+Progress should feel calm and achievable, not like an infinite backlog. Completion should be treated as positive product language, not as a problem to hide by adding endless numbered levels.
 
 Mixed confidence lists may become important confidence-building milestones, especially:
 

@@ -1,6 +1,6 @@
-# Spelio — Welsh spelling practice app
+# Spelio — Welsh spelling mastery system
 
-React + TypeScript + Tailwind web app for Welsh spelling practice. Spelio is an installable PWA, with the Android Trusted Web Activity wrapper kept in `android/` and the iOS Capacitor wrapper kept in `ios/`.
+React + TypeScript + Tailwind web app for Welsh spelling mastery, with a finite learning path and an expandable practice library. Spelio is an installable PWA, with the Android Trusted Web Activity wrapper kept in `android/` and the iOS Capacitor wrapper kept in `ios/`.
 
 ## Run
 

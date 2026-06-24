@@ -798,6 +798,16 @@ Spelio Core Welsh
 
 If only one collection exists, the UI may still appear similar to the current grouped MVP layout. The architecture should still be ready for multiple collections later.
 
+Longer-term, learner-facing catalogue presentation should be able to move toward:
+
+```text
+Learn / Practise
+  Category
+    Word list
+```
+
+This is a future information-architecture direction, not an MVP requirement to rename current `stage/group` data or rebuild the Word Lists page.
+
 This must remain lightweight and calm. Do not turn the Word Lists page into a dashboard, course browser, permissions view, or reporting surface.
 
 ### 8.3 Dialect handling
@@ -1767,6 +1777,18 @@ Each word list should include:
 - createdAt
 - updatedAt
 
+The conceptual catalogue model is:
+
+```text
+Learn / Practise
+    Category
+        Word List
+```
+
+For MVP compatibility, existing `stage/group` metadata may continue to exist. It should be treated as internal progression or grouping metadata, not as the preferred long-term learner-facing catalogue model. Future admin/content work may add explicit product-area and category metadata, but this must not rename or remove current fields during MVP.
+
+Spelio-authored practice content should distinguish finite Core Practice Collections from optional Extension Collections. Core Practice is representative and completable; Extensions can expand sideways into interests, domains, school needs, and specialist vocabulary.
+
 List-level dialect is a summary/display field only. The actual practice filtering is controlled by word-level dialect.
 
 Existing word-list fields remain unchanged. Do not remove or rename current English/Welsh MVP content fields.
@@ -1897,6 +1919,8 @@ Default seeded MVP collection:
 ```
 
 Existing Welsh MVP word lists belong to this default collection.
+
+The default collection name is an implementation-era container name. It should not be read as a final learner-facing information architecture. Longer-term catalogue presentation should be able to separate Learn, Core Practice Collections, and Extension Collections without requiring an immediate MVP schema rewrite.
 
 The Collections layer exists to reduce future refactor risk for curriculum integrations, course pathways, school deployments, teacher lists, personal lists, and future language-pair expansions. Those systems are intentionally postponed beyond MVP.
 

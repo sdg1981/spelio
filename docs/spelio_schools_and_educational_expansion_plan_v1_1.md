@@ -328,6 +328,23 @@ Avoid:
 Spelio should feel:
 > practical and usable rather than textbook-like.
 
+School-facing content should fit the broader Spelio catalogue model:
+
+```text
+Learn
+    Welsh Spelling Foundations
+
+Practise
+    Core Practice Collections
+    Extension Collections
+```
+
+Core Practice should remain finite and representative. It should support broad classroom and independent practice through useful categories such as Everyday Welsh, People & Home, Food & Drink, Nature & Animals, and Places, without becoming an endlessly expanding catalogue.
+
+Extension Collections are the better home for GCSE themes, curriculum-linked vocabulary, classroom topics, subject domains, school packs, and teacher-created lists. They can expand sideways into educational needs without implying that every topic must become Animals 3, Animals 4, Animals 5, or an endless numbered ladder.
+
+Within numbered Core Practice lists, progression should be based mainly on spelling complexity rather than rarity. A second list in a category should feel like accessible progression, not a move into obscure vocabulary.
+
 ---
 
 # 12. Spelling Patterns vs Phonics

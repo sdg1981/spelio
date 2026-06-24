@@ -59,11 +59,11 @@ A short, carefully designed path for Welsh spelling confidence.
 
 `Practise`
 
-A broad, expandable library for continued spelling reinforcement.
+A finite Core Practice library followed by optional Extension Collections for continued spelling reinforcement.
 
 The key product distinction is:
 
-> The learning path is finite. The practice library can be expansive.
+> Learn and Core Practice are completable. Extensions can expand sideways.
 
 The subsystem should ask:
 
@@ -90,7 +90,7 @@ The goal is not to show every possible word that contains a pattern. The goal is
 
 Required practice should therefore include only enough examples to build confidence with the underlying pattern. Additional examples may exist as optional reinforcement, but progression should not depend on exhaustive repetition once confidence is demonstrated.
 
-For this subsystem, the Learn layer should remain deliberately short, curated, representative, and emotionally achievable. Support practice may link out to broader optional reinforcement, but the foundation path should not feel like an infinite backlog of words.
+For this subsystem, the Learn layer should remain deliberately short, curated, representative, and emotionally achievable. Support practice may link out to finite Core Practice or broader optional Extension Collections, but the foundation path should not feel like an infinite backlog of words.
 
 ---
 
@@ -117,7 +117,7 @@ This layer should remain highly curated and intentionally compact.
 
 Applied Welsh content, such as numbers, time, food and drink, places, Welsh place names, travel, common phrases, messaging, and everyday written Welsh, may appear as transfer practice where it helps prove that foundations work in real Welsh. It should not become the definition of the foundation curriculum.
 
-Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, and partly as broader optional practice in the Practise library. It does not need to be exhaustive inside the core path, and learners should not need to complete large Applied Welsh collections before moving forward.
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, partly as finite Core Practice, and partly as broader optional Extension Collections. It does not need to be exhaustive inside the core path, and learners should not need to complete large Applied Welsh collections before moving forward.
 
 Advanced Topics, such as mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, and advanced decoding confidence, should remain future-facing and optional unless they are being introduced in a deliberately small and beginner-safe way.
 

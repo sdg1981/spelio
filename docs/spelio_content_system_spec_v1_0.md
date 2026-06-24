@@ -86,204 +86,203 @@ Child-focused or school-aligned content can be added later as separate word-list
 
 ---
 
-## 5. Content Progression Model
+## 5. Content Catalogue Model
 
-Spelio content should be organised into expandable stages.
+Spelio content should be organised around a clear distinction between:
 
-Stages represent broad learning progression. Difficulty values can still be used within stages, but stage and difficulty are not the same thing.
+```text
+Learn
+    Welsh Spelling Foundations
+    Possible future advanced foundations
 
-### Stage 1 — Foundations: Simple Spelling Confidence
+Practise
+    Core Practice Collections
+    Extension Collections
+```
+
+The overall identity is:
+
+> a Welsh spelling mastery system with an expandable practice library.
+
+Spelio should not become an endless vocabulary catalogue or a full language course.
+
+The main information architecture should be:
+
+```text
+Learn / Practise
+    Category
+        Word List
+```
+
+Example:
+
+```text
+Practise
+    Nature & Animals
+        Animals 1
+        Animals 2
+        Most Common Animals
+```
+
+Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the primary learner-facing catalogue model. Difficulty and progression metadata may still exist internally, but visible structure should favour understandable product areas, categories, and word lists.
+
+### Learn — Finite Spelling Confidence Path
+
+Learn is deliberately finite, curated, and completable.
 
 Purpose: build trust, confidence, and familiarity with Welsh spelling.
 
-Content should include:
+Current and possible future examples include:
 
-- short words, usually 2–5 letters
-- simple spelling patterns
-- high-frequency everyday words
-- minimal digraph complexity
-- no mutation burden
-- very short phrases only if they are easy and useful
+- Welsh Spelling Foundations
+- Advanced Recognition, if introduced later
+- Mutation Awareness, if introduced later
+- Written Welsh Patterns, if introduced later
 
-Avoid:
+Learn content may include:
 
-- long formal phrases
-- mutation-dependent phrases
-- dense grammar
-- multi-word answers with several spelling challenges
-- advanced vowel clusters too early
+- Welsh spelling foundations such as D / DD, Y, F / FF, W, CH, LL, RH, and future validated vowel or recognition topics
+- mixed confidence milestones that combine previously learned spelling systems
+- tightly selected representative words where they prove that spelling foundations transfer into real Welsh
+- possible future advanced foundations, if they remain spelling-confidence material rather than grammar-course material
 
-Good examples:
+Learn should remain compact, recommendation-friendly, teacher-friendly, emotionally achievable, and mastery-oriented. Learners should be able to feel that they have completed a meaningful spelling-confidence journey.
 
-- ie
-- na
-- te
-- mam
-- tad
-- siop
-- yma
-- yna
-- dod
-- mynd
+### Core Practice Collections
 
-### Stage 2 — Core Words: Useful Everyday Vocabulary
+Core Practice is also finite.
 
-Purpose: expand useful vocabulary while keeping spelling load manageable.
+Purpose:
 
-Content may include:
+- reinforce spelling confidence
+- provide broad exposure to useful Welsh vocabulary
+- provide representative practice across common topics
+- support adult learners, teachers, and GCSE learners
 
-- common nouns
-- common verbs
-- everyday adjectives
-- simple topic groups such as food, family, places, weather
-- slightly longer words
-- early controlled digraph exposure
+Core Practice should not become an endlessly expanding catalogue. It should offer a coherent core library of useful, representative Welsh spelling practice after Foundations.
 
-Avoid:
+Example categories:
 
-- mutation-heavy phrases
-- complex sentences
-- long formal expressions
+- Everyday Welsh
+- People & Home
+- Food & Drink
+- Nature & Animals
+- Places
 
-### Stage 3 — Spelling Patterns
+Example list patterns:
 
-Purpose: train Welsh spelling patterns deliberately.
+- Animals 1
+- Animals 2
+- Most Common Animals
+- Food 1
+- Food 2
+- Most Common Foods
+- Family 1
+- Family 2
+- Most Common Family Words
 
-This is one of Spelio’s most important content types.
+These examples are illustrative rather than final curriculum commitments.
 
-Pattern lists may focus on:
+Core Practice lists should not be designed around the absolute easiest spellings possible. They should prioritise:
 
-- ll
-- ch
-- dd
-- d vs dd
-- f vs ff
-- ae
-- oe
-- wy
-- w/y vowel behaviour
-- double letters
-- common endings
+- accessible words
+- representative words
+- useful words
+- recognisable words
+- words that fit the topic naturally
 
-Pattern lists should feel practical, not academic. They should use real words that learners are likely to meet.
+while still maintaining sensible spelling progression.
 
-### Stage 4 — Short Phrase Building
+For example, Animals 1 should not be restricted to only the easiest possible animal names. It should contain a balanced set of accessible, representative animal vocabulary appropriate for a learner who has completed Foundations.
 
-Purpose: introduce short practical chunks without overwhelming the learner.
+The goal is useful spelling confidence, not artificially simplified vocabulary.
 
-Content should include:
+### Progression Within Numbered Core Practice Lists
 
-- 2–3 word phrases
-- repeated phrase patterns
-- everyday actions
-- useful location/time phrases
-- controlled spacing practice
+Numbered Core Practice lists should provide meaningful spelling progression.
 
-Examples:
+For example:
 
-- mynd adref
-- dod yma
-- yfed coffi
-- dysgu Cymraeg
-- mynd allan
+- Animals 1 should generally contain words with a lower overall spelling load than Animals 2.
+- Family 1 should generally contain words with a lower overall spelling load than Family 2.
+- Food 1 should generally contain words with a lower overall spelling load than Food 2.
 
-Avoid:
+The distinction should be based primarily on spelling complexity rather than rarity or specialist vocabulary.
 
-- long sentences
-- several new grammar features in one item
-- mutation-heavy phrase sets unless intentionally controlled
+Factors may include:
 
-### Possible Future Stage 5 — Controlled Mutation Exposure
+- word length
+- number of spelling challenges
+- unfamiliar Welsh patterns
+- multiple simultaneous spelling features
+- accents and diacritics
+- apostrophes
+- multi-word phrases
 
-Purpose: expose learners to common mutated forms inside useful fixed phrases.
+Progression should remain moderate. Animals 2 should not become an obscure-vocabulary list.
 
-In a future sequence, mutation can appear once learners have enough spelling confidence, but the list should not behave like a grammar lesson.
+The goal is accessible progression, not easiest words followed by increasingly rare words. Core Practice collections should remain useful, representative, and adult-appropriate throughout.
 
-Good approach:
+### Extension Collections
 
-- use common fixed phrases
-- keep phrases short
-- use repeated structures
-- allow the pattern to emerge gradually
+Extension Collections are optional and intentionally expandable.
 
-Avoid:
-
-- explaining full mutation systems in notes
-- mixing too many mutation types in one list
-- making mutation knowledge essential without context
-
-### Possible Future Stage 6 — Mutation Pattern Lists
-
-Purpose: practise mutation patterns directly through spelling contrast.
-
-Mutation pattern lists should be introduced only after learners have enough spelling confidence, and only if they serve spelling recognition and written accuracy rather than comprehensive grammar teaching.
-
-Structure:
-
-- reuse the same base word or a small family of related base words
-- show 2–4 forms
-- keep the list tightly focused
-- let the spelling pattern teach itself through repetition
+Extensions expand sideways into interests, domains, and specialist vocabulary. They should not create an endless ladder of progression.
 
 Examples:
 
-Mutation Pattern — tref:
+- Welsh Place Names
+- GCSE Welsh
+- Healthcare Welsh
+- Education Welsh
+- Tourism Welsh
+- Church & Faith
+- Welsh History
+- Birds
+- British Wildlife
 
-- tref
-- y dref
-- i’r dref
-- yn y dref
+Avoid assumptions such as:
 
-Mutation Pattern — Cymru:
+```text
+Animals 1
+Animals 2
+Animals 3
+Animals 4
+Animals 5
+```
 
-- Cymru
-- yng Nghymru
-- i Gymru
+unless a strong educational reason exists. Prefer meaningful specialist collections with their own identity.
 
-Mutation Pattern — car:
+Example:
 
-- car
-- fy nghar
-- ei gar
-- y car
+```text
+Animals 1
+Animals 2
+Most Common Animals
 
-Do not use these lists too early.
+Birds
+Farm Animals
+British Wildlife
+```
 
-### Stage 7 — Sentences and Longer Real-World Use
+### Completion Philosophy
 
-Purpose: practise short, useful sentences and longer spellings once the learner has confidence.
+Completion is a meaningful part of the product.
 
-Content may include:
+Spelio should not be afraid of learners completing:
 
-- short practical sentences
-- common first-person phrases
-- longer workplace/social phrases
-- mixed phrase review
-- longer Welsh words
+- Foundations
+- Core Practice
 
-Sentences should still be concise and practical.
+The intended learner experience may be:
 
-### Stage 8+ — Expansion Packs
+> You have completed the core Spelio spelling journey.
 
-Purpose: allow the platform to grow indefinitely.
+followed by:
 
-Possible expansion packs:
+> Explore additional collections that match your interests.
 
-- school Welsh
-- workplace Welsh
-- travel Welsh
-- family life
-- health
-- hobbies
-- nature
-- place names
-- GCSE support
-- course-aligned practice packs
-- advanced spelling patterns
-- mutation mastery
-- mixed revision
-
-Expansion packs must still follow the same spelling-first content rules.
+This is preferable to creating an endless sequence of numbered levels purely to avoid completion.
 
 ---
 
@@ -326,7 +325,7 @@ Every word should pass these tests:
 4. Is it not randomly included just to fill space?
 5. Does it avoid too many new spelling challenges at once?
 
-If unsure, choose simpler spelling over higher usefulness.
+If unsure, choose a word that remains accessible for the list's intended point in the journey. Do not choose the absolute easiest spelling if it makes the topic artificial or unrepresentative, and do not choose a highly useful word if it creates too many simultaneous spelling challenges.
 
 ---
 
@@ -377,9 +376,9 @@ Mixed lists are allowed only when they serve review or consolidation.
 
 ---
 
-## 9. Core Vocabulary Lists
+## 9. Core Practice Word Selection
 
-Core vocabulary lists should prioritise words learners will actually encounter.
+Core Practice lists should prioritise words learners will actually encounter.
 
 Good categories:
 
@@ -554,7 +553,7 @@ Avoid early:
 - long formal phrases
 - full sentences
 - several mutations in one list
-- phrases that are useful but too spelling-heavy for the stage
+- phrases that are useful but too spelling-heavy for the list's intended point in the journey
 
 ---
 
@@ -588,19 +587,19 @@ Poor early examples:
 
 Mutations are essential in Welsh, but they should not be an early burden.
 
-### Early stages
+### Early content
 
 Avoid requiring learners to understand or predict mutations.
 
 Use mostly base forms and simple phrases.
 
-### Mid stages
+### Mid-journey content
 
 Introduce mutations inside fixed, common phrases.
 
 The learner should be able to practise the spelling without needing a full grammar explanation.
 
-### Later stages
+### Later or advanced content
 
 Introduce mutation pattern lists.
 
@@ -1104,7 +1103,7 @@ Before accepting a list, check:
 
 ### Spelling progression
 
-- Is anything too difficult for the stage?
+- Is anything too difficult for the list's intended point in the journey?
 - Are mutations introduced too early?
 - Are long phrases delayed appropriately?
 
@@ -1159,7 +1158,7 @@ Checks:
 
 Checks:
 
-- stage fit
+- fit with the product area, category, and list purpose
 - difficulty progression
 - list purpose
 - cognitive load
@@ -1183,31 +1182,51 @@ A list is production-ready only after all three review levels.
 
 ## 26. Scaling Strategy
 
-The platform should support hundreds or thousands of lists over time.
+The platform may support many lists over time, but scale should come primarily from optional Extension Collections rather than from stretching Learn or Core Practice indefinitely.
 
 To keep content scalable:
 
-- use clear stage names
+- use clear Learn / Practise areas
+- use understandable categories
 - use consistent list naming
 - avoid duplicate list concepts
+- keep Core Practice finite and representative
 - keep pattern lists modular
-- create expansion packs rather than bloated stages
+- create Extension Collections rather than bloated numbered sequences
 - maintain a content index as the library grows
 
 Possible long-term high-level library structure:
 
-- Foundations
-- Core Vocabulary
-- Spelling Patterns
-- Phrases
-- Controlled Mutations, if introduced as future spelling-confidence material
-- Mutation Patterns, if introduced as future spelling-confidence material
-- Sentences
-- Mixed Review
-- Topic Packs
-- School Packs
-- Course-Aligned Packs
-- Advanced Welsh
+- Learn
+- Core Practice Collections
+- Extension Collections
+
+Possible Learn examples:
+
+- Welsh Spelling Foundations
+- Advanced Recognition, if introduced as future spelling-confidence material
+- Mutation Awareness, if introduced as future spelling-confidence material
+- Written Welsh Patterns, if introduced as future spelling-confidence material
+
+Possible Core Practice category examples:
+
+- Everyday Welsh
+- People & Home
+- Food & Drink
+- Nature & Animals
+- Places
+
+Possible Extension Collection examples:
+
+- Welsh Place Names
+- GCSE Welsh
+- Healthcare Welsh
+- Education Welsh
+- Tourism Welsh
+- Church & Faith
+- Welsh History
+- Birds
+- British Wildlife
 
 Possible long-term spelling-confidence sequence:
 
@@ -1215,6 +1234,8 @@ Possible long-term spelling-confidence sequence:
 2. Foundations 2 — Pattern Extensions
 3. Foundations 3 — Advanced Recognition
 4. Written Welsh — Context & Mutation Patterns
+
+That sequence belongs in Learn or future advanced foundations. It should not be confused with an indefinitely growing Practise catalogue.
 
 ---
 
@@ -1265,15 +1286,16 @@ Use this when asking AI to create new content:
 ```text
 Use the Spelio Content System Specification.
 
-Create [number] Welsh spelling practice lists for [stage/purpose].
+Create [number] Welsh spelling practice lists for [Learn/Core Practice/Extension Collection purpose].
 
-Prioritise spelling progression first and real-world usefulness second.
+Prioritise spelling progression, real-world usefulness, and representative topic fit.
 
 For each list include:
 - id
 - name
 - description
-- stage
+- productArea
+- category
 - focus
 - difficulty
 - order
@@ -1298,7 +1320,10 @@ Rules:
 - Design Spelio-authored lists around 10–25 conceptual learning items, not fixed groups of 10 raw rows.
 - Do not pad, split, or duplicate lists only to make exact 10-item groups.
 - Avoid early mutation burden.
-- Use mutations only where appropriate for the stage.
+- Use mutations only where appropriate for the product area, category, and list purpose.
+- For Core Practice, choose accessible, useful, representative words rather than only the easiest possible spellings.
+- For numbered Core Practice lists, make progression moderate and based mainly on spelling complexity rather than rarity.
+- For Extensions, expand sideways into a meaningful topic, domain, or interest area rather than extending a numbered ladder without a strong educational reason.
 - Do not use acceptedAlternatives for different-length variants.
 - Create separate entries for meaningful dialect variants.
 - Link dialect variants with variantGroupId.
@@ -1312,7 +1337,7 @@ Rules:
 - Do not invent bespoke spelling hints for every word.
 - Flag uncertain hint cases in notes for later Welsh review.
 - Keep lists coherent and practical.
-- Prefer simpler spelling over higher usefulness if unsure.
+- If unsure, avoid both artificially easy vocabulary and words that create too many simultaneous spelling challenges.
 ```
 
 ---
@@ -1326,7 +1351,7 @@ Audit this Spelio word-list dataset against the Spelio Content System Specificat
 
 Check:
 - spelling progression
-- stage fit
+- fit with the product area, category, and list purpose
 - mutation burden
 - dialect handling
 - acceptedAlternatives

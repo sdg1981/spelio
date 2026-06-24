@@ -66,6 +66,10 @@ The guiding question should usually be:
 
 > Does this improve meaningful practice and learner confidence without adding unnecessary noise or complexity?
 
+For content and catalogue decisions, a second guiding question should be:
+
+> Does this strengthen a finite spelling-confidence journey or a meaningful optional extension, rather than creating catalogue bloat?
+
 ---
 
 # 2. Product Decision Hierarchy
@@ -176,6 +180,14 @@ before:
 - educational bureaucracy
 
 The product may eventually grow into broader learning support, but it should grow outward from strong practice foundations rather than becoming an unfocused all-in-one system.
+
+The long-term catalogue direction should preserve:
+
+- Learn as a finite, curated spelling-confidence path
+- Core Practice as a finite, representative practice library
+- Extension Collections as optional, expandable sideways growth
+
+Completion of Foundations and Core Practice should be treated as a meaningful learner outcome, not as a product problem to avoid through endless numbered lists.
 
 ---
 
