@@ -391,7 +391,6 @@ Focus instead on:
 
 - lle
 - llaw
-- llyfr
 
 ---
 

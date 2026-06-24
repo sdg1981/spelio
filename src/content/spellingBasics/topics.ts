@@ -264,8 +264,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
       },
       examples: [
         { welsh: 'lle', meaning: { en: 'place', cy: 'lle' } },
-        { welsh: 'llaw', meaning: { en: 'hand', cy: 'llaw' } },
-        { welsh: 'llyfr', meaning: { en: 'book', cy: 'llyfr' } }
+        { welsh: 'llaw', meaning: { en: 'hand', cy: 'llaw' } }
       ]
     }
   },
