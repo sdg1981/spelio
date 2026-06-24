@@ -108,6 +108,10 @@ assertEqual(soundCategory.topicSlugs.includes('y'), true, 'Overview should inclu
 assertEqual(soundCategory.topicSlugs.includes('wy' as never), false, 'Overview should not show the retired combined wy tile.');
 assertEqual(getSpellingBasicsTopic('w')?.practiceListId, 'support_w', 'W topic should launch support_w practice.');
 assertEqual(getSpellingBasicsTopic('y')?.practiceListId, 'support_y', 'Y topic should launch support_y practice.');
+const wTopic = getSpellingBasicsTopic('w');
+assert(wTopic?.kind === 'single', 'W topic should be a single spelling-basics topic.');
+assertEqual(wTopic.card.examples?.map(example => example.welsh).join('|'), 'dŵr|cwm|twr|sŵn', 'W examples should not include byw or bwrdd.');
+assertEqual(wTopic.card.body.some(copy => copy.en.includes('byw') || copy.en.includes('bwrdd') || copy.cy.includes('byw') || copy.cy.includes('bwrdd')), false, 'W explanatory copy should not reference removed examples.');
 const phoneticTopic = getSpellingBasicsTopic('phonetic');
 assert(phoneticTopic?.kind === 'single' && phoneticTopic.phoneticOrientation, 'Phonetic topic should expose sound anchors.');
 const phoneticYSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'y');

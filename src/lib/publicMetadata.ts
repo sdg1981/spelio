@@ -86,7 +86,7 @@ const spellingBasicsDescriptions: Record<string, string> = {
   ll: 'Learn to recognise the Welsh ll sound pattern in common words and practise spelling it with Spelio.',
   ch: 'A simple guide to Welsh ch, how it differs from English ch, and how to recognise it in spelling practice.',
   rh: 'Learn to notice rh as a Welsh spelling pattern, with examples and focused practice.',
-  w: 'A short guide to Welsh w as a vowel sound, with examples such as dŵr, cwm, byw, and bwrdd.',
+  w: 'A short guide to Welsh w as a vowel sound, with examples such as dŵr, cwm, twr, and sŵn.',
   y: 'Learn how Welsh y can sound in common words and practise recognising it as part of Welsh spelling.',
   accents: 'A short guide to Welsh accents, long vowel sounds, and why small marks can change words.'
 };
@@ -100,7 +100,7 @@ const spellingBasicsWelshDescriptions: Record<string, string> = {
   ll: 'Dysgwch adnabod y patrwm ll mewn geiriau Cymraeg cyffredin.',
   ch: 'Canllaw syml i ch Gymraeg, a sut mae’n wahanol i ch Saesneg.',
   rh: 'Dysgwch sylwi ar rh fel patrwm sillafu Cymraeg.',
-  w: 'Nodyn byr ar w fel llafariad Gymraeg, gydag enghreifftiau fel dŵr, cwm, byw, a bwrdd.',
+  w: 'Nodyn byr ar w fel llafariad Gymraeg, gydag enghreifftiau fel dŵr, cwm, twr, a sŵn.',
   y: 'Dysgwch sut gall y swnio mewn geiriau Cymraeg cyffredin.',
   accents: 'Nodyn byr ar acenion Cymraeg, llafariaid hir, a pham mae marciau bach yn gallu newid geiriau.'
 };

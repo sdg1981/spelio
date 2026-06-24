@@ -481,9 +481,9 @@ often behave like vowels.
 ## Example words
 
 - dŵr
-- tŷ
-- byw
-- gwyn
+- cwm
+- twr
+- sŵn
 
 ---
 

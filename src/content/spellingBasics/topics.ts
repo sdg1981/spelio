@@ -356,15 +356,15 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
           cy: 'Dyma un rheswm pam gall geiriau Cymraeg edrych yn annisgwyl os ydych yn eu darllen drwy arferion Saesneg.'
         },
         {
-          en: 'Once you start hearing w as a vowel, words like dŵr, cwm, byw, and bwrdd start to make more sense.',
-          cy: 'Unwaith rydych chi’n dechrau clywed w fel llafariad, mae geiriau fel dŵr, cwm, byw, a bwrdd yn dechrau gwneud mwy o synnwyr.'
+          en: 'Once you start hearing w as a vowel, words like dŵr, cwm, twr, and sŵn start to make more sense.',
+          cy: 'Unwaith rydych chi’n dechrau clywed w fel llafariad, mae geiriau fel dŵr, cwm, twr, a sŵn yn dechrau gwneud mwy o synnwyr.'
         }
       ],
       examples: [
         { welsh: 'dŵr', meaning: { en: 'water', cy: 'dŵr' } },
         { welsh: 'cwm', meaning: { en: 'valley', cy: 'cwm' } },
-        { welsh: 'byw', meaning: { en: 'living', cy: 'byw' } },
-        { welsh: 'bwrdd', meaning: { en: 'table', cy: 'bwrdd' } }
+        { welsh: 'twr', meaning: { en: 'tower', cy: 'twr' } },
+        { welsh: 'sŵn', meaning: { en: 'sound', cy: 'sŵn' } }
       ]
     }
   },

@@ -44,6 +44,8 @@ assert(
   spellingBasicsW.description.includes('dŵr'),
   'Welsh spelling basics metadata should preserve Welsh characters and diacritics.'
 );
+assertEqual(spellingBasicsW.description.includes('byw'), false, 'W metadata should not mention removed W example byw.');
+assertEqual(spellingBasicsW.description.includes('bwrdd'), false, 'W metadata should not mention removed W example bwrdd.');
 
 const legacyWy = resolvePublicMetadata({
   origin,
