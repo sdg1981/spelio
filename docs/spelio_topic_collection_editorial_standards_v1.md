@@ -141,11 +141,20 @@ When creating a new Topic Collection, use a staged editorial workflow:
 
 1. Generate a broad vocabulary pool.
 2. Add Welsh forms and notes.
-3. Classify each candidate by spelling load.
-4. Mark editorial status.
-5. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
+3. Classify spelling load using:
+   - Very Light
+   - Light
+   - Moderate
+   - Heavy
+   - Very Heavy
+4. Classify Core Status using:
+   - Core
+   - Extension
+   - Uncertain
+5. Mark Most Common candidates separately.
+6. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
 
-Spelling-load classification is an editorial aid, not a rigid formula. It helps editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
+Spelling-load classification is relative within the topic and is an editorial aid, not a rigid formula. It helps editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
 
 ---
 
