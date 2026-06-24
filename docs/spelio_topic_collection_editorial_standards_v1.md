@@ -152,9 +152,12 @@ When creating a new Topic Collection, use a staged editorial workflow:
    - Extension
    - Uncertain
 5. Mark Most Common candidates separately.
-6. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
+6. Assign Representative Role or similar topic-balance metadata.
+7. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
 
 Spelling-load classification is relative within the topic and is an editorial aid, not a rigid formula. It helps editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
+
+Representative Role helps editors balance lists so each Topic Collection feels varied, representative, and satisfying rather than simply sorted by spelling load.
 
 ---
 
