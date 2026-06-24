@@ -23,6 +23,7 @@ export const supportWordListCollection: WordListCollection = {
 };
 
 type SupportWordSeed = {
+  id?: string;
   englishPrompt: string;
   welshAnswer: string;
   acceptedAlternatives?: string[];
@@ -48,6 +49,7 @@ type SupportWordSeed = {
   elevenLabsPrompt?: string;
   audioReviewStatus?: PracticeWord['audioReviewStatus'];
   difficulty?: number;
+  order?: number;
   dialect?: PracticeWord['dialect'];
   dialectNote?: string;
   usageNote?: string;
@@ -73,12 +75,11 @@ const supportListSeeds: SupportListSeed[] = [
     descriptionCy: 'Ymarfer cymorth ffocysedig ar gyfer ff Cymraeg.',
     focus: 'Welsh spelling basics',
     words: [
-      { englishPrompt: 'road', welshAnswer: 'ffordd' },
-      { englishPrompt: 'coffee', welshAnswer: 'coffi' },
-      { englishPrompt: 'friend', welshAnswer: 'ffrind' },
-      { englishPrompt: 'phone', welshAnswer: 'ffôn' },
-      { englishPrompt: 'farm', welshAnswer: 'fferm' },
-      { englishPrompt: 'fruit', welshAnswer: 'ffrwyth' }
+      { id: 'support_ff_002', englishPrompt: 'coffee', welshAnswer: 'coffi', order: 2 },
+      { id: 'support_ff_003', englishPrompt: 'friend', welshAnswer: 'ffrind', order: 3 },
+      { id: 'support_ff_004', englishPrompt: 'phone', welshAnswer: 'ffôn', order: 4 },
+      { id: 'support_ff_005', englishPrompt: 'farm', welshAnswer: 'fferm', order: 5 },
+      { id: 'support_ff_006', englishPrompt: 'fruit', welshAnswer: 'ffrwyth', order: 6 }
     ]
   },
   {
@@ -221,7 +222,7 @@ const supportListSeeds: SupportListSeed[] = [
 
 function createSupportWord(seed: SupportWordSeed, listId: string, order: number): PracticeWord {
   return {
-    id: `${listId}_${String(order).padStart(3, '0')}`,
+    id: seed.id ?? `${listId}_${String(order).padStart(3, '0')}`,
     listId,
     prompt: seed.englishPrompt,
     answer: seed.welshAnswer,
@@ -252,7 +253,7 @@ function createSupportWord(seed: SupportWordSeed, listId: string, order: number)
     elevenLabsPrompt: seed.elevenLabsPrompt ?? '',
     audioReviewStatus: seed.audioReviewStatus ?? 'unchecked',
     notes: '',
-    order,
+    order: seed.order ?? order,
     difficulty: seed.difficulty ?? 1,
     dialect: seed.dialect ?? 'Both',
     dialectNote: seed.dialectNote ?? '',

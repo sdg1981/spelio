@@ -9298,22 +9298,6 @@
       },
       "words": [
         {
-          "id": "support_ff_001",
-          "listId": "support_ff",
-          "englishPrompt": "road",
-          "welshAnswer": "ffordd",
-          "acceptedAlternatives": [],
-          "audioUrl": "https://pybyqcmzattdmdxuhrtl.supabase.co/storage/v1/object/public/audio/cy/support/support-ff/support-ff-001.mp3",
-          "audioStatus": "ready",
-          "notes": "",
-          "order": 1,
-          "difficulty": 1,
-          "dialect": "Both",
-          "dialectNote": "",
-          "variantGroupId": "",
-          "usageNote": ""
-        },
-        {
           "id": "support_ff_002",
           "listId": "support_ff",
           "englishPrompt": "coffee",

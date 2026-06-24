@@ -823,8 +823,8 @@ test('support_ff session queue is stable and ordered for contextual practice', (
   const wordIds = session.words.map(word => word.id);
 
   assertEqual(new Set(wordIds).size, wordIds.length, 'Support session words should have unique IDs');
-  assertEqual(session.words.slice(0, 5).map(word => word.welshAnswer).join('|'), 'ffordd|coffi|ffrind|ffôn|fferm', 'support_ff should queue focused words in seed order');
-  assertEqual(session.words.slice(0, 5).map(word => word.englishPrompt).join('|'), 'road|coffee|friend|phone|farm', 'support_ff prompts should match the focused words');
+  assertEqual(session.words.slice(0, 5).map(word => word.welshAnswer).join('|'), 'coffi|ffrind|ffôn|fferm|ffrwyth', 'support_ff should queue focused words in seed order without support_ff_001.');
+  assertEqual(session.words.slice(0, 5).map(word => word.englishPrompt).join('|'), 'coffee|friend|phone|farm|fruit', 'support_ff prompts should match the focused words.');
 });
 
 test('support words are standalone hidden-list data with stable IDs and missing audio until generated', () => {
@@ -847,6 +847,8 @@ test('support words are standalone hidden-list data with stable IDs and missing 
   assertEqual(supportFf.isSupportList, true, 'Support FF should carry the support-list flag.');
   assertEqual(supportFf.hiddenFromMainCatalogue, true, 'Support FF should be hidden from the public word-list catalogue.');
   assertEqual(mainWordLists(supportLists).some(list => list.id === 'support_ff'), false, 'Support FF should not appear in the main catalogue filter.');
+  assertEqual(supportFf.words.some(word => word.id === 'support_ff_001'), false, 'Support FF should not include removed support_ff_001.');
+  assertEqual(supportFf.words.some(word => word.welshAnswer === 'ffordd'), false, 'Support FF should not include removed ffordd.');
   assertEqual(supportRh.listType, 'support', 'Support RH should be explicitly typed as a support list.');
   assertEqual(supportRh.isSupportList, true, 'Support RH should carry the support-list flag.');
   assertEqual(supportRh.hiddenFromMainCatalogue, true, 'Support RH should be hidden from the public word-list catalogue.');
@@ -904,7 +906,7 @@ test('support lists remain available when ordinary progression lists are removed
   const supportFf = findSupportWordList(listsWithSupport, 'support_ff');
 
   assert(supportFf, 'Support FF should be added independently of ordinary progression list membership.');
-  assertEqual(supportFf.words.map(word => word.welshAnswer).join('|'), 'ffordd|coffi|ffrind|ffôn|fferm|ffrwyth', 'Support FF words should not depend on normal list contents.');
+  assertEqual(supportFf.words.map(word => word.welshAnswer).join('|'), 'coffi|ffrind|ffôn|fferm|ffrwyth', 'Support FF words should not depend on normal list contents.');
   assertEqual(supportFf.words.every(word => word.listId === 'support_ff'), true, 'Support FF words should keep support-list ownership.');
 });
 

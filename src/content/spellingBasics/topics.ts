@@ -75,7 +75,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         { symbol: 'w', hint: { en: '“oo” in the English word food', cy: 'y sain “oo” yn y gair Saesneg food' }, example: 'dŵr' },
         { symbol: 'y', hint: { en: '“ee” in the English word see', cy: '“ee” yn y gair Saesneg see' }, example: 'tŷ' },
         { symbol: 'f', hint: { en: '“v” in the English word van', cy: 'y sain “v” yn y gair Saesneg van' }, example: 'afal' },
-        { symbol: 'ff', hint: { en: '“f” in the English word fish', cy: 'y sain “f” yn y gair Saesneg fish' }, example: 'ffordd' },
+        { symbol: 'ff', hint: { en: '“f” in the English word fish', cy: 'y sain “f” yn y gair Saesneg fish' }, example: 'coffi' },
         { symbol: 'dd', hint: { en: '“th” in the English word this', cy: 'y sain “th” yn y gair Saesneg this' }, example: 'dydd' },
         { symbol: 'll', hint: { en: 'a distinctive Welsh sound', cy: 'sain Gymraeg arbennig, nid sain Saesneg arferol' }, example: 'llaw' },
         { symbol: 'ch', hint: { en: '“ch” in the Scottish word loch', cy: 'yr “ch” yn y gair Sgoteg loch' }, example: 'bach' },

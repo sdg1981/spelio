@@ -338,7 +338,6 @@ Explain that Welsh `ff` sounds like English `f`.
 
 ## Example words
 
-- ffordd
 - coffi
 - ffrind
 
