@@ -111,13 +111,13 @@ assertEqual(getSpellingBasicsTopic('w')?.practiceListId, 'support_w', 'W topic s
 assertEqual(getSpellingBasicsTopic('y')?.practiceListId, 'support_y', 'Y topic should launch support_y practice.');
 assertEqual(
   getSpellingBasicsPracticeCtaLabel('w', 'en', () => 'Practise this pattern'),
-  'Practise this pattern (W as a vowel)',
-  'W topic English practice CTA should clarify the support practice focus.'
+  'Practise this pattern',
+  'W topic English practice CTA should use the current public page label.'
 );
 assertEqual(
   getSpellingBasicsPracticeCtaLabel('w', 'cy', () => 'Ymarfer y patrwm hwn'),
-  'Ymarferwch y patrwm hwn (W fel llafariad)',
-  'W topic Welsh practice CTA should clarify the support practice focus.'
+  'Ymarferwch y patrwm hwn',
+  'W topic Welsh practice CTA should use the current public page label.'
 );
 assertEqual(
   getSpellingBasicsPracticeCtaLabel('ff', 'en', () => 'Practise this pattern'),
