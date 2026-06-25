@@ -79,7 +79,7 @@ export const spellingBasicsTopics: SpellingBasicsTopic[] = [
         { symbol: 'dd', hint: { en: '“th” in the English word this', cy: 'y sain “th” yn y gair Saesneg this' }, example: 'dydd' },
         { symbol: 'll', hint: { en: 'a distinctive Welsh sound', cy: 'sain Gymraeg arbennig, nid sain Saesneg arferol' }, example: 'llaw' },
         { symbol: 'ch', hint: { en: '“ch” in the Scottish word loch', cy: 'yr “ch” yn y gair Sgoteg loch' }, example: 'bach' },
-        { symbol: 'rh', hint: { en: 'a breathy Welsh r sound', cy: 'sain “r” Gymraeg anadlol, nid sain Saesneg arferol' }, example: 'rhydd' }
+        { symbol: 'rh', hint: { en: 'a breathy Welsh r sound', cy: 'sain “r” Gymraeg anadlol, nid sain Saesneg arferol' }, example: 'rhedeg' }
       ],
       patternExample: {
         title: {

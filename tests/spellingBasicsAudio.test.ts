@@ -161,6 +161,7 @@ assertEqual(phoneticYSound?.hint.en, '“ee” in the English word see', 'Phonet
 assertEqual(phoneticYSound?.hint.cy, '“ee” yn y gair Saesneg see', 'Phonetic y sound should keep the softened Welsh sound anchor text in data.');
 const phoneticOSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'o');
 assertEqual(phoneticOSound?.hint.en, '“o” in the English word hot', 'Phonetic sound anchors should explicitly label English reference words.');
+const phoneticRhSound = phoneticTopic.phoneticOrientation.sounds.find(sound => sound.symbol === 'rh');
 
 const accentsTopic = spellingBasicsTopics.find(topic => topic.slug === 'accents');
 assert(accentsTopic && accentsTopic.kind === 'series', 'Accents topic should be a series topic.');
@@ -195,6 +196,7 @@ const rhTopic = getSpellingBasicsTopic('rh');
 assert(rhTopic?.kind === 'single', 'RH topic should be a single spelling-basics topic.');
 assertEqual(rhTopic.card.examples?.map(example => example.welsh).join('|'), 'rhedeg|rhaid', 'RH examples should use the current public page examples.');
 assertEqual(rhTopic.card.examples?.map(example => example.meaning?.en).join('|'), 'to run|must', 'RH example meanings should match the current public page examples.');
+assertEqual(phoneticRhSound?.example, rhTopic.card.examples?.[0]?.welsh, 'Phonetic RH example should mirror the first public RH topic example.');
 const chTopic = getSpellingBasicsTopic('ch');
 assert(chTopic?.kind === 'single', 'CH topic should be a single spelling-basics topic.');
 assertEqual(chTopic.card.examples?.map(example => example.welsh).join('|'), 'bach|chwech', 'CH examples should not include iechyd.');
@@ -256,6 +258,10 @@ for (const welsh of nestedExampleWords) {
   assertEqual(resolution.word.listId, 'support_spelling_basics_examples', `${welsh} should resolve through the spelling-basics examples support list.`);
   assertEqual(resolution.audioStatus, 'missing', `${welsh} should be discoverable as missing support audio until generated.`);
 }
+const phoneticRhResolution = resolveSpellingBasicsExampleAudio('rhedeg', supportExampleLists);
+assert(phoneticRhResolution.word, 'rhedeg should resolve to support RH audio data.');
+assertEqual(phoneticRhResolution.word.listId, 'support_rh', 'Phonetic RH audio should resolve through the existing RH support list.');
+assertEqual(phoneticRhResolution.word.englishPrompt, 'to run', 'Phonetic RH audio should use the same English meaning as the RH topic example.');
 
 const readySupportExamples = makeList({
   id: 'support_spelling_basics_examples',
