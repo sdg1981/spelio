@@ -317,7 +317,8 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
 
   const collections = (collectionsResult.data ?? []).map(row => mapCollection(row as CollectionRow));
   const collectionById = new Map(collections.map(collection => [collection.id, collection]));
-  const activeLists = (listsData ?? []) as WordListRow[];
+  const activeLists = ((listsData ?? []) as WordListRow[])
+    .filter(list => collectionById.has(list.collection_id ?? DEFAULT_WORD_LIST_COLLECTION_ID));
   const activeListIds = new Set(activeLists.map(list => list.id));
   const wordsByListId = new Map<string, WordRow[]>();
 

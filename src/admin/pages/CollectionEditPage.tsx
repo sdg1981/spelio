@@ -1,4 +1,4 @@
-import { ArrowLeft, Save, Trash2, Wand2 } from 'lucide-react';
+import { ArrowLeft, Save, ShieldCheck, Trash2, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminButton, AdminCard, AdminInput, AdminSelect, AdminTextarea, Field } from '../components/primitives';
@@ -165,11 +165,28 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
           <AdminCard className="p-5">
             <div className="grid gap-2 text-sm">
               <div className="font-mono text-xs text-slate-500">{collection.id}</div>
-              <div className="text-lg font-black text-slate-950">{collection.name}</div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="text-lg font-black text-slate-950">{collection.name}</div>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-black ${collection.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                  <ShieldCheck size={14} />
+                  {collection.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
               <div className="text-slate-600">{collection.description}</div>
-              <div className="max-w-xs">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
                 <Field label="Order" helper="Controls public collection order. Lower numbers appear first.">
                   <AdminInput type="number" min={0} value={collection.order} onChange={event => updateCollection({ order: Number(event.target.value) })} />
+                </Field>
+                <Field label="Public visibility" helper="Inactive collections and their word lists stay out of the public catalogue.">
+                  <label className="flex min-h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300"
+                      checked={collection.isActive}
+                      onChange={event => updateCollection({ isActive: event.target.checked })}
+                    />
+                    Active collection
+                  </label>
                 </Field>
               </div>
               <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>

@@ -747,6 +747,25 @@ test('support-only lists are present but hidden from the main word-list catalogu
   assertEqual(normalizeSingleSelectedListIds(['support_dd'], wordLists)[0], 'foundations_first_words', 'Normal list selection should not select a support list');
 });
 
+test('inactive collections are hidden from the main word-list catalogue', () => {
+  const visibleList = mainWordLists(wordLists).find(list => list.collection?.isActive !== false && !list.hiddenFromMainCatalogue);
+  assert(visibleList, 'Fixture should include at least one visible main word list.');
+
+  const inactiveCollectionList: WordList = {
+    ...visibleList,
+    id: 'draft_collection_visible_list',
+    isActive: true,
+    hiddenFromMainCatalogue: false,
+    collection: {
+      ...(visibleList.collection ?? wordLists[0].collection!),
+      id: 'draft_collection',
+      isActive: false
+    }
+  };
+
+  assertEqual(mainWordLists([inactiveCollectionList]).length, 0, 'Active lists inside inactive collections should stay out of the public catalogue.');
+});
+
 test('stored selected list falls back when the list has no usable imported words', () => {
   const emptyImportedList: WordList = {
     id: 'empty_imported',

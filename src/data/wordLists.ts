@@ -242,7 +242,10 @@ const usageNotesByWordId = new Map(
 );
 
 const baseWordLists: WordList[] = rawLists
-  .filter(list => list.isActive)
+  .filter(list => {
+    const collection = collectionMap.get(list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID) ?? defaultWordListCollection;
+    return list.isActive && collection.isActive;
+  })
   .sort((a, b) => a.order - b.order)
   .map(list => ({
     id: list.id,

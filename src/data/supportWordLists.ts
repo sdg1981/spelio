@@ -273,7 +273,7 @@ export function isSupportWordList(list: Pick<WordList, 'id' | 'collectionId' | '
 }
 
 export function mainWordLists(lists: WordList[]) {
-  return lists.filter(list => !isSupportWordList(list) && !list.hiddenFromMainCatalogue);
+  return lists.filter(list => list.isActive && list.collection?.isActive !== false && !isSupportWordList(list) && !list.hiddenFromMainCatalogue);
 }
 
 export function supportWordLists(lists: WordList[]) {
