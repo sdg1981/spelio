@@ -39,7 +39,14 @@ insert into public.word_lists (
   true,
   'main',
   false,
-  null
+  '{
+    "enabled": false,
+    "titleEn": "",
+    "titleCy": "",
+    "bodyEn": "",
+    "bodyCy": "",
+    "soundItems": []
+  }'::jsonb
 ) on conflict (id) do update set
   slug = excluded.slug,
   collection_id = excluded.collection_id,
