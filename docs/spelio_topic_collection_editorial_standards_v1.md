@@ -137,43 +137,40 @@ Most Common lists should complement Topic 1-3 rather than replace them.
 
 ## 8. Practical Collection Workflow
 
-When creating a new Topic Collection, use a staged editorial workflow:
+When creating a new Topic Collection, use a simple draft-first workflow:
 
-1. Generate a broad vocabulary pool.
-2. Add Welsh forms and notes.
-3. Classify spelling load using:
-   - Very Light
-   - Light
-   - Moderate
-   - Heavy
-   - Very Heavy
-4. Classify Core Status using:
-   - Core
-   - Extension
-   - Uncertain
-5. Mark Most Common candidates separately.
-6. Assign Representative Role or similar topic-balance metadata.
-7. Only then build Topic 1, Topic 2, Topic 3, and Most Common.
+1. Generate a broad vocabulary pool with Welsh and English forms.
+2. Ask AI to draft Topic 1, Topic 2, and Topic 3 directly from the pool.
+3. Keep each Topic 1-3 list tightly curated, normally around 10 words.
+4. Ask AI to judge progression primarily from Welsh spelling complexity, not English familiarity, semantic difficulty, or vocabulary frequency.
+5. Generate the Most Common list separately.
+6. Allow Most Common to duplicate words from Topic 1-3.
+7. Review the AI draft editorially before approval.
+8. Store approved lists in `docs/topic_collections/`.
 
-Spelling-load classification is relative within the topic and is an editorial aid, not a rigid formula. It helps editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
+Topic 1-3 are spelling-progression lists, not vocabulary-frequency lists. Most Common is frequency and usefulness driven, not spelling-progression driven.
 
-Representative Role helps editors balance lists so each Topic Collection feels varied, representative, and satisfying rather than simply sorted by spelling load.
+Human editorial review remains essential. The AI draft should create momentum, but editors must still judge whether the lists genuinely separate by Welsh spelling complexity, respect the topic, and feel calm, focused, intentional, and spelling-first.
 
-Representative Role is a balancing aid, not a primary selection driver. Selection weighting should normally be:
+The older metadata-heavy workflow may still be useful for difficult topics, disputed topics, or topics with many near-equivalent candidates. Fields such as Spelling Load, Core Status, Most Common Candidate, and Representative Role can help discovery and review, but they are no longer the default authoring workflow.
 
-1. Topic expectation / learner usefulness
-2. Spelling accessibility
-3. Representative balance
+If metadata is used, spelling-load classification remains relative within the topic and should be treated as an editorial aid, not a rigid formula. It can help editors notice when a familiar or common word carries more spelling complexity than expected, and when a less common word may still be highly accessible for spelling practice.
+
+Representative Role can help editors balance lists so each Topic Collection feels varied, representative, and satisfying rather than simply sorted by spelling load. It is a balancing aid, not a primary selection driver. Topic expectation, learner usefulness, and spelling accessibility should carry more weight than category spread.
 
 Representative Role should prevent a list becoming too narrow, but it should not force every introductory list to include every subcategory. A Topic 1 list may be naturally weighted toward the most expected vocabulary if that better serves learners and teachers. Balance should improve the list, not make it feel artificial, and important expected words should not be excluded solely to satisfy category spread.
 
-A few moderate spelling-load words may belong in Topic 1 if they are central to the topic. For example, Animals 1 should probably include highly expected words such as horse, sheep, duck, and fox even if that makes the list more farm/wildlife-heavy, because those words better match learner and teacher expectations than a perfectly even spread across pets, farm animals, birds, insects, reptiles, sea life, and zoo animals.
+Topic 1 should not include deliberate stretch words. A few moderate spelling-load words may belong in Topic 1 only if they are still genuinely accessible and central to the topic. If a word feels like a stretch, it should normally move later or remain unused.
 
 Selection is not allocation. Core means a word may be suitable for the main topic area, but it does not guarantee inclusion in Topic 1-3. Topic 1-3 should normally be tightly curated lists, often around 10 words each. Words not selected for Topic 1-3 may remain unused, move into future Topic 4/5 lists, or be better suited to specialist extension collections.
 
 Editorial quality matters more than using up the vocabulary pool. Do not force words into Topic 2 or Topic 3 merely because they were not used in Topic 1.
 
-Topic 1 should not include deliberate stretch words. A few moderate spelling-load words may appear only if they are still genuinely accessible and central to the topic. If a word feels like a stretch, it should normally move later or remain unused.
+### Animals Lesson Learned
+
+The Animals experiment showed that over-classifying every word can slow the process down. The detailed metadata was useful for discovery, but it created too much process weight to repeat by default for every future topic.
+
+A simpler AI draft, followed by human editorial review, may produce better momentum. The human review should focus on whether Topic 1, Topic 2, and Topic 3 genuinely separate by Welsh spelling complexity. Words should not be placed into later topics simply because they were unused earlier.
 
 ---
 
