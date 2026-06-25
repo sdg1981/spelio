@@ -53,6 +53,8 @@ Bee and butterfly were included despite Moderate spelling load because they are 
 
 This first draft revealed that Representative Role was over-weighted. The next revision should allow Animals 1 to lean more naturally toward highly expected learner and teacher vocabulary, even if that makes the list more farm- and wildlife-heavy.
 
+The next revision should also narrow Animals 1 toward approximately 10 words. The goal is not to allocate all good animal words across Animals 1-3; words removed from Animals 1 should return to the editorial pool unless they clearly strengthen a later list, and they should not automatically move to Animals 2.
+
 ### Possible Animals 2 Moves
 
 Mochyn daear, Gwenynen, Pili-pala, Malwen, Madfall, Brân, Alarch, Pysgodyn, and Llew may move to Animals 2 after further review if Animals 1 needs to become lighter overall. The current draft keeps them because Animals 1 should not feel like a list of only the shortest or easiest forms.

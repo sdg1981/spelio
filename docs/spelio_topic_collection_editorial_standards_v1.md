@@ -169,6 +169,12 @@ Representative Role should prevent a list becoming too narrow, but it should not
 
 A few moderate spelling-load words may belong in Topic 1 if they are central to the topic. For example, Animals 1 should probably include highly expected words such as horse, sheep, duck, and fox even if that makes the list more farm/wildlife-heavy, because those words better match learner and teacher expectations than a perfectly even spread across pets, farm animals, birds, insects, reptiles, sea life, and zoo animals.
 
+Selection is not allocation. Core means a word may be suitable for the main topic area, but it does not guarantee inclusion in Topic 1-3. Topic 1-3 should normally be tightly curated lists, often around 10 words each. Words not selected for Topic 1-3 may remain unused, move into future Topic 4/5 lists, or be better suited to specialist extension collections.
+
+Editorial quality matters more than using up the vocabulary pool. Do not force words into Topic 2 or Topic 3 merely because they were not used in Topic 1.
+
+Topic 1 should not include deliberate stretch words. A few moderate spelling-load words may appear only if they are still genuinely accessible and central to the topic. If a word feels like a stretch, it should normally move later or remain unused.
+
 ---
 
 ## 9. Every List Should Feel Complete
