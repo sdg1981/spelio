@@ -764,6 +764,19 @@ test('inactive collections are hidden from the main word-list catalogue', () => 
   };
 
   assertEqual(mainWordLists([inactiveCollectionList]).length, 0, 'Active lists inside inactive collections should stay out of the public catalogue.');
+
+  const normalized = normalizeStorageWordListSelection({
+    ...createDefaultStorage(),
+    selectedListIds: [inactiveCollectionList.id],
+    currentPathPosition: inactiveCollectionList.id
+  }, [inactiveCollectionList, visibleList]);
+  const recommendation = getNormalContinuationRecommendation(normalized, [inactiveCollectionList, visibleList]);
+  const session = createPracticeSession([inactiveCollectionList, visibleList], normalized);
+
+  assertEqual(normalized.selectedListIds[0], visibleList.id, 'Stored selections inside inactive collections should fall back to the active public list.');
+  assertEqual(normalized.currentPathPosition, visibleList.id, 'Current path inside an inactive collection should move to the active public list.');
+  assertEqual(recommendation.listId, visibleList.id, 'Recommendations should ignore inactive collections and continue from the active fallback.');
+  assertEqual(session.listIds.includes(inactiveCollectionList.id), false, 'Practice sessions should not start from lists inside inactive collections.');
 });
 
 test('stored selected list falls back when the list has no usable imported words', () => {

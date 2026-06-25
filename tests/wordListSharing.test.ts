@@ -109,6 +109,22 @@ assertEqual(
   'Inactive shared slugs should be ignored.'
 );
 
+const inactiveCollectionList: WordList = {
+  ...firstVerbs,
+  id: 'inactive-collection-first-verbs',
+  isActive: true,
+  collection: {
+    ...firstVerbs.collection!,
+    id: 'inactive-shared-collection',
+    isActive: false
+  }
+};
+assertEqual(
+  findActiveWordListBySlug([inactiveCollectionList], 'first-verbs-core-actions'),
+  null,
+  'Shared slugs from inactive collections should be ignored.'
+);
+
 const sharedStorage = applySharedWordListSelection(createDefaultStorage(), firstVerbs);
 assertEqual(sharedStorage.selectedListIds[0], firstVerbs.id, 'Temporary shared selection should preselect exactly the shared list.');
 assertEqual(sharedStorage.currentPathPosition, firstVerbs.id, 'Temporary shared selection should present the shared list as current.');

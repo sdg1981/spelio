@@ -1,4 +1,5 @@
 import type { WordList } from '../data/wordLists';
+import { mainWordLists } from '../data/supportWordLists';
 import { getPublicOrigin } from './nativeOrigin';
 import type { SessionResult, SpelioStorage } from './practice/storage';
 
@@ -69,7 +70,7 @@ export function getSharedWordListSlugFromPath(pathname: string) {
 
 export function findActiveWordListBySlug(lists: WordList[], slug: string | null) {
   if (!slug || !isValidWordListSlug(slug)) return null;
-  return lists.find(list => list.isActive && getWordListSlug(list) === slug) ?? null;
+  return mainWordLists(lists).find(list => getWordListSlug(list) === slug) ?? null;
 }
 
 export function isPracticeTestShareMode(search: string) {
