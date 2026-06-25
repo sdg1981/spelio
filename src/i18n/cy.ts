@@ -301,6 +301,7 @@ export const cy = {
   },
   wordLists: {
     title: 'Rhestrau geiriau',
+    introduction: 'Porwch gasgliadau sillafu Cymraeg â themâu i ymarfer geirfa ddefnyddiol, ailddychwelyd at bynciau cyfarwydd, a darganfod cynnwys newydd wrth i Spelio dyfu.',
     description: 'Dewiswch un rhestr eiriau i ymarfer.',
     selected: 'Dewiswyd',
     list: 'rhestr',

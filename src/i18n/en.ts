@@ -301,6 +301,7 @@ export const en = {
   },
   wordLists: {
     title: 'Word Lists',
+    introduction: 'Browse themed Welsh spelling collections to practise useful vocabulary, revisit familiar topics, and discover new content as Spelio grows.',
     description: 'Choose one word list to practise.',
     selected: 'Selected',
     list: 'list',

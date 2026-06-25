@@ -121,6 +121,7 @@ export function WordListsPage({
       <section className="word-lists-content" aria-labelledby="word-lists-page-title">
         <div className="how-hero-copy word-lists-heading">
           <h1 id="word-lists-page-title">{t('wordLists.title')}</h1>
+          <p className="word-lists-introduction">{t('wordLists.introduction')}</p>
         </div>
 
         <WordListSelectorPanel

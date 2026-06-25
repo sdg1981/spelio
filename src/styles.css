@@ -8116,6 +8116,14 @@
   font-size:clamp(38px,6vw,60px);
 }
 
+.word-lists-introduction{
+  width:min(100%,680px);
+  margin:16px auto 0;
+  color:var(--text-secondary, #5f6b78);
+  font-size:17px;
+  line-height:1.55;
+}
+
 .word-lists-recent-custom{
   display:grid;
   gap:18px;
