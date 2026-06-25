@@ -1787,7 +1787,7 @@ Learn / Practise
 
 For MVP compatibility, existing `stage/group` metadata may continue to exist. It should be treated as internal progression or grouping metadata, not as the preferred long-term learner-facing catalogue model. Future admin/content work may add explicit product-area and category metadata, but this must not rename or remove current fields during MVP.
 
-Spelio-authored practice content should distinguish finite Core Practice Collections from optional Extension Collections. Core Practice is representative and completable; Extensions can expand sideways into interests, domains, school needs, and specialist vocabulary.
+Spelio-authored content should distinguish finite Learning Journeys from Practice Library collections. Learning Journeys are concept-led and completable; the Practice Library can expand sideways into topics, interests, domains, school needs, teacher lists, custom lists, exam lists, and specialist vocabulary.
 
 List-level dialect is a summary/display field only. The actual practice filtering is controlled by word-level dialect.
 
@@ -1920,7 +1920,7 @@ Default seeded MVP collection:
 
 Existing Welsh MVP word lists belong to this default collection.
 
-The default collection name is an implementation-era container name. It should not be read as a final learner-facing information architecture. Longer-term catalogue presentation should be able to separate Learn, Core Practice Collections, and Extension Collections without requiring an immediate MVP schema rewrite.
+The default collection name is an implementation-era container name. It should not be read as a final learner-facing information architecture. Longer-term catalogue presentation should be able to separate Learning Journeys from the Practice Library without requiring an immediate MVP schema rewrite.
 
 The Collections layer exists to reduce future refactor risk for curriculum integrations, course pathways, school deployments, teacher lists, personal lists, and future language-pair expansions. Those systems are intentionally postponed beyond MVP.
 

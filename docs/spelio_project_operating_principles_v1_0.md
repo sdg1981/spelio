@@ -68,7 +68,7 @@ The guiding question should usually be:
 
 For content and catalogue decisions, a second guiding question should be:
 
-> Does this strengthen a finite spelling-confidence journey or a meaningful optional extension, rather than creating catalogue bloat?
+> Does this strengthen a finite Learning Journey or a useful Practice Library resource, rather than creating catalogue bloat?
 
 ---
 
@@ -181,17 +181,23 @@ before:
 
 The product may eventually grow into broader learning support, but it should grow outward from strong practice foundations rather than becoming an unfocused all-in-one system.
 
-The preferred long-term content architecture is:
+The preferred long-term content architecture distinguishes:
 
-> Learn → Practise → Build
+> Learning Journeys and the Practice Library
 
 This means:
 
-- Learn as a finite, curated spelling-confidence path
-- Practise as focused word-list reinforcement through Topic Collections, Custom Lists, and optional extension collections
-- Build as controlled written Welsh practice using known spellings, not a full grammar course or conversation syllabus
+- Learning Journeys as finite, concept-led collections that teach one idea well
+- the Practice Library as expandable, topic-led word-list reinforcement through Topic Collections, Custom Lists, teacher lists, exam lists, and optional extension collections
+- Build as a controlled written-context technique or optional phase inside a Learning Journey, not a required top-level product area
 
-Completion of Foundations and Core Practice should be treated as a meaningful learner outcome, not as a product problem to avoid through endless numbered lists.
+The internal framing can remain:
+
+> Understand Welsh spelling. Practise Welsh spelling. Build real written Welsh where it helps learning.
+
+Build should stay spelling-first and writing-first. It should not become a full grammar course, long sentence translation system, conversation syllabus, or Duolingo-style progression.
+
+Completion of a Learning Journey should be treated as a meaningful learner outcome, not as a product problem to avoid through endless numbered lists. Practice Library collections can remain browsable and revisitable without becoming compulsory progression.
 
 ---
 

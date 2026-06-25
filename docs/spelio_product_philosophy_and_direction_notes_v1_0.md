@@ -231,27 +231,29 @@ than:
 
 > an infinite content catalogue.
 
-Spelio is not choosing between a tiny finite course and an endless vocabulary catalogue. The stronger model is:
+Spelio is not choosing between a tiny finite course and an endless vocabulary catalogue. The stronger model is to distinguish concept-led Learning Journeys from an expandable Practice Library.
 
-`Learn`
+Learning Journeys teach understanding. They are finite, concept-driven collections designed to teach one idea well. Each journey should use the structure the educational need requires rather than being forced into one fixed template.
 
-Understand how Welsh spelling works.
+The Practice Library reinforces useful vocabulary. It is open-ended, topical, browsable, and useful for repeated spelling practice, teacher lists, custom lists, exam lists, and adult learner interests.
 
-`Practise`
+The internal framing remains:
 
-Remember and reinforce Welsh spellings through focused word-list practice.
-
-`Build`
-
-Use known spellings in short written Welsh contexts.
+- Understand Welsh spelling.
+- Practise Welsh spelling.
+- Build real written Welsh where it helps learning.
 
 The key product distinction is:
 
-> Learn and Core Practice are completable. Extensions and Build can expand sideways without turning Spelio into a full Welsh course.
+> Learning Journeys are finite and concept-led. The Practice Library is expandable and topic-led.
 
-The core hear → recall → spell loop remains the interaction engine. The broader learner outcome is written Welsh confidence: understanding Welsh spelling, practising it until it sticks, then using familiar spellings in controlled written contexts.
+The two systems can recommend each other without becoming the same structure. After a Learning Journey, Spelio may recommend relevant Practice Library lists. After a learner completes a Practice Library topic, Spelio may later suggest a related Learning Journey. This should be recommendation-based, not hard-locking; adults should generally remain free to browse.
 
-Build should not be framed as conversational language learning, a grammar syllabus, or a Duolingo-style course path. It is about writing with known spellings: short phrase chunks, sentence fragments, word transformations, endings, mutations, and context-dependent spelling changes where those help learners build real written Welsh.
+The core hear → recall → spell loop remains the interaction engine. The broader learner outcome is written Welsh confidence: understanding Welsh spelling, practising it until it sticks, then using familiar spellings in controlled written contexts where that helps learning.
+
+Build should be framed as a teaching technique or optional phase within a Learning Journey, not as a mandatory top-level product area. It is about writing with known spellings in short, controlled contexts: short phrase chunks, sentence fragments, word transformations, endings, mutations, and context-dependent spelling changes where those help learners notice how real written Welsh behaves.
+
+Build should not become conversational language learning, long sentence translation, a grammar syllabus, or a Duolingo-style course path.
 
 The product should keep asking:
 
@@ -570,27 +572,24 @@ This should not redesign MVP behaviour, introduce dashboards, formal course tree
 
 The clearest architecture is:
 
-- Learn: a finite, curated spelling-confidence path.
-- Practise: focused word-list practice through Topic Collections, Custom Lists, and future extension collections.
-- Build: future-facing written Welsh practice using known spellings in short controlled contexts.
+- Learning Journeys: finite, concept-led collections that teach one idea well.
+- Practice Library: expandable, topic-led vocabulary reinforcement through Topic Collections, Custom Lists, teacher lists, exam lists, and future extension collections.
 
-Learn should contain Welsh Foundations, possible future advanced foundations, mixed confidence milestones, and just enough required exposure for the learner to understand the pattern and feel ready to move on.
+Learning Journeys should contain just enough learning, focused practice, mixed confidence work, pattern recognition, or written context for the learner to understand the concept and feel ready to move on.
 
-Practise should reinforce spelling confidence, provide broad exposure to useful Welsh vocabulary, and support adult learners, teachers, and GCSE learners through representative categories such as Everyday Welsh, People & Home, Food & Drink, Nature & Animals, and Places.
+The Practice Library should reinforce spelling confidence, provide broad exposure to useful Welsh vocabulary, and support adult learners, teachers, and GCSE learners through browsable topics such as animals, food and drink, people and family, places, weather, colours, body, work, transport, sport, nature, teacher lists, custom lists, and exam lists.
 
-Extension Collections may include Welsh place names, GCSE Welsh, healthcare Welsh, education Welsh, tourism Welsh, Church & Faith, Welsh history, birds, British wildlife, teacher-created lists, custom lists, and expanded topic libraries.
+Learning Journeys should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. Practice Library collections may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, personal interests, or everyday Welsh life, but they should remain optional reinforcement rather than required curriculum.
 
-Learn and Core Practice should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. The learner should be able to complete them. Extensions may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, personal interests, or everyday Welsh life, but extensions should expand sideways rather than define required progression.
+Build should grow from spelling into writing only where it helps a Learning Journey. Possible Build content includes short controlled chunks such as "I can", "I want", "I need", "I am going", "going to work", "going home", "rain" to "rainy", and "work" to "working". These examples should remain spelling-first, writing-focused, and context-based rather than becoming general conversation teaching, long sentence translation, or broad grammar progression.
 
-Build should grow from spelling into writing without changing Spelio into a full Welsh course. Possible Build content includes short controlled chunks such as "I can", "I want", "I need", "I am going", "going to work", "going home", "rain" to "rainy", and "work" to "working". These examples should remain spelling-first, writing-focused, and context-based rather than becoming general conversation teaching or broad grammar progression.
-
-## Learn — Welsh Foundations and Representative Transfer
+## Learning Journeys — Welsh Foundations and Representative Transfer
 
 Purpose:
 
 > Build Welsh spelling confidence through a short, finite, carefully designed path.
 
-This is the core path. It mainly contains Welsh Foundations and any tightly curated representative practice needed to make those foundations feel useful and transferable.
+This is the current core Learning Journey. It mainly contains Welsh Foundations and any tightly curated representative practice needed to make those foundations feel useful and transferable.
 
 Examples include:
 
@@ -615,15 +614,15 @@ Goals:
 
 This layer should remain highly curated and intentionally compact.
 
-## Practise — Core Practice and Extensions
+## Practice Library — Topic Collections and Extensions
 
 Purpose:
 
 > Reinforce spelling confidence across useful Welsh words and topics.
 
-Core Practice is finite. It should provide a coherent, representative library of useful Welsh spelling practice after Foundations.
+The Practice Library should provide a coherent, representative library of useful Welsh spelling practice after Foundations without becoming compulsory progression.
 
-Example Core Practice categories include:
+Example Practice Library categories include:
 
 - Everyday Welsh
 - People & Home
@@ -631,11 +630,11 @@ Example Core Practice categories include:
 - Nature and animals
 - Places
 
-Core Practice lists should use accessible, useful, representative, recognisable vocabulary that fits the topic naturally. They should not be restricted to the absolute easiest possible spellings, and they should not become obscure specialist vocabulary merely because a numbered list is later in the sequence.
+Practice Library lists should use accessible, useful, representative, recognisable vocabulary that fits the topic naturally. They should not be restricted to the absolute easiest possible spellings, and they should not become obscure specialist vocabulary merely because a numbered list is later in the sequence.
 
 Numbered lists should still progress moderately by spelling complexity. Animals 1 should generally carry a lower spelling load than Animals 2, but Animals 2 should still feel useful, representative, and adult-appropriate.
 
-Extension Collections are optional and expandable. They should expand sideways into interests, domains, school needs, or specialist vocabulary rather than creating endless numbered ladders.
+Extension collections are optional and expandable. They should expand sideways into interests, domains, school needs, or specialist vocabulary rather than creating endless numbered ladders.
 
 Examples include:
 
@@ -656,17 +655,17 @@ Examples include:
 
 The goal is not exhaustive vocabulary coverage.
 
-The goal is demonstrating that the foundations transfer into real Welsh usage and giving learners somewhere useful to keep practising after the core journey is complete.
+The goal is giving learners somewhere useful to keep practising and reinforcing real Welsh vocabulary without making every topic part of the curriculum.
 
-Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, partly as finite Core Practice, and partly as broader optional Extension Collections. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside a Learning Journey, where it helps prove that foundations transfer into real Welsh, and partly as broader optional Practice Library reinforcement. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
 
-## Build — Written Welsh With Known Spellings
+## Build — Optional Written Context Within Learning Journeys
 
 Purpose:
 
 > Build real written Welsh from known spelling patterns, familiar words, and high-frequency chunks.
 
-Build is a separate future-facing product area, not ordinary Practise and not a full course mode. It may include Building Welsh, Word Building, Written Welsh Patterns, and other controlled writing-confidence content.
+Build is an optional Learning Journey technique, not ordinary Practice Library content and not a full course mode. It may include controlled writing-confidence content where a spelling idea only makes sense in context.
 
 Build content may include:
 
@@ -728,9 +727,9 @@ The learner should feel:
 
 Progression should remain visually simple and understandable.
 
-Core Practice should also be finite and completable. It should give learners a coherent sense that they have completed the core Spelio spelling journey, while still leaving room to explore additional collections.
+Practice Library collections should remain browsable, revisitable, and optional. They should give learners useful places to reinforce vocabulary without implying that every topic is required before moving forward.
 
-Separate from Learn and Core Practice, Extension Collections may become:
+Separate from Learning Journeys, Practice Library collections may become:
 
 - broader
 - revisitable
@@ -748,7 +747,7 @@ Examples include:
 - custom lists
 - adaptive practice
 
-Extensions exist to reinforce learning, support interests and specialist domains, and provide more practice. They should not define the required curriculum.
+Practice Library extensions exist to reinforce learning, support interests and specialist domains, and provide more practice. They should not define the required curriculum.
 
 The pattern mastery principle is:
 
@@ -758,7 +757,7 @@ Additional practice should remain available but optional. Progression should not
 
 Large topics should be split mentally into:
 
-- a short representative Core Practice set where appropriate
+- a short representative Practice Library set where appropriate
 - optional expanded practice
 
 For example, a Numbers topic should not require the learner to spell every number from 1-100 before moving on. The core path should teach the structure and spelling feel of Welsh numbers through a carefully selected set of examples. Expanded practice can then offer many additional numbers for learners who want more repetition.

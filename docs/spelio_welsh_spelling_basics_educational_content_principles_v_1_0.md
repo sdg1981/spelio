@@ -51,19 +51,19 @@ rather than:
 
 > an endless vocabulary-practice platform.
 
-The broader Spelio curriculum model should distinguish:
+The broader Spelio content model should distinguish:
 
-`Learn`
+`Learning Journeys`
 
-A short, carefully designed path for Welsh spelling confidence.
+Finite, concept-led collections that teach one spelling or written-Welsh idea well.
 
-`Practise`
+`Practice Library`
 
-A finite Core Practice library followed by optional Extension Collections for continued spelling reinforcement.
+Expandable, topic-led collections for continued spelling and vocabulary reinforcement.
 
 The key product distinction is:
 
-> Learn and Core Practice are completable. Extensions can expand sideways.
+> Learning Journeys teach understanding. The Practice Library reinforces useful vocabulary.
 
 The subsystem should ask:
 
@@ -90,13 +90,13 @@ The goal is not to show every possible word that contains a pattern. The goal is
 
 Required practice should therefore include only enough examples to build confidence with the underlying pattern. Additional examples may exist as optional reinforcement, but progression should not depend on exhaustive repetition once confidence is demonstrated.
 
-For this subsystem, the Learn layer should remain deliberately short, curated, representative, and emotionally achievable. Support practice may link out to finite Core Practice or broader optional Extension Collections, but the foundation path should not feel like an infinite backlog of words.
+For this subsystem, the Learning Journey should remain deliberately short, curated, representative, and emotionally achievable. Support practice may link out to relevant Practice Library collections, but the foundation path should not feel like an infinite backlog of words.
 
 ---
 
 # Curriculum relationship
 
-Welsh Spelling Basics sits most naturally inside the Learn path:
+Welsh Spelling Basics sits most naturally inside a Learning Journey:
 
 > Welsh Foundations — learn how Welsh spelling works.
 
@@ -117,7 +117,7 @@ This layer should remain highly curated and intentionally compact.
 
 Applied Welsh content, such as numbers, time, food and drink, places, Welsh place names, travel, common phrases, messaging, and everyday written Welsh, may appear as transfer practice where it helps prove that foundations work in real Welsh. It should not become the definition of the foundation curriculum.
 
-Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, partly as finite Core Practice, and partly as broader optional Extension Collections. It does not need to be exhaustive inside the core path, and learners should not need to complete large Applied Welsh collections before moving forward.
+Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside a Learning Journey, where it helps prove that foundations transfer into real Welsh, and partly as broader optional Practice Library reinforcement. It does not need to be exhaustive inside the core path, and learners should not need to complete large Applied Welsh collections before moving forward.
 
 Advanced Topics, such as mutation awareness, accents, tricky spellings, subtle spelling distinctions, similar-looking words, advanced listening, and advanced decoding confidence, should remain future-facing and optional unless they are being introduced in a deliberately small and beginner-safe way.
 

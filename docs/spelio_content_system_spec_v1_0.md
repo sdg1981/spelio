@@ -86,23 +86,18 @@ Child-focused or school-aligned content can be added later as separate word-list
 
 ---
 
-## 5. Content Catalogue Model
+## 5. Content Architecture Model
 
 Spelio content should be organised around a clear distinction between:
 
 ```text
-Learn
-    Welsh Spelling Foundations
-    Future spelling-awareness topics
+Learning Journeys
+    finite, concept-led collections
+    flexible teaching structure
 
-Practise
-    Topic Collections
-    Custom Lists
-    Future extension collections
-
-Build
-    Building Welsh
-    Word Building / Written Welsh Patterns
+Practice Library
+    expandable, topic-led practice
+    browsable reinforcement collections
 ```
 
 The overall identity is:
@@ -111,50 +106,58 @@ The overall identity is:
 
 Spelio should not become an endless vocabulary catalogue or a full language course. The content system should keep spelling first while recognising that spelling exists in service of writing.
 
-The main information architecture should be:
+Learning Journeys teach understanding. The Practice Library reinforces useful vocabulary. They can recommend each other, but they should not be forced into the same structure.
+
+A useful internal framing is:
 
 ```text
-Learn / Practise / Build
-    Category
-        Word List
+Understand Welsh spelling.
+Practise Welsh spelling.
+Build real written Welsh where it helps learning.
 ```
 
-Example:
+This supersedes any rigid interpretation of Learn / Practise / Build as three mandatory top-level product sections.
 
-```text
-Practise
-    Nature & Animals
-        Animals 1
-        Animals 2
-        Most Common Animals
-```
+### Learning Journeys
 
-Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the primary learner-facing catalogue model. Difficulty and progression metadata may still exist internally, but visible structure should favour understandable product areas, categories, and word lists.
+Learning Journeys are deliberately finite, curated, and completable.
 
-### Learn — Finite Spelling Understanding Path
+Purpose: help learners understand one spelling or written-Welsh idea well.
 
-Learn is deliberately finite, curated, and completable.
+Learning Journeys may contain a flexible mix of:
 
-Purpose: help learners understand how Welsh spelling works.
+- learning lists
+- focused practice lists
+- mixed confidence lists
+- build or context lists
+- short written chunks
+- pattern-recognition exercises
+
+The structure should be chosen according to the educational need of that journey. Do not force every journey into the same Learn / Practise / Build template.
 
 Current and possible future examples include:
 
 - Welsh Spelling Foundations
-- Advanced Recognition, if introduced later
 - Mutation Awareness, if introduced later
+- Accents and Diacritics, if introduced later
+- Yes / No Responses, if introduced later
 
-Learn content may include:
+Welsh Spelling Foundations currently works as a Learning Journey. It teaches letter/sound patterns and interleaves Mixed Confidence practice. It does not need a separate Build stage.
+
+Future journeys may vary. A mutations journey may need Learn / Practise / Build because spelling changes make sense in context. An accents and diacritics journey may only need Learn / Practise. A yes/no responses journey may need Build because the concept only makes sense in short written context.
+
+Learning Journey content may include:
 
 - Welsh spelling foundations such as D / DD, Y, F / FF, W, CH, LL, RH, and future validated vowel or recognition topics
 - mixed confidence milestones that combine previously learned spelling systems
 - tightly selected representative words where they prove that spelling foundations transfer into real Welsh
 - possible future advanced foundations, if they remain spelling-confidence material rather than grammar-course material
 
-Learn should remain compact, recommendation-friendly, teacher-friendly, emotionally achievable, and mastery-oriented. Learners should be able to feel that they have completed a meaningful spelling-confidence journey.
+Learning Journeys should remain compact, recommendation-friendly, teacher-friendly, emotionally achievable, and mastery-oriented. Learners should be able to feel that they have completed a meaningful spelling-confidence journey.
 
-### Practise — Topic Collections, Custom Lists, and Extensions
+### Practice Library
 
-Practise is the focused spelling-reinforcement layer. Topic Collections are the first Practise catalogue. Custom Lists and future extension collections may expand this area sideways.
+The Practice Library is separate from the curriculum. It is the focused spelling-reinforcement layer: open-ended, topical, browsable, and designed for repeated vocabulary practice.
 
 Purpose:
 
@@ -163,19 +166,32 @@ Purpose:
 - provide representative practice across common topics
 - support adult learners, teachers, and GCSE learners
 
-Core Practice should not become an endlessly expanding catalogue. It should offer a coherent core library of useful, representative Welsh spelling practice after Foundations.
+Practice Library collections are not teaching journeys. They do not need to form a strict progression, and learners should generally be free to browse, revisit, and follow interest.
 
 Example categories:
 
+- Animals
+- Food & Drink
+- People & Family
+- Places
+- Weather
+- Colours
+- Body
+- Work
+- Transport
+- Sport
+- Nature
+- Teacher Lists
+- Custom Lists
+- Exam Lists
 - Everyday Welsh
 - People & Home
-- Food & Drink
-- Nature & Animals
-- Places
 
-### Build — Short Written Welsh Contexts
+Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the primary learner-facing catalogue model. Difficulty and progression metadata may still exist internally, but visible structure should favour understandable library areas, categories, and word lists.
 
-Build is a separate future-facing product area for using known spellings in short written Welsh contexts.
+### Build as an Optional Learning-Journey Technique
+
+Build means using known spellings in short written context where that helps learners understand how Welsh spelling behaves in real writing. It is a teaching technique or optional phase within a Learning Journey, not a mandatory top-level product area.
 
 Purpose:
 
@@ -185,12 +201,11 @@ Purpose:
 
 Build may include:
 
-- Building Welsh
-- Word Building
-- Written Welsh Patterns
 - phrase chunks such as "I can", "I want", "I need", and "I am going"
 - short fragments such as "going to work" and "going home"
 - word transformations such as "rain" to "rainy" and "work" to "working"
+- yes/no responses after questions
+- mutated forms after common helper words
 - endings, mutations, and context-dependent spelling changes
 
 Build should remain spelling-first and writing-first. It should not become conversational language learning, a grammar-heavy course, or a Duolingo-style syllabus.
@@ -209,7 +224,7 @@ Example list patterns:
 
 These examples are illustrative rather than final curriculum commitments.
 
-Core Practice lists should not be designed around the absolute easiest spellings possible. They should prioritise:
+Practice Library lists should not be designed around the absolute easiest spellings possible. They should prioritise:
 
 - accessible words
 - representative words
@@ -223,9 +238,9 @@ For example, Animals 1 should not be restricted to only the easiest possible ani
 
 The goal is useful spelling confidence, not artificially simplified vocabulary.
 
-### Progression Within Numbered Core Practice Lists
+### Progression Within Numbered Practice Library Lists
 
-Numbered Core Practice lists should provide meaningful spelling progression.
+Numbered Practice Library lists should provide meaningful spelling progression.
 
 For example:
 
@@ -247,13 +262,13 @@ Factors may include:
 
 Progression should remain moderate. Animals 2 should not become an obscure-vocabulary list.
 
-The goal is accessible progression, not easiest words followed by increasingly rare words. Core Practice collections should remain useful, representative, and adult-appropriate throughout.
+The goal is accessible progression, not easiest words followed by increasingly rare words. Practice Library collections should remain useful, representative, and adult-appropriate throughout.
 
-### Extension Collections
+### Specialist Practice Library Collections
 
-Extension Collections are optional and intentionally expandable.
+Specialist Practice Library collections are optional and intentionally expandable.
 
-Extensions expand sideways into interests, domains, and specialist vocabulary. They should not create an endless ladder of progression.
+They expand sideways into interests, domains, and specialist vocabulary. They should not create an endless ladder of progression.
 
 Examples:
 
@@ -298,7 +313,7 @@ Completion is a meaningful part of the product.
 Spelio should not be afraid of learners completing:
 
 - Foundations
-- Core Practice
+- Practice Library
 
 The intended learner experience may be:
 
@@ -402,9 +417,9 @@ Mixed lists are allowed only when they serve review or consolidation.
 
 ---
 
-## 9. Core Practice Word Selection
+## 9. Practice Library Word Selection
 
-Core Practice lists should prioritise words learners will actually encounter.
+Practice Library lists should prioritise words learners will actually encounter.
 
 Good categories:
 
@@ -1208,33 +1223,32 @@ A list is production-ready only after all three review levels.
 
 ## 26. Scaling Strategy
 
-The platform may support many lists over time, but scale should come primarily from optional Practise extensions and future Build collections rather than from stretching Learn or Core Practice indefinitely.
+The platform may support many lists over time, but scale should come primarily from the optional Practice Library rather than from stretching Learning Journeys indefinitely.
 
 To keep content scalable:
 
-- use clear Learn / Practise / Build areas
+- keep Learning Journeys distinct from the Practice Library
 - use understandable categories
 - use consistent list naming
 - avoid duplicate list concepts
-- keep Core Practice finite and representative
-- keep Build short, controlled, spelling-first, and writing-first
+- keep Learning Journeys finite and concept-led
+- keep Build short, controlled, spelling-first, writing-first, and journey-specific
 - keep pattern lists modular
-- create Extension Collections rather than bloated numbered sequences
+- create specialist Practice Library collections rather than bloated numbered sequences
 - maintain a content index as the library grows
 
 Possible long-term high-level library structure:
 
-- Learn
-- Practise
-- Build
+- Learning Journeys
+- Practice Library
 
-Possible Learn examples:
+Possible Learning Journey examples:
 
 - Welsh Spelling Foundations
 - Advanced Recognition, if introduced as future spelling-confidence material
 - Mutation Awareness, if introduced as future spelling-confidence material
 
-Possible Practise examples:
+Possible Practice Library examples:
 
 - Topic Collections
 - Custom Lists
@@ -1245,17 +1259,14 @@ Possible Practise examples:
 - Nature & Animals
 - Places
 
-Possible Build examples:
+Possible Build-within-journey examples:
 
-- Building Welsh
-- Word Building
-- Written Welsh Patterns
 - short phrase chunks
 - short sentence fragments
 - word transformations
 - endings, mutations, and context-dependent spelling changes
 
-Possible Extension Collection examples:
+Possible specialist Practice Library examples:
 
 - Welsh Place Names
 - GCSE Welsh
@@ -1325,7 +1336,7 @@ Use this when asking AI to create new content:
 ```text
 Use the Spelio Content System Specification.
 
-Create [number] Welsh spelling practice lists for [Learn/Core Practice/Extension Collection purpose].
+Create [number] Welsh spelling practice lists for [Learning Journey/Practice Library purpose].
 
 Prioritise spelling progression, real-world usefulness, and representative topic fit.
 
@@ -1360,9 +1371,9 @@ Rules:
 - Do not pad, split, or duplicate lists only to make exact 10-item groups.
 - Avoid early mutation burden.
 - Use mutations only where appropriate for the product area, category, and list purpose.
-- For Core Practice, choose accessible, useful, representative words rather than only the easiest possible spellings.
-- For numbered Core Practice lists, make progression moderate and based mainly on spelling complexity rather than rarity.
-- For Extensions, expand sideways into a meaningful topic, domain, or interest area rather than extending a numbered ladder without a strong educational reason.
+- For Practice Library lists, choose accessible, useful, representative words rather than only the easiest possible spellings.
+- For numbered Practice Library topic lists, make progression moderate and based mainly on spelling complexity rather than rarity.
+- For specialist Practice Library collections, expand sideways into a meaningful topic, domain, or interest area rather than extending a numbered ladder without a strong educational reason.
 - Do not use acceptedAlternatives for different-length variants.
 - Create separate entries for meaningful dialect variants.
 - Link dialect variants with variantGroupId.

@@ -6,13 +6,14 @@ Working draft. This document is a content-architecture source of truth for the f
 
 Spelio Practice should launch first with Topic Collections. This reinforces that Spelio is a spelling-practice platform, not a full Welsh language course.
 
-Intended product hierarchy:
+Current content architecture should distinguish Learning Journeys from the Practice Library:
 
 ```text
-Learn
+Learning Journeys
   Welsh Spelling Foundations
+  Future concept-led journeys
 
-Practise
+Practice Library
   Topic Collections
     Animals
     Food & Drink
@@ -32,20 +33,15 @@ Practise
   Professional Welsh
     Future
 
-  Other extension collections
-    Future
-
-Build
-  Building Welsh / Language Building
-    Future
-
-  Word Building / Written Welsh Patterns
+  Teacher, custom, and other extension collections
     Future
 ```
 
-Practise is the focused word-list practice area. Topic Collections is the first Practise catalogue being designed now.
+Learning Journeys are finite, concept-driven collections designed to teach one idea well. Welsh Spelling Foundations currently works as a Learning Journey: it teaches letter/sound patterns and interleaves Mixed Confidence practice without needing a separate Build stage.
 
-Build is a separate future-facing product area for using known spellings in short written Welsh contexts. It is not ordinary Practise and should not be treated as a full Welsh course, conversation path, or grammar syllabus.
+The Practice Library is the focused word-list practice area. Topic Collections is the first Practice Library catalogue being designed now. Practice Library collections are not teaching journeys, do not need to form a strict progression, and should remain browsable for adult learners.
+
+Build is an optional teaching technique or phase inside a Learning Journey. It means using known spellings in short written Welsh contexts where context helps the learner notice how spelling behaves. It is not ordinary Practice Library content and should not be treated as a full Welsh course, conversation path, long sentence translation system, or grammar syllabus.
 
 Later Practice collections should appear as separate collection cards or destinations rather than being squeezed into one huge topic list. UI implementation is not part of this task.
 
@@ -65,16 +61,16 @@ The first Topic Collections launch should focus on practical, adult-friendly voc
 
 Topic Collections should be spelling-first. They are not intended to become a full course sequence, grammar syllabus, or general Welsh curriculum.
 
-Future Practise collections may include:
+Future Practice Library collections may include:
 
 - GCSE Welsh
 - Professional Welsh
 - Welsh Place Names
 - Custom / Teacher Collections
 
-These should be documented as future separate Practise collections, not included in the first Topic Collections launch.
+These should be documented as future separate Practice Library collections, not included in the first Topic Collections launch.
 
-Future Build collections may include Building Welsh, Word Building, and Written Welsh Patterns. These belong under Build, not ordinary Practise.
+Future Learning Journeys may include Build where the concept needs context, such as yes/no responses, mutations after common helper words, or familiar words in short chunks such as "I want coffee". These should remain journey-specific and spelling-first rather than becoming a separate general Welsh conversation course.
 
 ## Level Model
 
@@ -257,23 +253,22 @@ Where possible, prefer meaningful specialist extension collections once a topic 
 
 This does not rule out Animals 4 later if there is a strong educational reason.
 
-## Build
+## Build Within Learning Journeys
 
 Build is deliberately postponed and should not be part of the first Topic Collections build.
 
-Potential future Build areas may include:
+Potential future Build patterns may include:
 
-- Building Welsh / Language Building
-- Word Building
-- Written Welsh Patterns
 - short phrase chunks
 - short sentence fragments
 - word transformations
+- yes/no responses after questions
+- mutated forms after common helper words
 - endings, mutations, and context-dependent spelling changes
 
 Build should use familiar words and high-frequency chunks to help learners build real written Welsh. Examples might include "I can", "I want", "I need", "I am going", "going to work", "going home", "rain" to "rainy", and "work" to "working".
 
-Build introduces more curriculum-design complexity and could make Spelio feel closer to a language-learning course if rushed. It should remain short, controlled, spelling-first, writing-first, and context-based. Topic Collections are easier to understand, easier for teachers to share, and clearer as spelling-practice content for the first Practise launch.
+Build introduces more curriculum-design complexity and could make Spelio feel closer to a language-learning course if rushed. It should remain short, controlled, spelling-first, writing-first, and context-based. Topic Collections are easier to understand, easier for teachers to share, and clearer as spelling-practice content for the first Practice Library launch.
 
 ## Draft Boundaries
 
