@@ -181,11 +181,15 @@ before:
 
 The product may eventually grow into broader learning support, but it should grow outward from strong practice foundations rather than becoming an unfocused all-in-one system.
 
-The long-term catalogue direction should preserve:
+The preferred long-term content architecture is:
+
+> Learn → Practise → Build
+
+This means:
 
 - Learn as a finite, curated spelling-confidence path
-- Core Practice as a finite, representative practice library
-- Extension Collections as optional, expandable sideways growth
+- Practise as focused word-list reinforcement through Topic Collections, Custom Lists, and optional extension collections
+- Build as controlled written Welsh practice using known spellings, not a full grammar course or conversation syllabus
 
 Completion of Foundations and Core Practice should be treated as a meaningful learner outcome, not as a product problem to avoid through endless numbered lists.
 

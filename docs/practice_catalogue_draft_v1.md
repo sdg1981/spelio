@@ -26,9 +26,6 @@ Practise
     Colours & Shapes
     Clothing & Appearance
 
-  Language Building
-    Future
-
   GCSE Welsh
     Future
 
@@ -37,9 +34,18 @@ Practise
 
   Other extension collections
     Future
+
+Build
+  Building Welsh / Language Building
+    Future
+
+  Word Building / Written Welsh Patterns
+    Future
 ```
 
-Practise is the broad product area. Topic Collections is the first Practice collection being designed now.
+Practise is the focused word-list practice area. Topic Collections is the first Practise catalogue being designed now.
+
+Build is a separate future-facing product area for using known spellings in short written Welsh contexts. It is not ordinary Practise and should not be treated as a full Welsh course, conversation path, or grammar syllabus.
 
 Later Practice collections should appear as separate collection cards or destinations rather than being squeezed into one huge topic list. UI implementation is not part of this task.
 
@@ -59,15 +65,16 @@ The first Topic Collections launch should focus on practical, adult-friendly voc
 
 Topic Collections should be spelling-first. They are not intended to become a full course sequence, grammar syllabus, or general Welsh curriculum.
 
-Future Practice collections may include:
+Future Practise collections may include:
 
-- Language Building
 - GCSE Welsh
 - Professional Welsh
 - Welsh Place Names
 - Custom / Teacher Collections
 
-These should be documented as future separate Practice collections, not included in the first Topic Collections launch.
+These should be documented as future separate Practise collections, not included in the first Topic Collections launch.
+
+Future Build collections may include Building Welsh, Word Building, and Written Welsh Patterns. These belong under Build, not ordinary Practise.
 
 ## Level Model
 
@@ -250,22 +257,23 @@ Where possible, prefer meaningful specialist extension collections once a topic 
 
 This does not rule out Animals 4 later if there is a strong educational reason.
 
-## Language Building
+## Build
 
-Language Building is deliberately postponed and should not be part of the first Topic Collections build.
+Build is deliberately postponed and should not be part of the first Topic Collections build.
 
-Potential future Language Building areas may include:
+Potential future Build areas may include:
 
-- Verbs
-- Connecting words
-- Question words
-- Short phrases
-- Past-focused phrases
-- Future-focused phrases
-- Talking about yourself
-- Talking about other people
+- Building Welsh / Language Building
+- Word Building
+- Written Welsh Patterns
+- short phrase chunks
+- short sentence fragments
+- word transformations
+- endings, mutations, and context-dependent spelling changes
 
-Language Building introduces more curriculum-design complexity and could make Spelio feel closer to a language-learning course if rushed. Topic Collections are easier to understand, easier for teachers to share, and clearer as spelling-practice content.
+Build should use familiar words and high-frequency chunks to help learners build real written Welsh. Examples might include "I can", "I want", "I need", "I am going", "going to work", "going home", "rain" to "rainy", and "work" to "working".
+
+Build introduces more curriculum-design complexity and could make Spelio feel closer to a language-learning course if rushed. It should remain short, controlled, spelling-first, writing-first, and context-based. Topic Collections are easier to understand, easier for teachers to share, and clearer as spelling-practice content for the first Practise launch.
 
 ## Draft Boundaries
 

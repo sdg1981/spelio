@@ -221,7 +221,7 @@ Spelio exists to reduce that gap.
 
 Spelio is increasingly becoming:
 
-> a Welsh spelling mastery system with an expandable practice library.
+> a Welsh written-confidence product built from spelling mastery.
 
 This should feel closer to:
 
@@ -235,15 +235,23 @@ Spelio is not choosing between a tiny finite course and an endless vocabulary ca
 
 `Learn`
 
-A short, carefully designed path for Welsh spelling confidence.
+Understand how Welsh spelling works.
 
 `Practise`
 
-A finite Core Practice library followed by optional Extension Collections for continued spelling reinforcement.
+Remember and reinforce Welsh spellings through focused word-list practice.
+
+`Build`
+
+Use known spellings in short written Welsh contexts.
 
 The key product distinction is:
 
-> Learn and Core Practice are completable. Extensions can expand sideways.
+> Learn and Core Practice are completable. Extensions and Build can expand sideways without turning Spelio into a full Welsh course.
+
+The core hear → recall → spell loop remains the interaction engine. The broader learner outcome is written Welsh confidence: understanding Welsh spelling, practising it until it sticks, then using familiar spellings in controlled written contexts.
+
+Build should not be framed as conversational language learning, a grammar syllabus, or a Duolingo-style course path. It is about writing with known spellings: short phrase chunks, sentence fragments, word transformations, endings, mutations, and context-dependent spelling changes where those help learners build real written Welsh.
 
 The product should keep asking:
 
@@ -563,16 +571,18 @@ This should not redesign MVP behaviour, introduce dashboards, formal course tree
 The clearest architecture is:
 
 - Learn: a finite, curated spelling-confidence path.
-- Practise / Core Practice Collections: a finite representative practice library.
-- Practise / Extension Collections: optional expandable collections for interests, domains, schools, and specialist vocabulary.
+- Practise: focused word-list practice through Topic Collections, Custom Lists, and future extension collections.
+- Build: future-facing written Welsh practice using known spellings in short controlled contexts.
 
 Learn should contain Welsh Foundations, possible future advanced foundations, mixed confidence milestones, and just enough required exposure for the learner to understand the pattern and feel ready to move on.
 
-Core Practice should reinforce spelling confidence, provide broad exposure to useful Welsh vocabulary, and support adult learners, teachers, and GCSE learners through representative categories such as Everyday Welsh, People & Home, Food & Drink, Nature & Animals, and Places.
+Practise should reinforce spelling confidence, provide broad exposure to useful Welsh vocabulary, and support adult learners, teachers, and GCSE learners through representative categories such as Everyday Welsh, People & Home, Food & Drink, Nature & Animals, and Places.
 
 Extension Collections may include Welsh place names, GCSE Welsh, healthcare Welsh, education Welsh, tourism Welsh, Church & Faith, Welsh history, birds, British wildlife, teacher-created lists, custom lists, and expanded topic libraries.
 
 Learn and Core Practice should remain finite, recommendation-friendly, teacher-friendly, emotionally achievable, mastery-oriented, and not artificially extended. The learner should be able to complete them. Extensions may grow because learners often enjoy practising more words they recognise from Duolingo, SaySomethinginWelsh, Welsh classes, school, personal interests, or everyday Welsh life, but extensions should expand sideways rather than define required progression.
+
+Build should grow from spelling into writing without changing Spelio into a full Welsh course. Possible Build content includes short controlled chunks such as "I can", "I want", "I need", "I am going", "going to work", "going home", "rain" to "rainy", and "work" to "working". These examples should remain spelling-first, writing-focused, and context-based rather than becoming general conversation teaching or broad grammar progression.
 
 ## Learn — Welsh Foundations and Representative Transfer
 
@@ -649,6 +659,25 @@ The goal is not exhaustive vocabulary coverage.
 The goal is demonstrating that the foundations transfer into real Welsh usage and giving learners somewhere useful to keep practising after the core journey is complete.
 
 Applied Welsh is not necessarily a fixed second course layer. It can exist partly as representative practice inside Learn, where it helps prove that foundations transfer into real Welsh, partly as finite Core Practice, and partly as broader optional Extension Collections. It does not need to be exhaustive inside the core path. Applied Welsh lists should use carefully chosen representative examples for progression, while allowing larger topic libraries to grow as optional reinforcement. Learners should not need to complete exhaustive Applied Welsh collections before moving forward.
+
+## Build — Written Welsh With Known Spellings
+
+Purpose:
+
+> Build real written Welsh from known spelling patterns, familiar words, and high-frequency chunks.
+
+Build is a separate future-facing product area, not ordinary Practise and not a full course mode. It may include Building Welsh, Word Building, Written Welsh Patterns, and other controlled writing-confidence content.
+
+Build content may include:
+
+- phrase chunks
+- short sentence fragments
+- word transformations
+- endings
+- mutations
+- context-dependent spelling changes
+
+The learner should still feel that Spelio is helping them spell and write Welsh, not teaching conversation or running a grammar syllabus.
 
 ## Advanced Topics
 

@@ -93,23 +93,28 @@ Spelio content should be organised around a clear distinction between:
 ```text
 Learn
     Welsh Spelling Foundations
-    Possible future advanced foundations
+    Future spelling-awareness topics
 
 Practise
-    Core Practice Collections
-    Extension Collections
+    Topic Collections
+    Custom Lists
+    Future extension collections
+
+Build
+    Building Welsh
+    Word Building / Written Welsh Patterns
 ```
 
 The overall identity is:
 
-> a Welsh spelling mastery system with an expandable practice library.
+> a Welsh written-confidence product built from spelling mastery.
 
-Spelio should not become an endless vocabulary catalogue or a full language course.
+Spelio should not become an endless vocabulary catalogue or a full language course. The content system should keep spelling first while recognising that spelling exists in service of writing.
 
 The main information architecture should be:
 
 ```text
-Learn / Practise
+Learn / Practise / Build
     Category
         Word List
 ```
@@ -126,18 +131,17 @@ Practise
 
 Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the primary learner-facing catalogue model. Difficulty and progression metadata may still exist internally, but visible structure should favour understandable product areas, categories, and word lists.
 
-### Learn — Finite Spelling Confidence Path
+### Learn — Finite Spelling Understanding Path
 
 Learn is deliberately finite, curated, and completable.
 
-Purpose: build trust, confidence, and familiarity with Welsh spelling.
+Purpose: help learners understand how Welsh spelling works.
 
 Current and possible future examples include:
 
 - Welsh Spelling Foundations
 - Advanced Recognition, if introduced later
 - Mutation Awareness, if introduced later
-- Written Welsh Patterns, if introduced later
 
 Learn content may include:
 
@@ -148,9 +152,9 @@ Learn content may include:
 
 Learn should remain compact, recommendation-friendly, teacher-friendly, emotionally achievable, and mastery-oriented. Learners should be able to feel that they have completed a meaningful spelling-confidence journey.
 
-### Core Practice Collections
+### Practise — Topic Collections, Custom Lists, and Extensions
 
-Core Practice is also finite.
+Practise is the focused spelling-reinforcement layer. Topic Collections are the first Practise catalogue. Custom Lists and future extension collections may expand this area sideways.
 
 Purpose:
 
@@ -168,6 +172,28 @@ Example categories:
 - Food & Drink
 - Nature & Animals
 - Places
+
+### Build — Short Written Welsh Contexts
+
+Build is a separate future-facing product area for using known spellings in short written Welsh contexts.
+
+Purpose:
+
+- build real written Welsh from familiar words and high-frequency chunks
+- connect spelling recall to controlled writing
+- introduce context-dependent spelling changes only where they support written accuracy
+
+Build may include:
+
+- Building Welsh
+- Word Building
+- Written Welsh Patterns
+- phrase chunks such as "I can", "I want", "I need", and "I am going"
+- short fragments such as "going to work" and "going home"
+- word transformations such as "rain" to "rainy" and "work" to "working"
+- endings, mutations, and context-dependent spelling changes
+
+Build should remain spelling-first and writing-first. It should not become conversational language learning, a grammar-heavy course, or a Duolingo-style syllabus.
 
 Example list patterns:
 
@@ -1182,15 +1208,16 @@ A list is production-ready only after all three review levels.
 
 ## 26. Scaling Strategy
 
-The platform may support many lists over time, but scale should come primarily from optional Extension Collections rather than from stretching Learn or Core Practice indefinitely.
+The platform may support many lists over time, but scale should come primarily from optional Practise extensions and future Build collections rather than from stretching Learn or Core Practice indefinitely.
 
 To keep content scalable:
 
-- use clear Learn / Practise areas
+- use clear Learn / Practise / Build areas
 - use understandable categories
 - use consistent list naming
 - avoid duplicate list concepts
 - keep Core Practice finite and representative
+- keep Build short, controlled, spelling-first, and writing-first
 - keep pattern lists modular
 - create Extension Collections rather than bloated numbered sequences
 - maintain a content index as the library grows
@@ -1198,23 +1225,35 @@ To keep content scalable:
 Possible long-term high-level library structure:
 
 - Learn
-- Core Practice Collections
-- Extension Collections
+- Practise
+- Build
 
 Possible Learn examples:
 
 - Welsh Spelling Foundations
 - Advanced Recognition, if introduced as future spelling-confidence material
 - Mutation Awareness, if introduced as future spelling-confidence material
-- Written Welsh Patterns, if introduced as future spelling-confidence material
 
-Possible Core Practice category examples:
+Possible Practise examples:
 
+- Topic Collections
+- Custom Lists
+- Future extension collections
 - Everyday Welsh
 - People & Home
 - Food & Drink
 - Nature & Animals
 - Places
+
+Possible Build examples:
+
+- Building Welsh
+- Word Building
+- Written Welsh Patterns
+- short phrase chunks
+- short sentence fragments
+- word transformations
+- endings, mutations, and context-dependent spelling changes
 
 Possible Extension Collection examples:
 
