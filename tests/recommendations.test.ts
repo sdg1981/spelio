@@ -1830,28 +1830,64 @@ test('normal progression falls back when sequential next lists are complete or u
   assertEqual(recommendation.listId, fallback.id, 'Unavailable sequential continuation should use the existing unfinished-list fallback');
 });
 
-test('legacy stage metadata affects fallback recommendation buckets after nextListId is unavailable', () => {
-  const current = makeMetadataAuditList('stage_audit_current', 1, 'Alpha');
-  const nextStageCandidate = makeMetadataAuditList('stage_audit_next_stage', 2, 'Beta');
-  const sameStageCandidate = makeMetadataAuditList('stage_audit_same_stage', 3, 'Alpha');
-  const lists = [current, nextStageCandidate, sameStageCandidate];
+test('normal progression fallback follows collection and list order instead of legacy stage buckets', () => {
+  const learningCollection = {
+    id: 'learning',
+    slug: 'learning',
+    name: 'Learning',
+    description: '',
+    type: 'spelio_core' as const,
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio' as const,
+    ownerId: null,
+    order: 1,
+    isActive: true
+  };
+  const practiceCollection = {
+    ...learningCollection,
+    id: 'practice',
+    slug: 'practice',
+    name: 'Practice Library',
+    order: 2
+  };
+  const current: WordList = {
+    ...makeMetadataAuditList('stage_audit_current', 1, 'Alpha'),
+    collectionId: learningCollection.id,
+    collection: learningCollection
+  };
+  const sameCollectionCandidate: WordList = {
+    ...makeMetadataAuditList('stage_audit_same_collection', 2, 'Beta'),
+    collectionId: learningCollection.id,
+    collection: learningCollection
+  };
+  const laterCollectionCandidate: WordList = {
+    ...makeMetadataAuditList('stage_audit_later_collection', 1, 'Alpha'),
+    collectionId: practiceCollection.id,
+    collection: practiceCollection
+  };
+  const lists = [laterCollectionCandidate, current, sameCollectionCandidate];
   const storage = completeListCleanlyInLists({
     ...createDefaultStorage(),
     selectedListIds: [current.id],
     currentPathPosition: current.id
   }, lists, current.id);
-  const sameStageRecommendation = getRecommendation(storage, lists);
+  const recommendation = getRecommendation(storage, lists);
 
-  const changedStageLists = [current, nextStageCandidate, { ...sameStageCandidate, stage: 'Gamma' }];
+  const changedStageLists = [
+    laterCollectionCandidate,
+    { ...current, stage: 'Changed current' },
+    { ...sameCollectionCandidate, stage: 'Changed candidate' }
+  ];
   const changedStageStorage = completeListCleanlyInLists({
     ...createDefaultStorage(),
     selectedListIds: [current.id],
     currentPathPosition: current.id
   }, changedStageLists, current.id);
-  const nextStageRecommendation = getRecommendation(changedStageStorage, changedStageLists);
+  const changedStageRecommendation = getRecommendation(changedStageStorage, changedStageLists);
 
-  assertEqual(sameStageRecommendation.listId, sameStageCandidate.id, 'Fallback should prefer a later incomplete list in the same legacy stage bucket.');
-  assertEqual(nextStageRecommendation.listId, nextStageCandidate.id, 'Changing the later list stage should change the fallback bucket recommendation.');
+  assertEqual(recommendation.listId, sameCollectionCandidate.id, 'Fallback should prefer the next incomplete list by collection/list order.');
+  assertEqual(changedStageRecommendation.listId, sameCollectionCandidate.id, 'Changing legacy stage labels should not change fallback recommendations.');
 });
 
 test('focus metadata does not affect recommendations or session generation', () => {

@@ -77,25 +77,42 @@ function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], curre
   if (sequentialNext) return sequentialNext;
 
   const incompleteLists = activeLists.filter(list => listHasUnseenLearningItems(storage, list));
+  const orderedLists = sortListsByCollectionProgression(activeLists);
+  const orderedIndexById = new Map(orderedLists.map((list, index) => [list.id, index]));
+  const incompleteListIds = new Set(incompleteLists.map(list => list.id));
+  const currentIndex = orderedLists.findIndex(list => list.id === current.id);
+  const orderedIncompleteLists = orderedLists.filter(list => incompleteListIds.has(list.id));
 
-  // `stage` is legacy editorial metadata. It still acts as a progression bucket
-  // fallback when a list has no usable explicit nextListId chain.
-  const currentStageNext = incompleteLists.find(list => {
-    return list.stage === current.stage && list.order > current.order;
-  });
-  if (currentStageNext) return currentStageNext;
-
-  const nextStageName = activeLists.find(list => list.order > current.order && list.stage !== current.stage)?.stage;
-  const nextStageFirst = nextStageName
-    ? incompleteLists.find(list => list.stage === nextStageName)
-    : undefined;
-  if (nextStageFirst) return nextStageFirst;
+  if (currentIndex >= 0) {
+    const nextByCollectionOrder = orderedIncompleteLists.find(list => (orderedIndexById.get(list.id) ?? -1) > currentIndex);
+    if (nextByCollectionOrder) return nextByCollectionOrder;
+  }
 
   return [...incompleteLists].sort((left, right) => {
     const leftSeenCount = groupLearningItems(left.words).filter(group => isLearningItemSeen(storage, group)).length;
     const rightSeenCount = groupLearningItems(right.words).filter(group => isLearningItemSeen(storage, group)).length;
-    return leftSeenCount - rightSeenCount || left.order - right.order;
+    return leftSeenCount - rightSeenCount || compareListsByCollectionProgression(left, right);
   })[0];
+}
+
+function compareListsByCollectionProgression(left: WordList, right: WordList) {
+  const leftCollection = left.collection;
+  const rightCollection = right.collection;
+  const leftCollectionOrder = Number.isFinite(leftCollection?.order) ? Number(leftCollection?.order) : Number.POSITIVE_INFINITY;
+  const rightCollectionOrder = Number.isFinite(rightCollection?.order) ? Number(rightCollection?.order) : Number.POSITIVE_INFINITY;
+  const leftCollectionName = leftCollection?.name ?? left.collectionId;
+  const rightCollectionName = rightCollection?.name ?? right.collectionId;
+
+  return leftCollectionOrder - rightCollectionOrder ||
+    leftCollectionName.localeCompare(rightCollectionName) ||
+    left.collectionId.localeCompare(right.collectionId) ||
+    left.order - right.order ||
+    getListDisplayName(left).localeCompare(getListDisplayName(right)) ||
+    left.id.localeCompare(right.id);
+}
+
+function sortListsByCollectionProgression(lists: WordList[]) {
+  return [...lists].sort(compareListsByCollectionProgression);
 }
 
 export function getNormalContinuationRecommendation(storage: SpelioStorage, lists: WordList[], t?: Translate, interfaceLanguage?: InterfaceLanguage): Recommendation {

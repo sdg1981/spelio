@@ -2,6 +2,8 @@
 
 Date: 2026-06-27
 
+Status update: recommendation fallback now uses explicit `nextListId`, then collection/list order. `stage_id` no longer drives progression recommendations.
+
 ## Scope
 
 This audit covers the legacy `stages` and `focus_categories` reference tables and the `word_lists.stage_id` and `word_lists.focus_category_id` fields.
@@ -20,10 +22,10 @@ Current product architecture:
 
 | Item | Current role | Live behaviour affected | Verdict | Recommended action |
 | ---- | ------------ | ----------------------- | ------- | ------------------ |
-| `stages` | Reference table for legacy list-stage labels. Admin joins it to resolve `word_lists.stage_id` to `list.stage`; export includes it. | Indirectly, only through resolved `list.stage` in recommendation fallback and non-Practice-Library catalogue grouping. | Rename/reframe | Reframe as "progression buckets" or "legacy progression groups". Do not remove until recommendation fallback no longer depends on `list.stage`. |
-| `stage_id` | Foreign key on `word_lists`; selected in public/admin content loaders; editable in word-list admin; imported/exported. | Yes, indirectly. Public catalogue checks `stageId === "foundations"` for Foundations display, and recommendation fallback uses resolved `list.stage`. It does not directly affect session word selection. | Rename/reframe | Keep for now, but treat as a compatibility field backing a progression bucket. Prefer explicit `journey_group_id` / `catalogue_group_id` in a future migration. |
-| `focus_categories` | Reference table for editorial list-purpose labels. Admin joins it to resolve `word_lists.focus_category_id` to `list.focus`; export includes it. | No learner-facing behaviour found. Not used by public catalogue grouping, ordering, recommendations, progression, or session generation. | Deprecate | Keep for import/export/admin compatibility only. Remove from primary mental model and avoid using it for Practice Library categories. |
-| `focus_category_id` | Foreign key on `word_lists`; editable in word-list admin; imported/exported; shown in admin tables. | No learner-facing behaviour found. Session and recommendation tests confirm changing `focus` labels does not change recommendations or generated session words. | Deprecate | Keep as optional legacy/editorial metadata until import/export schema can version it out or replace it with explicit editorial tags. |
+| `stages` | Reference table for legacy list-stage labels. Admin joins it to resolve `word_lists.stage_id` to `list.stage`; export includes it. | Transitional only. Public catalogue fallback can still display resolved `list.stage` for non-special collections, but progression recommendations no longer use it. | Deprecate | Remove from the future architecture. Keep only until admin import/export and catalogue fallback are versioned away from it. |
+| `stage_id` | Foreign key on `word_lists`; selected in public/admin content loaders; editable in word-list admin; imported/exported. | Transitional only. Public catalogue checks `stageId === "foundations"` for one display override, but recommendations and session generation no longer use it. | Deprecate | Replace display fallback with collection/list metadata, then version import/export and drop the field/table in a later migration. |
+| `focus_categories` | Reference table for editorial list-purpose labels. Admin joins it to resolve `word_lists.focus_category_id` to `list.focus`; export includes it. | No learner-facing behaviour found. Not used by public catalogue grouping, ordering, recommendations, progression, or session generation. | Deprecate | Remove from the future architecture. Keep only while current admin import/export and edit forms still expose it. |
+| `focus_category_id` | Foreign key on `word_lists`; editable in word-list admin; imported/exported; shown in admin tables. | No learner-facing behaviour found. Session and recommendation tests confirm changing `focus` labels does not change recommendations or generated session words. | Deprecate | Version out of import/export and remove from admin editing before dropping the schema column. |
 
 ## Detailed Findings
 
@@ -47,22 +49,21 @@ Code paths:
 - Public Supabase loader selects `stage_id` and `stages(name)`, then maps them to `WordList.stageId` and `WordList.stage`.
 - Static loader derives `stageId` from `stage`.
 - Public catalogue display uses `stageId === "foundations"` for the Welsh Spelling Foundations display override, and uses `list.stage` for fallback grouping outside the special Learning and Practice Library paths.
-- Recommendations use `list.stage` as a fallback bucket after explicit `nextListId` traversal fails.
+- Recommendations used to use `list.stage` as a fallback bucket after explicit `nextListId` traversal failed. They now use collection/list order instead.
 - Session generation does not read `stage` or `stageId`.
 - Admin word-list edit reads and writes `stageId`.
 - Import/export preserves `stage`, `stageId`, and the `stages` reference list.
 
 Conceptual status:
 
-`stage_id` is not a good product name under the current architecture. It is still behaviourally meaningful because `list.stage` affects fallback recommendations. The concept should be reframed as a progression bucket or replaced later by a clearer journey/progression grouping field.
+`stage_id` is not a good product name under the current architecture. It is no longer needed for progression recommendations, but remains present in admin editing, import/export, public content loading, and one catalogue display fallback.
 
 Safe deprecation path:
 
-1. Keep `stage_id` while recommendation fallback depends on `list.stage`.
-2. Introduce an explicit replacement such as `progression_bucket_id`, `journey_group_id`, or `catalogue_group_id`.
-3. Move public catalogue display overrides away from `stageId`.
-4. Update import/export schema with backward compatibility from `stageId`.
-5. Only then make `stage_id` nullable-unused and remove it in a later schema version.
+1. Move public catalogue display overrides away from `stageId`.
+2. Remove stage editing from the day-to-day word-list admin form.
+3. Version import/export so older payloads can still be read while new exports omit `stages`, `stage`, and `stageId`.
+4. Add a schema migration that drops `word_lists.stage_id`, then `public.stages`, after app code no longer selects or writes them.
 
 ### Focus Categories and focus_category_id
 
@@ -95,5 +96,16 @@ Safe deprecation path:
 1. Keep `focus_category_id` for import/export compatibility.
 2. Stop presenting it as day-to-day content architecture.
 3. If editorial tags are still useful, replace it with explicit tags or a more general editorial metadata field.
-4. Version import/export so older payloads can still hydrate `focusCategoryId`.
+4. Version import/export so older payloads can still hydrate or ignore `focusCategoryId`.
 5. Remove the admin field and schema reference only after active content no longer relies on the import/export shape.
+
+## Dependency Classification
+
+| Dependency | Classification | Notes |
+| ---------- | -------------- | ----- |
+| `stages` reference table | Transitional | Still used by admin loaders and export snapshots, but not required by the simplified product model. |
+| `word_lists.stage_id` | Transitional | Still selected/written by admin and public content loaders, but no longer drives recommendation fallback. |
+| `focus_categories` reference table | Legacy | Only supports admin/editorial display and export shape. |
+| `word_lists.focus_category_id` | Legacy | No live learner behaviour depends on it. |
+| Public recommendation fallback by stage | Dead | Replaced by explicit `nextListId`, then collection/list order. |
+| Practice Library category display by focus | Dead | The public catalogue uses collection/list display mapping instead. |
