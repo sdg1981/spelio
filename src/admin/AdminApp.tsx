@@ -18,13 +18,14 @@ import { getAdminRepository, type AdminRepository } from './repositories';
 
 export function AdminApp() {
   const { path, navigate } = useAdminPath();
+  const routePath = path.split('?')[0] ?? path;
   const repository = getAdminRepository();
 
-  if (path === '/admin/login') return <LoginPage navigate={navigate} repository={repository} />;
+  if (routePath === '/admin/login') return <LoginPage navigate={navigate} repository={repository} />;
 
   return (
     <AdminLayout path={path} navigate={navigate}>
-      <AdminRoute path={path} navigate={navigate} repository={repository} />
+      <AdminRoute path={routePath} navigate={navigate} repository={repository} />
     </AdminLayout>
   );
 }

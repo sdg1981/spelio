@@ -183,6 +183,9 @@ assertEqual(
 
 const collectionsPageSource = readFileSync('src/admin/pages/CollectionsPage.tsx', 'utf8');
 const collectionEditPageSource = readFileSync('src/admin/pages/CollectionEditPage.tsx', 'utf8');
+const wordListsPageSource = readFileSync('src/admin/pages/WordListsPage.tsx', 'utf8');
+const adminAppSource = readFileSync('src/admin/AdminApp.tsx', 'utf8');
+const adminRouterSource = readFileSync('src/admin/utils/router.ts', 'utf8');
 
 assert(
   collectionsPageSource.includes('role="link"') && collectionsPageSource.includes('onKeyDown='),
@@ -204,6 +207,17 @@ assert(
 assert(
   collectionEditPageSource.includes('Word lists in this collection') &&
     collectionEditPageSource.includes("navigate(`/admin/word-lists/${encodeURIComponent(list.id)}`)") &&
-    collectionEditPageSource.includes("navigate('/admin/word-lists')"),
+    collectionEditPageSource.includes("navigate(`/admin/word-lists?collection=${encodeURIComponent(collection.id)}`)"),
   'Collection edit page should provide compact navigation into word lists in the collection.'
+);
+assert(
+  wordListsPageSource.includes("new URLSearchParams(window.location.search).get('collection')") &&
+    wordListsPageSource.includes('list.collectionId === collectionFilter') &&
+    wordListsPageSource.includes("navigate('/admin/word-lists')"),
+  'Word lists index should support collection-filtered admin navigation with a clear path back to all lists.'
+);
+assert(
+  adminRouterSource.includes('window.location.search') &&
+    adminAppSource.includes("const routePath = path.split('?')[0] ?? path;"),
+  'Admin routing should preserve query-string filters while matching pages by pathname.'
 );

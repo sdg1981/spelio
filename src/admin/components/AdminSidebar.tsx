@@ -99,6 +99,7 @@ function NavItem({ active, children, icon, badge, description, onClick }: { acti
 }
 
 function isActive(currentPath: string, itemPath: string) {
-  if (itemPath === '/admin') return currentPath === '/admin';
-  return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
+  const pathname = currentPath.split('?')[0] ?? currentPath;
+  if (itemPath === '/admin') return pathname === '/admin';
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 }

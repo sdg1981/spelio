@@ -362,7 +362,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                   {collectionWordLists.length} word list{collectionWordLists.length === 1 ? '' : 's'} in current catalogue order.
                 </p>
               </div>
-              <AdminButton onClick={() => navigate('/admin/word-lists')}>
+              <AdminButton onClick={() => navigate(`/admin/word-lists?collection=${encodeURIComponent(collection.id)}`)}>
                 Manage word lists <ChevronRight size={16} />
               </AdminButton>
             </div>
