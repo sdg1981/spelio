@@ -23,10 +23,12 @@ Words belong to one word list and keep their existing spelling, audio, dialect, 
 Normal recommendation progression now uses:
 
 1. `nextListId` traversal when present and usable.
-2. collection/list order when explicit progression links are absent or exhausted.
+2. collection/catalogue list order when explicit progression links are absent or exhausted.
 3. existing least-seen fallback when there is no later incomplete list.
 
 This supports Learning Journeys, Practice Library lists, teacher collections, GCSE collections, and custom collections without stage buckets. Collection order determines which collection comes first; list order determines progression inside each collection; explicit `nextListId` handles curated exceptions.
+
+Practice Library seeded topic lists use the same lightweight catalogue display order for public grouping and recommendation fallback. This keeps learner-facing order aligned without reusing legacy `stage_id` or `focus_category_id` metadata.
 
 ## Legacy Metadata Dependency Classification
 

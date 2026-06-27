@@ -185,6 +185,42 @@ const practiceFoodList = createList({
   order: 2
 });
 
+function createPracticeLibraryList(id: string, name: string, order: number): WordList {
+  return createList({
+    id,
+    collectionId: 'practice',
+    collection: practiceAnimalList.collection,
+    name,
+    stageId: 'core',
+    stage: 'Core',
+    focus: 'Topic Vocabulary',
+    order
+  });
+}
+
+const practiceLibraryRawOrderLists = [
+  createPracticeLibraryList('practice_most_common_animals', 'Most Common Animals', 1),
+  createPracticeLibraryList('practice_most_common_food_and_drink', 'Most Common Food & Drink', 2),
+  createPracticeLibraryList('practice_most_common_places', 'Most Common Places', 3),
+  createPracticeLibraryList('practice_most_common_people_and_family', 'Most Common People & Family', 4),
+  createPracticeLibraryList('practice_most_common_weather', 'Most Common Weather', 5),
+  createPracticeLibraryList('practice_most_common_colours', 'Most Common Colours', 6),
+  createPracticeLibraryList('practice_most_common_clothing', 'Most Common Clothing', 7),
+  createPracticeLibraryList('practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 8),
+  createPracticeLibraryList('practice_most_common_work', 'Most Common Work', 9),
+  createPracticeLibraryList('practice_most_common_school_and_learning', 'Most Common School & Learning', 10),
+  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 11),
+  createPracticeLibraryList('practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 12),
+  createPracticeLibraryList('practice_most_common_nature_and_landscape', 'Most Common Nature & Landscape', 13),
+  createPracticeLibraryList('practice_most_common_shopping', 'Most Common Shopping', 14),
+  createPracticeLibraryList('practice_most_common_body_parts', 'Most Common Body Parts', 15),
+  createPracticeLibraryList('practice_most_common_sports', 'Most Common Sports', 16),
+  createPracticeLibraryList('practice_most_common_leisure', 'Most Common Leisure', 17),
+  createPracticeLibraryList('practice_most_common_numbers', 'Most Common Numbers', 18),
+  createPracticeLibraryList('practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 19),
+  createPracticeLibraryList('practice_most_common_around_town', 'Most Common Around Town', 20)
+];
+
 const inactiveCollectionList = createList({
   id: 'inactive_topic',
   collectionId: 'inactive',
@@ -240,4 +276,36 @@ assertEqual(
   catalogueGroups[1].listGroups[0].lists[0].name,
   'Most Common Animals',
   'Practice Library category display should preserve the actual database-backed list name.'
+);
+
+const practiceLibraryCatalogue = buildPublicCatalogueGroups([
+  foundationsList,
+  ...practiceLibraryRawOrderLists
+]);
+const practiceLibraryGroup = practiceLibraryCatalogue.find(group => group.title === 'Practice Library');
+assertEqual(
+  practiceLibraryGroup?.listGroups.flatMap(group => group.lists.map(list => list.name)).join('|'),
+  [
+    'Most Common Animals',
+    'Most Common Food & Drink',
+    'Most Common Places',
+    'Most Common Travel & Transport',
+    'Most Common People & Family',
+    'Most Common Home & Household',
+    'Most Common Weather',
+    'Most Common Time & Calendar',
+    'Most Common School & Learning',
+    'Most Common Work',
+    'Most Common Colours',
+    'Most Common Clothing',
+    'Most Common Nature & Landscape',
+    'Most Common Shopping',
+    'Most Common Body Parts',
+    'Most Common Sports',
+    'Most Common Leisure',
+    'Most Common Numbers',
+    'Most Common Meals & Eating',
+    'Most Common Around Town'
+  ].join('|'),
+  'Practice Library public display should follow the intended catalogue sequence, not raw legacy order indexes.'
 );

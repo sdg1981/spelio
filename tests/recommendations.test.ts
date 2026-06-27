@@ -225,6 +225,53 @@ function makeMetadataAuditList(id: string, order: number, stage: string, focus =
   };
 }
 
+function makePracticeLibraryProgressionLists(): WordList[] {
+  const collection = {
+    id: 'practice',
+    slug: 'practice',
+    name: 'Practice Library',
+    description: '',
+    type: 'spelio_core' as const,
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio' as const,
+    ownerId: null,
+    order: 2,
+    isActive: true
+  };
+  const lists = [
+    ['practice_most_common_animals', 'Most Common Animals', 1],
+    ['practice_most_common_food_and_drink', 'Most Common Food & Drink', 2],
+    ['practice_most_common_places', 'Most Common Places', 3],
+    ['practice_most_common_people_and_family', 'Most Common People & Family', 4],
+    ['practice_most_common_weather', 'Most Common Weather', 5],
+    ['practice_most_common_colours', 'Most Common Colours', 6],
+    ['practice_most_common_clothing', 'Most Common Clothing', 7],
+    ['practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 8],
+    ['practice_most_common_work', 'Most Common Work', 9],
+    ['practice_most_common_school_and_learning', 'Most Common School & Learning', 10],
+    ['practice_most_common_home_and_household', 'Most Common Home & Household', 11],
+    ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 12],
+    ['practice_most_common_nature_and_landscape', 'Most Common Nature & Landscape', 13],
+    ['practice_most_common_shopping', 'Most Common Shopping', 14],
+    ['practice_most_common_body_parts', 'Most Common Body Parts', 15],
+    ['practice_most_common_sports', 'Most Common Sports', 16],
+    ['practice_most_common_leisure', 'Most Common Leisure', 17],
+    ['practice_most_common_numbers', 'Most Common Numbers', 18],
+    ['practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 19],
+    ['practice_most_common_around_town', 'Most Common Around Town', 20]
+  ] as const;
+
+  return lists.map(([id, name, order]) => ({
+    ...makeLargeList(id, order, 3),
+    collectionId: 'practice',
+    collection,
+    name,
+    stage: 'Core',
+    focus: 'Topic Vocabulary'
+  }));
+}
+
 function makeLargeVariantList(): WordList {
   const id = 'test_large_variant_single';
   return {
@@ -1890,6 +1937,52 @@ test('normal progression fallback follows collection and list order instead of l
   assertEqual(changedStageRecommendation.listId, sameCollectionCandidate.id, 'Changing legacy stage labels should not change fallback recommendations.');
 });
 
+test('Practice Library fallback follows the public catalogue sequence after manual list completion', () => {
+  const lists = makePracticeLibraryProgressionLists();
+  const freshPlacesStorage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_places'],
+    currentPathPosition: 'practice_most_common_places',
+    hasManualWordListSelection: true
+  };
+
+  assertEqual(
+    getRecommendation(freshPlacesStorage, lists).listId,
+    'practice_most_common_places',
+    'Manual selection should continue the selected Practice Library list while it still has unseen learning items.'
+  );
+
+  const completedPlacesStorage = completeListCleanlyInLists(freshPlacesStorage, lists, 'practice_most_common_places');
+  const completedTravelStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_travel_and_transport'],
+    currentPathPosition: 'practice_most_common_travel_and_transport',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_travel_and_transport');
+  const completedPeopleStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_people_and_family'],
+    currentPathPosition: 'practice_most_common_people_and_family',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_people_and_family');
+
+  assertEqual(
+    getRecommendation(completedPlacesStorage, lists).listId,
+    'practice_most_common_travel_and_transport',
+    'Completing Most Common Places should recommend Most Common Travel & Transport before People & Family.'
+  );
+  assertEqual(
+    getRecommendation(completedTravelStorage, lists).listId,
+    'practice_most_common_people_and_family',
+    'Completing Most Common Travel & Transport should recommend Most Common People & Family next.'
+  );
+  assertEqual(
+    getRecommendation(completedPeopleStorage, lists).listId,
+    'practice_most_common_home_and_household',
+    'Completing Most Common People & Family should recommend Most Common Home & Household next.'
+  );
+});
+
 test('focus metadata does not affect recommendations or session generation', () => {
   const current = makeMetadataAuditList('focus_audit_current', 1, 'Alpha', 'Original');
   const next = makeMetadataAuditList('focus_audit_next', 2, 'Alpha', 'Original');
@@ -2698,6 +2791,38 @@ test('ordinary continue learning does not use difficult review words from anothe
 
   assertEqual(normalSession.words.some(word => word.id === please.id), false, 'Normal continue learning should not pull difficult words from another list');
   assertEqual(reviewSession.words.some(word => word.id === please.id), true, 'Difficult word should remain available only in explicit review mode');
+});
+
+test('Review difficult words uses the unresolved difficult pool across active main lists', () => {
+  const earlier = makeLargeList('test_review_pool_earlier', 1, 2);
+  const current = makeLargeList('test_review_pool_current', 2, 2);
+  const lists = [earlier, current];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id,
+    lastSessionResult: {
+      totalWords: 2,
+      correctWords: 1,
+      incorrectWords: 1,
+      revealedWords: 0,
+      incorrectAttempts: 1,
+      revealedLetters: 0,
+      durationSeconds: 30,
+      listIds: [current.id],
+      state: 'struggled'
+    }
+  };
+  storage = applyWordProgressPatch(storage, earlier.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, current.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
+
+  const recommendation = getRecommendation(storage, lists);
+  const reviewSession = createPracticeSession(lists, storage, true);
+  const reviewWordIds = new Set(reviewSession.words.map(word => word.id));
+
+  assertEqual(recommendation.kind, 'review', 'A struggled session with unresolved difficult words should recommend Review difficult words.');
+  assertEqual(reviewWordIds.has(earlier.words[0].id), true, 'Review difficult words should include unresolved difficult words from earlier active lists.');
+  assertEqual(reviewWordIds.has(current.words[0].id), true, 'Review difficult words should include unresolved difficult words from the just-completed struggled list.');
 });
 
 test('manual list selection invalidates stale next-list recommendation', () => {

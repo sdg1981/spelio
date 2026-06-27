@@ -5,7 +5,7 @@ import type { SpelioStorage } from './storage';
 import { isListFullyComplete } from './storage';
 import { groupLearningItems, isLearningItemSeen } from './learningItems';
 import { hasDifficultWords } from './sessionEngine';
-import { getListDisplayName } from './wordListDisplay';
+import { compareWordListsForCatalogue, getListDisplayName } from './wordListDisplay';
 import { normalizeSingleSelectedListIds, getSelectedLists } from './wordListSelection';
 
 export type Recommendation = {
@@ -106,9 +106,7 @@ function compareListsByCollectionProgression(left: WordList, right: WordList) {
   return leftCollectionOrder - rightCollectionOrder ||
     leftCollectionName.localeCompare(rightCollectionName) ||
     left.collectionId.localeCompare(right.collectionId) ||
-    left.order - right.order ||
-    getListDisplayName(left).localeCompare(getListDisplayName(right)) ||
-    left.id.localeCompare(right.id);
+    compareWordListsForCatalogue(left, right);
 }
 
 function sortListsByCollectionProgression(lists: WordList[]) {

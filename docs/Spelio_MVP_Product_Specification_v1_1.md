@@ -1535,6 +1535,8 @@ Review selection should use current difficulty only:
 progress.difficult === true
 ```
 
+Dedicated Review difficult words sessions use the full unresolved, dialect-eligible difficult-word pool across active main word lists. They are not limited to words from the immediately previous session. This is separate from automatic recap injection and the optional From earlier action.
+
 Review difficult words should resolve eligibility using the exact difficult word variant and the active `dialectPreference`.
 
 A word becomes difficult at the exact `wordId` / variant the learner attempted. Changing Welsh style must not convert that old difficult variant into a different dialect variant.
