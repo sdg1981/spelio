@@ -1,6 +1,5 @@
 import type { ComponentType } from 'react';
 import {
-  ArrowLeft,
   ArrowRight,
   BadgeCheck,
   BookOpen,
@@ -27,8 +26,8 @@ import {
   Zap
 } from 'lucide-react';
 import { Footer } from './Footer';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
+import { PublicPageUtilityHeader } from './PublicInfoPages';
 import { SpelioSocialLinks } from './SpelioSocialLinks';
 import type { InterfaceLanguage, Translate, TranslationKey } from '../i18n';
 
@@ -195,17 +194,12 @@ export function HowSpelioWorks({
 }) {
   return (
     <main className="how-page">
-      <button className="how-back-button" type="button" onClick={onHome} aria-label={t('how.backHomeLabel')}>
-        <ArrowLeft size={24} strokeWidth={2.1} />
-      </button>
-      <div className="homepage-utility">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
+      <PublicPageUtilityHeader
+        interfaceLanguage={interfaceLanguage}
+        onBack={onHome}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
 
       <section className="how-hero" aria-labelledby="how-spelio-works-title">
         <div className="how-page-logo">

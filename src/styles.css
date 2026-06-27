@@ -2412,6 +2412,19 @@
   padding:clamp(34px,5vw,56px) clamp(24px,5vw,72px) 64px;
 }
 
+.public-page-utility-header{
+  position:relative;
+  z-index:18;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  width:min(100%,1120px);
+  min-height:44px;
+  margin:0 auto;
+  padding:0;
+}
+
 .how-back-button{
   position:fixed;
   left:clamp(20px,3.6vw,44px);
@@ -3966,6 +3979,12 @@
     padding:calc(32px + env(safe-area-inset-top)) 26px calc(46px + env(safe-area-inset-bottom));
   }
 
+  .public-page-utility-header{
+    width:100%;
+    min-height:42px;
+    padding:3px 4px;
+  }
+
   .how-back-button{
     left:14px;
     top:calc(16px + env(safe-area-inset-top));
@@ -3976,7 +3995,7 @@
   }
 
   .how-page-logo{
-    margin-top:58px;
+    margin-top:28px;
   }
 
   .public-info-content{
@@ -8764,6 +8783,46 @@
   .custom-list-privacy-card{
     align-items:flex-start;
     padding:22px;
+  }
+}
+
+.public-page-utility-header .how-back-button{
+  position:static;
+  inset:auto;
+  z-index:auto;
+  flex:0 0 auto;
+}
+
+.public-page-utility-header .homepage-utility{
+  position:static;
+  inset:auto;
+  z-index:auto;
+  flex:0 1 auto;
+  min-width:0;
+  justify-content:flex-end;
+}
+
+.public-page-utility-header .homepage-language-switcher{
+  position:static;
+  inset:auto;
+  z-index:auto;
+  padding:8px 10px;
+  border:1px solid rgba(223,217,209,.42);
+  border-radius:999px;
+  background:rgba(251,248,242,.56);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+.overlay{
+  z-index:140;
+}
+
+@media (max-width:620px){
+  .public-info-page .public-info-logo,
+  .custom-list-page .custom-list-logo,
+  .word-lists-page .word-lists-logo{
+    margin-top:28px;
   }
 }
 

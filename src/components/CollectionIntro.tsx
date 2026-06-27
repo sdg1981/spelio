@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Pause, Play } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 import { PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
+import { PublicPageUtilityHeader } from './PublicInfoPages';
 import type { CollectionIntro as CollectionIntroContent } from '../content/collectionIntro';
 import { markCollectionIntroSeen } from '../content/collectionIntro';
 import type { InterfaceLanguage, Translate } from '../i18n';
@@ -83,17 +83,13 @@ export function CollectionIntro({
 
   return (
     <main className="how-page public-info-page foundations-primer-page collection-intro-page">
-      <button className="how-back-button foundations-primer-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
-        <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
-      </button>
-      <div className="homepage-utility foundations-primer-language">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
+      <PublicPageUtilityHeader
+        className="foundations-primer-utility-header"
+        interfaceLanguage={interfaceLanguage}
+        onBack={onBack}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
 
       <div className="how-page-logo public-info-logo foundations-primer-logo">
         <Logo onClick={onHome} backHomeLabel={t('how.backHomeLabel')} />

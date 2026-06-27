@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, ChevronRight, FileText, X } from 'lucide-react';
+import { ChevronRight, FileText, X } from 'lucide-react';
 import { Footer } from './Footer';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import { WordListSelectorPanel } from './Practice';
+import { PublicPageUtilityHeader } from './PublicInfoPages';
 import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import { loadRecentCustomLists, removeRecentCustomList, type RecentCustomListReference } from '../lib/customListRecent';
@@ -102,17 +102,13 @@ export function WordListsPage({
 
   return (
     <main className="how-page public-info-page word-lists-page">
-      <button className="how-back-button word-lists-back" type="button" onClick={handleBack} aria-label={t('publicPages.backLabel')}>
-        <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
-      </button>
-      <div className="homepage-utility word-lists-language">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
+      <PublicPageUtilityHeader
+        className="word-lists-utility-header"
+        interfaceLanguage={interfaceLanguage}
+        onBack={handleBack}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
 
       <div className="how-page-logo public-info-logo word-lists-logo">
         <Logo onClick={onHome} backHomeLabel={t('how.backHomeLabel')} />

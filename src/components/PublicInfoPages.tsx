@@ -31,17 +31,12 @@ export function PublicPageShell({
 }: PublicPageShellProps) {
   return (
     <main className="how-page public-info-page">
-      <button className="how-back-button" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
-        <ArrowLeft size={24} strokeWidth={2.1} />
-      </button>
-      <div className="homepage-utility">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
+      <PublicPageUtilityHeader
+        interfaceLanguage={interfaceLanguage}
+        onBack={onBack}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
 
       <div className="how-page-logo public-info-logo">
         <Logo onClick={onHome} backHomeLabel={t('how.backHomeLabel')} />
@@ -60,6 +55,36 @@ export function PublicPageShell({
         t={t}
       />
     </main>
+  );
+}
+
+export function PublicPageUtilityHeader({
+  className = '',
+  interfaceLanguage,
+  onBack,
+  onInterfaceLanguageChange,
+  t
+}: {
+  className?: string;
+  interfaceLanguage: InterfaceLanguage;
+  onBack: () => void;
+  onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
+  t: Translate;
+}) {
+  return (
+    <div className={['public-page-utility-header', className].filter(Boolean).join(' ')}>
+      <button className="how-back-button" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
+        <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
+      </button>
+      <div className="homepage-utility">
+        <LanguageSwitcher
+          interfaceLanguage={interfaceLanguage}
+          onInterfaceLanguageChange={onInterfaceLanguageChange}
+          t={t}
+          variant="homepageTop"
+        />
+      </div>
+    </div>
   );
 }
 

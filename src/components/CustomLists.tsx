@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ArrowRight, Copy, LockKeyhole, Share2, ShieldCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft } from './Icons';
 import { Footer } from './Footer';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import { LargeWordListQrOverlay } from './Practice';
+import { PublicPageUtilityHeader } from './PublicInfoPages';
 import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import {
@@ -58,17 +57,13 @@ function CustomListPublicShell({
 }: CustomListShellProps) {
   return (
     <main className="how-page public-info-page custom-list-page">
-      <button className="how-back-button custom-list-back" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
-        <ArrowLeft size={25} strokeWidth={2.2} aria-hidden="true" />
-      </button>
-      <div className="homepage-utility custom-list-language">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
+      <PublicPageUtilityHeader
+        className="custom-list-utility-header"
+        interfaceLanguage={interfaceLanguage}
+        onBack={onBack}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
+        t={t}
+      />
       <div className="how-page-logo public-info-logo custom-list-logo">
         <Logo onClick={onHome} backHomeLabel={t('how.backHomeLabel')} />
       </div>
