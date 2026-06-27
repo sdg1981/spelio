@@ -1,4 +1,6 @@
 import { adminNavGroups } from '../src/admin/navigation';
+import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder } from '../src/admin/services/collectionOrdering';
+import type { AdminWordList } from '../src/admin/types';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -65,3 +67,112 @@ for (const group of adminNavGroups) {
     assert(item.description.trim().length > 0, `${item.label} should explain what it is for.`);
   }
 }
+
+function makeList(id: string, collectionId: string, order: number, nextListId: string | null = null, overrides: Partial<AdminWordList> = {}): AdminWordList {
+  return {
+    id,
+    slug: id,
+    collectionId,
+    collectionName: collectionId,
+    name: id,
+    nameCy: '',
+    description: '',
+    descriptionCy: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Both',
+    stageId: '',
+    stage: '',
+    focusCategoryId: '',
+    focus: '',
+    difficulty: 1,
+    order,
+    nextListId,
+    isActive: true,
+    createdAt: '',
+    updatedAt: '',
+    words: [],
+    ...overrides
+  };
+}
+
+const catalogueLists = [
+  makeList('animals', 'practice', 7, 'food'),
+  makeList('food', 'practice', 8, null),
+  makeList('other', 'other', 1, null)
+];
+const reorderedCatalogueLists = applyCollectionCatalogueOrder(catalogueLists, ['food', 'animals']);
+
+assertEqual(
+  reorderedCatalogueLists.find(list => list.id === 'food')?.order,
+  1,
+  'Collection word-list order save should update the first list order value.'
+);
+assertEqual(
+  reorderedCatalogueLists.find(list => list.id === 'animals')?.order,
+  2,
+  'Collection word-list order save should update the second list order value.'
+);
+assertEqual(
+  reorderedCatalogueLists.find(list => list.id === 'animals')?.nextListId,
+  'food',
+  'Collection word-list order save must not change nextListId progression links.'
+);
+
+const progressionLists = [
+  makeList('animals', 'practice', 1, 'food'),
+  makeList('food', 'practice', 2, 'places'),
+  makeList('places', 'practice', 3, null),
+  makeList('extra', 'practice', 4, 'food'),
+  makeList('other', 'other', 1, null)
+];
+const progressionUpdates = applyCollectionProgressionOrder(progressionLists, 'practice', ['animals', 'places']);
+
+assertEqual(
+  progressionUpdates.find(list => list.id === 'animals')?.nextListId,
+  'places',
+  'Progression order save should link each included list to the next included list.'
+);
+assertEqual(
+  progressionUpdates.find(list => list.id === 'places')?.nextListId,
+  null,
+  'Progression order save should clear same-collection nextListId on the final included list.'
+);
+assertEqual(
+  progressionUpdates.find(list => list.id === 'food')?.nextListId,
+  null,
+  'Excluded same-collection lists should not remain inserted in the curated nextListId chain.'
+);
+assertEqual(
+  progressionUpdates.find(list => list.id === 'extra')?.nextListId,
+  null,
+  'Excluded lists should have same-collection nextListId cleared while remaining browsable.'
+);
+assertEqual(
+  progressionUpdates.find(list => list.id === 'animals')?.order,
+  1,
+  'Progression order save should not change catalogue/display order values.'
+);
+
+const crossCollectionProgression = applyCollectionProgressionOrder([
+  makeList('last_foundations', 'learning', 1, 'animals'),
+  makeList('animals', 'practice', 1, null)
+], 'learning', ['last_foundations']);
+
+assertEqual(
+  crossCollectionProgression.find(list => list.id === 'last_foundations')?.nextListId,
+  'animals',
+  'Progression order save should preserve an existing cross-collection nextListId on the terminal included list.'
+);
+
+const changedLegacyMetadata = applyCollectionProgressionOrder([
+  makeList('animals', 'practice', 1, null, { stage: 'Changed', focus: 'Changed' }),
+  makeList('food', 'practice', 2, null, { stage: 'Other', focus: 'Other' })
+], 'practice', ['animals', 'food']);
+
+assertEqual(
+  changedLegacyMetadata.find(list => list.id === 'animals')?.nextListId,
+  'food',
+  'Collection progression ordering should not depend on legacy stage or focus metadata.'
+);

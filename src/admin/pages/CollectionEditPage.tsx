@@ -1,23 +1,30 @@
-import { ArrowLeft, Save, ShieldCheck, Trash2, Wand2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, ListOrdered, Route, Save, ShieldCheck, Trash2, Wand2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
 import { AdminButton, AdminCard, AdminInput, AdminSelect, AdminTextarea, Field } from '../components/primitives';
 import { AudioStatusPill } from '../components/audioStatus';
 import type { AdminRepository } from '../repositories';
-import type { AdminWordListCollection } from '../types';
+import type { AdminWordList, AdminWordListCollection } from '../types';
 import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
+import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder, deriveInitialProgressionListIds, moveItem, sortCollectionWordLists } from '../services/collectionOrdering';
 
 export function CollectionEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [collection, setCollection] = useState<AdminWordListCollection | null>(null);
+  const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [orderingSaving, setOrderingSaving] = useState(false);
+  const [orderingPanel, setOrderingPanel] = useState<'catalogue' | 'progression' | null>(null);
+  const [catalogueOrderIds, setCatalogueOrderIds] = useState<string[]>([]);
+  const [progressionIncludedIds, setProgressionIncludedIds] = useState<string[]>([]);
   const [generatingLanguage, setGeneratingLanguage] = useState<'en' | 'cy' | null>(null);
   const [clearingAudioLanguage, setClearingAudioLanguage] = useState<'en' | 'cy' | null>(null);
 
   useEffect(() => {
-    repository.getCollection(id)
-      .then(nextCollection => {
+    Promise.all([repository.getCollection(id), repository.listWordLists()])
+      .then(([nextCollection, nextWordLists]) => {
         if (!nextCollection) {
           setErrorMessage('Collection not found.');
           return;
@@ -26,11 +33,33 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
           ...nextCollection,
           introContent: normalizeCollectionIntroContent(nextCollection.introContent, nextCollection.id)
         });
+        setWordLists(nextWordLists);
       })
       .catch(error => setErrorMessage(error instanceof Error ? error.message : 'Could not load collection.'));
   }, [id, repository]);
 
   const intro = useMemo(() => normalizeCollectionIntroContent(collection?.introContent, collection?.id ?? id), [collection, id]);
+  const collectionWordLists = useMemo(() => sortCollectionWordLists(wordLists, id), [wordLists, id]);
+  const wordListById = useMemo(() => new Map(wordLists.map(list => [list.id, list])), [wordLists]);
+  const catalogueOrderLists = useMemo(
+    () => catalogueOrderIds.map(listId => wordListById.get(listId)).filter((list): list is AdminWordList => Boolean(list)),
+    [catalogueOrderIds, wordListById]
+  );
+  const progressionIncludedLists = useMemo(
+    () => progressionIncludedIds.map(listId => wordListById.get(listId)).filter((list): list is AdminWordList => Boolean(list)),
+    [progressionIncludedIds, wordListById]
+  );
+  const progressionExcludedLists = useMemo(
+    () => collectionWordLists.filter(list => !progressionIncludedIds.includes(list.id)),
+    [collectionWordLists, progressionIncludedIds]
+  );
+  const crossCollectionNextLinks = useMemo(
+    () => collectionWordLists.filter(list => {
+      const next = list.nextListId ? wordListById.get(list.nextListId) : undefined;
+      return next && next.collectionId !== id;
+    }),
+    [collectionWordLists, id, wordListById]
+  );
 
   function updateCollection(patch: Partial<AdminWordListCollection>) {
     setCollection(previous => previous ? ({ ...previous, ...patch }) : previous);
@@ -68,6 +97,88 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   }
 
   const busy = saving || Boolean(generatingLanguage) || Boolean(clearingAudioLanguage);
+  const anyBusy = busy || orderingSaving;
+
+  async function refreshWordLists() {
+    const nextWordLists = await repository.listWordLists();
+    setWordLists(nextWordLists);
+    return nextWordLists;
+  }
+
+  function openCatalogueOrdering() {
+    setCatalogueOrderIds(collectionWordLists.map(list => list.id));
+    setOrderingPanel('catalogue');
+  }
+
+  function openProgressionOrdering() {
+    const existingProgressionIds = deriveInitialProgressionListIds(collectionWordLists, wordLists);
+    const defaultIncludedIds = collectionWordLists.filter(list => list.isActive).map(list => list.id);
+    setProgressionIncludedIds(existingProgressionIds.length ? existingProgressionIds : defaultIncludedIds);
+    setOrderingPanel('progression');
+  }
+
+  function closeOrderingPanel() {
+    if (orderingSaving) return;
+    setOrderingPanel(null);
+  }
+
+  function moveCatalogueList(index: number, direction: 'up' | 'down') {
+    setCatalogueOrderIds(current => moveItem(current, index, direction));
+  }
+
+  function moveProgressionList(index: number, direction: 'up' | 'down') {
+    setProgressionIncludedIds(current => moveItem(current, index, direction));
+  }
+
+  function includeProgressionList(listId: string) {
+    setProgressionIncludedIds(current => current.includes(listId) ? current : [...current, listId]);
+  }
+
+  function excludeProgressionList(listId: string) {
+    setProgressionIncludedIds(current => current.filter(id => id !== listId));
+  }
+
+  async function saveCatalogueOrder() {
+    setOrderingSaving(true);
+    setErrorMessage('');
+    setStatusMessage('');
+    try {
+      const updatedLists = applyCollectionCatalogueOrder(wordLists, catalogueOrderIds);
+      const changedLists = updatedLists.filter(updated => {
+        const original = wordListById.get(updated.id);
+        return original && original.order !== updated.order;
+      });
+      await Promise.all(changedLists.map(list => repository.saveWordList(list)));
+      await refreshWordLists();
+      setStatusMessage('Word list order saved.');
+      setOrderingPanel(null);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not save word list order.');
+    } finally {
+      setOrderingSaving(false);
+    }
+  }
+
+  async function saveProgressionOrder() {
+    setOrderingSaving(true);
+    setErrorMessage('');
+    setStatusMessage('');
+    try {
+      const updatedLists = applyCollectionProgressionOrder(wordLists, id, progressionIncludedIds);
+      const changedLists = updatedLists.filter(updated => {
+        const original = wordListById.get(updated.id);
+        return original && original.nextListId !== updated.nextListId;
+      });
+      await Promise.all(changedLists.map(list => repository.saveWordList(list)));
+      await refreshWordLists();
+      setStatusMessage('Progression order saved.');
+      setOrderingPanel(null);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not save progression order.');
+    } finally {
+      setOrderingSaving(false);
+    }
+  }
 
   function audioFields(language: 'en' | 'cy') {
     return language === 'cy'
@@ -190,6 +301,14 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 </Field>
               </div>
               <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>
+              <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
+                <AdminButton onClick={openCatalogueOrdering} disabled={anyBusy || !collectionWordLists.length}>
+                  <ListOrdered size={16} /> Arrange word list order
+                </AdminButton>
+                <AdminButton onClick={openProgressionOrdering} disabled={anyBusy || !collectionWordLists.length}>
+                  <Route size={16} /> Arrange progression order
+                </AdminButton>
+              </div>
             </div>
           </AdminCard>
 
@@ -295,7 +414,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
               </div>
 
               <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-5">
-                <AdminButton variant="primary" onClick={saveCollection} disabled={busy}>
+                <AdminButton variant="primary" onClick={saveCollection} disabled={anyBusy}>
                   <Save size={16} /> {saving ? 'Saving...' : 'Save collection'}
                 </AdminButton>
               </div>
@@ -304,6 +423,147 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
           </AdminCard>
         </div>
       )}
+
+      {orderingPanel && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-4 py-8">
+          <div className="w-full max-w-3xl rounded-lg bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
+              <div>
+                <h2 className="text-lg font-black text-slate-950">
+                  {orderingPanel === 'catalogue' ? 'Arrange word list order' : 'Arrange progression order'}
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  {orderingPanel === 'catalogue'
+                    ? 'Controls how lists appear when browsing this collection. Progression can be arranged separately.'
+                    : 'Controls the recommended path after a list is completed. Lists not included remain browsable but are skipped by curated progression.'}
+                </p>
+              </div>
+              <button className="rounded-md p-2 text-slate-500 hover:bg-slate-100" type="button" onClick={closeOrderingPanel} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            {orderingPanel === 'catalogue' ? (
+              <div className="grid gap-3 p-5">
+                {catalogueOrderLists.map((list, index) => (
+                  <OrderingListRow
+                    key={list.id}
+                    list={list}
+                    index={index}
+                    total={catalogueOrderLists.length}
+                    onMove={direction => moveCatalogueList(index, direction)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-5 p-5">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Included in progression</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Saving writes each list&apos;s next list link in this order. The final list keeps an existing cross-collection next link; otherwise it is set to none.</p>
+                  {crossCollectionNextLinks.length > 0 && (
+                    <p className="mt-2 rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-800">
+                      Existing cross-collection next-list links: {crossCollectionNextLinks.map(list => `${list.name} -> ${wordListById.get(list.nextListId ?? '')?.name ?? list.nextListId}`).join(', ')}. Keep one as the final included list to preserve it.
+                    </p>
+                  )}
+                  <div className="mt-3 grid gap-3">
+                    {progressionIncludedLists.length ? progressionIncludedLists.map((list, index) => (
+                      <OrderingListRow
+                        key={list.id}
+                        list={list}
+                        index={index}
+                        total={progressionIncludedLists.length}
+                        nextLabel={progressionIncludedLists[index + 1]?.name ?? getTerminalNextLabel(list, wordListById, id)}
+                        onMove={direction => moveProgressionList(index, direction)}
+                        action={<AdminButton variant="ghost" onClick={() => excludeProgressionList(list.id)}>Exclude</AdminButton>}
+                      />
+                    )) : (
+                      <div className="rounded-md border border-dashed border-slate-200 p-4 text-sm font-semibold text-slate-500">No lists are included in the curated progression path.</div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Not in progression</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">These lists remain browsable. Saving clears same-collection next-list links from excluded lists; cross-collection links are preserved.</p>
+                  <div className="mt-3 grid gap-3">
+                    {progressionExcludedLists.length ? progressionExcludedLists.map(list => (
+                      <OrderingListRow
+                        key={list.id}
+                        list={list}
+                        action={<AdminButton onClick={() => includeProgressionList(list.id)}>Include</AdminButton>}
+                      />
+                    )) : (
+                      <div className="rounded-md border border-dashed border-slate-200 p-4 text-sm font-semibold text-slate-500">All collection lists are included in progression.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 p-5">
+              <AdminButton onClick={closeOrderingPanel} disabled={orderingSaving}>Cancel</AdminButton>
+              <AdminButton
+                variant="primary"
+                onClick={orderingPanel === 'catalogue' ? saveCatalogueOrder : saveProgressionOrder}
+                disabled={orderingSaving}
+              >
+                <Save size={16} /> {orderingSaving ? 'Saving...' : 'Save order'}
+              </AdminButton>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
+}
+
+function OrderingListRow({
+  list,
+  index,
+  total,
+  nextLabel,
+  action,
+  onMove
+}: {
+  list: AdminWordList;
+  index?: number;
+  total?: number;
+  nextLabel?: string;
+  action?: ReactNode;
+  onMove?: (direction: 'up' | 'down') => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-md border border-slate-200 bg-white p-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {typeof index === 'number' && <span className="text-xs font-black text-slate-400">{index + 1}</span>}
+          <span className="truncate text-sm font-black text-slate-950">{list.name}</span>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${list.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+            {list.isActive ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        <div className="mt-1 text-xs font-semibold text-slate-500">
+          Order {list.order}{nextLabel ? ` · Next: ${nextLabel}` : list.nextListId ? ` · Current next: ${list.nextListId}` : ''}
+        </div>
+      </div>
+      {onMove && typeof index === 'number' && typeof total === 'number' && (
+        <div className="flex gap-2">
+          <AdminButton className="min-h-9 px-3" onClick={() => onMove('up')} disabled={index === 0} aria-label={`Move ${list.name} up`}>
+            <ArrowUp size={15} />
+          </AdminButton>
+          <AdminButton className="min-h-9 px-3" onClick={() => onMove('down')} disabled={index === total - 1} aria-label={`Move ${list.name} down`}>
+            <ArrowDown size={15} />
+          </AdminButton>
+        </div>
+      )}
+      {action}
+    </div>
+  );
+}
+
+function getTerminalNextLabel(list: AdminWordList, wordListById: Map<string, AdminWordList>, collectionId: string) {
+  if (!list.nextListId) return 'None';
+  const next = wordListById.get(list.nextListId);
+  if (!next) return `Missing list ${list.nextListId}`;
+  return next.collectionId === collectionId ? 'None' : `${next.name} (outside this collection)`;
 }
