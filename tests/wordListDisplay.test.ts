@@ -1,4 +1,5 @@
-import { compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import type { WordList } from '../src/data/wordLists';
+import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -22,7 +23,7 @@ assertEqual(
     stageId: 'foundations',
     stage: 'Foundations'
   }),
-  'Common Patterns',
+  'Spelling Patterns',
   'Welsh Spelling Foundations should override the foundations stage label for public display.'
 );
 
@@ -85,4 +86,146 @@ assertEqual(
   sortedCollections[2].id,
   'missing_order_a',
   'Collection display sorting should fall back to collection name when order is missing.'
+);
+
+function createList(overrides: Partial<WordList>): WordList {
+  return {
+    id: 'list',
+    collectionId: 'spelio_core_welsh',
+    collection: {
+      id: 'spelio_core_welsh',
+      slug: 'spelio-core-welsh',
+      name: 'Spelio Core Welsh',
+      description: '',
+      type: 'spelio_core',
+      sourceLanguage: 'en',
+      targetLanguage: 'cy',
+      ownerType: 'spelio',
+      ownerId: null,
+      order: 1,
+      isActive: true
+    },
+    name: 'List',
+    description: '',
+    language: 'Welsh',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    dialect: 'Both',
+    stageId: 'core',
+    stage: 'Core',
+    difficulty: 1,
+    order: 1,
+    nextListId: null,
+    isActive: true,
+    words: [],
+    ...overrides
+  };
+}
+
+const foundationsList = createList({
+  id: 'foundation_patterns_d_dd',
+  collectionId: 'spelio_welsh_foundations',
+  collection: {
+    id: 'spelio_welsh_foundations',
+    slug: 'welsh-spelling-foundations',
+    name: 'Welsh Spelling Foundations',
+    nameCy: 'Sylfeini Sillafu Cymraeg',
+    description: '',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio',
+    ownerId: null,
+    order: 1,
+    isActive: true
+  },
+  name: 'D / DD',
+  stageId: 'foundations',
+  stage: 'Foundations'
+});
+
+const practiceAnimalList = createList({
+  id: 'practice_most_common_animals',
+  collectionId: 'practice',
+  collection: {
+    id: 'practice',
+    slug: 'practice',
+    name: 'Practice',
+    description: '',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio',
+    ownerId: null,
+    order: 2,
+    isActive: true
+  },
+  name: 'Most Common Animals',
+  stageId: 'core',
+  stage: 'Core',
+  order: 1
+});
+
+const practiceFoodList = createList({
+  ...practiceAnimalList,
+  id: 'practice_most_common_food_and_drink',
+  name: 'Most Common Food & Drink',
+  order: 2
+});
+
+const inactiveCollectionList = createList({
+  id: 'inactive_topic',
+  collectionId: 'inactive',
+  collection: {
+    id: 'inactive',
+    slug: 'inactive',
+    name: 'Inactive',
+    description: '',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio',
+    ownerId: null,
+    order: 3,
+    isActive: false
+  },
+  name: 'Inactive Topic',
+  isActive: true
+});
+
+const catalogueGroups = buildPublicCatalogueGroups([
+  practiceFoodList,
+  inactiveCollectionList,
+  foundationsList,
+  practiceAnimalList
+]);
+
+assertEqual(
+  catalogueGroups.map(group => group.title).join('|'),
+  'Learning|Practice Library',
+  'Public catalogue should use product-area labels and hide inactive collections.'
+);
+
+assertEqual(
+  catalogueGroups[0].listGroups[0].title,
+  'Welsh Spelling Foundations',
+  'Foundations should remain the journey/list group title under Learning.'
+);
+
+assertEqual(
+  catalogueGroups[0].listGroups[0].subtitle,
+  'Spelling Patterns',
+  'Foundations should expose Spelling Patterns as the visible subgroup label.'
+);
+
+assertEqual(
+  catalogueGroups[1].listGroups.map(group => group.title).join('|'),
+  'Animals|Food & Drink',
+  'Practice Library should group active topic lists by catalogue category instead of the generic Core stage.'
+);
+
+assertEqual(
+  catalogueGroups[1].listGroups[0].lists[0].name,
+  'Most Common Animals',
+  'Practice Library category display should preserve the actual database-backed list name.'
 );

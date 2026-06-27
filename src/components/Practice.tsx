@@ -8,13 +8,12 @@ import { FirstPracticeHint } from './FirstPracticeHint';
 import { SpelioTouchKeyboard } from './SpelioTouchKeyboard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
 import type { PracticeWord, WordList } from '../data/wordLists';
-import { mainWordLists } from '../data/supportWordLists';
 import { getAnswer, getPrompt } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWordListStageDisplayName } from '../lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -64,17 +63,6 @@ type StruggleAssistGuidanceKind = 'shortcut' | 'mobile';
 type ShareDataNavigator = Navigator & {
   share?: (data: ShareData) => Promise<void>;
   canShare?: (data: ShareData) => boolean;
-};
-
-type WordListCollectionGroup = {
-  collection: {
-    id: string;
-    name: string;
-    nameCy?: string | null;
-    order?: number | null;
-  };
-  collectionName: string;
-  stageGroups: Record<string, WordList[]>;
 };
 
 const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
@@ -2173,7 +2161,9 @@ export function WordListSelectorPanel({
   variant?: 'modal' | 'page';
 }) {
   const [query, setQuery] = useState('');
-  const selectableLists = useMemo(() => mainWordLists(lists), [lists]);
+  const selectableLists = useMemo(() => buildPublicCatalogueGroups(lists, interfaceLanguage).flatMap(group => (
+    group.listGroups.flatMap(listGroup => listGroup.lists)
+  )), [interfaceLanguage, lists]);
   const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, selectableLists));
   const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
@@ -2188,31 +2178,9 @@ export function WordListSelectorPanel({
       return `${displayName} ${displayDescription} ${list.name} ${list.description}`.toLowerCase().includes(normalizedQuery);
     });
   }, [interfaceLanguage, selectableLists, query]);
-  const collectionGroups = useMemo(() => {
-    const groupsById = new Map<string, WordListCollectionGroup>();
-    filteredLists.forEach(list => {
-      const collectionId = list.collection?.id ?? list.collectionId;
-      const collectionName = list.collection ? getCollectionDisplayName(list.collection, interfaceLanguage) : 'Spelio Core Welsh';
-      const collectionGroup = groupsById.get(collectionId) ?? {
-        collection: {
-          id: collectionId,
-          name: list.collection?.name ?? collectionName,
-          nameCy: list.collection?.nameCy,
-          order: list.collection?.order
-        },
-        collectionName,
-        stageGroups: {}
-      };
-      (collectionGroup.stageGroups[getWordListStageDisplayName(list)] ??= []).push(list);
-      groupsById.set(collectionId, collectionGroup);
-    });
-
-    return Array.from(groupsById.values()).sort((a, b) => (
-      compareWordListCollectionsForDisplay(a.collection, b.collection, interfaceLanguage)
-    ));
-  }, [filteredLists, interfaceLanguage]);
+  const collectionGroups = useMemo(() => buildPublicCatalogueGroups(filteredLists, interfaceLanguage), [filteredLists, interfaceLanguage]);
   const showCollections = collectionGroups.length > 1;
-  const singleCollectionStageGroups = collectionGroups[0]?.stageGroups ?? {};
+  const singleCollectionListGroups = collectionGroups[0]?.listGroups ?? [];
 
   const selectList = useCallback((listId: string) => {
     setSelectedIds(selectSingleWordList(listId));
@@ -2318,10 +2286,11 @@ export function WordListSelectorPanel({
         />
 
         <div id={listGridId} className="list-grid">
-          {!showCollections && Object.entries(singleCollectionStageGroups).map(([group, groupLists]) => (
-            <div key={group}>
-              <h3 className="group-title">{getWordListStageLabel(group, t)}</h3>
-              {groupLists.map(list => {
+          {!showCollections && singleCollectionListGroups.map(group => (
+            <div key={group.key}>
+              <h3 className="group-title">{getWordListStageLabel(group.title, t)}</h3>
+              {group.subtitle && <h4 className="group-title">{getWordListStageLabel(group.subtitle, t)}</h4>}
+              {group.lists.map(list => {
                 const displayName = getListDisplayName(list, interfaceLanguage);
                 return (
                   <WordListRow
@@ -2341,13 +2310,14 @@ export function WordListSelectorPanel({
               })}
             </div>
           ))}
-          {showCollections && collectionGroups.map(({ collection, collectionName, stageGroups }) => (
+          {showCollections && collectionGroups.map(({ collection, title, listGroups }) => (
             <div key={collection.id} className={showCollections ? 'collection-group' : undefined}>
-              <h3 className="collection-title">{collectionName}</h3>
-              {Object.entries(stageGroups).map(([group, groupLists]) => (
-                <div key={`${collectionName}-${group}`} className="stage-group">
-                  <h4 className="group-title">{getWordListStageLabel(group, t)}</h4>
-                  {groupLists.map(list => {
+              <h3 className="collection-title">{title}</h3>
+              {listGroups.map(group => (
+                <div key={`${collection.id}-${group.key}`} className="stage-group">
+                  <h4 className="group-title">{getWordListStageLabel(group.title, t)}</h4>
+                  {group.subtitle && <h5 className="group-title">{getWordListStageLabel(group.subtitle, t)}</h5>}
+                  {group.lists.map(list => {
                     const displayName = getListDisplayName(list, interfaceLanguage);
                     return (
                       <WordListRow
