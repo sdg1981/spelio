@@ -25,8 +25,8 @@ const PRACTICE_LIBRARY_CATEGORY_LABELS: Record<string, { en: string; cy?: string
   practice_most_common_time_and_calendar: { en: 'Time & Calendar', cy: 'Amser a Chalendr' },
   practice_most_common_school_and_learning: { en: 'School & Learning', cy: 'Ysgol a Dysgu' },
   practice_most_common_work: { en: 'Work', cy: 'Gwaith' },
-  practice_most_common_colours: { en: 'Colours', cy: 'Lliwiau' },
-  practice_most_common_clothing: { en: 'Clothing', cy: 'Dillad' },
+  practice_most_common_colours: { en: 'Colours & Shapes', cy: 'Lliwiau a Siapiau' },
+  practice_most_common_clothing: { en: 'Clothing & Appearance', cy: 'Dillad ac Ymddangosiad' },
   practice_most_common_nature_and_landscape: { en: 'Nature & Landscape', cy: 'Natur a Thirwedd' },
   practice_most_common_shopping: { en: 'Shopping', cy: 'Siopa' },
   practice_most_common_body_parts: { en: 'Body Parts', cy: "Rhannau o'r Corff" },
@@ -47,7 +47,7 @@ const PRACTICE_LIBRARY_CATEGORY_ICON_NAMES: Record<string, string> = {
   practice_most_common_weather: 'CloudSun',
   practice_most_common_time_and_calendar: 'Calendar',
   practice_most_common_school_and_learning: 'GraduationCap',
-  practice_most_common_work: 'BriefcaseBusiness',
+  practice_most_common_work: 'Briefcase',
   practice_most_common_colours: 'Palette',
   practice_most_common_clothing: 'Shirt',
   practice_most_common_nature_and_landscape: 'Leaf',
@@ -177,8 +177,27 @@ export function getPracticeLibraryCategoryLabel(list: Pick<WordList, 'id' | 'nam
   return list.name.replace(/^Most Common\s+/i, '').trim() || list.name;
 }
 
-export function getPracticeLibraryIconName(list: Pick<WordList, 'id' | 'iconName'>) {
-  return list.iconName?.trim() || PRACTICE_LIBRARY_CATEGORY_ICON_NAMES[list.id] || 'BookOpen';
+export function getPracticeLibraryIconName(list: Pick<WordList, 'id' | 'iconName'> & { name?: string }) {
+  const explicitIcon = list.iconName?.trim();
+  if (explicitIcon) return explicitIcon;
+  const iconById = PRACTICE_LIBRARY_CATEGORY_ICON_NAMES[list.id];
+  if (iconById) return iconById;
+
+  const normalizedName = list.name?.toLowerCase() ?? '';
+  if (/\banimals?\b/.test(normalizedName)) return 'Dog';
+  if (/\bfood\b|\bdrink\b|\bmeals?\b|\beating\b/.test(normalizedName)) return 'Apple';
+  if (/\bpeople\b|\bfamily\b|\bhome\b|\bhousehold\b/.test(normalizedName)) return 'UserRound';
+  if (/\bplaces?\b|\btravel\b|\btown\b|\btransport\b/.test(normalizedName)) return 'MapPin';
+  if (/\bweather\b|\bseasons?\b/.test(normalizedName)) return 'CloudSun';
+  if (/\btime\b|\bcalendar\b/.test(normalizedName)) return 'Calendar';
+  if (/\bcolou?rs?\b|\bshapes?\b/.test(normalizedName)) return 'Palette';
+  if (/\bclothing\b|\bappearance\b|\bshirt\b/.test(normalizedName)) return 'Shirt';
+  if (/\bwork\b|\bdaily life\b/.test(normalizedName)) return 'Briefcase';
+  if (/\bschool\b|\blearning\b/.test(normalizedName)) return 'GraduationCap';
+  if (/\bnature\b|\blandscape\b/.test(normalizedName)) return 'Leaf';
+  if (/\bshopping\b|\bshop\b/.test(normalizedName)) return 'ShoppingBag';
+
+  return 'BookOpen';
 }
 
 export function getWordListCatalogueOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {

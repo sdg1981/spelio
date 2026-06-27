@@ -3,7 +3,7 @@ import type { CSSProperties, ComponentType, KeyboardEvent as ReactKeyboardEvent,
 import { createPortal } from 'react-dom';
 import * as LucideIcons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { ArrowRight, BookOpen, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, Sparkles, SquareArrowLeft, X } from 'lucide-react';
+import { ArrowRight, ArrowUp, BookOpen, CheckCircle2, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { FirstPracticeHint } from './FirstPracticeHint';
@@ -2003,6 +2003,7 @@ const PRACTICE_LIBRARY_MAIN_LIST_IDS = [
   'practice_most_common_nature_and_landscape',
   'practice_most_common_shopping'
 ];
+const FOUNDATION_PREVIEW_CHIP_LABELS = ['D / DD', 'Y', 'F / FF'];
 
 function resolveCatalogueIcon(iconName: string | undefined) {
   const Icon = iconName ? catalogueIconComponents[iconName] : undefined;
@@ -2012,6 +2013,15 @@ function resolveCatalogueIcon(iconName: string | undefined) {
 function getPracticeLibrarySubtitle(list: WordList, interfaceLanguage: InterfaceLanguage) {
   const displayName = getListDisplayName(list, interfaceLanguage);
   return displayName.replace(/^Most Common\s+/i, interfaceLanguage === 'cy' ? '' : 'Most common ').trim() || displayName;
+}
+
+function getFoundationPatternLabel(list: WordList, interfaceLanguage: InterfaceLanguage) {
+  const displayName = getListDisplayName(list, interfaceLanguage);
+  return displayName
+    .replace(/^Spelling (?:Pattern|Contrast|Focus)\s+[—-]\s*/i, '')
+    .replace(/^Mixed Confidence\s+[—-]\s*/i, 'Mixed Confidence - ')
+    .replace(/^Foundations\s*\d+\s*[—-]\s*/i, '')
+    .trim() || displayName;
 }
 
 function handleNestedCardAction(event: MouseEvent<HTMLButtonElement>) {
@@ -2074,6 +2084,7 @@ function WordListPageCatalogue({
   interfaceLanguage: InterfaceLanguage;
   t: Translate;
 }) {
+  const [foundationsExpanded, setFoundationsExpanded] = useState(false);
   const normalizedQuery = query.trim();
   const foundationsLists = selectableLists
     .filter(isFoundationsCatalogueList)
@@ -2090,6 +2101,8 @@ function WordListPageCatalogue({
   const foundationsProgressLabel = t('wordLists.foundationsProgress')
     .replace('{completed}', String(foundationsCompleted))
     .replace('{total}', String(foundationsTotal));
+  const previewChipLabels = FOUNDATION_PREVIEW_CHIP_LABELS;
+  const hiddenFoundationsCount = Math.max(0, foundationsLists.length - previewChipLabels.length);
 
   if (normalizedQuery) {
     return (
@@ -2156,11 +2169,20 @@ function WordListPageCatalogue({
                 </span>
               </div>
               <div className="learning-journey-chips" aria-label={t('wordLists.foundationsChipsLabel')}>
-                <span>D / DD</span>
-                <span>Y</span>
-                <span>F / FF</span>
-                <span>{t('wordLists.moreFoundationsChips')}</span>
+                {previewChipLabels.map(label => (
+                  <span key={label}>{label}</span>
+                ))}
+                {hiddenFoundationsCount > 0 && (
+                  <button className="learning-journey-chip-button" type="button" onClick={() => setFoundationsExpanded(true)}>
+                    {t('wordLists.moreFoundationsChips').replace('{count}', String(hiddenFoundationsCount))}
+                  </button>
+                )}
               </div>
+              {foundationsLists.length > previewChipLabels.length && (
+                <button className="learning-journey-secondary-action" type="button" onClick={() => setFoundationsExpanded(value => !value)}>
+                  {foundationsExpanded ? t('wordLists.hideAllPatterns') : t('wordLists.viewAllPatterns')}
+                </button>
+              )}
             </div>
             <button className="learning-journey-cta" type="button" onClick={() => onSelect(currentFoundationList.id)}>
               {t('wordLists.continueJourney')}
@@ -2168,15 +2190,42 @@ function WordListPageCatalogue({
             </button>
           </article>
         )}
+        {foundationsExpanded && foundationsLists.length > 0 && (
+          <div className="foundations-pattern-list" aria-label={t('wordLists.allFoundationsPatterns')}>
+            {foundationsLists.map(list => {
+              const selected = selectedId === list.id;
+              const completed = completedSet.has(list.id);
+              const inProgress = !completed && inProgressSet.has(list.id);
+              return (
+                <button
+                  className={`foundations-pattern-item ${selected ? 'selected' : ''}`}
+                  type="button"
+                  key={list.id}
+                  aria-pressed={selected}
+                  onClick={() => onSelect(list.id)}
+                >
+                  <span>
+                    <strong>{getFoundationPatternLabel(list, interfaceLanguage)}</strong>
+                    <small>{getListDisplayName(list, interfaceLanguage)}</small>
+                  </span>
+                  <span className="foundations-pattern-meta">
+                    {selected && <span className="foundations-pattern-selected"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.selected')}</span>}
+                    {!selected && completed && <span>{t('wordLists.completed')}</span>}
+                    {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="word-lists-section upcoming-journeys" aria-labelledby="word-lists-upcoming-title">
         <h2 id="word-lists-upcoming-title">{t('wordLists.upcomingLearningJourneys')}</h2>
         <div className="upcoming-journey-grid">
           {[
-            { title: t('wordLists.upcomingWordFamilies'), icon: Sparkles },
             { title: t('wordLists.upcomingMutationAwareness'), icon: GitBranch },
-            { title: t('wordLists.upcomingAccents'), icon: Lightbulb },
+            { title: t('wordLists.upcomingAccents'), icon: ArrowUp },
             { title: t('wordLists.upcomingYesNo'), icon: MessageCircle }
           ].map(({ title, icon: Icon }) => (
             <article className="upcoming-journey-card" key={title}>
@@ -2223,12 +2272,13 @@ function WordListPageCatalogue({
                 <span className="practice-library-card-title">{categoryTitle}</span>
                 <span className="practice-library-card-subtitle">{subtitle}</span>
                 <span className="practice-library-card-footer">
-                  <span>{t('wordLists.explore')}</span>
+                  <span>{selected ? t('wordLists.selected') : t('wordLists.select')}</span>
                   <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
                 </span>
                 <span className="practice-library-card-status" aria-live="polite">
-                  {completed && <span>{t('wordLists.completed')}</span>}
-                  {inProgress && <span>{t('wordLists.inProgress')}</span>}
+                  {selected && <span>{t('wordLists.selected')}</span>}
+                  {!selected && completed && <span>{t('wordLists.completed')}</span>}
+                  {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
                 </span>
                 {shouldShowSelectedListShareAction(list.id, selected ? list.id : undefined) && (
                   <button
@@ -2555,7 +2605,7 @@ export function WordListSelectorPanel({
             {t('customLists.createCta')}
           </button>
         )}
-        <button className="done-button" onClick={() => onDone(selectedIds)}>{t('wordLists.done')}</button>
+        <button className="done-button" onClick={() => onDone(selectedIds)}>{variant === 'page' ? t('wordLists.useSelectedList') : t('wordLists.done')}</button>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ from (
     ('practice_most_common_time_and_calendar', 'Calendar'),
     ('practice_most_common_colours', 'Palette'),
     ('practice_most_common_clothing', 'Shirt'),
-    ('practice_most_common_work', 'BriefcaseBusiness'),
+    ('practice_most_common_work', 'Briefcase'),
     ('practice_most_common_school_and_learning', 'GraduationCap'),
     ('practice_most_common_nature_and_landscape', 'Leaf'),
     ('practice_most_common_shopping', 'ShoppingBag')

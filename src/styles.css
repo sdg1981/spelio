@@ -8069,6 +8069,7 @@
 /* Standalone public Word Lists page */
 .word-lists-page.how-page{
   min-height:100svh;
+  overflow-x:hidden;
   padding-bottom:calc(112px + env(safe-area-inset-bottom));
 }
 
@@ -8293,6 +8294,10 @@
   color:var(--red, #d90000);
 }
 
+.word-lists-section-heading > svg{
+  transform:translateY(-2px);
+}
+
 .word-lists-section-heading h2,
 .upcoming-journeys h2,
 .practice-library-growth-card h2{
@@ -8415,6 +8420,33 @@
   line-height:1;
 }
 
+.learning-journey-chip-button,
+.learning-journey-secondary-action{
+  border:1px solid rgba(7,21,34,.08);
+  border-radius:999px;
+  background:#f8f4ef;
+  color:var(--ink, #071522);
+  padding:10px 18px;
+  font-size:15px;
+  font-weight:850;
+  line-height:1;
+}
+
+.learning-journey-chip-button:hover,
+.learning-journey-chip-button:focus-visible,
+.learning-journey-secondary-action:hover,
+.learning-journey-secondary-action:focus-visible{
+  outline:0;
+  border-color:rgba(217,0,0,.24);
+  background:#fff7f4;
+  color:var(--red, #d90000);
+}
+
+.learning-journey-secondary-action{
+  margin-top:18px;
+  background:transparent;
+}
+
 .learning-journey-chips span:nth-child(1),
 .learning-journey-chips span:nth-child(2){
   background:#edf4e9;
@@ -8449,8 +8481,75 @@
 .learning-journey-cta:focus-visible,
 .practice-library-growth-link:focus-visible,
 .practice-library-card:focus-visible,
-.practice-library-share-button:focus-visible{
+.practice-library-share-button:focus-visible,
+.foundations-pattern-item:focus-visible{
   box-shadow:0 0 0 3px rgba(217,0,0,.14), 0 18px 38px rgba(217,0,0,.12);
+}
+
+.foundations-pattern-list{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+
+.foundations-pattern-item{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid rgba(7,21,34,.07);
+  border-radius:8px;
+  background:rgba(255,255,255,.72);
+  color:var(--text-primary, #071522);
+  padding:14px 15px;
+  text-align:left;
+  box-shadow:0 12px 30px rgba(7,21,34,.035);
+}
+
+.foundations-pattern-item:hover,
+.foundations-pattern-item:focus-visible{
+  outline:0;
+  border-color:rgba(217,0,0,.18);
+  background:#fff;
+}
+
+.foundations-pattern-item.selected{
+  border-color:rgba(217,0,0,.42);
+  background:#fff4f1;
+  box-shadow:inset 0 0 0 2px rgba(217,0,0,.12), 0 12px 30px rgba(7,21,34,.04);
+}
+
+.foundations-pattern-item strong,
+.foundations-pattern-item small{
+  display:block;
+  min-width:0;
+}
+
+.foundations-pattern-item strong{
+  font-size:15px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.foundations-pattern-item small{
+  margin-top:4px;
+  color:var(--text-secondary, #5f6b78);
+  font-size:12px;
+  line-height:1.25;
+}
+
+.foundations-pattern-meta{
+  flex:0 0 auto;
+  color:var(--red, #d90000);
+  font-size:12px;
+  font-weight:850;
+}
+
+.foundations-pattern-selected{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
 }
 
 .upcoming-journeys{
@@ -8463,7 +8562,7 @@
 
 .upcoming-journey-grid{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:18px;
 }
 
@@ -8532,8 +8631,9 @@
 }
 
 .practice-library-card.selected{
-  border-color:rgba(217,0,0,.28);
-  box-shadow:inset 0 0 0 2px rgba(217,0,0,.12), 0 18px 44px rgba(7,21,34,.052);
+  border-color:rgba(217,0,0,.46);
+  background:#fff5f2;
+  box-shadow:inset 0 0 0 2px rgba(217,0,0,.16), 0 22px 52px rgba(217,0,0,.08);
 }
 
 .practice-library-card-icon{
@@ -8579,10 +8679,18 @@
 
 .practice-library-card-status{
   min-height:18px;
-  color:var(--red, #d90000);
+  color:var(--text-secondary, #5f6b78);
   font-size:12px;
   font-weight:850;
   line-height:1;
+}
+
+.practice-library-card.selected .practice-library-card-status{
+  color:var(--red, #d90000);
+}
+
+.practice-library-card.selected .practice-library-card-footer{
+  color:var(--red, #d90000);
 }
 
 .practice-library-share-button{
@@ -8672,11 +8780,15 @@
   }
 
   .upcoming-journey-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
 
   .practice-library-card-grid{
     grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .foundations-pattern-list{
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
 
   .practice-library-growth-card{
@@ -9100,6 +9212,11 @@
     flex:0 1 auto;
   }
 
+  .learning-journey-chip-button,
+  .learning-journey-secondary-action{
+    font-size:14px;
+  }
+
   .learning-journey-progress-row{
     align-items:flex-start;
     flex-direction:column;
@@ -9114,10 +9231,15 @@
     grid-column:auto;
     justify-self:stretch;
     width:100%;
+    min-width:0;
+    max-width:100%;
+    padding-inline:18px;
+    white-space:normal;
   }
 
   .upcoming-journey-grid,
-  .practice-library-card-grid{
+  .practice-library-card-grid,
+  .foundations-pattern-list{
     grid-template-columns:1fr;
   }
 
@@ -9186,17 +9308,24 @@
   }
 
   .wordlist-page-actions .wordlist-actions{
+    width:100%;
+    min-width:0;
     gap:14px;
   }
 
   .wordlist-page-actions .wordlist-custom-list-link{
+    flex:0 1 auto;
+    min-width:0;
     font-size:14px;
   }
 
   .wordlist-page-actions .done-button{
+    flex:0 1 auto;
     min-width:122px;
+    max-width:100%;
     font-size:20px;
     padding:18px 30px;
+    white-space:normal;
   }
 
   .custom-list-create,
