@@ -196,6 +196,13 @@ export function AboutPage({
         <p>{t('footer.aboutBody3')}</p>
         <p>{t('footer.aboutBody4')}</p>
         <p>{t('footer.aboutBody5')}</p>
+        <p>
+          {t('footer.aboutBody5ResourcePrefix')}
+          <a href="https://www.saysomethingin.com/" target="_blank" rel="noopener noreferrer">
+            {t('footer.aboutBody5ResourceLinkText')}
+          </a>
+          {t('footer.aboutBody5ResourceSuffix')}
+        </p>
         <p>{t('footer.aboutBody6')}</p>
         <p>{t('footer.aboutBody7')}</p>
       </div>
