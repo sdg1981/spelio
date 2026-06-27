@@ -41,6 +41,10 @@ Learning Journeys are finite, concept-driven collections designed to teach one i
 
 The Practice Library is the focused word-list practice area. Topic Collections is the first Practice Library catalogue being designed now. Practice Library collections are not teaching journeys, do not need to form a strict progression, and should remain browsable for adult learners.
 
+The active content model is `Collections -> Word Lists -> Words`. Topic Collection categories such as Animals, Food & Drink, Places & Travel, and People & Home are catalogue/display groupings, not legacy Focus Categories. They should eventually be represented by explicit catalogue/display metadata if the current collection/list display mapping is not enough.
+
+Catalogue/display order should come from database/admin word-list order. The Practice Library launch sequence should not depend on hidden hard-coded ordering as the source of truth. Curated progression should use `nextListId`; if it is empty or unusable, recommendation fallback may use collection/list order. Do not reintroduce stages or Focus Categories for Practice Library category grouping or progression.
+
 Build is an optional teaching technique or phase inside a Learning Journey. It means using known spellings in short written Welsh contexts where context helps the learner notice how spelling behaves. It is not ordinary Practice Library content and should not be treated as a full Welsh course, conversation path, long sentence translation system, or grammar syllabus.
 
 Later Practice collections should appear as separate collection cards or destinations rather than being squeezed into one huge topic list. UI implementation is not part of this task.

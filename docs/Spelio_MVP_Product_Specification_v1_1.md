@@ -806,7 +806,7 @@ Learn / Practise
     Word list
 ```
 
-This is a future information-architecture direction, not an MVP requirement to rename current `stage/group` data or rebuild the Word Lists page.
+This is a future information-architecture direction, not an MVP requirement to rename existing compatibility metadata or rebuild the Word Lists page.
 
 This must remain lightweight and calm. Do not turn the Word Lists page into a dashboard, course browser, permissions view, or reporting surface.
 
@@ -1770,7 +1770,6 @@ Each word list should include:
 - sourceLanguage
 - targetLanguage
 - dialect: Both / Mixed / North Wales / South Wales / Standard / Other
-- stage/group
 - difficulty: 1–5
 - order
 - nextListId
@@ -1778,15 +1777,25 @@ Each word list should include:
 - createdAt
 - updatedAt
 
-The conceptual catalogue model is:
+The active content model is:
 
 ```text
-Learn / Practise
-    Category
+Collections
+  Word Lists
+    Words
+```
+
+The learner-facing catalogue model is:
+
+```text
+Learning / Practice Library
+    Catalogue category
         Word List
 ```
 
-For MVP compatibility, existing `stage/group` metadata may continue to exist. It should be treated as internal progression or grouping metadata, not as the preferred long-term learner-facing catalogue model. Future admin/content work may add explicit product-area and category metadata, but this must not rename or remove current fields during MVP.
+For compatibility, existing `stage/group`, `stage_id`, `focus`, and `focus_category_id` metadata may continue to exist in loaders, import/export, or old records. They are compatibility metadata only, not normal admin editing fields and not the preferred long-term learner-facing catalogue model. New content should not rely on stages or Focus Categories. Future admin/content work may add explicit catalogue/display metadata, but should not resurrect legacy Focus Categories for Practice Library categories.
+
+Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated progression is controlled by `nextListId`. If `nextListId` is empty or unusable, recommendations may fall back to collection/list order. Do not add a separate progression order number unless a future content need proves it necessary.
 
 Spelio-authored content should distinguish finite Learning Journeys from Practice Library collections. Learning Journeys are concept-led and completable; the Practice Library can expand sideways into topics, interests, domains, school needs, teacher lists, custom lists, exam lists, and specialist vocabulary.
 
@@ -2915,13 +2924,13 @@ Add local storage persistence to Spelio using the `spelio-storage-v1` key. Store
 
 Use this once the app works with mock data:
 
-Build a simple private admin panel for Spelio. It should be protected by a simple password stored in an environment variable. The admin panel should allow me to create/edit/delete word lists and add/edit/delete words. Each word list should have name, description, language, dialect, stage, difficulty, order, nextListId, and active status. Each word should have English prompt, Welsh answer, accepted alternatives, audioUrl, audioStatus, notes, order, optional difficulty, dialect, optional dialectNote, optional usageNote, and optional variantGroupId. Keep usageNote and dialectNote in a collapsible Advanced content notes or Learner notes area, keep notes clearly labelled internal-only, and do not add separate learner-facing note fields such as grammarNote or registerNote. Add an API route to generate audio using Azure Voice without exposing API keys in the browser. Save generated audio references against words and allow preview/playback in admin.
+Build a simple private admin panel for Spelio. It should be protected by a simple password stored in an environment variable. The admin panel should allow me to create/edit/delete collections, word lists, and words. Each word list should have name, description, language, dialect, difficulty, order, nextListId, and active status. Do not expose stage or focus-category selectors in normal word-list editing; any remaining `stage_id` or `focus_category_id` handling is legacy import/export compatibility only. Collection admin should let editors arrange word-list display order and curated `nextListId` progression, with clear links to the word lists in the collection where implemented. Each word should have English prompt, Welsh answer, accepted alternatives, audioUrl, audioStatus, notes, order, optional difficulty, dialect, optional dialectNote, optional usageNote, and optional variantGroupId. Keep usageNote and dialectNote in a collapsible Advanced content notes or Learner notes area, keep notes clearly labelled internal-only, and do not add separate learner-facing note fields such as grammarNote or registerNote. Add an API route to generate audio using Azure Voice without exposing API keys in the browser. Save generated audio references against words and allow preview/playback in admin.
 
 ### Prompt 5 — Create starter Welsh word lists
 
 Use this as a separate content-generation chat:
 
-Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 dialect-resolved conceptual learning items, not necessarily exactly 10 words or raw rows. Include list name, dialect tag where relevant, stage, difficulty, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes only for exceptional internal review needs. Suggested categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Explicitly identify high-risk learner-confusion items such as yes/no, response words, function words, fixed expressions, shortened/full forms, register differences, grammar-dependent meanings, and common traps. Add short usageNote or dialectNote values only where genuinely useful. Do not put regional information in usageNote; use dialectNote for that.
+Help me create original Welsh word lists for Spelio. Do not copy any commercial course structure or proprietary lists. Create beginner-friendly Welsh spelling practice lists for adult learners. Start with around 8–12 lists, each with 10–25 dialect-resolved conceptual learning items, not necessarily exactly 10 words or raw rows. Include collection/category, list name, dialect tag where relevant, difficulty, catalogue order, optional nextListId, English prompt, Welsh answer, accepted alternatives if needed, dialect, dialectNote where useful, usageNote where useful, variantGroupId where dialect variants exist, and notes only for exceptional internal review needs. Do not assign stage or focus-category values for new content. Suggested catalogue categories include Common Verbs, Everyday Words, Opposites, Animals, Birds, Weather, Food & Drink, Family, Places, and Useful Phrases. Prioritise words that are useful, common, and good for spelling practice. Explicitly identify high-risk learner-confusion items such as yes/no, response words, function words, fixed expressions, shortened/full forms, register differences, grammar-dependent meanings, and common traps. Add short usageNote or dialectNote values only where genuinely useful. Do not put regional information in usageNote; use dialectNote for that.
 
 ### Prompt 6 — Create a technical implementation plan
 

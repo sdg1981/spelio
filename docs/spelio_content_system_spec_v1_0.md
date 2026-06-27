@@ -88,6 +88,14 @@ Child-focused or school-aligned content can be added later as separate word-list
 
 ## 5. Content Architecture Model
 
+The active admin/content model is:
+
+```text
+Collections
+    Word Lists
+        Words
+```
+
 Spelio content should be organised around a clear distinction between:
 
 ```text
@@ -187,7 +195,11 @@ Example categories:
 - Everyday Welsh
 - People & Home
 
-Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the primary learner-facing catalogue model. Difficulty and progression metadata may still exist internally, but visible structure should favour understandable library areas, categories, and word lists.
+Practice Library categories such as Animals, Food & Drink, Places & Travel, and People & Home are catalogue/display groupings. They are not legacy Focus Categories. If they need durable metadata beyond collection/list display mapping, use explicit catalogue/display metadata rather than `focus_categories` or `focus_category_id`.
+
+Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the learner-facing catalogue model or normal admin editing model. Any remaining `stages`, `stage_id`, `focus_categories`, or `focus_category_id` handling is compatibility metadata for old data and import/export only. New content should not rely on stages or Focus Categories.
+
+Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated progression is controlled by `nextListId`. If `nextListId` is empty or unusable, recommendation fallback may use collection/list order. Do not add a separate progression order number unless a future content need proves it necessary, and do not reintroduce stages or focus categories for progression.
 
 ### Build as an Optional Learning-Journey Technique
 
@@ -1344,11 +1356,11 @@ For each list include:
 - id
 - name
 - description
-- productArea
-- category
-- focus
+- collection
+- catalogueCategory where needed for display
 - difficulty
 - order
+- nextListId where an explicit curated path is needed
 - words
 
 For each word include:
@@ -1370,7 +1382,11 @@ Rules:
 - Design Spelio-authored lists around 10–25 conceptual learning items, not fixed groups of 10 raw rows.
 - Do not pad, split, or duplicate lists only to make exact 10-item groups.
 - Avoid early mutation burden.
-- Use mutations only where appropriate for the product area, category, and list purpose.
+- Use mutations only where appropriate for the collection, catalogue category, and list purpose.
+- Do not assign stage, stageId, focus, or focusCategoryId values for new content.
+- Treat Practice Library categories as catalogue/display groupings, not Focus Categories.
+- Use word-list order for catalogue/display order.
+- Use nextListId for explicit curated progression; if it is empty, recommendation fallback may use collection/list order.
 - For Practice Library lists, choose accessible, useful, representative words rather than only the easiest possible spellings.
 - For numbered Practice Library topic lists, make progression moderate and based mainly on spelling complexity rather than rarity.
 - For specialist Practice Library collections, expand sideways into a meaningful topic, domain, or interest area rather than extending a numbered ladder without a strong educational reason.

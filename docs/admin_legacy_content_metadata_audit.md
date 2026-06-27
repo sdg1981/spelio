@@ -8,7 +8,15 @@ Status update: recommendation fallback now uses explicit `nextListId`, then coll
 
 This audit covers the legacy `stages` and `focus_categories` reference tables and the `word_lists.stage_id` and `word_lists.focus_category_id` fields.
 
-Current product architecture:
+Current active content architecture:
+
+```text
+Collections
+  Word Lists
+    Words
+```
+
+Current learner-facing product architecture:
 
 - Learning
   - Learning Journeys
@@ -17,6 +25,10 @@ Current product architecture:
 - Practice Library
   - category-led topic collections
   - Animals, Food & Drink, People & Home, Places & Travel, etc.
+
+Practice Library categories such as Animals, Food & Drink, Places & Travel, and People & Home are catalogue/display groupings. They are not Focus Categories. If they need durable metadata beyond the current collection/list display mapping, add explicit catalogue/display metadata rather than reusing `focus_categories`.
+
+Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated recommendation progression is controlled by `nextListId`. If `nextListId` is empty or unusable, recommendation fallback may use collection/list order. Do not add a separate progression order number unless a future content need proves it necessary, and do not reintroduce stages or focus categories for progression.
 
 ## Verdict Table
 
@@ -53,11 +65,12 @@ Code paths:
 - Session generation does not read `stage` or `stageId`.
 - Admin word-list edit preserves existing `stageId` values but no longer exposes an Internal Stage selector.
 - Admin word-list creation now leaves `stageId` empty.
+- Stages are removed from normal admin sidebar/navigation; any direct legacy route exists only for compatibility maintenance.
 - Import/export preserves `stage`, `stageId`, and the `stages` reference list.
 
 Conceptual status:
 
-`stage_id` is not a good product name under the current architecture. It is no longer needed for progression recommendations or normal content editing, but remains present for import/export, public content loading, existing data preservation, and one catalogue display override.
+`stage_id` is not a good product name under the current architecture. `stages` and `stage_id` are compatibility metadata only. New content should not rely on stages, and editors should not choose stage values during normal word-list creation or editing. Any remaining stage handling exists only for old data, old import/export payloads, public content loading compatibility, existing data preservation, and one catalogue display override until schema removal is safe.
 
 Safe deprecation path:
 
@@ -84,6 +97,7 @@ Code paths:
 - Admin loaders join `focus_categories(name)` and expose it as `list.focus` for compatibility.
 - Admin word-list edit preserves existing `focusCategoryId` values but no longer exposes an Internal Focus selector.
 - Admin word-list creation now leaves `focusCategoryId` empty.
+- Focus Categories are removed from normal admin sidebar/navigation; any direct legacy route exists only for compatibility maintenance.
 - Import/export preserves `focus`, `focusCategoryId`, and the `focusCategories` reference list.
 - Public Supabase loading reads `focus_category_id` only into the public `focus` string.
 - Public catalogue grouping does not use focus metadata.
@@ -91,7 +105,7 @@ Code paths:
 
 Conceptual status:
 
-`focus_category_id` is legacy/editorial metadata. It is not a current product architecture concept and should not be used for Practice Library categories.
+`focus_category_id` is deprecated compatibility metadata only. It is not a current product architecture concept and must not be used for future Practice Library categories, catalogue grouping, ordering, recommendations, progression, or session generation. Preserve it only for legacy import/export compatibility until schema removal is safe.
 
 Safe deprecation path:
 
@@ -105,9 +119,9 @@ Safe deprecation path:
 
 | Dependency | Classification | Notes |
 | ---------- | -------------- | ----- |
-| `stages` reference table | Legacy | Only supports the direct legacy admin route, old catalogue-data fallback, and export shape. |
-| `word_lists.stage_id` | Legacy | Existing values are preserved, but new normal admin list creation leaves it empty and no live recommendation/session behaviour depends on it. |
-| `focus_categories` reference table | Legacy | Only supports the direct legacy admin route and export shape. |
-| `word_lists.focus_category_id` | Legacy | Existing values are preserved, but new normal admin list creation leaves it empty and no live learner behaviour depends on it. |
+| `stages` reference table | Compatibility only | Only supports the direct legacy admin route, old catalogue-data fallback, and export shape. |
+| `word_lists.stage_id` | Compatibility only | Existing values are preserved, but new normal admin list creation leaves it empty and no live recommendation/session behaviour depends on it. |
+| `focus_categories` reference table | Compatibility only | Only supports the direct legacy admin route and export shape. |
+| `word_lists.focus_category_id` | Compatibility only | Existing values are preserved, but new normal admin list creation leaves it empty and no live learner behaviour depends on it. |
 | Public recommendation fallback by stage | Dead | Replaced by explicit `nextListId`, then collection/list order. |
 | Practice Library category display by focus | Dead | The public catalogue uses collection/list display mapping instead. |
