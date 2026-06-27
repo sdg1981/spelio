@@ -746,6 +746,7 @@ export function usePracticeSession({
     stats: publicStats,
     progressValue: session.words.length ? (stats.correctWords / session.words.length) * 100 : 0,
     progressCount: isRecapActive ? t('practice.quickRecap') : `${Math.min(stats.correctWords + 1, session.words.length)} / ${session.words.length}`,
+    isRecapActive,
     hasWords: session.words.length > 0,
     handleInput,
     revealNext,

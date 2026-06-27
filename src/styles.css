@@ -4104,6 +4104,22 @@
   letter-spacing:.02em;
 }
 
+.quick-recap-heading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  line-height:1.12;
+}
+
+.quick-recap-kicker{
+  color:var(--text-muted);
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:0;
+  line-height:1.15;
+}
+
 .practice-app .progress-track{
   position:absolute;
   left:50%;

@@ -69,7 +69,7 @@ type ShareDataNavigator = Navigator & {
 
 const HIDDEN_PROMPT_STYLE = { opacity: 0, visibility: 'hidden' } satisfies CSSProperties;
 
-export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: string }) {
+export function Progress({ value = 30, count = '3 / 10' }: { value?: number; count?: ReactNode }) {
   return (
     <div className="progress-top">
       <div className="progress-count">{count}</div>
@@ -301,6 +301,7 @@ export function Practice({
     stats,
     progressValue,
     progressCount,
+    isRecapActive,
     hasWords,
     handleInput,
     revealNext,
@@ -1349,7 +1350,15 @@ export function Practice({
 
   return (
     <main className={`app-bg practice-app relative ${shouldShowCustomKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
-      <Progress value={isComplete ? 100 : progressValue} count={isComplete ? `${stats.total} / ${stats.total}` : progressCount} />
+      <Progress
+        value={isComplete ? 100 : progressValue}
+        count={isComplete ? `${stats.total} / ${stats.total}` : isRecapActive ? (
+          <span className="quick-recap-heading">
+            <span className="quick-recap-kicker">{t('practice.quickRecapKicker')}</span>
+            <span>{progressCount}</span>
+          </span>
+        ) : progressCount}
+      />
       <PracticeTopNav onBackHome={onBackHome} />
 
       <section className="page-shell practice-shell">

@@ -243,6 +243,7 @@ export const cy = {
     audioFallbackPromptShown: 'Dangosir awgrym testun gan nad oes sain ar gael',
     incorrectTryAgain: 'Anghywir. Ceisiwch eto.',
     correct: 'Cywir',
+    quickRecapKicker: 'O sesiwn gynharach',
     quickRecap: 'Adolygiad cyflym',
     northForm: 'Ffurf Gogledd Cymru',
     southStandardForm: 'Ffurf De Cymru / Safonol',

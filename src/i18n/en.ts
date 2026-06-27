@@ -243,6 +243,7 @@ export const en = {
     audioFallbackPromptShown: 'Text prompt shown because audio is unavailable',
     incorrectTryAgain: 'Incorrect. Try again.',
     correct: 'Correct',
+    quickRecapKicker: 'From an earlier session',
     quickRecap: 'Quick recap',
     northForm: 'North Wales form',
     southStandardForm: 'South Wales / Standard form',
