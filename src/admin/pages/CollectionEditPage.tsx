@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeft, ArrowUp, ListOrdered, Route, Save, ShieldCheck, Trash2, Wand2, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, ChevronRight, ListOrdered, Route, Save, ShieldCheck, Trash2, Wand2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
@@ -72,6 +72,8 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
     }),
     [collectionWordLists]
   );
+  const visibleCollectionWordLists = useMemo(() => collectionWordLists.slice(0, 10), [collectionWordLists]);
+  const hiddenCollectionWordListCount = Math.max(0, collectionWordLists.length - visibleCollectionWordLists.length);
   const canConfirmClearContent = collection ? isDeleteConfirmationValid(clearConfirmationText, collection.id) : false;
 
   function updateCollection(patch: Partial<AdminWordListCollection>) {
@@ -348,6 +350,54 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 </AdminButton>
               </div>
             </div>
+          </AdminCard>
+
+          <AdminCard className="overflow-hidden">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 p-5">
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-black text-slate-950">
+                  <BookOpen size={18} /> Word lists in this collection
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {collectionWordLists.length} word list{collectionWordLists.length === 1 ? '' : 's'} in current catalogue order.
+                </p>
+              </div>
+              <AdminButton onClick={() => navigate('/admin/word-lists')}>
+                Manage word lists <ChevronRight size={16} />
+              </AdminButton>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {visibleCollectionWordLists.length ? visibleCollectionWordLists.map(list => (
+                <button
+                  key={list.id}
+                  type="button"
+                  className="flex w-full items-center gap-4 px-5 py-3 text-left transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-200"
+                  onClick={() => navigate(`/admin/word-lists/${encodeURIComponent(list.id)}`)}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-black text-slate-400">#{list.order}</span>
+                      <span className="truncate text-sm font-black text-slate-950">{list.name}</span>
+                      {!list.isActive && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-black text-slate-500">Inactive</span>}
+                    </div>
+                    <div className="mt-1 truncate text-xs font-semibold text-slate-500">
+                      {list.words.length} word{list.words.length === 1 ? '' : 's'}
+                      {list.nextListId ? ` · Next: ${getNextListLabel(list, wordListById, id)}` : ''}
+                    </div>
+                  </div>
+                  <ChevronRight className="shrink-0 text-slate-400" size={16} />
+                </button>
+              )) : (
+                <div className="px-5 py-6 text-sm font-semibold text-slate-500">No word lists belong to this collection yet.</div>
+              )}
+            </div>
+
+            {hiddenCollectionWordListCount > 0 && (
+              <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-xs font-semibold text-slate-500">
+                Showing the first {visibleCollectionWordLists.length}. Use Manage word lists to review {hiddenCollectionWordListCount} more.
+              </div>
+            )}
           </AdminCard>
 
           <AdminCard className="p-5">
@@ -667,4 +717,10 @@ function getTerminalNextLabel(list: AdminWordList, wordListById: Map<string, Adm
   const next = wordListById.get(list.nextListId);
   if (!next) return `Missing list ${list.nextListId}`;
   return next.collectionId === collectionId ? 'None' : `${next.name} (outside this collection)`;
+}
+
+function getNextListLabel(list: AdminWordList, wordListById: Map<string, AdminWordList>, collectionId: string) {
+  const next = list.nextListId ? wordListById.get(list.nextListId) : null;
+  if (!next) return list.nextListId ?? 'None';
+  return next.collectionId === collectionId ? next.name : `${next.name} (outside this collection)`;
 }

@@ -201,3 +201,9 @@ assert(
   collectionEditPageSource.includes('Danger zone') && collectionEditPageSource.includes('Clear content'),
   'Collection destructive actions should live on the individual collection edit page danger zone.'
 );
+assert(
+  collectionEditPageSource.includes('Word lists in this collection') &&
+    collectionEditPageSource.includes("navigate(`/admin/word-lists/${encodeURIComponent(list.id)}`)") &&
+    collectionEditPageSource.includes("navigate('/admin/word-lists')"),
+  'Collection edit page should provide compact navigation into word lists in the collection.'
+);
