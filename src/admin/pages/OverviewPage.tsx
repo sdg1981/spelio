@@ -39,7 +39,7 @@ export function OverviewPage({ navigate, repository }: { navigate: (path: string
             <button key={list.id} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50" onClick={() => navigate(`/admin/word-lists/${list.id}`)}>
               <div>
                 <div className="font-bold text-slate-950">{list.name}</div>
-                <div className="mt-1 text-sm text-slate-500">{list.collectionName} · {list.stage}</div>
+                <div className="mt-1 text-sm text-slate-500">{list.collectionName}</div>
               </div>
               <StatusPill tone={getAudioHealth(list).missing ? 'red' : 'green'}>{getAudioHealth(list).missing ? `${getAudioHealth(list).missing} missing audio` : 'Healthy'}</StatusPill>
             </button>

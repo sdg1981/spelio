@@ -8,8 +8,8 @@ import type { AdminStructureOption } from '../types';
 export function StagesPage({ repository }: { repository: AdminRepository }) {
   return (
     <StructurePage
-      title="Internal Stages"
-      description="Read-only reference metadata for progression, import/export, and limited public catalogue grouping. Learning and Practice Library areas are managed through Collections and Word Lists."
+      title="Legacy Stages"
+      description="Deprecated read-only compatibility metadata retained for older imports, exports, and limited catalogue fallback display. Normal content structure is managed through Collections and Word Lists."
       repository={repository}
       kind="stages"
     />

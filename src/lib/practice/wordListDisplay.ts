@@ -140,7 +140,7 @@ export function getWordListStageDisplayName(
   }
   if (list.stageId === FOUNDATIONS_STAGE_ID) return 'Foundations';
 
-  return list.stage;
+  return list.stage.trim() || 'Word Lists';
 }
 
 function getWelshFoundationsStageLabel(interfaceLanguage?: InterfaceLanguage) {

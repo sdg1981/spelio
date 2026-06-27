@@ -36,12 +36,15 @@ const referenceGroup = adminNavGroups.find(group => group.label === 'Reference /
 assert(referenceGroup, 'Reference / Structure group should exist.');
 assertEqual(
   referenceGroup.items.map(item => item.label).join('|'),
-  'Dialects|Internal Stages',
-  'Reference group should keep active structure metadata available without exposing deprecated focus categories.'
+  'Dialects',
+  'Reference group should keep active structure metadata available without exposing deprecated stage or focus categories.'
 );
 
-const internalStages = referenceGroup.items.find(item => item.path === '/admin/stages');
-assertEqual(internalStages?.badge, 'Internal', 'Stages should be labelled as internal reference metadata.');
+assertEqual(
+  referenceGroup.items.some(item => item.path === '/admin/stages'),
+  false,
+  'Deprecated stages should not appear in ordinary admin sidebar navigation.'
+);
 
 assertEqual(
   referenceGroup.items.some(item => item.path === '/admin/focus-categories'),

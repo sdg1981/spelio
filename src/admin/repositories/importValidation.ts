@@ -161,6 +161,8 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       sourceLanguage,
       targetLanguage,
       dialect: listDialect as AdminWordList['dialect'],
+      // Deprecated compatibility metadata: accepted for old exports, but not
+      // used for recommendation fallback or normal admin editing.
       stageId: stringField(list, 'stageId', 'stage_id') || slug(stringField(list, 'stage')),
       stage: stringField(list, 'stage') || stringField(list, 'stageId', 'stage_id'),
       // Deprecated compatibility metadata: accepted for old exports, but not

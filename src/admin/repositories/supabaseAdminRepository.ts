@@ -878,6 +878,8 @@ function mapWordListRow(row: WordListRow): AdminWordList {
     sourceLanguage: row.source_language ?? 'en',
     targetLanguage: row.target_language ?? 'cy',
     dialect: row.dialect as AdminWordList['dialect'],
+    // Deprecated compatibility metadata. Stages are no longer part of normal
+    // admin editing and do not drive recommendation fallback.
     stageId: row.stage_id ?? '',
     stage: row.stages?.name ?? row.stage_id ?? '',
     // Deprecated compatibility metadata. Focus categories are no longer part
@@ -953,6 +955,8 @@ function toWordListRow(list: AdminWordList) {
     source_language: list.sourceLanguage || 'en',
     target_language: list.targetLanguage || 'cy',
     dialect: list.dialect,
+    // Preserve old values when present, but allow new lists to save without a
+    // stage. This field is compatibility-only until the schema drops it.
     stage_id: list.stageId || null,
     // Preserve old values when present, but allow new lists to save without a
     // focus category. This field is compatibility-only until the schema drops it.

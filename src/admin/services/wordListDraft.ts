@@ -1,14 +1,12 @@
-import { DEFAULT_COLLECTION_ID, type AdminStructureOption, type AdminWordList, type AdminWordListCollection } from '../types';
+import { DEFAULT_COLLECTION_ID, type AdminWordList, type AdminWordListCollection } from '../types';
 import { createAdminWordListSlug } from './wordListSlug';
 
 export function createDraftAdminWordList(input: {
   name: string;
   existingLists: AdminWordList[];
-  stages: AdminStructureOption[];
   collections: AdminWordListCollection[];
   now?: string;
 }): AdminWordList {
-  const stage = input.stages[0] ?? { id: 'foundations', name: 'Foundations' };
   const collection = input.collections.find(item => item.id === DEFAULT_COLLECTION_ID) ?? input.collections[0];
   const now = input.now ?? new Date().toISOString();
 
@@ -25,8 +23,8 @@ export function createDraftAdminWordList(input: {
     sourceLanguage: 'en',
     targetLanguage: 'cy',
     dialect: 'Mixed',
-    stageId: stage.id,
-    stage: stage.name,
+    stageId: '',
+    stage: '',
     focusCategoryId: '',
     focus: '',
     difficulty: 1,

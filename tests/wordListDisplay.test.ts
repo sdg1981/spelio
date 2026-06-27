@@ -28,6 +28,16 @@ assertEqual(
 );
 
 assertEqual(
+  getWordListStageDisplayName({
+    collectionId: 'future_collection',
+    stageId: '',
+    stage: ''
+  }),
+  'Word Lists',
+  'Lists without legacy stage metadata should still receive a non-empty public catalogue group label.'
+);
+
+assertEqual(
   getListDisplayName({ name: 'Mixed Confidence — Foundations 1', nameCy: 'Hyder Cymysg — Sylfeini 1' }, 'cy'),
   'Hyder Cymysg — Sylfeini 1',
   'Welsh interface should prefer Welsh list display names.'

@@ -244,6 +244,8 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     sourceLanguage,
     targetLanguage,
     dialect: asDialect(row.dialect),
+    // Deprecated compatibility metadata only. Public recommendation fallback
+    // uses nextListId, then collection/list order instead of stage buckets.
     stageId: row.stage_id ?? '',
     stage: row.stages?.name ?? row.stage_id ?? '',
     // Deprecated compatibility metadata only. Focus categories are not used for

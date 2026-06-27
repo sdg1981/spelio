@@ -7,7 +7,6 @@ export type AdminNavIconKey =
   | 'importExport'
   | 'overview'
   | 'settings'
-  | 'stages'
   | 'wordLists'
   | 'words';
 
@@ -86,13 +85,6 @@ export const adminNavGroups: AdminNavGroup[] = [
         path: '/admin/dialects',
         icon: 'dialects',
         description: 'Reference labels used by word lists and words for dialect handling.'
-      },
-      {
-        label: 'Internal Stages',
-        path: '/admin/stages',
-        icon: 'stages',
-        badge: 'Internal',
-        description: 'Read-only reference metadata used by progression, import/export, and some public catalogue grouping.'
       }
     ]
   },
