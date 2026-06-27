@@ -1,10 +1,18 @@
 import type { WordList } from '../src/data/wordLists';
-import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+
+declare function require(name: string): { readFileSync(path: string, encoding: string): string };
+
+const { readFileSync } = require('fs');
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
     throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
   }
+}
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
 }
 
 assertEqual(
@@ -199,19 +207,19 @@ function createPracticeLibraryList(id: string, name: string, order: number, over
   });
 }
 
-const practiceLibraryRawOrderLists = [
+const practiceLibraryOrderedLists = [
   createPracticeLibraryList('practice_most_common_animals', 'Most Common Animals', 1),
   createPracticeLibraryList('practice_most_common_food_and_drink', 'Most Common Food & Drink', 2),
   createPracticeLibraryList('practice_most_common_places', 'Most Common Places', 3),
-  createPracticeLibraryList('practice_most_common_people_and_family', 'Most Common People & Family', 4),
-  createPracticeLibraryList('practice_most_common_weather', 'Most Common Weather', 5),
-  createPracticeLibraryList('practice_most_common_colours', 'Most Common Colours', 6),
-  createPracticeLibraryList('practice_most_common_clothing', 'Most Common Clothing', 7),
-  createPracticeLibraryList('practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 8),
-  createPracticeLibraryList('practice_most_common_work', 'Most Common Work', 9),
-  createPracticeLibraryList('practice_most_common_school_and_learning', 'Most Common School & Learning', 10),
-  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 11),
-  createPracticeLibraryList('practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 12),
+  createPracticeLibraryList('practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 4),
+  createPracticeLibraryList('practice_most_common_people_and_family', 'Most Common People & Family', 5),
+  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 6),
+  createPracticeLibraryList('practice_most_common_weather', 'Most Common Weather', 7),
+  createPracticeLibraryList('practice_most_common_colours', 'Most Common Colours', 8),
+  createPracticeLibraryList('practice_most_common_clothing', 'Most Common Clothing', 9),
+  createPracticeLibraryList('practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 10),
+  createPracticeLibraryList('practice_most_common_work', 'Most Common Work', 11),
+  createPracticeLibraryList('practice_most_common_school_and_learning', 'Most Common School & Learning', 12),
   createPracticeLibraryList('practice_most_common_nature_and_landscape', 'Most Common Nature & Landscape', 13),
   createPracticeLibraryList('practice_most_common_shopping', 'Most Common Shopping', 14),
   createPracticeLibraryList('practice_most_common_body_parts', 'Most Common Body Parts', 15),
@@ -281,7 +289,7 @@ assertEqual(
 
 const practiceLibraryCatalogue = buildPublicCatalogueGroups([
   foundationsList,
-  ...practiceLibraryRawOrderLists
+  ...practiceLibraryOrderedLists
 ]);
 const practiceLibraryGroup = practiceLibraryCatalogue.find(group => group.title === 'Practice Library');
 assertEqual(
@@ -294,11 +302,11 @@ assertEqual(
     'Most Common People & Family',
     'Most Common Home & Household',
     'Most Common Weather',
-    'Most Common Time & Calendar',
-    'Most Common School & Learning',
-    'Most Common Work',
     'Most Common Colours',
     'Most Common Clothing',
+    'Most Common Time & Calendar',
+    'Most Common Work',
+    'Most Common School & Learning',
     'Most Common Nature & Landscape',
     'Most Common Shopping',
     'Most Common Body Parts',
@@ -308,8 +316,19 @@ assertEqual(
     'Most Common Meals & Eating',
     'Most Common Around Town'
   ].join('|'),
-  'Practice Library public display should follow the intended catalogue sequence, not raw legacy order indexes.'
+  'Practice Library public display should follow the intended admin/catalogue order sequence.'
 );
+
+const practiceLibraryOrderMigration = readFileSync('supabase/migrations/202606270001_align_practice_library_catalogue_order.sql', 'utf8');
+practiceLibraryOrderedLists.forEach((list, index) => {
+  const expectedOrder = index + 1;
+  assertEqual(list.order, expectedOrder, `${list.name} test fixture order should match the intended admin/catalogue order.`);
+  assertEqual(getWordListCatalogueOrder(list), expectedOrder, `${list.name} catalogue order should come from the database/admin order value.`);
+  assert(
+    new RegExp(`\\('${list.id}',\\s*${expectedOrder}\\)`).test(practiceLibraryOrderMigration),
+    `${list.id} should be seeded with order ${expectedOrder} in the Practice Library order migration.`
+  );
+});
 
 const displayOrderWithExplicitProgression = buildPublicCatalogueGroups([
   createPracticeLibraryList('practice_animals_entry', 'Animals Entry', 1, { nextListId: 'practice_animals_progression_target' }),

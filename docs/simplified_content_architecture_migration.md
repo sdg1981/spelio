@@ -26,9 +26,9 @@ Normal recommendation progression now uses:
 2. collection/progression list order when explicit progression links are absent or exhausted.
 3. existing least-seen fallback when there is no later incomplete list.
 
-This supports Learning Journeys, Practice Library lists, teacher collections, GCSE collections, and custom collections without stage buckets. Collection order determines which collection comes first; list order determines progression inside each collection; explicit `nextListId` handles curated exceptions.
+This supports Learning Journeys, Practice Library lists, teacher collections, GCSE collections, and custom collections without stage buckets. Collection order determines which collection comes first; list order determines the normal catalogue and fallback progression order inside each collection; explicit `nextListId` handles curated exceptions.
 
-Practice Library seeded topic lists use the same lightweight catalogue display order for public grouping and recommendation fallback. This keeps learner-facing order aligned without reusing legacy `stage_id` or `focus_category_id` metadata.
+Practice Library seeded topic lists use their database/admin `order` values as the public catalogue order. Category grouping remains lightweight display metadata, but it must not silently reorder lists in a way that contradicts admin order.
 
 ## Catalogue Order vs Progression Order
 
@@ -39,7 +39,7 @@ Catalogue order and progression order are separate product concepts:
 - `nextListId` is the strongest progression signal. If it points to an active incomplete list, it overrides catalogue/display order.
 - If no usable `nextListId` path remains, recommendations fall back to collection and progression order, then the existing weakest/least-seen fallback.
 
-For the current launch Practice Library, catalogue order and fallback progression order intentionally use the same Most Common topic sequence so the homepage recommendation does not contradict the public library.
+For the current launch Practice Library, catalogue order and fallback progression order intentionally use the same Most Common topic sequence from each list's `order` value so the homepage recommendation does not contradict the public library or admin editing UI.
 
 Future browsable extras such as `Animals 1`, `Animals 2`, and `Animals 3` should not reuse stages or focus categories. If they simply need a curated path, set `nextListId` explicitly. If they must remain visible in the catalogue but excluded from default fallback recommendations, add a small explicit progression metadata field such as `includeInProgression` / `include_in_default_progression`, or a local Spelio-owned progression allowlist for seeded content. Do not add that field until there is active content that needs the distinction; `nextListId` plus collection/list order is enough for the current Learning, Practice Library, teacher, custom, and GCSE paths.
 

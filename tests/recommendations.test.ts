@@ -243,15 +243,15 @@ function makePracticeLibraryProgressionLists(): WordList[] {
     ['practice_most_common_animals', 'Most Common Animals', 1],
     ['practice_most_common_food_and_drink', 'Most Common Food & Drink', 2],
     ['practice_most_common_places', 'Most Common Places', 3],
-    ['practice_most_common_people_and_family', 'Most Common People & Family', 4],
-    ['practice_most_common_weather', 'Most Common Weather', 5],
-    ['practice_most_common_colours', 'Most Common Colours', 6],
-    ['practice_most_common_clothing', 'Most Common Clothing', 7],
-    ['practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 8],
-    ['practice_most_common_work', 'Most Common Work', 9],
-    ['practice_most_common_school_and_learning', 'Most Common School & Learning', 10],
-    ['practice_most_common_home_and_household', 'Most Common Home & Household', 11],
-    ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 12],
+    ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 4],
+    ['practice_most_common_people_and_family', 'Most Common People & Family', 5],
+    ['practice_most_common_home_and_household', 'Most Common Home & Household', 6],
+    ['practice_most_common_weather', 'Most Common Weather', 7],
+    ['practice_most_common_colours', 'Most Common Colours', 8],
+    ['practice_most_common_clothing', 'Most Common Clothing', 9],
+    ['practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 10],
+    ['practice_most_common_work', 'Most Common Work', 11],
+    ['practice_most_common_school_and_learning', 'Most Common School & Learning', 12],
     ['practice_most_common_nature_and_landscape', 'Most Common Nature & Landscape', 13],
     ['practice_most_common_shopping', 'Most Common Shopping', 14],
     ['practice_most_common_body_parts', 'Most Common Body Parts', 15],
@@ -1980,6 +1980,24 @@ test('Practice Library fallback follows the public catalogue sequence after manu
     currentPathPosition: 'practice_most_common_people_and_family',
     hasManualWordListSelection: true
   }, lists, 'practice_most_common_people_and_family');
+  const completedHomeStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_home_and_household'],
+    currentPathPosition: 'practice_most_common_home_and_household',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_home_and_household');
+  const completedWeatherStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_weather'],
+    currentPathPosition: 'practice_most_common_weather',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_weather');
+  const completedClothingStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_clothing'],
+    currentPathPosition: 'practice_most_common_clothing',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_clothing');
 
   assertEqual(
     getRecommendation(completedPlacesStorage, lists).listId,
@@ -1995,6 +2013,21 @@ test('Practice Library fallback follows the public catalogue sequence after manu
     getRecommendation(completedPeopleStorage, lists).listId,
     'practice_most_common_home_and_household',
     'Completing Most Common People & Family should recommend Most Common Home & Household next.'
+  );
+  assertEqual(
+    getRecommendation(completedHomeStorage, lists).listId,
+    'practice_most_common_weather',
+    'Completing Most Common Home & Household should recommend Most Common Weather next.'
+  );
+  assertEqual(
+    getRecommendation(completedWeatherStorage, lists).listId,
+    'practice_most_common_colours',
+    'Completing Most Common Weather should recommend Most Common Colours next.'
+  );
+  assertEqual(
+    getRecommendation(completedClothingStorage, lists).listId,
+    'practice_most_common_time_and_calendar',
+    'Completing Most Common Clothing should recommend Most Common Time & Calendar next.'
   );
 });
 

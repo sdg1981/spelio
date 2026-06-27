@@ -14,39 +14,6 @@ const PRACTICE_LIBRARY_COLLECTION_ID = 'practice';
 const PRACTICE_LIBRARY_AREA_LABEL = 'Practice Library';
 const PRACTICE_LIBRARY_AREA_LABEL_CY = 'Llyfrgell Ymarfer';
 
-const PRACTICE_LIBRARY_CATALOGUE_ORDER = [
-  'practice_most_common_animals',
-  'practice_most_common_food_and_drink',
-  'practice_most_common_places',
-  'practice_most_common_travel_and_transport',
-  'practice_most_common_people_and_family',
-  'practice_most_common_home_and_household',
-  'practice_most_common_weather',
-  'practice_most_common_time_and_calendar',
-  'practice_most_common_school_and_learning',
-  'practice_most_common_work',
-  'practice_most_common_colours',
-  'practice_most_common_clothing',
-  'practice_most_common_nature_and_landscape',
-  'practice_most_common_shopping',
-  'practice_most_common_body_parts',
-  'practice_most_common_sports',
-  'practice_most_common_leisure',
-  'practice_most_common_numbers',
-  'practice_most_common_meals_and_eating',
-  'practice_most_common_around_town'
-] as const;
-
-const PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER = PRACTICE_LIBRARY_CATALOGUE_ORDER;
-
-const PRACTICE_LIBRARY_CATALOGUE_ORDER_INDEX = new Map<string, number>(
-  PRACTICE_LIBRARY_CATALOGUE_ORDER.map((id, index) => [id, index + 1])
-);
-
-const PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER_INDEX = new Map<string, number>(
-  PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER.map((id, index) => [id, index + 1])
-);
-
 const PRACTICE_LIBRARY_CATEGORY_LABELS: Record<string, { en: string; cy?: string }> = {
   practice_most_common_animals: { en: 'Animals', cy: 'Anifeiliaid' },
   practice_most_common_food_and_drink: { en: 'Food & Drink', cy: 'Bwyd a Diod' },
@@ -188,20 +155,10 @@ function getPracticeLibraryCategoryLabel(list: Pick<WordList, 'id' | 'name'>, in
 }
 
 export function getWordListCatalogueOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {
-  const collectionId = list.collection?.id ?? list.collectionId;
-  if (collectionId === PRACTICE_LIBRARY_COLLECTION_ID) {
-    return PRACTICE_LIBRARY_CATALOGUE_ORDER_INDEX.get(list.id) ?? list.order;
-  }
-
   return list.order;
 }
 
 export function getWordListProgressionOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {
-  const collectionId = list.collection?.id ?? list.collectionId;
-  if (collectionId === PRACTICE_LIBRARY_COLLECTION_ID) {
-    return PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER_INDEX.get(list.id) ?? list.order;
-  }
-
   return list.order;
 }
 
