@@ -1252,20 +1252,14 @@
 }
 
 .homepage-utility{
-  position:fixed;
-  top:26px;
-  right:30px;
-  z-index:10;
+  position:static;
   display:flex;
   align-items:center;
   gap:14px;
 }
 
 .homepage-menu{
-  position:fixed;
-  top:22px;
-  left:28px;
-  z-index:12;
+  position:relative;
 }
 
 .homepage-menu-button{
@@ -1339,10 +1333,7 @@
 }
 
 .homepage-language-switcher{
-  position:fixed;
-  top:26px;
-  right:30px;
-  z-index:10;
+  position:static;
 }
 
 .homepage-utility .homepage-language-switcher{
@@ -2425,11 +2416,14 @@
   padding:0;
 }
 
+.public-page-left-control{
+  position:relative;
+  flex:0 0 auto;
+  min-width:42px;
+}
+
 .how-back-button{
-  position:fixed;
-  left:clamp(20px,3.6vw,44px);
-  top:clamp(22px,3.6vw,42px);
-  z-index:8;
+  position:static;
   display:grid;
   place-items:center;
   width:42px;
@@ -7237,32 +7231,10 @@
   position:relative;
 }
 
-.custom-list-back{
-  position:absolute;
-  left:clamp(22px,4vw,58px);
-  top:42px;
-  display:inline-flex;
-  align-items:center;
-  gap:18px;
-  border:0;
-  background:transparent;
-  color:var(--ink);
-  font-size:18px;
-  font-weight:900;
-  padding:6px 0;
-}
-
-.custom-list-back:focus-visible,
 .custom-list-logo button:focus-visible{
   outline:0;
   box-shadow:0 0 0 3px rgba(7,21,34,.13);
   border-radius:8px;
-}
-
-.custom-list-language{
-  position:absolute;
-  right:clamp(22px,4vw,58px);
-  top:44px;
 }
 
 .custom-list-logo{
@@ -7699,20 +7671,6 @@
     padding:28px 20px 44px;
   }
 
-  .custom-list-back{
-    left:20px;
-    top:28px;
-  }
-
-  .custom-list-back span{
-    display:none;
-  }
-
-  .custom-list-language{
-    right:20px;
-    top:30px;
-  }
-
   .custom-list-logo{
     padding-top:36px;
   }
@@ -7806,24 +7764,6 @@
 .custom-list-page.how-page{
   background:var(--bg-app, #f6f5f2);
   padding:clamp(34px,5vw,56px) clamp(24px,5vw,72px) 64px;
-}
-
-.custom-list-page .custom-list-back{
-  position:fixed;
-  left:clamp(20px,3.6vw,44px);
-  top:clamp(22px,3.6vw,42px);
-  display:grid;
-  width:42px;
-  height:42px;
-  padding:0;
-  color:var(--text-secondary, #3f4a55);
-  font-size:0;
-}
-
-.custom-list-page .custom-list-language{
-  position:fixed;
-  top:26px;
-  right:30px;
 }
 
 .custom-list-page .custom-list-logo{
@@ -8597,11 +8537,6 @@
     padding:calc(32px + env(safe-area-inset-top)) 26px calc(46px + env(safe-area-inset-bottom));
   }
 
-  .custom-list-page .custom-list-back{
-    left:14px;
-    top:calc(16px + env(safe-area-inset-top));
-  }
-
   .custom-list-page .custom-list-logo{
     margin-top:58px;
   }
@@ -8612,11 +8547,6 @@
 
   .word-lists-page.how-page{
     padding:calc(32px + env(safe-area-inset-top)) 26px calc(106px + env(safe-area-inset-bottom));
-  }
-
-  .word-lists-page .word-lists-back{
-    left:14px;
-    top:calc(16px + env(safe-area-inset-top));
   }
 
   .word-lists-page .word-lists-logo{
@@ -8786,11 +8716,16 @@
   }
 }
 
-.public-page-utility-header .how-back-button{
+.public-page-utility-header .how-back-button,
+.public-page-utility-header .homepage-menu{
   position:static;
   inset:auto;
   z-index:auto;
   flex:0 0 auto;
+}
+
+.public-page-utility-header .homepage-menu{
+  width:42px;
 }
 
 .public-page-utility-header .homepage-utility{
@@ -8806,12 +8741,26 @@
   position:static;
   inset:auto;
   z-index:auto;
-  padding:8px 10px;
-  border:1px solid rgba(223,217,209,.42);
-  border-radius:999px;
-  background:rgba(251,248,242,.56);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
+}
+
+.homepage-bg .homepage-public-header{
+  width:min(calc(100% - clamp(48px,10vw,144px)),1120px);
+  margin-top:26px;
+}
+
+.how-page{
+  padding-top:26px;
+}
+
+.homepage-bg .home-shell{
+  min-height:calc(100svh - 70px);
+  padding-top:24px;
+}
+
+.homepage-bg .homepage-public-header,
+.homepage-bg .homepage-public-header .homepage-menu,
+.homepage-bg .homepage-public-header .homepage-utility{
+  z-index:12;
 }
 
 .overlay{
@@ -8819,6 +8768,24 @@
 }
 
 @media (max-width:620px){
+  .how-page{
+    padding-top:calc(18px + env(safe-area-inset-top));
+  }
+
+  .public-page-utility-header{
+    padding:0;
+  }
+
+  .homepage-bg .homepage-public-header{
+    width:calc(100% - 44px);
+    margin-top:calc(18px + env(safe-area-inset-top));
+  }
+
+  .homepage-bg .home-shell{
+    min-height:calc(100svh - 66px - env(safe-area-inset-top));
+    padding-top:60px;
+  }
+
   .public-info-page .public-info-logo,
   .custom-list-page .custom-list-logo,
   .word-lists-page .word-lists-logo{

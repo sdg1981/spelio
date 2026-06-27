@@ -61,21 +61,29 @@ export function PublicPageShell({
 export function PublicPageUtilityHeader({
   className = '',
   interfaceLanguage,
+  leftControl,
   onBack,
   onInterfaceLanguageChange,
   t
 }: {
   className?: string;
   interfaceLanguage: InterfaceLanguage;
-  onBack: () => void;
+  leftControl?: ReactNode;
+  onBack?: () => void;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  const resolvedLeftControl = leftControl ?? (
+    <button className="how-back-button" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
+      <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
+    </button>
+  );
+
   return (
     <div className={['public-page-utility-header', className].filter(Boolean).join(' ')}>
-      <button className="how-back-button" type="button" onClick={onBack} aria-label={t('publicPages.backLabel')}>
-        <ArrowLeft size={24} strokeWidth={2.1} aria-hidden="true" />
-      </button>
+      <div className="public-page-left-control">
+        {resolvedLeftControl}
+      </div>
       <div className="homepage-utility">
         <LanguageSwitcher
           interfaceLanguage={interfaceLanguage}

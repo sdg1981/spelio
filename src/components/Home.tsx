@@ -3,7 +3,7 @@ import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer, shareCurrentPublicPage } from './Footer';
 import { ListCheck, Menu, Play, RotateCcw, Settings } from './Icons';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { PublicPageUtilityHeader } from './PublicInfoPages';
 import { SettingsModal } from './Practice';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { Recommendation } from '../lib/practice/recommendations';
@@ -125,22 +125,22 @@ export function Home({
           />
         </div>
       </div>
-      <HomepageMenu
+      <PublicPageUtilityHeader
+        className="homepage-public-header"
+        interfaceLanguage={interfaceLanguage}
+        onInterfaceLanguageChange={onInterfaceLanguageChange}
         t={t}
-        onHowSpelioWorks={onHowSpelioWorks}
-        onWelshSpellingBasics={onWelshSpellingBasics}
-        onFeedback={onFeedback}
-        onPrivacy={onPrivacy}
-        onAbout={onAbout}
+        leftControl={(
+          <HomepageMenu
+            t={t}
+            onHowSpelioWorks={onHowSpelioWorks}
+            onWelshSpellingBasics={onWelshSpellingBasics}
+            onFeedback={onFeedback}
+            onPrivacy={onPrivacy}
+            onAbout={onAbout}
+          />
+        )}
       />
-      <div className="homepage-utility">
-        <LanguageSwitcher
-          interfaceLanguage={interfaceLanguage}
-          onInterfaceLanguageChange={onInterfaceLanguageChange}
-          t={t}
-          variant="homepageTop"
-        />
-      </div>
       <section className={`page-shell home-shell ${shellStateClass} ${mobileHeroClass}`}>
         <div className="home-logo">
           <Logo animateCursor />
