@@ -14,6 +14,32 @@ const validAudioReviewStatuses = new Set<AudioReviewStatus>(['unchecked', 'appro
 const validCollectionTypes = new Set(['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom']);
 const validOwnerTypes = new Set(['spelio', 'school', 'teacher', 'user']);
 const validListTypes = new Set(['main', 'support']);
+const englishPromptProperNounStarts = new Set([
+  'April',
+  'August',
+  'Bangor',
+  'Cardiff',
+  'Cymru',
+  'December',
+  'February',
+  'Friday',
+  'January',
+  'July',
+  'June',
+  'March',
+  'May',
+  'Monday',
+  'November',
+  'October',
+  'Saturday',
+  'September',
+  'Sunday',
+  'Thursday',
+  'Tuesday',
+  'Wales',
+  'Wednesday',
+  'Welsh'
+]);
 
 export interface ImportValidationContext {
   existingCollectionIds?: string[];
@@ -362,6 +388,9 @@ function normalizeWord(word: RawWord, list: AdminWordList, wordIndex: number, er
     warnings.push(`Word ${label} has acceptedAlternatives with substantially different lengths.`);
   }
   if (welshAnswer.length > 34) warnings.push(`Word ${label} has a long answer that may stress mobile layout.`);
+  if (shouldFlagEnglishPromptCapitalization(englishPrompt, list.sourceLanguage)) {
+    warnings.push(`Word ${label} englishPrompt "${englishPrompt}" starts with uppercase; ordinary English word prompts should be lowercase unless they are proper nouns or sentence prompts.`);
+  }
 
   return {
     id: wordId,
@@ -542,6 +571,27 @@ function validOrder(value: unknown) {
 
 function validLanguage(value: string) {
   return /^[A-Za-z]{2,20}(-[A-Za-z0-9]{2,20})*$/.test(value);
+}
+
+export function shouldFlagEnglishPromptCapitalization(prompt: string, sourceLanguage = 'en') {
+  if (sourceLanguage.toLowerCase() !== 'en') return false;
+  const normalized = prompt.trim();
+  if (!/^[A-Z]/.test(normalized)) return false;
+  if (/^I(?:\b|'|’)/.test(normalized)) return false;
+  const firstWord = normalized.match(/^[A-Za-z]+/)?.[0] ?? '';
+  if (englishPromptProperNounStarts.has(firstWord)) return false;
+  if (looksLikeSentencePrompt(normalized)) return false;
+  return true;
+}
+
+function looksLikeSentencePrompt(prompt: string) {
+  const words = prompt.split(/\s+/).filter(Boolean);
+  if (/[.!?]$/.test(prompt) && words.length > 1) return true;
+  if (words.length < 4) return false;
+  const firstWord = words[0] ?? '';
+  const laterWords = words.slice(1).filter(word => /[A-Za-z]/.test(word));
+  if (!laterWords.length) return false;
+  return /^[A-Z][a-z]+$/.test(firstWord) && laterWords.some(word => /^[a-z]/.test(word));
 }
 
 function slug(value: string) {

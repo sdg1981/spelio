@@ -1,5 +1,5 @@
 import { buildAdminContentExportPayload, createAdminContentExportFilename } from '../src/admin/repositories/contentExport';
-import { validateImportPayload } from '../src/admin/repositories/importValidation';
+import { shouldFlagEnglishPromptCapitalization, validateImportPayload } from '../src/admin/repositories/importValidation';
 import { createDraftAdminWordList } from '../src/admin/services/wordListDraft';
 import type { AdminStructureOption, AdminWordList, AdminWordListCollection } from '../src/admin/types';
 
@@ -64,6 +64,7 @@ const lists: AdminWordList[] = [
     slug: 'second-list',
     collectionId: 'spelio_core_welsh',
     collectionName: 'Spelio Core Welsh',
+    iconName: '',
     name: 'Second List',
     nameCy: '',
     description: 'Second list.',
@@ -93,6 +94,7 @@ const lists: AdminWordList[] = [
     slug: 'first-list',
     collectionId: 'spelio_core_welsh',
     collectionName: 'Spelio Core Welsh',
+    iconName: '',
     name: 'First List',
     nameCy: 'Rhestr Gyntaf',
     description: 'First list.',
@@ -284,3 +286,11 @@ assertEqual(draftList.stageId, '', 'new admin word-list drafts should not requir
 assertEqual(draftList.stage, '', 'new admin word-list drafts should not assign deprecated stage metadata.');
 assertEqual(draftList.focusCategoryId, '', 'new admin word-list drafts should not require focus category selection.');
 assertEqual(draftList.focus, '', 'new admin word-list drafts should not assign deprecated focus metadata.');
+
+assertEqual(shouldFlagEnglishPromptCapitalization('Dog'), true, 'ordinary uppercase word prompts should be flagged.');
+assertEqual(shouldFlagEnglishPromptCapitalization('Post Office'), true, 'ordinary title-case phrase prompts should be flagged.');
+assertEqual(shouldFlagEnglishPromptCapitalization('dog'), false, 'lowercase ordinary word prompts should pass.');
+assertEqual(shouldFlagEnglishPromptCapitalization('Welsh'), false, 'known English proper nouns should pass.');
+assertEqual(shouldFlagEnglishPromptCapitalization('Monday'), false, 'known day names should pass.');
+assertEqual(shouldFlagEnglishPromptCapitalization('I am learning Welsh'), false, 'I sentence prompts should pass.');
+assertEqual(shouldFlagEnglishPromptCapitalization('Open the door now'), false, 'sentence-like prompts should pass.');
