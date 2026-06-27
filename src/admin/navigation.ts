@@ -3,7 +3,6 @@ export type AdminNavIconKey =
   | 'collections'
   | 'customLists'
   | 'dialects'
-  | 'focusCategories'
   | 'helperAudio'
   | 'importExport'
   | 'overview'
@@ -94,13 +93,6 @@ export const adminNavGroups: AdminNavGroup[] = [
         icon: 'stages',
         badge: 'Internal',
         description: 'Read-only reference metadata used by progression, import/export, and some public catalogue grouping.'
-      },
-      {
-        label: 'Internal Focus Categories',
-        path: '/admin/focus-categories',
-        icon: 'focusCategories',
-        badge: 'Internal',
-        description: 'Read-only editorial metadata used by word-list editing and import/export, not Practice Library category headings.'
       }
     ]
   },

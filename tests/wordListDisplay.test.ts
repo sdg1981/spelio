@@ -163,6 +163,7 @@ const practiceAnimalList = createList({
   name: 'Most Common Animals',
   stageId: 'core',
   stage: 'Core',
+  focus: 'Topic Vocabulary',
   order: 1
 });
 
@@ -170,6 +171,7 @@ const practiceFoodList = createList({
   ...practiceAnimalList,
   id: 'practice_most_common_food_and_drink',
   name: 'Most Common Food & Drink',
+  focus: 'Legacy Focus Label',
   order: 2
 });
 
@@ -221,7 +223,7 @@ assertEqual(
 assertEqual(
   catalogueGroups[1].listGroups.map(group => group.title).join('|'),
   'Animals|Food & Drink',
-  'Practice Library should group active topic lists by catalogue category instead of the generic Core stage.'
+  'Practice Library should group active topic lists by catalogue category instead of generic Core stage or focus metadata.'
 );
 
 assertEqual(

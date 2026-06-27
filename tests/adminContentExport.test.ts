@@ -1,5 +1,6 @@
 import { buildAdminContentExportPayload, createAdminContentExportFilename } from '../src/admin/repositories/contentExport';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
+import { createDraftAdminWordList } from '../src/admin/services/wordListDraft';
 import type { AdminStructureOption, AdminWordList, AdminWordListCollection } from '../src/admin/types';
 
 function assert(condition: boolean, message: string) {
@@ -73,8 +74,8 @@ const lists: AdminWordList[] = [
     dialect: 'Mixed',
     stageId: 'foundations',
     stage: 'Foundations',
-    focusCategoryId: 'core-vocabulary',
-    focus: 'Core Vocabulary',
+    focusCategoryId: '',
+    focus: '',
     difficulty: 1,
     order: 2,
     nextListId: null,
@@ -230,6 +231,7 @@ assertEqual(payload.schemaVersion, '1.5', 'export schema should include split co
 assertEqual(payload.lists[0].id, 'first_list', 'lists should sort by order');
 assertEqual(payload.lists[0].isActive, true, 'export should preserve active list status.');
 assertEqual(payload.lists[1].isActive, false, 'export should preserve inactive list status.');
+assertEqual(payload.lists[1].focusCategoryId, '', 'export should allow new lists without focus category metadata.');
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
 assertEqual(payload.collections[0].order, 2, 'collection order should be exported');
@@ -257,6 +259,7 @@ assertEqual(preview.totalLists, 2, 'export should include all lists');
 assertEqual(preview.totalWords, 2, 'export should include all words');
 assertEqual(preview.content.lists[0].isActive, true, 'import validation should preserve active list status.');
 assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
+assertEqual(preview.content.lists[1].focusCategoryId, '', 'import validation should preserve missing focus category metadata.');
 assertEqual(preview.content.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'import validation should preserve collection Welsh display name.');
 assertEqual(preview.content.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'import validation should preserve collection Welsh display description.');
 assertEqual(preview.content.collections[0].order, 2, 'import validation should preserve collection order.');
@@ -267,3 +270,14 @@ assertEqual(preview.content.lists[0].nameCy, 'Rhestr Gyntaf', 'import validation
 assertEqual(preview.content.lists[0].descriptionCy, 'Disgrifiad Cymraeg cyntaf.', 'import validation should preserve list Welsh display description.');
 assertEqual(preview.content.lists[0].primerContent?.soundItems[0].textToSpeak, 'hedd', 'import validation should preserve primer sound generation text.');
 assertEqual(createAdminContentExportFilename(payload.exportedAt), 'spelio_live_content_export_2026-05-21_10-11-12Z.json', 'filename should be timestamped and filesystem-safe');
+
+const draftList = createDraftAdminWordList({
+  name: 'New Practice Topic',
+  existingLists: lists,
+  stages: structure,
+  collections,
+  now: '2026-06-27T12:00:00.000Z'
+});
+
+assertEqual(draftList.focusCategoryId, '', 'new admin word-list drafts should not require focus category selection.');
+assertEqual(draftList.focus, '', 'new admin word-list drafts should not assign deprecated focus metadata.');

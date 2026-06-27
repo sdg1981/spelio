@@ -163,6 +163,8 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       dialect: listDialect as AdminWordList['dialect'],
       stageId: stringField(list, 'stageId', 'stage_id') || slug(stringField(list, 'stage')),
       stage: stringField(list, 'stage') || stringField(list, 'stageId', 'stage_id'),
+      // Deprecated compatibility metadata: accepted for old exports, but not
+      // used for Practice Library categories, recommendations, or sessions.
       focusCategoryId: stringField(list, 'focusCategoryId', 'focus_category_id') || slug(stringField(list, 'focus')),
       focus: stringField(list, 'focus') || stringField(list, 'focusCategoryId', 'focus_category_id'),
       difficulty: listDifficulty as AdminWordList['difficulty'],

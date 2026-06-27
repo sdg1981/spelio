@@ -24,7 +24,6 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
   const [collections, setCollections] = useState<AdminWordListCollection[]>([]);
   const [stages, setStages] = useState<AdminStructureOption[]>([]);
-  const [focusCategories, setFocusCategories] = useState<AdminStructureOption[]>([]);
   const [selectedWordId, setSelectedWordId] = useState('');
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,9 +53,8 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       repository.getWordList(id),
       repository.listWordLists(),
       repository.listCollections(),
-      repository.listStages(),
-      repository.listFocusCategories()
-    ]).then(([nextList, nextWordLists, nextCollections, nextStages, nextFocusCategories]) => {
+      repository.listStages()
+    ]).then(([nextList, nextWordLists, nextCollections, nextStages]) => {
       const fallback = nextWordLists[0] ?? null;
       const resolved = nextList ?? fallback;
       setSource(resolved);
@@ -64,7 +62,6 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
       setWordLists(nextWordLists);
       setCollections(nextCollections);
       setStages(nextStages);
-      setFocusCategories(nextFocusCategories);
       setSelectedWordId(resolved?.words[7]?.id ?? resolved?.words[0]?.id ?? '');
       setErrorMessage(resolved ? '' : 'Word list not found.');
     }).catch(error => {
@@ -479,10 +476,6 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
                 const stage = stages.find(item => item.id === event.target.value);
                 updateList({ stageId: event.target.value, stage: stage?.name ?? event.target.value });
               }}>{stages.map(stage => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</AdminSelect></Field>
-              <Field label="Internal focus" helper="Editorial metadata for list purpose. This is not the Practice Library category heading."><AdminSelect value={list.focusCategoryId} onChange={event => {
-                const focus = focusCategories.find(item => item.id === event.target.value);
-                updateList({ focusCategoryId: event.target.value, focus: focus?.name ?? event.target.value });
-              }}>{focusCategories.map(focus => <option key={focus.id} value={focus.id}>{focus.name}</option>)}</AdminSelect></Field>
               <Field label="Dialect"><AdminSelect value={list.dialect} onChange={event => updateList({ dialect: event.target.value as AdminWordList['dialect'] })}><option>Mixed</option><option>Both</option><option>North Wales</option><option>South Wales / Standard</option><option>Standard</option><option>Other</option></AdminSelect></Field>
               <Field label="Difficulty"><AdminSelect value={list.difficulty} onChange={event => updateList({ difficulty: Number(event.target.value) as AdminWordList['difficulty'] })}><option value={1}>1 - Beginner</option><option value={2}>2 - Easy</option><option value={3}>3 - Developing</option><option value={4}>4 - Challenging</option><option value={5}>5 - Advanced</option></AdminSelect></Field>
               <Field label="List type" helper="Support lists are hidden from learner catalogue/progression but remain available for contextual practice and audio maintenance."><AdminSelect value={list.listType ?? 'main'} onChange={event => {

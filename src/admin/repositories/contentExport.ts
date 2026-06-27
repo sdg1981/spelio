@@ -18,6 +18,8 @@ export interface AdminContentExportPayload {
   notes: string[];
   collections: ExportedCollection[];
   stages: ExportedStructureOption[];
+  // Deprecated compatibility metadata. Focus categories are not used for
+  // Practice Library grouping, recommendations, or session generation.
   focusCategories: ExportedStructureOption[];
   dialects: ExportedStructureOption[];
   lists: ExportedWordList[];
@@ -62,6 +64,8 @@ interface ExportedWordList {
   dialect: string;
   stage: string;
   stageId: string;
+  // Deprecated compatibility fields retained for schema 1.5 exports only.
+  // New admin editing should not require or assign focus categories.
   focus: string;
   focusCategoryId: string;
   difficulty: number;
@@ -135,6 +139,7 @@ export function buildAdminContentExportPayload(input: {
       'Generated from the current admin database content, not from static JSON seed files.',
       'The export intentionally excludes learner progress, analytics, timestamps, and transient operational metadata.',
       'Audio fields, including collection intro and primer audio fields, contain lightweight URL/status metadata only; physical audio files are not embedded.',
+      'Focus category fields are deprecated compatibility metadata for schema 1.5 and are not used for Practice Library grouping, recommendations, or sessions.',
       'Collections, lists, and words are sorted by order, then id, for stable review diffs.'
     ],
     collections,

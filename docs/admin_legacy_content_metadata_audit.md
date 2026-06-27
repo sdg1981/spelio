@@ -24,8 +24,8 @@ Current product architecture:
 | ---- | ------------ | ----------------------- | ------- | ------------------ |
 | `stages` | Reference table for legacy list-stage labels. Admin joins it to resolve `word_lists.stage_id` to `list.stage`; export includes it. | Transitional only. Public catalogue fallback can still display resolved `list.stage` for non-special collections, but progression recommendations no longer use it. | Deprecate | Remove from the future architecture. Keep only until admin import/export and catalogue fallback are versioned away from it. |
 | `stage_id` | Foreign key on `word_lists`; selected in public/admin content loaders; editable in word-list admin; imported/exported. | Transitional only. Public catalogue checks `stageId === "foundations"` for one display override, but recommendations and session generation no longer use it. | Deprecate | Replace display fallback with collection/list metadata, then version import/export and drop the field/table in a later migration. |
-| `focus_categories` | Reference table for editorial list-purpose labels. Admin joins it to resolve `word_lists.focus_category_id` to `list.focus`; export includes it. | No learner-facing behaviour found. Not used by public catalogue grouping, ordering, recommendations, progression, or session generation. | Deprecate | Remove from the future architecture. Keep only while current admin import/export and edit forms still expose it. |
-| `focus_category_id` | Foreign key on `word_lists`; editable in word-list admin; imported/exported; shown in admin tables. | No learner-facing behaviour found. Session and recommendation tests confirm changing `focus` labels does not change recommendations or generated session words. | Deprecate | Version out of import/export and remove from admin editing before dropping the schema column. |
+| `focus_categories` | Reference table for legacy/editorial list-purpose labels. Admin still has a direct legacy route and export includes it for schema 1.5 compatibility. | No learner-facing behaviour found. Not used by public catalogue grouping, ordering, recommendations, progression, or session generation. | Deprecate | Removed from normal admin navigation and word-list editing. Keep only for old import/export compatibility until the export schema is versioned. |
+| `focus_category_id` | Foreign key on `word_lists`; imported/exported and preserved on existing records. New normal admin word-list creation does not require or assign it. | No learner-facing behaviour found. Session and recommendation tests confirm changing `focus` labels does not change recommendations or generated session words. | Deprecate | Preserve existing values, allow null for new lists, version out of import/export before dropping the schema column. |
 
 ## Detailed Findings
 
@@ -80,8 +80,9 @@ Current records:
 
 Code paths:
 
-- Admin loaders join `focus_categories(name)` and expose it as `list.focus`.
-- Admin word-list edit reads and writes `focusCategoryId`.
+- Admin loaders join `focus_categories(name)` and expose it as `list.focus` for compatibility.
+- Admin word-list edit preserves existing `focusCategoryId` values but no longer exposes an Internal Focus selector.
+- Admin word-list creation now leaves `focusCategoryId` empty.
 - Import/export preserves `focus`, `focusCategoryId`, and the `focusCategories` reference list.
 - Public Supabase loading reads `focus_category_id` only into the public `focus` string.
 - Public catalogue grouping does not use focus metadata.
@@ -94,7 +95,7 @@ Conceptual status:
 Safe deprecation path:
 
 1. Keep `focus_category_id` for import/export compatibility.
-2. Stop presenting it as day-to-day content architecture.
+2. Keep it out of day-to-day content architecture and normal admin navigation.
 3. If editorial tags are still useful, replace it with explicit tags or a more general editorial metadata field.
 4. Version import/export so older payloads can still hydrate or ignore `focusCategoryId`.
 5. Remove the admin field and schema reference only after active content no longer relies on the import/export shape.
@@ -105,7 +106,7 @@ Safe deprecation path:
 | ---------- | -------------- | ----- |
 | `stages` reference table | Transitional | Still used by admin loaders and export snapshots, but not required by the simplified product model. |
 | `word_lists.stage_id` | Transitional | Still selected/written by admin and public content loaders, but no longer drives recommendation fallback. |
-| `focus_categories` reference table | Legacy | Only supports admin/editorial display and export shape. |
-| `word_lists.focus_category_id` | Legacy | No live learner behaviour depends on it. |
+| `focus_categories` reference table | Legacy | Only supports the direct legacy admin route and export shape. |
+| `word_lists.focus_category_id` | Legacy | Existing values are preserved, but new normal admin list creation leaves it empty and no live learner behaviour depends on it. |
 | Public recommendation fallback by stage | Dead | Replaced by explicit `nextListId`, then collection/list order. |
 | Practice Library category display by focus | Dead | The public catalogue uses collection/list display mapping instead. |

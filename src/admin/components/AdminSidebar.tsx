@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Files, FlaskConical, FolderTree, Headphones, Import, Layers3, LogOut, Menu, Settings, SlidersHorizontal, Volume2, X } from 'lucide-react';
+import { BarChart3, BookOpen, Files, FlaskConical, FolderTree, Headphones, Import, Layers3, LogOut, Menu, Settings, Volume2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { adminNavGroups, type AdminNavIconKey } from '../navigation';
@@ -10,7 +10,6 @@ const navIcons: Record<AdminNavIconKey, ReactNode> = {
   collections: <FolderTree size={18} />,
   customLists: <FlaskConical size={18} />,
   dialects: <FolderTree size={18} />,
-  focusCategories: <SlidersHorizontal size={18} />,
   helperAudio: <Volume2 size={18} />,
   importExport: <Import size={18} />,
   overview: <BarChart3 size={18} />,

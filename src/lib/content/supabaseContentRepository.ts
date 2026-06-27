@@ -246,6 +246,8 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     dialect: asDialect(row.dialect),
     stageId: row.stage_id ?? '',
     stage: row.stages?.name ?? row.stage_id ?? '',
+    // Deprecated compatibility metadata only. Focus categories are not used for
+    // Practice Library grouping, recommendations, or session generation.
     focus: row.focus_category_id ?? '',
     difficulty: asDifficulty(row.difficulty),
     order: row.order_index ?? 0,

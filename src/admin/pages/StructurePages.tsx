@@ -19,8 +19,8 @@ export function StagesPage({ repository }: { repository: AdminRepository }) {
 export function FocusCategoriesPage({ repository }: { repository: AdminRepository }) {
   return (
     <StructurePage
-      title="Internal Focus Categories"
-      description="Read-only editorial metadata used by word-list editing and import/export. These are not the learner-facing Practice Library category headings."
+      title="Legacy Focus Categories"
+      description="Deprecated read-only compatibility metadata retained for older imports and exports. These are not used for Practice Library categories, recommendations, or session generation."
       repository={repository}
       kind="focus"
     />
