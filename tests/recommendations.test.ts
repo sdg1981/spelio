@@ -215,6 +215,16 @@ function makeLargeList(id: string, startOrder: number, wordCount: number): WordL
   };
 }
 
+function makeMetadataAuditList(id: string, order: number, stage: string, focus = 'Focus'): WordList {
+  return {
+    ...makeLargeList(id, order, 3),
+    name: id,
+    stage,
+    focus,
+    nextListId: null
+  };
+}
+
 function makeLargeVariantList(): WordList {
   const id = 'test_large_variant_single';
   return {
@@ -1818,6 +1828,63 @@ test('normal progression falls back when sequential next lists are complete or u
   assertEqual(isListFullyComplete(storage, done), true, 'Setup should make the sequential next list fully complete');
   assertEqual(recommendation.kind, 'list', 'Normal progression should fall back to a list recommendation');
   assertEqual(recommendation.listId, fallback.id, 'Unavailable sequential continuation should use the existing unfinished-list fallback');
+});
+
+test('legacy stage metadata affects fallback recommendation buckets after nextListId is unavailable', () => {
+  const current = makeMetadataAuditList('stage_audit_current', 1, 'Alpha');
+  const nextStageCandidate = makeMetadataAuditList('stage_audit_next_stage', 2, 'Beta');
+  const sameStageCandidate = makeMetadataAuditList('stage_audit_same_stage', 3, 'Alpha');
+  const lists = [current, nextStageCandidate, sameStageCandidate];
+  const storage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  }, lists, current.id);
+  const sameStageRecommendation = getRecommendation(storage, lists);
+
+  const changedStageLists = [current, nextStageCandidate, { ...sameStageCandidate, stage: 'Gamma' }];
+  const changedStageStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  }, changedStageLists, current.id);
+  const nextStageRecommendation = getRecommendation(changedStageStorage, changedStageLists);
+
+  assertEqual(sameStageRecommendation.listId, sameStageCandidate.id, 'Fallback should prefer a later incomplete list in the same legacy stage bucket.');
+  assertEqual(nextStageRecommendation.listId, nextStageCandidate.id, 'Changing the later list stage should change the fallback bucket recommendation.');
+});
+
+test('focus metadata does not affect recommendations or session generation', () => {
+  const current = makeMetadataAuditList('focus_audit_current', 1, 'Alpha', 'Original');
+  const next = makeMetadataAuditList('focus_audit_next', 2, 'Alpha', 'Original');
+  const baseLists = [current, next];
+  const changedFocusLists = [
+    { ...current, focus: 'Changed current' },
+    { ...next, focus: 'Changed next' }
+  ];
+  const baseStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  }, baseLists, current.id);
+  const changedFocusStorage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  }, changedFocusLists, current.id);
+  const selectedStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [next.id],
+    currentPathPosition: next.id
+  };
+
+  assertEqual(getRecommendation(baseStorage, baseLists).listId, next.id, 'Setup should recommend the next list.');
+  assertEqual(getRecommendation(changedFocusStorage, changedFocusLists).listId, next.id, 'Changing focus labels should not change recommendations.');
+  assertEqual(
+    createPracticeSession(baseLists, selectedStorage).words.map(word => word.id).join('|'),
+    createPracticeSession(changedFocusLists, selectedStorage).words.map(word => word.id).join('|'),
+    'Changing focus labels should not change generated session words.'
+  );
 });
 
 test('continue learning advances when all eligible current-list items are seen without granting completion tick', () => {

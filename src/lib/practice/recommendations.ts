@@ -78,6 +78,8 @@ function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], curre
 
   const incompleteLists = activeLists.filter(list => listHasUnseenLearningItems(storage, list));
 
+  // `stage` is legacy editorial metadata. It still acts as a progression bucket
+  // fallback when a list has no usable explicit nextListId chain.
   const currentStageNext = incompleteLists.find(list => {
     return list.stage === current.stage && list.order > current.order;
   });
