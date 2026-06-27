@@ -136,6 +136,7 @@ export interface WordList {
   slug?: string;
   collectionId: string;
   collection?: WordListCollection;
+  iconName?: string;
   name: string;
   nameCy?: string;
   description: string;
@@ -201,6 +202,7 @@ type DatasetList = {
   id: string;
   slug?: string;
   collectionId?: string;
+  iconName?: string;
   name: string;
   nameCy?: string;
   description: string;
@@ -252,6 +254,7 @@ const baseWordLists: WordList[] = rawLists
     slug: list.slug,
     collectionId: list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID,
     collection: collectionMap.get(list.collectionId ?? DEFAULT_WORD_LIST_COLLECTION_ID) ?? defaultWordListCollection,
+    iconName: list.iconName ?? '',
     name: list.name,
     nameCy: list.nameCy ?? '',
     description: list.description,

@@ -464,6 +464,7 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
               <Field label="Description"><AdminInput value={list.description} onChange={event => updateList({ description: event.target.value })} /></Field>
               <Field label="Welsh display name (optional)"><AdminInput value={list.nameCy} onChange={event => updateList({ nameCy: event.target.value })} /></Field>
               <Field label="Welsh display description (optional)"><AdminInput value={list.descriptionCy} onChange={event => updateList({ descriptionCy: event.target.value })} /></Field>
+              <Field label="Lucide icon name" helper="Official Lucide React component name, for example Dog, Apple, MapPin, CloudSun, or Calendar."><AdminInput value={list.iconName} onChange={event => updateList({ iconName: event.target.value })} /></Field>
               <Field label="Collection"><AdminSelect value={list.collectionId} onChange={event => {
                 const collection = collections.find(item => item.id === event.target.value);
                 updateList({ collectionId: event.target.value, collectionName: collection?.name ?? event.target.value });

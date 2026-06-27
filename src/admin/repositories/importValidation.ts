@@ -153,6 +153,7 @@ export function validateImportPayload(payload: unknown, context: ImportValidatio
       slug: stringField(list, 'slug') || slug(stringField(list, 'name') || listId),
       collectionId,
       collectionName: collectionName(collectionInputs.get(collectionId), collectionId),
+      iconName: stringField(list, 'iconName', 'icon_name'),
       name: stringField(list, 'name'),
       nameCy: stringField(list, 'nameCy', 'name_cy'),
       description: stringField(list, 'description'),

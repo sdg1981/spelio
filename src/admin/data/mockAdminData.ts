@@ -45,6 +45,7 @@ type RawList = {
   id: string;
   slug?: string;
   collectionId?: string;
+  iconName?: string;
   name: string;
   nameCy?: string;
   description: string;
@@ -111,6 +112,7 @@ export const adminWordLists: AdminWordList[] = rawLists
     slug: list.slug ?? slug(list.name),
     collectionId: list.collectionId ?? DEFAULT_COLLECTION_ID,
     collectionName: collectionNameById.get(list.collectionId ?? DEFAULT_COLLECTION_ID) ?? 'Spelio Core Welsh',
+    iconName: list.iconName ?? '',
     name: list.name,
     nameCy: list.nameCy ?? '',
     description: list.description,

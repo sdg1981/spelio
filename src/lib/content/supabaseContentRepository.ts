@@ -42,6 +42,7 @@ type WordListRow = {
   id: string;
   slug: string | null;
   collection_id: string | null;
+  icon_name?: string | null;
   name: string | null;
   name_cy: string | null;
   description: string | null;
@@ -99,7 +100,7 @@ type WordRow = {
   difficulty: number | null;
 };
 
-const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue,primer_content';
+const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,icon_name,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue,primer_content';
 const WORD_LIST_SELECT_WITHOUT_SLUG = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active';
 
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
@@ -155,7 +156,7 @@ function asAcceptedAlternatives(value: unknown): string[] {
 }
 
 function isMissingOptionalWordListColumnError(error: { code?: string; message?: string } | null) {
-  return error?.code === '42703' && /\b(slug|list_type|hidden_from_main_catalogue|primer_content)\b/.test(error.message ?? '');
+  return error?.code === '42703' && /\b(slug|icon_name|list_type|hidden_from_main_catalogue|primer_content)\b/.test(error.message ?? '');
 }
 
 function mapCollection(row: CollectionRow): WordListCollection {
@@ -236,6 +237,7 @@ function mapList(row: WordListRow, collection: WordListCollection, words: WordRo
     slug: row.slug ?? undefined,
     collectionId: row.collection_id ?? DEFAULT_WORD_LIST_COLLECTION_ID,
     collection,
+    iconName: row.icon_name ?? '',
     name: row.name ?? row.id,
     nameCy: row.name_cy ?? '',
     description: row.description ?? '',

@@ -79,6 +79,7 @@ export interface AdminWordList {
   slug: string;
   collectionId: string;
   collectionName: string;
+  iconName: string;
   name: string;
   nameCy: string;
   description: string;

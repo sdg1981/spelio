@@ -15,6 +15,7 @@ export function createDraftAdminWordList(input: {
     slug: createAdminWordListSlug(input.name, input.existingLists),
     collectionId: collection?.id ?? DEFAULT_COLLECTION_ID,
     collectionName: collection?.name ?? 'Spelio Core Welsh',
+    iconName: '',
     name: input.name,
     nameCy: '',
     description: 'New editorial word list.',

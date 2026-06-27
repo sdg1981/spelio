@@ -1,7 +1,9 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
+import type { CSSProperties, ComponentType, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Copy, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+import { ArrowRight, BookOpen, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, Sparkles, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { FirstPracticeHint } from './FirstPracticeHint';
@@ -13,7 +15,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName } from '../lib/practice/wordListDisplay';
+import { PRACTICE_LIBRARY_COLLECTION_ID, WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -1977,6 +1979,291 @@ const WordListRow = memo(function WordListRow({
   );
 });
 
+const catalogueIconComponents = LucideIcons as unknown as Record<string, ComponentType<LucideProps> | undefined>;
+const PRACTICE_LIBRARY_MAIN_LIST_IDS = [
+  'practice_most_common_animals',
+  'practice_most_common_food_and_drink',
+  'practice_most_common_people_and_family',
+  'practice_most_common_places',
+  'practice_most_common_weather',
+  'practice_most_common_time_and_calendar',
+  'practice_most_common_colours',
+  'practice_most_common_clothing',
+  'practice_most_common_work',
+  'practice_most_common_school_and_learning',
+  'practice_most_common_nature_and_landscape',
+  'practice_most_common_shopping'
+];
+
+function resolveCatalogueIcon(iconName: string | undefined) {
+  const Icon = iconName ? catalogueIconComponents[iconName] : undefined;
+  return typeof Icon === 'function' ? Icon : BookOpen;
+}
+
+function getPracticeLibrarySubtitle(list: WordList, interfaceLanguage: InterfaceLanguage) {
+  const displayName = getListDisplayName(list, interfaceLanguage);
+  return displayName.replace(/^Most Common\s+/i, interfaceLanguage === 'cy' ? '' : 'Most common ').trim() || displayName;
+}
+
+function handleNestedCardAction(event: MouseEvent<HTMLButtonElement>) {
+  event.stopPropagation();
+}
+
+function handleCardKeyDown(event: ReactKeyboardEvent<HTMLDivElement>, onActivate: () => void) {
+  if (event.target !== event.currentTarget) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onActivate();
+}
+
+function isFoundationsCatalogueList(list: WordList) {
+  return list.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID ||
+    list.collection?.id === WELSH_FOUNDATIONS_COLLECTION_ID ||
+    list.stageId === 'foundations' ||
+    list.stage.trim().toLowerCase() === 'foundations';
+}
+
+function getPracticeLibraryCatalogueLists(selectableLists: WordList[]) {
+  const practiceListsById = new Map(
+    selectableLists
+      .filter(list => list.collectionId === PRACTICE_LIBRARY_COLLECTION_ID || list.collection?.id === PRACTICE_LIBRARY_COLLECTION_ID)
+      .map(list => [list.id, list])
+  );
+  const configuredPracticeLists = PRACTICE_LIBRARY_MAIN_LIST_IDS
+    .map(id => practiceListsById.get(id))
+    .filter((list): list is WordList => Boolean(list));
+
+  if (configuredPracticeLists.length > 0) return configuredPracticeLists;
+
+  return selectableLists
+    .filter(list => !isFoundationsCatalogueList(list))
+    .slice(0, 12);
+}
+
+function WordListPageCatalogue({
+  collectionGroups,
+  selectableLists,
+  selectedId,
+  completedSet,
+  inProgressSet,
+  query,
+  onSelect,
+  onShare,
+  afterListGridContent,
+  interfaceLanguage,
+  t
+}: {
+  collectionGroups: ReturnType<typeof buildPublicCatalogueGroups>;
+  selectableLists: WordList[];
+  selectedId?: string;
+  completedSet: Set<string>;
+  inProgressSet: Set<string>;
+  query: string;
+  onSelect: (listId: string) => void;
+  onShare: (list: WordList) => void;
+  afterListGridContent?: ReactNode;
+  interfaceLanguage: InterfaceLanguage;
+  t: Translate;
+}) {
+  const normalizedQuery = query.trim();
+  const foundationsLists = selectableLists
+    .filter(isFoundationsCatalogueList)
+    .sort((a, b) => a.order - b.order || getListDisplayName(a, interfaceLanguage).localeCompare(getListDisplayName(b, interfaceLanguage)));
+  const foundationsCompleted = foundationsLists.filter(list => completedSet.has(list.id)).length;
+  const foundationsTotal = foundationsLists.length;
+  const currentFoundationList =
+    foundationsLists.find(list => inProgressSet.has(list.id) && !completedSet.has(list.id)) ??
+    foundationsLists.find(list => !completedSet.has(list.id)) ??
+    foundationsLists[0];
+  const foundationsProgress = foundationsTotal > 0 ? Math.round((foundationsCompleted / foundationsTotal) * 100) : 0;
+  const practiceLists = getPracticeLibraryCatalogueLists(selectableLists);
+  const searchResultLists = collectionGroups.flatMap(group => group.listGroups.flatMap(listGroup => listGroup.lists));
+  const foundationsProgressLabel = t('wordLists.foundationsProgress')
+    .replace('{completed}', String(foundationsCompleted))
+    .replace('{total}', String(foundationsTotal));
+
+  if (normalizedQuery) {
+    return (
+      <div id="word-list-page-list-grid" className="word-lists-redesign word-lists-search-results">
+        <section className="word-lists-section" aria-labelledby="word-lists-search-results-title">
+          <div className="word-lists-section-heading">
+            <Search size={25} strokeWidth={1.8} aria-hidden="true" />
+            <div>
+              <h2 id="word-lists-search-results-title">{t('wordLists.searchResults')}</h2>
+              <p>{t('wordLists.searchResultsSubtitle')}</p>
+            </div>
+          </div>
+          <div className="word-lists-search-card">
+            {searchResultLists.length > 0 ? searchResultLists.map(list => {
+              const displayName = getListDisplayName(list, interfaceLanguage);
+              return (
+                <WordListRow
+                  key={list.id}
+                  list={list}
+                  displayName={displayName}
+                  selected={selectedId === list.id}
+                  completed={completedSet.has(list.id)}
+                  inProgress={!completedSet.has(list.id) && inProgressSet.has(list.id)}
+                  completedLabel={t('wordLists.completed')}
+                  inProgressLabel={t('wordLists.inProgress')}
+                  shareLabel={`${t('wordLists.shareWordList')} - ${displayName}`}
+                  onSelect={onSelect}
+                  onShare={onShare}
+                />
+              );
+            }) : (
+              <p className="word-lists-empty-search">{t('wordLists.noSearchResults')}</p>
+            )}
+          </div>
+        </section>
+        {afterListGridContent}
+      </div>
+    );
+  }
+
+  return (
+    <div id="word-list-page-list-grid" className="word-lists-redesign">
+      <section className="word-lists-section" aria-labelledby="word-lists-learning-journeys-title">
+        <div className="word-lists-section-heading">
+          <BookOpen size={28} strokeWidth={1.8} aria-hidden="true" />
+          <div>
+            <h2 id="word-lists-learning-journeys-title">{t('wordLists.learningJourneys')}</h2>
+            <p>{t('wordLists.learningJourneysSubtitle')}</p>
+          </div>
+        </div>
+
+        {currentFoundationList && (
+          <article className={`learning-journey-card ${selectedId === currentFoundationList.id ? 'selected' : ''}`}>
+            <div className="learning-journey-icon" aria-hidden="true">
+              <GraduationCap size={66} strokeWidth={1.6} />
+            </div>
+            <div className="learning-journey-main">
+              <h3>{t('wordLists.foundationsJourneyTitle')}</h3>
+              <p>{t('wordLists.currentlyOn')} <strong>{t('wordLists.foundationsCurrentSection')}</strong></p>
+              <div className="learning-journey-progress-row">
+                <span>{foundationsProgressLabel}</span>
+                <span className="learning-journey-progress-track" aria-hidden="true">
+                  <span style={{ width: `${foundationsProgress}%` }} />
+                </span>
+              </div>
+              <div className="learning-journey-chips" aria-label={t('wordLists.foundationsChipsLabel')}>
+                <span>D / DD</span>
+                <span>Y</span>
+                <span>F / FF</span>
+                <span>{t('wordLists.moreFoundationsChips')}</span>
+              </div>
+            </div>
+            <button className="learning-journey-cta" type="button" onClick={() => onSelect(currentFoundationList.id)}>
+              {t('wordLists.continueJourney')}
+              <ArrowRight size={20} strokeWidth={2.1} aria-hidden="true" />
+            </button>
+          </article>
+        )}
+      </section>
+
+      <section className="word-lists-section upcoming-journeys" aria-labelledby="word-lists-upcoming-title">
+        <h2 id="word-lists-upcoming-title">{t('wordLists.upcomingLearningJourneys')}</h2>
+        <div className="upcoming-journey-grid">
+          {[
+            { title: t('wordLists.upcomingWordFamilies'), icon: Sparkles },
+            { title: t('wordLists.upcomingMutationAwareness'), icon: GitBranch },
+            { title: t('wordLists.upcomingAccents'), icon: Lightbulb },
+            { title: t('wordLists.upcomingYesNo'), icon: MessageCircle }
+          ].map(({ title, icon: Icon }) => (
+            <article className="upcoming-journey-card" key={title}>
+              <span aria-hidden="true"><Icon size={28} strokeWidth={1.8} /></span>
+              <div>
+                <h3>{title}</h3>
+                <p>{t('wordLists.comingSoon')}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="word-lists-section practice-library-section" aria-labelledby="word-lists-practice-library-title">
+        <div className="word-lists-section-heading practice-library-heading">
+          <Grid2X2 size={27} strokeWidth={1.8} aria-hidden="true" />
+          <div>
+            <h2 id="word-lists-practice-library-title">{t('wordLists.practiceLibrary')}</h2>
+            <p>{t('wordLists.practiceLibrarySubtitle')}</p>
+          </div>
+        </div>
+        <div className="practice-library-card-grid">
+          {practiceLists.map(list => {
+            const categoryTitle = getPracticeLibraryCategoryLabel(list, interfaceLanguage);
+            const subtitle = getPracticeLibrarySubtitle(list, interfaceLanguage);
+            const Icon = resolveCatalogueIcon(getPracticeLibraryIconName(list));
+            const selected = selectedId === list.id;
+            const completed = completedSet.has(list.id);
+            const inProgress = !completed && inProgressSet.has(list.id);
+
+            return (
+              <div
+                className={`practice-library-card ${selected ? 'selected' : ''}`}
+                key={list.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={selected}
+                onClick={() => onSelect(list.id)}
+                onKeyDown={event => handleCardKeyDown(event, () => onSelect(list.id))}
+              >
+                <span className="practice-library-card-icon" aria-hidden="true">
+                  <Icon size={39} strokeWidth={1.7} />
+                </span>
+                <span className="practice-library-card-title">{categoryTitle}</span>
+                <span className="practice-library-card-subtitle">{subtitle}</span>
+                <span className="practice-library-card-footer">
+                  <span>{t('wordLists.explore')}</span>
+                  <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
+                </span>
+                <span className="practice-library-card-status" aria-live="polite">
+                  {completed && <span>{t('wordLists.completed')}</span>}
+                  {inProgress && <span>{t('wordLists.inProgress')}</span>}
+                </span>
+                {shouldShowSelectedListShareAction(list.id, selected ? list.id : undefined) && (
+                  <button
+                    className="practice-library-share-button"
+                    type="button"
+                    aria-label={`${t('wordLists.shareWordList')} - ${categoryTitle}`}
+                    onClick={event => {
+                      handleNestedCardAction(event);
+                      onShare(list);
+                    }}
+                  >
+                    <Share2 size={17} strokeWidth={1.9} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {afterListGridContent}
+
+      <section className="practice-library-growth-card" aria-labelledby="practice-library-growth-title">
+        <span className="practice-library-growth-icon" aria-hidden="true">
+          <Lightbulb size={34} strokeWidth={1.8} />
+        </span>
+        <div>
+          <h2 id="practice-library-growth-title">{t('wordLists.growthTitle')}</h2>
+          <p>{t('wordLists.growthBody')}</p>
+        </div>
+        <a className="practice-library-growth-link" href="/feedback" onClick={event => {
+          event.preventDefault();
+          window.history.pushState({ spelioPublicPage: true }, '', '/feedback');
+          resetPublicPageScrollToTop();
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }}>
+          {t('wordLists.suggestTopic')}
+          <ArrowRight size={20} strokeWidth={2} aria-hidden="true" />
+        </a>
+      </section>
+    </div>
+  );
+}
+
 function getWordListStageLabel(stage: string, t: Translate) {
   if (stage === 'Foundations') return t('wordLists.stageFoundations');
   if (stage === 'Core') return t('wordLists.stageCore');
@@ -2285,6 +2572,21 @@ export function WordListSelectorPanel({
           onChange={event => setQuery(event.target.value)}
         />
 
+        {variant === 'page' ? (
+          <WordListPageCatalogue
+            collectionGroups={collectionGroups}
+            selectableLists={selectableLists}
+            selectedId={selectedId}
+            completedSet={completedSet}
+            inProgressSet={inProgressSet}
+            query={query}
+            onSelect={selectList}
+            onShare={openShareList}
+            afterListGridContent={afterListGridContent}
+            interfaceLanguage={interfaceLanguage}
+            t={t}
+          />
+        ) : (
         <div id={listGridId} className="list-grid">
           {!showCollections && singleCollectionListGroups.map(group => (
             <div key={group.key}>
@@ -2341,6 +2643,7 @@ export function WordListSelectorPanel({
           ))}
           {afterListGridContent}
         </div>
+        )}
 
         {onSuggestWordList && variant === 'modal' && (
           <p className="wordlist-suggestion">

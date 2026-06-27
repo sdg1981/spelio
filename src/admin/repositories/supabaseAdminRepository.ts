@@ -27,6 +27,7 @@ type WordListRow = {
   id: string;
   slug?: string | null;
   collection_id?: string | null;
+  icon_name?: string | null;
   name: string;
   name_cy?: string | null;
   description: string;
@@ -870,6 +871,7 @@ function mapWordListRow(row: WordListRow): AdminWordList {
     slug: row.slug ?? slugOrNull(row.name) ?? row.id,
     collectionId: row.collection_id ?? DEFAULT_COLLECTION_ID,
     collectionName: row.word_list_collections?.name ?? 'Spelio Core Welsh',
+    iconName: row.icon_name ?? '',
     name: row.name,
     nameCy: row.name_cy ?? '',
     description: row.description,
@@ -947,6 +949,7 @@ function toWordListRow(list: AdminWordList) {
     id: list.id,
     slug: list.slug,
     collection_id: list.collectionId || DEFAULT_COLLECTION_ID,
+    icon_name: list.iconName?.trim() || null,
     name: list.name,
     name_cy: list.nameCy || null,
     description: list.description,

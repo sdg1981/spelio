@@ -2,7 +2,7 @@ import type { WordList, WordListCollection } from '../../data/wordLists';
 import { mainWordLists } from '../../data/supportWordLists';
 import type { InterfaceLanguage } from '../../i18n';
 
-const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
+export const WELSH_FOUNDATIONS_COLLECTION_ID = 'spelio_welsh_foundations';
 const WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME = 'Welsh Spelling Foundations';
 const WELSH_FOUNDATIONS_COLLECTION_DISPLAY_NAME_CY = 'Sylfeini Sillafu Cymraeg';
 const FOUNDATIONS_STAGE_ID = 'foundations';
@@ -10,7 +10,7 @@ const WELSH_FOUNDATIONS_AREA_LABEL = 'Learning';
 const WELSH_FOUNDATIONS_AREA_LABEL_CY = 'Dysgu';
 const WELSH_FOUNDATIONS_STAGE_LABEL = 'Spelling Patterns';
 const WELSH_FOUNDATIONS_STAGE_LABEL_CY = 'Patrymau Sillafu';
-const PRACTICE_LIBRARY_COLLECTION_ID = 'practice';
+export const PRACTICE_LIBRARY_COLLECTION_ID = 'practice';
 const PRACTICE_LIBRARY_AREA_LABEL = 'Practice Library';
 const PRACTICE_LIBRARY_AREA_LABEL_CY = 'Llyfrgell Ymarfer';
 
@@ -35,6 +35,29 @@ const PRACTICE_LIBRARY_CATEGORY_LABELS: Record<string, { en: string; cy?: string
   practice_most_common_numbers: { en: 'Numbers', cy: 'Rhifau' },
   practice_most_common_meals_and_eating: { en: 'Meals & Eating', cy: 'Prydau a Bwyta' },
   practice_most_common_around_town: { en: 'Around Town', cy: 'O Gwmpas y Dref' }
+};
+
+const PRACTICE_LIBRARY_CATEGORY_ICON_NAMES: Record<string, string> = {
+  practice_most_common_animals: 'Dog',
+  practice_most_common_food_and_drink: 'Apple',
+  practice_most_common_places: 'MapPin',
+  practice_most_common_travel_and_transport: 'MapPin',
+  practice_most_common_people_and_family: 'UserRound',
+  practice_most_common_home_and_household: 'Home',
+  practice_most_common_weather: 'CloudSun',
+  practice_most_common_time_and_calendar: 'Calendar',
+  practice_most_common_school_and_learning: 'GraduationCap',
+  practice_most_common_work: 'BriefcaseBusiness',
+  practice_most_common_colours: 'Palette',
+  practice_most_common_clothing: 'Shirt',
+  practice_most_common_nature_and_landscape: 'Leaf',
+  practice_most_common_shopping: 'ShoppingBag',
+  practice_most_common_body_parts: 'Hand',
+  practice_most_common_sports: 'Trophy',
+  practice_most_common_leisure: 'Drama',
+  practice_most_common_numbers: 'Hash',
+  practice_most_common_meals_and_eating: 'Utensils',
+  practice_most_common_around_town: 'Map'
 };
 
 export type PublicCatalogueListGroup = {
@@ -147,11 +170,15 @@ function getWelshFoundationsStageLabel(interfaceLanguage?: InterfaceLanguage) {
   return interfaceLanguage === 'cy' ? WELSH_FOUNDATIONS_STAGE_LABEL_CY : WELSH_FOUNDATIONS_STAGE_LABEL;
 }
 
-function getPracticeLibraryCategoryLabel(list: Pick<WordList, 'id' | 'name'>, interfaceLanguage?: InterfaceLanguage) {
+export function getPracticeLibraryCategoryLabel(list: Pick<WordList, 'id' | 'name'>, interfaceLanguage?: InterfaceLanguage) {
   const category = PRACTICE_LIBRARY_CATEGORY_LABELS[list.id];
   if (category) return interfaceLanguage === 'cy' && category.cy ? category.cy : category.en;
 
   return list.name.replace(/^Most Common\s+/i, '').trim() || list.name;
+}
+
+export function getPracticeLibraryIconName(list: Pick<WordList, 'id' | 'iconName'>) {
+  return list.iconName?.trim() || PRACTICE_LIBRARY_CATEGORY_ICON_NAMES[list.id] || 'BookOpen';
 }
 
 export function getWordListCatalogueOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {

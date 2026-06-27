@@ -56,6 +56,7 @@ interface ExportedWordList {
   id: string;
   slug: string;
   collectionId: string;
+  iconName: string;
   name: string;
   nameCy: string;
   description: string;
@@ -164,6 +165,7 @@ function exportList(list: AdminWordList): ExportedWordList {
     id: list.id,
     slug: list.slug,
     collectionId: list.collectionId,
+    iconName: list.iconName,
     name: list.name,
     nameCy: list.nameCy,
     description: list.description,
