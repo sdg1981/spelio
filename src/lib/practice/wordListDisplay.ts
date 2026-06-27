@@ -14,7 +14,7 @@ const PRACTICE_LIBRARY_COLLECTION_ID = 'practice';
 const PRACTICE_LIBRARY_AREA_LABEL = 'Practice Library';
 const PRACTICE_LIBRARY_AREA_LABEL_CY = 'Llyfrgell Ymarfer';
 
-const PRACTICE_LIBRARY_LIST_ORDER = [
+const PRACTICE_LIBRARY_CATALOGUE_ORDER = [
   'practice_most_common_animals',
   'practice_most_common_food_and_drink',
   'practice_most_common_places',
@@ -37,8 +37,14 @@ const PRACTICE_LIBRARY_LIST_ORDER = [
   'practice_most_common_around_town'
 ] as const;
 
-const PRACTICE_LIBRARY_LIST_ORDER_INDEX = new Map<string, number>(
-  PRACTICE_LIBRARY_LIST_ORDER.map((id, index) => [id, index + 1])
+const PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER = PRACTICE_LIBRARY_CATALOGUE_ORDER;
+
+const PRACTICE_LIBRARY_CATALOGUE_ORDER_INDEX = new Map<string, number>(
+  PRACTICE_LIBRARY_CATALOGUE_ORDER.map((id, index) => [id, index + 1])
+);
+
+const PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER_INDEX = new Map<string, number>(
+  PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER.map((id, index) => [id, index + 1])
 );
 
 const PRACTICE_LIBRARY_CATEGORY_LABELS: Record<string, { en: string; cy?: string }> = {
@@ -184,7 +190,16 @@ function getPracticeLibraryCategoryLabel(list: Pick<WordList, 'id' | 'name'>, in
 export function getWordListCatalogueOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {
   const collectionId = list.collection?.id ?? list.collectionId;
   if (collectionId === PRACTICE_LIBRARY_COLLECTION_ID) {
-    return PRACTICE_LIBRARY_LIST_ORDER_INDEX.get(list.id) ?? list.order;
+    return PRACTICE_LIBRARY_CATALOGUE_ORDER_INDEX.get(list.id) ?? list.order;
+  }
+
+  return list.order;
+}
+
+export function getWordListProgressionOrder(list: Pick<WordList, 'id' | 'collectionId' | 'order'> & { collection?: Pick<WordListCollection, 'id'> | null }) {
+  const collectionId = list.collection?.id ?? list.collectionId;
+  if (collectionId === PRACTICE_LIBRARY_COLLECTION_ID) {
+    return PRACTICE_LIBRARY_DEFAULT_PROGRESSION_ORDER_INDEX.get(list.id) ?? list.order;
   }
 
   return list.order;
@@ -192,6 +207,12 @@ export function getWordListCatalogueOrder(list: Pick<WordList, 'id' | 'collectio
 
 export function compareWordListsForCatalogue(a: WordList, b: WordList, interfaceLanguage?: InterfaceLanguage) {
   return getWordListCatalogueOrder(a) - getWordListCatalogueOrder(b) ||
+    getListDisplayName(a, interfaceLanguage).localeCompare(getListDisplayName(b, interfaceLanguage)) ||
+    a.id.localeCompare(b.id);
+}
+
+export function compareWordListsForProgression(a: WordList, b: WordList, interfaceLanguage?: InterfaceLanguage) {
+  return getWordListProgressionOrder(a) - getWordListProgressionOrder(b) ||
     getListDisplayName(a, interfaceLanguage).localeCompare(getListDisplayName(b, interfaceLanguage)) ||
     a.id.localeCompare(b.id);
 }

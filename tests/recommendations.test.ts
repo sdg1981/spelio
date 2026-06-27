@@ -1877,6 +1877,21 @@ test('normal progression falls back when sequential next lists are complete or u
   assertEqual(recommendation.listId, fallback.id, 'Unavailable sequential continuation should use the existing unfinished-list fallback');
 });
 
+test('explicit nextListId overrides fallback progression order', () => {
+  const current: WordList = { ...makeLargeList('test_explicit_current', 1, 2), nextListId: 'test_explicit_target' };
+  const displayNext: WordList = makeLargeList('test_display_next', 2, 2);
+  const explicitTarget: WordList = makeLargeList('test_explicit_target', 99, 2);
+  const lists = [current, displayNext, explicitTarget];
+  const storage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  }, lists, current.id);
+  const recommendation = getRecommendation(storage, lists);
+
+  assertEqual(recommendation.listId, explicitTarget.id, 'Curated nextListId progression should win even when another list is earlier in display/order fallback.');
+});
+
 test('normal progression fallback follows collection and list order instead of legacy stage buckets', () => {
   const learningCollection = {
     id: 'learning',

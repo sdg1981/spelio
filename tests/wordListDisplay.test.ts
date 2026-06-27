@@ -185,7 +185,7 @@ const practiceFoodList = createList({
   order: 2
 });
 
-function createPracticeLibraryList(id: string, name: string, order: number): WordList {
+function createPracticeLibraryList(id: string, name: string, order: number, overrides: Partial<WordList> = {}): WordList {
   return createList({
     id,
     collectionId: 'practice',
@@ -194,7 +194,8 @@ function createPracticeLibraryList(id: string, name: string, order: number): Wor
     stageId: 'core',
     stage: 'Core',
     focus: 'Topic Vocabulary',
-    order
+    order,
+    ...overrides
   });
 }
 
@@ -308,4 +309,15 @@ assertEqual(
     'Most Common Around Town'
   ].join('|'),
   'Practice Library public display should follow the intended catalogue sequence, not raw legacy order indexes.'
+);
+
+const displayOrderWithExplicitProgression = buildPublicCatalogueGroups([
+  createPracticeLibraryList('practice_animals_entry', 'Animals Entry', 1, { nextListId: 'practice_animals_progression_target' }),
+  createPracticeLibraryList('practice_animals_browsable_extra', 'Animals Browsable Extra', 2),
+  createPracticeLibraryList('practice_animals_progression_target', 'Animals Progression Target', 99)
+]);
+assertEqual(
+  displayOrderWithExplicitProgression[0]?.listGroups.flatMap(group => group.lists.map(list => list.name)).join('|'),
+  'Animals Entry|Animals Browsable Extra|Animals Progression Target',
+  'Public catalogue display order should not be changed by explicit nextListId progression links.'
 );
