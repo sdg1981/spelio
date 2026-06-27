@@ -242,10 +242,10 @@ function makePracticeLibraryProgressionLists(): WordList[] {
   const lists = [
     ['practice_most_common_animals', 'Most Common Animals', 1],
     ['practice_most_common_food_and_drink', 'Most Common Food & Drink', 2],
-    ['practice_most_common_places', 'Most Common Places', 3],
-    ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 4],
-    ['practice_most_common_people_and_family', 'Most Common People & Family', 5],
-    ['practice_most_common_home_and_household', 'Most Common Home & Household', 6],
+    ['practice_most_common_people_and_family', 'Most Common People & Family', 3],
+    ['practice_most_common_home_and_household', 'Most Common Home & Household', 4],
+    ['practice_most_common_places', 'Most Common Places', 5],
+    ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 6],
     ['practice_most_common_weather', 'Most Common Weather', 7],
     ['practice_most_common_colours', 'Most Common Colours', 8],
     ['practice_most_common_clothing', 'Most Common Clothing', 9],
@@ -1954,6 +1954,12 @@ test('normal progression fallback follows collection and list order instead of l
 
 test('Practice Library fallback follows the public catalogue sequence after manual list completion', () => {
   const lists = makePracticeLibraryProgressionLists();
+  const freshFoodStorage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_food_and_drink'],
+    currentPathPosition: 'practice_most_common_food_and_drink',
+    hasManualWordListSelection: true
+  };
   const freshPlacesStorage: SpelioStorage = {
     ...createDefaultStorage(),
     selectedListIds: ['practice_most_common_places'],
@@ -1967,6 +1973,7 @@ test('Practice Library fallback follows the public catalogue sequence after manu
     'Manual selection should continue the selected Practice Library list while it still has unseen learning items.'
   );
 
+  const completedFoodStorage = completeListCleanlyInLists(freshFoodStorage, lists, 'practice_most_common_food_and_drink');
   const completedPlacesStorage = completeListCleanlyInLists(freshPlacesStorage, lists, 'practice_most_common_places');
   const completedTravelStorage = completeListCleanlyInLists({
     ...createDefaultStorage(),
@@ -2000,14 +2007,9 @@ test('Practice Library fallback follows the public catalogue sequence after manu
   }, lists, 'practice_most_common_clothing');
 
   assertEqual(
-    getRecommendation(completedPlacesStorage, lists).listId,
-    'practice_most_common_travel_and_transport',
-    'Completing Most Common Places should recommend Most Common Travel & Transport before People & Family.'
-  );
-  assertEqual(
-    getRecommendation(completedTravelStorage, lists).listId,
+    getRecommendation(completedFoodStorage, lists).listId,
     'practice_most_common_people_and_family',
-    'Completing Most Common Travel & Transport should recommend Most Common People & Family next.'
+    'Completing Most Common Food & Drink should recommend Most Common People & Family before later Places/Travel lists.'
   );
   assertEqual(
     getRecommendation(completedPeopleStorage, lists).listId,
@@ -2016,8 +2018,18 @@ test('Practice Library fallback follows the public catalogue sequence after manu
   );
   assertEqual(
     getRecommendation(completedHomeStorage, lists).listId,
+    'practice_most_common_places',
+    'Completing Most Common Home & Household should recommend Most Common Places next.'
+  );
+  assertEqual(
+    getRecommendation(completedPlacesStorage, lists).listId,
+    'practice_most_common_travel_and_transport',
+    'Completing Most Common Places should recommend Most Common Travel & Transport next.'
+  );
+  assertEqual(
+    getRecommendation(completedTravelStorage, lists).listId,
     'practice_most_common_weather',
-    'Completing Most Common Home & Household should recommend Most Common Weather next.'
+    'Completing Most Common Travel & Transport should recommend Most Common Weather next.'
   );
   assertEqual(
     getRecommendation(completedWeatherStorage, lists).listId,
@@ -2028,6 +2040,41 @@ test('Practice Library fallback follows the public catalogue sequence after manu
     getRecommendation(completedClothingStorage, lists).listId,
     'practice_most_common_time_and_calendar',
     'Completing Most Common Clothing should recommend Most Common Time & Calendar next.'
+  );
+});
+
+test('Word Lists completion ticks distinguish completed and attempted lists', () => {
+  const lists = makePracticeLibraryProgressionLists();
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_food_and_drink'],
+    currentPathPosition: 'practice_most_common_food_and_drink',
+    hasManualWordListSelection: true
+  };
+  storage = applyWordProgressPatch(storage, lists[1].words[0], { revealed: true }, '2026-05-05T00:00:00.000Z');
+
+  assertEqual(
+    getFullyCompletedListIds(storage, lists).includes('practice_most_common_food_and_drink'),
+    false,
+    'A selected or attempted list should not receive the Word Lists completion tick.'
+  );
+  assertEqual(
+    getInProgressListIds(storage, lists).includes('practice_most_common_food_and_drink'),
+    true,
+    'Attempted incomplete lists should remain visibly in progress.'
+  );
+
+  storage = completeListCleanlyInLists(storage, lists, 'practice_most_common_food_and_drink');
+
+  assertEqual(
+    getFullyCompletedListIds(storage, lists).includes('practice_most_common_food_and_drink'),
+    true,
+    'A clean full completion should restore the Word Lists completion tick.'
+  );
+  assertEqual(
+    getInProgressListIds(storage, lists).includes('practice_most_common_food_and_drink'),
+    false,
+    'Fully completed lists should not also show the in-progress state.'
   );
 });
 

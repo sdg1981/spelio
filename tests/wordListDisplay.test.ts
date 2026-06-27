@@ -1,5 +1,5 @@
 import type { WordList } from '../src/data/wordLists';
-import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
 
@@ -210,10 +210,10 @@ function createPracticeLibraryList(id: string, name: string, order: number, over
 const practiceLibraryOrderedLists = [
   createPracticeLibraryList('practice_most_common_animals', 'Most Common Animals', 1),
   createPracticeLibraryList('practice_most_common_food_and_drink', 'Most Common Food & Drink', 2),
-  createPracticeLibraryList('practice_most_common_places', 'Most Common Places', 3),
-  createPracticeLibraryList('practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 4),
-  createPracticeLibraryList('practice_most_common_people_and_family', 'Most Common People & Family', 5),
-  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 6),
+  createPracticeLibraryList('practice_most_common_people_and_family', 'Most Common People & Family', 3),
+  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 4),
+  createPracticeLibraryList('practice_most_common_places', 'Most Common Places', 5),
+  createPracticeLibraryList('practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 6),
   createPracticeLibraryList('practice_most_common_weather', 'Most Common Weather', 7),
   createPracticeLibraryList('practice_most_common_colours', 'Most Common Colours', 8),
   createPracticeLibraryList('practice_most_common_clothing', 'Most Common Clothing', 9),
@@ -297,10 +297,10 @@ assertEqual(
   [
     'Most Common Animals',
     'Most Common Food & Drink',
-    'Most Common Places',
-    'Most Common Travel & Transport',
     'Most Common People & Family',
     'Most Common Home & Household',
+    'Most Common Places',
+    'Most Common Travel & Transport',
     'Most Common Weather',
     'Most Common Colours',
     'Most Common Clothing',
@@ -317,6 +317,18 @@ assertEqual(
     'Most Common Around Town'
   ].join('|'),
   'Practice Library public display should follow the intended admin/catalogue order sequence.'
+);
+
+assertEqual(
+  getPracticeLibraryIconName({ id: 'practice_most_common_food_and_drink', name: 'Most Common Food & Drink', iconName: '' }),
+  'Apple',
+  'Practice Library icon defaults should be content-specific when database icon_name is missing.'
+);
+
+assertEqual(
+  getPracticeLibraryIconName({ id: 'practice_most_common_work', name: 'Most Common Work', iconName: 'BriefcaseBusiness' }),
+  'BriefcaseBusiness',
+  'Practice Library icon metadata should preserve explicit database icon names for the frontend resolver.'
 );
 
 const practiceLibraryOrderMigration = readFileSync('supabase/migrations/202606270001_align_practice_library_catalogue_order.sql', 'utf8');

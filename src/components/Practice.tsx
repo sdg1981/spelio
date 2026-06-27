@@ -15,7 +15,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { PRACTICE_LIBRARY_COLLECTION_ID, WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
+import { PRACTICE_LIBRARY_COLLECTION_ID, WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, compareWordListsForCatalogue, getListDisplayDescription, getListDisplayName, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -1989,11 +1989,16 @@ const WordListRow = memo(function WordListRow({
 });
 
 const catalogueIconComponents = LucideIcons as unknown as Record<string, ComponentType<LucideProps> | undefined>;
+const catalogueIconNameByNormalizedName = new Map(
+  Object.keys(catalogueIconComponents).map(name => [normalizeCatalogueIconName(name), name])
+);
 const PRACTICE_LIBRARY_MAIN_LIST_IDS = [
   'practice_most_common_animals',
   'practice_most_common_food_and_drink',
   'practice_most_common_people_and_family',
+  'practice_most_common_home_and_household',
   'practice_most_common_places',
+  'practice_most_common_travel_and_transport',
   'practice_most_common_weather',
   'practice_most_common_time_and_calendar',
   'practice_most_common_colours',
@@ -2005,8 +2010,16 @@ const PRACTICE_LIBRARY_MAIN_LIST_IDS = [
 ];
 const FOUNDATION_PREVIEW_CHIP_LABELS = ['D / DD', 'Y', 'F / FF'];
 
-function resolveCatalogueIcon(iconName: string | undefined) {
-  const Icon = iconName ? catalogueIconComponents[iconName] : undefined;
+function normalizeCatalogueIconName(name: string) {
+  return name.trim().replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function resolveCatalogueIcon(iconName: string | undefined, fallbackIconName = 'BookOpen') {
+  const normalizedName = iconName ? normalizeCatalogueIconName(iconName) : '';
+  const resolvedName = normalizedName ? catalogueIconNameByNormalizedName.get(normalizedName) : undefined;
+  const normalizedFallbackName = normalizeCatalogueIconName(fallbackIconName);
+  const resolvedFallbackName = catalogueIconNameByNormalizedName.get(normalizedFallbackName) ?? 'BookOpen';
+  const Icon = resolvedName ? catalogueIconComponents[resolvedName] : catalogueIconComponents[resolvedFallbackName];
   return typeof Icon === 'function' ? Icon : BookOpen;
 }
 
@@ -2051,12 +2064,45 @@ function getPracticeLibraryCatalogueLists(selectableLists: WordList[]) {
   const configuredPracticeLists = PRACTICE_LIBRARY_MAIN_LIST_IDS
     .map(id => practiceListsById.get(id))
     .filter((list): list is WordList => Boolean(list));
+  const configuredIds = new Set(configuredPracticeLists.map(list => list.id));
+  const additionalPracticeLists = Array.from(practiceListsById.values())
+    .filter(list => !configuredIds.has(list.id))
+    .sort((a, b) => compareWordListsForCatalogue(a, b));
 
-  if (configuredPracticeLists.length > 0) return configuredPracticeLists;
+  if (configuredPracticeLists.length > 0) return [...configuredPracticeLists, ...additionalPracticeLists];
 
   return selectableLists
     .filter(list => !isFoundationsCatalogueList(list))
+    .sort((a, b) => compareWordListsForCatalogue(a, b))
     .slice(0, 12);
+}
+
+function findNextSelectableList(lists: WordList[], completedSet: Set<string>, current?: WordList) {
+  if (!current) return undefined;
+  const activeLists = lists.filter(list => list.isActive && list.words.length > 0);
+  const activeById = new Map(activeLists.map(list => [list.id, list]));
+  const visited = new Set([current.id]);
+  let nextListId = current.nextListId;
+
+  while (nextListId) {
+    if (visited.has(nextListId)) break;
+    visited.add(nextListId);
+
+    const next = activeById.get(nextListId);
+    if (!next) break;
+    if (!completedSet.has(next.id)) return next;
+
+    nextListId = next.nextListId;
+  }
+
+  const orderedLists = [...activeLists].sort((a, b) => compareWordListsForCatalogue(a, b));
+  const currentIndex = orderedLists.findIndex(list => list.id === current.id);
+  if (currentIndex >= 0) {
+    const nextByOrder = orderedLists.slice(currentIndex + 1).find(list => !completedSet.has(list.id));
+    if (nextByOrder) return nextByOrder;
+  }
+
+  return orderedLists.find(list => !completedSet.has(list.id)) ?? current;
 }
 
 function WordListPageCatalogue({
@@ -2067,6 +2113,7 @@ function WordListPageCatalogue({
   inProgressSet,
   query,
   onSelect,
+  onCommitSelection,
   onShare,
   afterListGridContent,
   interfaceLanguage,
@@ -2079,6 +2126,7 @@ function WordListPageCatalogue({
   inProgressSet: Set<string>;
   query: string;
   onSelect: (listId: string) => void;
+  onCommitSelection: (listId: string) => void;
   onShare: (list: WordList) => void;
   afterListGridContent?: ReactNode;
   interfaceLanguage: InterfaceLanguage;
@@ -2091,10 +2139,16 @@ function WordListPageCatalogue({
     .sort((a, b) => a.order - b.order || getListDisplayName(a, interfaceLanguage).localeCompare(getListDisplayName(b, interfaceLanguage)));
   const foundationsCompleted = foundationsLists.filter(list => completedSet.has(list.id)).length;
   const foundationsTotal = foundationsLists.length;
-  const currentFoundationList =
+  const selectedFoundationList = selectedId ? foundationsLists.find(list => list.id === selectedId) : undefined;
+  const currentFoundationAnchor =
+    selectedFoundationList ??
     foundationsLists.find(list => inProgressSet.has(list.id) && !completedSet.has(list.id)) ??
     foundationsLists.find(list => !completedSet.has(list.id)) ??
     foundationsLists[0];
+  const nextFoundationList = findNextSelectableList(foundationsLists, completedSet, currentFoundationAnchor);
+  const currentFoundationList = completedSet.has(currentFoundationAnchor?.id ?? '')
+    ? nextFoundationList ?? currentFoundationAnchor
+    : currentFoundationAnchor;
   const foundationsProgress = foundationsTotal > 0 ? Math.round((foundationsCompleted / foundationsTotal) * 100) : 0;
   const practiceLists = getPracticeLibraryCatalogueLists(selectableLists);
   const searchResultLists = collectionGroups.flatMap(group => group.listGroups.flatMap(listGroup => listGroup.lists));
@@ -2169,9 +2223,25 @@ function WordListPageCatalogue({
                 </span>
               </div>
               <div className="learning-journey-chips" aria-label={t('wordLists.foundationsChipsLabel')}>
-                {previewChipLabels.map(label => (
-                  <span key={label}>{label}</span>
-                ))}
+                {foundationsLists.slice(0, previewChipLabels.length).map(list => {
+                  const selected = selectedId === list.id;
+                  const completed = completedSet.has(list.id);
+                  const inProgress = !completed && inProgressSet.has(list.id);
+                  return (
+                    <span
+                      className={[
+                        'learning-journey-chip',
+                        completed ? 'completed' : '',
+                        selected ? 'selected' : '',
+                        inProgress ? 'in-progress' : ''
+                      ].filter(Boolean).join(' ')}
+                      key={list.id}
+                    >
+                      {completed && <CheckCircle2 size={13} strokeWidth={2.2} aria-hidden="true" />}
+                      {getFoundationPatternLabel(list, interfaceLanguage)}
+                    </span>
+                  );
+                })}
                 {hiddenFoundationsCount > 0 && (
                   <button className="learning-journey-chip-button" type="button" onClick={() => setFoundationsExpanded(true)}>
                     {t('wordLists.moreFoundationsChips').replace('{count}', String(hiddenFoundationsCount))}
@@ -2184,7 +2254,7 @@ function WordListPageCatalogue({
                 </button>
               )}
             </div>
-            <button className="learning-journey-cta" type="button" onClick={() => onSelect(currentFoundationList.id)}>
+            <button className="learning-journey-cta" type="button" onClick={() => onCommitSelection(currentFoundationList.id)}>
               {t('wordLists.continueJourney')}
               <ArrowRight size={20} strokeWidth={2.1} aria-hidden="true" />
             </button>
@@ -2196,21 +2266,19 @@ function WordListPageCatalogue({
               const selected = selectedId === list.id;
               const completed = completedSet.has(list.id);
               const inProgress = !completed && inProgressSet.has(list.id);
+              const statusClass = completed ? 'completed' : selected ? 'selected' : inProgress ? 'in-progress' : '';
               return (
                 <button
-                  className={`foundations-pattern-item ${selected ? 'selected' : ''}`}
+                  className={`foundations-pattern-item ${statusClass}`}
                   type="button"
                   key={list.id}
                   aria-pressed={selected}
                   onClick={() => onSelect(list.id)}
                 >
-                  <span>
-                    <strong>{getFoundationPatternLabel(list, interfaceLanguage)}</strong>
-                    <small>{getListDisplayName(list, interfaceLanguage)}</small>
-                  </span>
+                  <span className="foundations-pattern-label">{getFoundationPatternLabel(list, interfaceLanguage)}</span>
                   <span className="foundations-pattern-meta">
-                    {selected && <span className="foundations-pattern-selected"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.selected')}</span>}
-                    {!selected && completed && <span>{t('wordLists.completed')}</span>}
+                    {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.completed')}</span>}
+                    {!completed && selected && <span className="foundations-pattern-selected">{t('wordLists.selected')}</span>}
                     {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
                   </span>
                 </button>
@@ -2251,7 +2319,7 @@ function WordListPageCatalogue({
           {practiceLists.map(list => {
             const categoryTitle = getPracticeLibraryCategoryLabel(list, interfaceLanguage);
             const subtitle = getPracticeLibrarySubtitle(list, interfaceLanguage);
-            const Icon = resolveCatalogueIcon(getPracticeLibraryIconName(list));
+            const Icon = resolveCatalogueIcon(getPracticeLibraryIconName(list), getPracticeLibraryIconName({ ...list, iconName: '' }));
             const selected = selectedId === list.id;
             const completed = completedSet.has(list.id);
             const inProgress = !completed && inProgressSet.has(list.id);
@@ -2276,8 +2344,7 @@ function WordListPageCatalogue({
                   <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
                 </span>
                 <span className="practice-library-card-status" aria-live="polite">
-                  {selected && <span>{t('wordLists.selected')}</span>}
-                  {!selected && completed && <span>{t('wordLists.completed')}</span>}
+                  {completed && <span className="practice-library-completed"><CheckCircle2 size={14} strokeWidth={2.2} aria-hidden="true" />{t('wordLists.completed')}</span>}
                   {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
                 </span>
                 {shouldShowSelectedListShareAction(list.id, selected ? list.id : undefined) && (
@@ -2513,6 +2580,13 @@ export function WordListSelectorPanel({
   const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, selectableLists));
   const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
+  const normalizedInitialSelectedIds = useMemo(
+    () => normalizeSingleSelectedListIds(initialSelectedIds, selectableLists),
+    [initialSelectedIds, selectableLists]
+  );
+  const hasPendingSelectionChange =
+    selectedIds.length !== normalizedInitialSelectedIds.length ||
+    selectedIds.some((id, index) => id !== normalizedInitialSelectedIds[index]);
   const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
   const inProgressSet = useMemo(() => new Set(inProgressListIds), [inProgressListIds]);
   const filteredLists = useMemo(() => {
@@ -2605,7 +2679,9 @@ export function WordListSelectorPanel({
             {t('customLists.createCta')}
           </button>
         )}
-        <button className="done-button" onClick={() => onDone(selectedIds)}>{variant === 'page' ? t('wordLists.useSelectedList') : t('wordLists.done')}</button>
+        <button className="done-button" onClick={() => onDone(selectedIds)}>
+          {variant === 'page' && hasPendingSelectionChange ? t('wordLists.useSelectedList') : t('wordLists.done')}
+        </button>
       </div>
     </div>
   );
@@ -2640,6 +2716,7 @@ export function WordListSelectorPanel({
             inProgressSet={inProgressSet}
             query={query}
             onSelect={selectList}
+            onCommitSelection={listId => onDone(selectSingleWordList(listId))}
             onShare={openShareList}
             afterListGridContent={afterListGridContent}
             interfaceLanguage={interfaceLanguage}
