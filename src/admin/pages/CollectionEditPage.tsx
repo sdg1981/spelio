@@ -8,6 +8,7 @@ import type { AdminRepository } from '../repositories';
 import type { AdminWordList, AdminWordListCollection } from '../types';
 import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder, deriveInitialProgressionListIds, moveItem, sortCollectionWordLists } from '../services/collectionOrdering';
+import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
 
 export function CollectionEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
   const [collection, setCollection] = useState<AdminWordListCollection | null>(null);
@@ -19,8 +20,12 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   const [orderingPanel, setOrderingPanel] = useState<'catalogue' | 'progression' | null>(null);
   const [catalogueOrderIds, setCatalogueOrderIds] = useState<string[]>([]);
   const [progressionIncludedIds, setProgressionIncludedIds] = useState<string[]>([]);
+  const [clearContentModalOpen, setClearContentModalOpen] = useState(false);
+  const [clearConfirmationText, setClearConfirmationText] = useState('');
+  const [clearingContent, setClearingContent] = useState(false);
   const [generatingLanguage, setGeneratingLanguage] = useState<'en' | 'cy' | null>(null);
   const [clearingAudioLanguage, setClearingAudioLanguage] = useState<'en' | 'cy' | null>(null);
+  const deleteAllowed = isAdminContentDeleteAllowed(import.meta.env.VITE_ALLOW_ADMIN_CONTENT_DELETE);
 
   useEffect(() => {
     Promise.all([repository.getCollection(id), repository.listWordLists()])
@@ -60,6 +65,14 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
     }),
     [collectionWordLists, id, wordListById]
   );
+  const collectionContentCounts = useMemo(
+    () => ({
+      lists: collectionWordLists.length,
+      words: collectionWordLists.reduce((total, list) => total + list.words.length, 0)
+    }),
+    [collectionWordLists]
+  );
+  const canConfirmClearContent = collection ? isDeleteConfirmationValid(clearConfirmationText, collection.id) : false;
 
   function updateCollection(patch: Partial<AdminWordListCollection>) {
     setCollection(previous => previous ? ({ ...previous, ...patch }) : previous);
@@ -97,7 +110,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   }
 
   const busy = saving || Boolean(generatingLanguage) || Boolean(clearingAudioLanguage);
-  const anyBusy = busy || orderingSaving;
+  const anyBusy = busy || orderingSaving || clearingContent;
 
   async function refreshWordLists() {
     const nextWordLists = await repository.listWordLists();
@@ -177,6 +190,31 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
       setErrorMessage(error instanceof Error ? error.message : 'Could not save progression order.');
     } finally {
       setOrderingSaving(false);
+    }
+  }
+
+  function openClearContentModal() {
+    setClearConfirmationText('');
+    setStatusMessage('');
+    setErrorMessage('');
+    setClearContentModalOpen(true);
+  }
+
+  async function clearCollectionContent() {
+    if (!collection || !canConfirmClearContent) return;
+    setClearingContent(true);
+    setErrorMessage('');
+    setStatusMessage('');
+    try {
+      const result = await repository.clearCollectionContent(collection.id);
+      await refreshWordLists();
+      setStatusMessage(`Cleared ${result.listsDeleted} list(s) and ${result.wordsDeleted} word(s) from ${collection.name}.`);
+      setClearContentModalOpen(false);
+      setClearConfirmationText('');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not clear collection content.');
+    } finally {
+      setClearingContent(false);
     }
   }
 
@@ -421,6 +459,69 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
               <p className="text-xs leading-5 text-slate-500">ElevenLabs generation is not exposed here yet; the current reusable ElevenLabs path is tuned for Welsh word and primer audio, not English collection introductions.</p>
             </div>
           </AdminCard>
+
+          <AdminCard className="border-red-100 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-lg font-black text-red-700">Danger zone</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                  Clear all word lists and words inside this collection while keeping the collection itself. Use this only for intentional content cleanup.
+                </p>
+                <p className="mt-2 text-xs font-semibold text-slate-500">
+                  Current content: {collectionContentCounts.lists} list(s), {collectionContentCounts.words} word(s).
+                </p>
+                {!deleteAllowed && (
+                  <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+                    Destructive content deletion is unavailable. Set {ADMIN_CONTENT_DELETE_FLAG}=true only for an intentional admin cleanup.
+                  </p>
+                )}
+              </div>
+              <AdminButton
+                variant="danger"
+                disabled={!deleteAllowed || anyBusy || collectionContentCounts.lists === 0}
+                onClick={openClearContentModal}
+              >
+                <Trash2 size={16} /> Clear content
+              </AdminButton>
+            </div>
+          </AdminCard>
+        </div>
+      )}
+
+      {collection && clearContentModalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
+          <div className="w-full max-w-xl rounded-lg border border-red-100 bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+              <div>
+                <h2 className="text-lg font-black text-slate-950">Clear collection content</h2>
+                <p className="mt-1 text-sm text-slate-600">This will delete word lists and words, but preserve the collection row.</p>
+              </div>
+              <button className="rounded-md p-2 text-slate-500 hover:bg-slate-100" type="button" onClick={() => setClearContentModalOpen(false)} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid gap-4 p-5 text-sm">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="font-bold text-slate-950">{collection.name}</div>
+                <div className="mt-1 font-mono text-xs text-slate-600">{collection.id}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-md border border-slate-200 p-3"><b>{collectionContentCounts.lists}</b><span className="ml-1 text-slate-600">list(s) deleted</span></div>
+                <div className="rounded-md border border-slate-200 p-3"><b>{collectionContentCounts.words}</b><span className="ml-1 text-slate-600">word(s) deleted</span></div>
+              </div>
+              <div className="rounded-md border border-red-100 bg-red-50 p-4 font-bold text-red-700">This cannot be undone.</div>
+              <label className="grid gap-2">
+                <span className="text-xs font-bold text-slate-700">Type {getDeleteConfirmationPhrase(collection.id)} to confirm</span>
+                <AdminInput value={clearConfirmationText} onChange={event => setClearConfirmationText(event.target.value)} autoFocus />
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-200 p-5">
+              <AdminButton onClick={() => setClearContentModalOpen(false)}>Cancel</AdminButton>
+              <AdminButton variant="danger" disabled={!canConfirmClearContent || clearingContent} onClick={clearCollectionContent}>
+                <Trash2 size={16} /> {clearingContent ? 'Deleting...' : 'Delete lists & words'}
+              </AdminButton>
+            </div>
+          </div>
         </div>
       )}
 

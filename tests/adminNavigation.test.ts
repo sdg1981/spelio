@@ -2,6 +2,10 @@ import { adminNavGroups } from '../src/admin/navigation';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder } from '../src/admin/services/collectionOrdering';
 import type { AdminWordList } from '../src/admin/types';
 
+declare function require(name: string): { readFileSync(path: string, encoding: string): string };
+
+const { readFileSync } = require('fs');
+
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
     throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
@@ -175,4 +179,25 @@ assertEqual(
   changedLegacyMetadata.find(list => list.id === 'animals')?.nextListId,
   'food',
   'Collection progression ordering should not depend on legacy stage or focus metadata.'
+);
+
+const collectionsPageSource = readFileSync('src/admin/pages/CollectionsPage.tsx', 'utf8');
+const collectionEditPageSource = readFileSync('src/admin/pages/CollectionEditPage.tsx', 'utf8');
+
+assert(
+  collectionsPageSource.includes('role="link"') && collectionsPageSource.includes('onKeyDown='),
+  'Collections table rows should be keyboard-accessible links to collection editing.'
+);
+assertEqual(
+  collectionsPageSource.includes('Clear content'),
+  false,
+  'Clear content should not appear on the main collections table.'
+);
+assert(
+  collectionsPageSource.includes('Collection creation is not exposed in this MVP editor yet.'),
+  'Disabled Add collection button should explain why collection creation is not available.'
+);
+assert(
+  collectionEditPageSource.includes('Danger zone') && collectionEditPageSource.includes('Clear content'),
+  'Collection destructive actions should live on the individual collection edit page danger zone.'
 );
