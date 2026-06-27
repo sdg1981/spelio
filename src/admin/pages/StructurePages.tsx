@@ -6,11 +6,25 @@ import type { AdminRepository } from '../repositories';
 import type { AdminStructureOption } from '../types';
 
 export function StagesPage({ repository }: { repository: AdminRepository }) {
-  return <StructurePage title="Stages" description="Lightweight progression structure for spelling difficulty. Used by word-list metadata and public catalogue grouping." repository={repository} kind="stages" />;
+  return (
+    <StructurePage
+      title="Internal Stages"
+      description="Read-only reference metadata for progression, import/export, and limited public catalogue grouping. Learning and Practice Library areas are managed through Collections and Word Lists."
+      repository={repository}
+      kind="stages"
+    />
+  );
 }
 
 export function FocusCategoriesPage({ repository }: { repository: AdminRepository }) {
-  return <StructurePage title="Focus Categories" description="Editorial groupings used to describe the purpose of each list. Used by word-list metadata, filters, and content export." repository={repository} kind="focus" />;
+  return (
+    <StructurePage
+      title="Internal Focus Categories"
+      description="Read-only editorial metadata used by word-list editing and import/export. These are not the learner-facing Practice Library category headings."
+      repository={repository}
+      kind="focus"
+    />
+  );
 }
 
 export function DialectsPage({ repository }: { repository: AdminRepository }) {

@@ -475,11 +475,11 @@ export function WordListEditPage({ id, navigate, repository }: { id: string; nav
                 const collection = collections.find(item => item.id === event.target.value);
                 updateList({ collectionId: event.target.value, collectionName: collection?.name ?? event.target.value });
               }}>{collections.map(collection => <option key={collection.id} value={collection.id}>{collection.name}</option>)}</AdminSelect></Field>
-              <Field label="Stage"><AdminSelect value={list.stageId} onChange={event => {
+              <Field label="Internal stage" helper="Reference metadata for progression/imports. Public catalogue labels may use a separate display mapping."><AdminSelect value={list.stageId} onChange={event => {
                 const stage = stages.find(item => item.id === event.target.value);
                 updateList({ stageId: event.target.value, stage: stage?.name ?? event.target.value });
               }}>{stages.map(stage => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</AdminSelect></Field>
-              <Field label="Focus"><AdminSelect value={list.focusCategoryId} onChange={event => {
+              <Field label="Internal focus" helper="Editorial metadata for list purpose. This is not the Practice Library category heading."><AdminSelect value={list.focusCategoryId} onChange={event => {
                 const focus = focusCategories.find(item => item.id === event.target.value);
                 updateList({ focusCategoryId: event.target.value, focus: focus?.name ?? event.target.value });
               }}>{focusCategories.map(focus => <option key={focus.id} value={focus.id}>{focus.name}</option>)}</AdminSelect></Field>

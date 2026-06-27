@@ -88,7 +88,7 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
     <>
       <AdminPageHeader
         title="Word Lists"
-        description="Manage the order, focus, and editorial quality of Welsh spelling lists."
+        description="Manage learner-facing journey and Practice Library lists, plus internal metadata used for progression and import/export."
         actions={<AdminButton variant="primary" onClick={createList} disabled={saving}><Plus size={16} /> {saving ? 'Adding...' : 'Add word list'}</AdminButton>}
       />
       {errorMessage && <div className="mb-5 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errorMessage}</div>}
@@ -103,7 +103,7 @@ export function WordListsPage({ navigate, repository }: { navigate: (path: strin
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b border-slate-200 text-xs font-medium text-slate-500">
               <tr>
-                {['Name', 'Type', 'Collection', 'Stage', 'Focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
+                {['Name', 'Type', 'Collection', 'Internal stage', 'Internal focus', 'Difficulty', 'Words', 'Audio health', 'Active', 'Updated'].map(column => <th key={column} className="px-5 py-3">{column}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

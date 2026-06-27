@@ -1,36 +1,24 @@
 import { BarChart3, BookOpen, Files, FlaskConical, FolderTree, Headphones, Import, Layers3, LogOut, Menu, Settings, SlidersHorizontal, Volume2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { adminNavGroups, type AdminNavIconKey } from '../navigation';
 
 type Navigate = (path: string) => void;
 
-const navGroups = [
-  {
-    label: 'Content',
-    items: [
-      { label: 'Overview', path: '/admin', icon: BarChart3 },
-      { label: 'Collections', path: '/admin/collections', icon: FolderTree },
-      { label: 'Word Lists', path: '/admin/word-lists', icon: Files },
-      { label: 'Custom Lists', path: '/admin/custom-lists', icon: FlaskConical, badge: 'Preview' },
-      { label: 'Words', path: '/admin/words', icon: BookOpen },
-      { label: 'Audio Queue', path: '/admin/audio', icon: Headphones },
-      { label: 'Helper Audio', path: '/admin/interface-audio', icon: Volume2 },
-      { label: 'Import / Export', path: '/admin/import', icon: Import, badge: 'New' }
-    ]
-  },
-  {
-    label: 'Structure',
-    items: [
-      { label: 'Stages', path: '/admin/stages', icon: Layers3 },
-      { label: 'Focus Categories', path: '/admin/focus-categories', icon: SlidersHorizontal },
-      { label: 'Dialects', path: '/admin/dialects', icon: FolderTree }
-    ]
-  },
-  {
-    label: 'System',
-    items: [{ label: 'Settings', path: '/admin/settings', icon: Settings }]
-  }
-];
+const navIcons: Record<AdminNavIconKey, ReactNode> = {
+  audio: <Headphones size={18} />,
+  collections: <FolderTree size={18} />,
+  customLists: <FlaskConical size={18} />,
+  dialects: <FolderTree size={18} />,
+  focusCategories: <SlidersHorizontal size={18} />,
+  helperAudio: <Volume2 size={18} />,
+  importExport: <Import size={18} />,
+  overview: <BarChart3 size={18} />,
+  settings: <Settings size={18} />,
+  stages: <Layers3 size={18} />,
+  wordLists: <Files size={18} />,
+  words: <BookOpen size={18} />
+};
 
 export function AdminSidebar({ path, navigate }: { path: string; navigate: Navigate }) {
   const [open, setOpen] = useState(false);
@@ -56,12 +44,19 @@ export function AdminSidebar({ path, navigate }: { path: string; navigate: Navig
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-4 pb-5">
-          {navGroups.map(group => (
+          {adminNavGroups.map(group => (
             <div key={group.label} className="border-b border-slate-200 py-5 first:pt-3">
               <div className="mb-3 px-3 text-xs font-bold uppercase tracking-[.13em] text-slate-500">{group.label}</div>
               <div className="grid gap-1">
                 {group.items.map(item => (
-                  <NavItem key={item.path} active={isActive(path, item.path)} onClick={() => go(item.path)} badge={item.badge} icon={<item.icon size={18} />}>
+                  <NavItem
+                    key={item.path}
+                    active={isActive(path, item.path)}
+                    onClick={() => go(item.path)}
+                    badge={item.badge}
+                    icon={navIcons[item.icon]}
+                    description={item.description}
+                  >
                     {item.label}
                   </NavItem>
                 ))}
@@ -91,11 +86,12 @@ function LogoBlock() {
   return <img src="/spelio-logo.svg" alt="Spelio" className="h-auto w-[116px]" />;
 }
 
-function NavItem({ active, children, icon, badge, onClick }: { active: boolean; children: ReactNode; icon: ReactNode; badge?: string; onClick: () => void }) {
+function NavItem({ active, children, icon, badge, description, onClick }: { active: boolean; children: ReactNode; icon: ReactNode; badge?: string; description: string; onClick: () => void }) {
   return (
     <button
       className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-bold transition ${active ? 'bg-red-50 text-red-700' : 'text-slate-800 hover:bg-slate-50'}`}
       onClick={onClick}
+      title={description}
     >
       {icon}
       <span className="flex-1">{children}</span>
