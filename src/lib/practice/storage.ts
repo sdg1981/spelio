@@ -18,6 +18,7 @@ export interface SessionResult {
   revealedLetters: number;
   durationSeconds: number;
   listIds: string[];
+  wordIds?: string[];
   state: SessionState;
 }
 

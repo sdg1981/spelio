@@ -10,7 +10,7 @@ import {
   processPracticeInput,
   type PracticeLetterState
 } from '../lib/practice/inputFlow';
-import { classifySession, createPracticeSession, selectPreSessionRecapWord } from '../lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, selectPreSessionRecapWord, type ReviewScope } from '../lib/practice/sessionEngine';
 import type { SessionWord } from '../lib/practice/sessionEngine';
 import { findNextSequentialRecommendationList, isListProgressionComplete } from '../lib/practice/recommendations';
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
@@ -104,6 +104,8 @@ export function usePracticeSession({
   storage,
   sessionStorage = storage,
   reviewDifficult = false,
+  reviewScope = 'global',
+  reviewWordIds,
   includeRecapDue = false,
   forceAudioAvailable = false,
   defaultAudioProvider = DEFAULT_AUDIO_PROVIDER,
@@ -119,6 +121,8 @@ export function usePracticeSession({
   storage: SpelioStorage;
   sessionStorage?: SpelioStorage;
   reviewDifficult?: boolean;
+  reviewScope?: ReviewScope;
+  reviewWordIds?: string[];
   includeRecapDue?: boolean;
   forceAudioAvailable?: boolean;
   defaultAudioProvider?: DefaultAudioProvider;
@@ -134,7 +138,7 @@ export function usePracticeSession({
   // update while the learner is on the final word; rebuilding here can replace the
   // completed queue with an empty one before the end-screen transition runs.
   const session = useMemo(
-    () => createPracticeSession(lists, sessionStorage, reviewDifficult, includeRecapDue),
+    () => createPracticeSession(lists, sessionStorage, reviewDifficult, includeRecapDue, { reviewScope, reviewWordIds }),
     [sessionKey]
   );
   const recapWord = useMemo(
@@ -457,7 +461,8 @@ export function usePracticeSession({
       incorrectAttempts: finalStats.incorrectAttempts,
       revealedLetters: finalStats.revealedLetters,
       durationSeconds: Math.max(1, Math.round((endedAt - finalStats.startedAt) / 1000)),
-      listIds: session.listIds
+      listIds: session.listIds,
+      wordIds: session.words.map(word => word.id)
     };
     const result: SessionResult = { ...base, state: classifySession(base) };
 

@@ -9,6 +9,8 @@ export type PracticeStart = {
   mode: 'normal' | 'review' | 'recap';
   review: boolean;
   recap: boolean;
+  reviewScope?: 'session' | 'global';
+  reviewWordIds?: string[];
   storage: SpelioStorage;
   recommendation?: Recommendation;
 };
@@ -20,11 +22,16 @@ function withPracticeStarted(storage: SpelioStorage): SpelioStorage {
   };
 }
 
-export function createReviewPracticeStart(storage: SpelioStorage): PracticeStart {
+export function createReviewPracticeStart(
+  storage: SpelioStorage,
+  options: { reviewScope?: 'session' | 'global'; reviewWordIds?: string[] } = {}
+): PracticeStart {
   return {
     mode: 'review',
     review: true,
     recap: false,
+    reviewScope: options.reviewScope ?? 'global',
+    reviewWordIds: options.reviewWordIds,
     storage: withPracticeStarted(storage)
   };
 }
@@ -134,6 +141,7 @@ export function createDetachedSupportReviewPracticeStart(
     mode: 'review',
     review: true,
     recap: false,
+    reviewScope: 'global',
     storage: {
       ...storage,
       selectedListIds: [list.id],

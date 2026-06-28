@@ -181,6 +181,8 @@ export function Practice({
   storage,
   sessionStorage = storage,
   reviewDifficult = false,
+  reviewScope = 'global',
+  reviewWordIds,
   includeRecapDue = false,
   sessionKey = 0,
   practiceTestMode = false,
@@ -203,6 +205,8 @@ export function Practice({
   storage: SpelioStorage;
   sessionStorage?: SpelioStorage;
   reviewDifficult?: boolean;
+  reviewScope?: 'session' | 'global';
+  reviewWordIds?: string[];
   includeRecapDue?: boolean;
   sessionKey?: number;
   practiceTestMode?: boolean;
@@ -313,6 +317,8 @@ export function Practice({
     storage,
     sessionStorage,
     reviewDifficult,
+    reviewScope,
+    reviewWordIds,
     includeRecapDue,
     forceAudioAvailable: practiceTestMode,
     defaultAudioProvider,

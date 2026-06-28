@@ -325,6 +325,7 @@ Behaviour:
 
 - If the last session is classified as “struggled” and difficult words exist, review becomes the primary action.
 - If the last session is classified as “struggled” but no eligible difficult words currently exist, do not show a review action. Fall back to the appropriate continue-learning recommendation.
+- Homepage Review difficult words uses the global unresolved difficult-word pool across normal learning, filtered by the active Welsh style.
 - Review difficult words and From earlier are different pools and actions: Review difficult words fixes current unresolved difficulty; From earlier revisits previously weak words through `recapDue`.
 - Review difficult words must never fall back to ordinary words when empty.
 - The user can still continue learning or choose another word list.
@@ -1487,7 +1488,12 @@ If the user struggled but no dialect-eligible difficult words currently exist, t
 
 Review difficult words represents current difficulty, not historical difficulty.
 
-Review difficult words, From earlier, and automatic recap injection are distinct:
+Review difficult words has two entry scopes, and those scopes must stay distinct:
+
+- End-screen Review difficult words, shown immediately after a normal word-list session, reviews only unresolved difficult words from the just-completed session/list.
+- Homepage Review difficult words reviews the broader unresolved, dialect-eligible difficult-word pool across active main word lists.
+
+Review difficult words, From earlier, and automatic recap injection are also distinct:
 
 - Review difficult words fixes current unresolved difficulty and uses `progress.difficult === true`.
 - From earlier revisits resolved or previously weak words using `recapDue` / `cleanRecapCount`; for this action, resolved means `progress.difficult === false`.
@@ -1535,7 +1541,11 @@ Review selection should use current difficulty only:
 progress.difficult === true
 ```
 
-Dedicated Review difficult words sessions use the full unresolved, dialect-eligible difficult-word pool across active main word lists. They are not limited to words from the immediately previous session. This is separate from automatic recap injection and the optional From earlier action.
+End-screen Review difficult words is session/list-scoped. When it is shown immediately after completing a normal word-list session, its pool is limited to unresolved difficult words from the just-completed session/list. It must not pull unresolved difficult words from unrelated Practice Library lists or earlier sessions.
+
+Homepage Review difficult words is global. It uses the full unresolved, dialect-eligible difficult-word pool across active main word lists. It is not limited to words from the immediately previous session/list.
+
+Both Review difficult words scopes are separate from automatic recap injection and the optional From earlier action.
 
 Review difficult words should resolve eligibility using the exact difficult word variant and the active `dialectPreference`.
 
@@ -1566,10 +1576,10 @@ Review session:
 
 **Critical rule:** Review must never fall back to a standard session. This prevents incorrect practice behaviour and ensures the feature reflects true user difficulty.
 
-If no dialect-eligible difficult words currently exist:
+If no dialect-eligible difficult words currently exist for the relevant review scope:
 
 - Hide “Review difficult words” on the homepage.
-- Hide “Review difficult words” on the end screen.
+- Hide “Review difficult words” on the end screen when the just-completed session/list has no scoped difficult words.
 - Do not allow Review difficult words to fall back to a standard session.
 - Do not load random words as a substitute review session.
 
@@ -1588,7 +1598,7 @@ Example:
 
 This should happen immediately as progress updates.
 
-Resolved recap-due words must not keep the visible Review difficult words option on the homepage or end screen.
+Resolved recap-due words must not keep the visible Review difficult words option on the homepage or end screen. From earlier/Revisit a few words is a separate `recapDue` system and must not be confused with Review difficult words.
 
 ## 14. Recommendation logic
 

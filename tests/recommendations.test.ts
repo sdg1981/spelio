@@ -1,7 +1,7 @@
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList } from '../src/data/wordLists';
 import { createSupportWordLists, findSupportWordList, isSupportWordList, mainWordLists, withSupportWordLists } from '../src/data/supportWordLists';
-import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
+import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel, normalizeSingleSelectedListIds, normalizeStorageWordListSelection, selectSingleWordList } from '../src/lib/practice/wordListSelection';
 import {
   addLearningStats,
@@ -1264,6 +1264,130 @@ test('dedicated review clears difficult after one clean completion but leaves re
   assertEqual(storage.recentlyResolvedReviewWordIds?.[0], numbers.words[0].id, 'Clean review completion should temporarily exclude the word from automatic recap');
 });
 
+test('end-screen difficult review is scoped to the just-completed session words', () => {
+  const mixedConfidence3 = {
+    ...makeLargeList('test_mixed_confidence_3', 1, 3),
+    name: 'Mixed Confidence 3'
+  };
+  const places = {
+    ...makeLargeList('test_places', 2, 1),
+    name: 'Places',
+    words: [
+      makeTestWord('test_places_bathroom', 1, {
+        listId: 'test_places',
+        englishPrompt: 'bathroom',
+        welshAnswer: 'ystafell ymolchi'
+      })
+    ]
+  };
+  const lists = [mixedConfidence3, places];
+  const mixedWord = mixedConfidence3.words[0];
+  const bathroom = places.words[0];
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [mixedConfidence3.id],
+    currentPathPosition: mixedConfidence3.id
+  };
+  storage = applyWordProgressPatch(storage, mixedWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, bathroom, { incorrect: true }, '2026-05-05T00:01:00.000Z');
+
+  const reviewStart = createReviewPracticeStart(storage, {
+    reviewScope: 'session',
+    reviewWordIds: mixedConfidence3.words.map(word => word.id)
+  });
+  const reviewSession = createPracticeSession(lists, reviewStart.storage, reviewStart.review, reviewStart.recap, {
+    reviewScope: reviewStart.reviewScope,
+    reviewWordIds: reviewStart.reviewWordIds
+  });
+
+  assertEqual(hasDifficultWords(storage, lists), true, 'Setup should still have unresolved global difficult words.');
+  assertEqual(getDifficultWordCountForWordIds(storage, lists, mixedConfidence3.words.map(word => word.id)), 1, 'End-screen visibility should count only scoped difficult words from the completed list.');
+  assertEqual(reviewStart.reviewScope, 'session', 'End-screen review start should carry a session review scope.');
+  assert(reviewSession.words.some(word => word.id === mixedWord.id), 'Session-scoped review should include the difficult word from the completed Mixed Confidence 3 session.');
+  assertEqual(reviewSession.words.some(word => word.id === bathroom.id), false, 'Session-scoped review must not include Bathroom from an unrelated Practice Library list.');
+  assertEqual(reviewStart.storage.selectedListIds[0], mixedConfidence3.id, 'Session-scoped review must not overwrite selectedListIds.');
+  assertEqual(reviewStart.storage.currentPathPosition, mixedConfidence3.id, 'Session-scoped review must not overwrite currentPathPosition.');
+});
+
+test('homepage difficult review remains global across unresolved normal-learning words', () => {
+  const numbers = makeLargeList('test_numbers', 1, 3);
+  const places = {
+    ...makeLargeList('test_places_global', 2, 1),
+    name: 'Places',
+    words: [
+      makeTestWord('test_places_global_bathroom', 1, {
+        listId: 'test_places_global',
+        englishPrompt: 'bathroom',
+        welshAnswer: 'ystafell ymolchi'
+      })
+    ]
+  };
+  const lists = [numbers, places];
+  const bathroom = places.words[0];
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [numbers.id],
+    currentPathPosition: numbers.id
+  };
+  storage = applyWordProgressPatch(storage, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = applyWordProgressPatch(storage, bathroom, { incorrect: true }, '2026-05-05T00:01:00.000Z');
+
+  const reviewStart = createReviewPracticeStart(storage);
+  const reviewSession = createPracticeSession(lists, reviewStart.storage, reviewStart.review, reviewStart.recap, {
+    reviewScope: reviewStart.reviewScope,
+    reviewWordIds: reviewStart.reviewWordIds
+  });
+
+  assertEqual(reviewStart.reviewScope, 'global', 'Homepage review start should default to global scope.');
+  assert(reviewSession.words.some(word => word.id === numbers.words[0].id), 'Global homepage review should include unresolved difficult words from the selected path.');
+  assert(reviewSession.words.some(word => word.id === bathroom.id), 'Global homepage review should include unresolved difficult words from normal Practice Library lists.');
+});
+
+test('session-scoped difficult review resolves the exact reviewed word variant cleanly', () => {
+  const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
+  assert(wanting, 'Expected stage2_phrases_wanting to exist');
+  const northCoffee = wanting.words.find(word => word.variantGroupId === 'want coffee' && word.dialect === 'North Wales');
+  assert(northCoffee, 'Expected a North Wales want coffee variant');
+
+  let storage = wantingStorage('mixed');
+  storage = applyWordProgressPatch(storage, northCoffee, { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  const session = createPracticeSession(wordLists, storage, true, false, {
+    reviewScope: 'session',
+    reviewWordIds: [northCoffee.id]
+  });
+  storage = applyWordProgressPatch(storage, northCoffee, {
+    completed: true,
+    cleanCompleted: true,
+    reviewResolvedClean: true
+  }, '2026-05-05T00:01:00.000Z');
+
+  assertEqual(session.words[0]?.id, northCoffee.id, 'Session-scoped review should use the exact difficult variant.');
+  assertEqual(storage.wordProgress[northCoffee.id]?.difficult, false, 'Clean session-scoped review completion should clear difficult for the exact variant.');
+});
+
+test('session-scoped difficult review stays empty instead of falling back to unrelated difficult or ordinary words', () => {
+  const mixedConfidence3 = {
+    ...makeLargeList('test_mixed_confidence_3_empty', 1, 3),
+    name: 'Mixed Confidence 3'
+  };
+  const numbers = makeLargeList('test_numbers_empty_review', 2, 3);
+  const lists = [mixedConfidence3, numbers];
+
+  const storage = applyWordProgressPatch({
+    ...createDefaultStorage(),
+    selectedListIds: [numbers.id],
+    currentPathPosition: numbers.id
+  }, numbers.words[0], { incorrect: true }, '2026-05-05T00:00:00.000Z');
+  const session = createPracticeSession(lists, storage, true, false, {
+    reviewScope: 'session',
+    reviewWordIds: mixedConfidence3.words.map(word => word.id)
+  });
+
+  assertEqual(session.words.length, 0, 'Empty session-scoped review should not borrow unrelated difficult words or ordinary words.');
+});
+
 test('From earlier uses recapDue words and starts recap mode', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');
@@ -1286,7 +1410,7 @@ test('From earlier uses recapDue words and starts recap mode', () => {
         incorrectAttempts: 1,
         revealedCount: 0,
         difficult: true,
-        recapDue: false,
+        recapDue: true,
         cleanRecapCount: 0
       }
     }
@@ -1302,6 +1426,7 @@ test('From earlier uses recapDue words and starts recap mode', () => {
   assertEqual(recapStart.recap, true, 'From earlier should pass recap mode');
   assertEqual(recapSession.words.length, 1, 'Dedicated recap should use the recapDue pool');
   assertEqual(recapSession.words[0]?.id, numbers.words[0].id, 'Dedicated recap should not use difficult-only words');
+  assertEqual(recapSession.words.some(word => word.id === numbers.words[1].id), false, 'Dedicated recap should not include unresolved current difficult words even when they are recapDue');
   assertEqual(reviewSession.words[0]?.id, numbers.words[1].id, 'Dedicated review should remain based on difficult words');
 });
 

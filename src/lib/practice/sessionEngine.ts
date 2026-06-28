@@ -12,6 +12,13 @@ export interface PracticeSession {
   listIds: string[];
 }
 
+export type ReviewScope = 'session' | 'global';
+
+export type CreatePracticeSessionOptions = {
+  reviewScope?: ReviewScope;
+  reviewWordIds?: string[];
+};
+
 const SESSION_TARGET = 10;
 const COMPLETION_TAIL_THRESHOLD = 5;
 const COMPLETION_REINFORCEMENT_TARGET = 2;
@@ -310,8 +317,20 @@ export function getRecapCandidates(words: PracticeWord[], storage: SpelioStorage
     });
 }
 
-export function createPracticeSession(lists: WordList[], storage: SpelioStorage, reviewDifficult = false, includeRecapDue = false): PracticeSession {
+function getResolvedRecapCandidates(words: PracticeWord[], storage: SpelioStorage) {
+  return getRecapCandidates(words, storage).filter(word => storage.wordProgress[word.id]?.difficult !== true);
+}
+
+export function createPracticeSession(
+  lists: WordList[],
+  storage: SpelioStorage,
+  reviewDifficult = false,
+  includeRecapDue = false,
+  options: CreatePracticeSessionOptions = {}
+): PracticeSession {
   const recapOnly = includeRecapDue && !reviewDifficult;
+  const reviewScope = options.reviewScope ?? 'global';
+  const scopedReviewWordIds = new Set(options.reviewWordIds ?? []);
   const activeListIds = new Set(lists.filter(list => list.isActive && list.words.length > 0).map(list => list.id));
   const selectedSupportListId = storage.selectedListIds.find(id => {
     const list = lists.find(item => item.id === id && activeListIds.has(id));
@@ -338,9 +357,11 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
   );
 
   const pool = reviewDifficult
-    ? getReviewCandidates(allCandidates, storage)
+    ? getReviewCandidates(allCandidates, storage).filter(word => (
+        reviewScope === 'global' || scopedReviewWordIds.has(word.id)
+      ))
     : recapOnly
-      ? getRecapCandidates(allCandidates, storage)
+      ? getResolvedRecapCandidates(allCandidates, storage)
     : dialectResolvedCandidates;
   const learningItemScores = reviewDifficult || recapOnly ? undefined : getLearningItemScores(allCandidates, storage);
   const sessionTarget = reviewDifficult || recapOnly ? SESSION_TARGET : getNormalSessionTarget(allCandidates, storage);
@@ -362,7 +383,7 @@ export function createPracticeSession(lists: WordList[], storage: SpelioStorage,
 
 export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
   const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
-  return getRecapCandidates(activeWords, storage).length;
+  return getResolvedRecapCandidates(activeWords, storage).length;
 }
 
 export function formatRecapWordCount(count: number) {
@@ -372,6 +393,17 @@ export function formatRecapWordCount(count: number) {
 
 export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
   const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
+  return getDifficultCandidates(activeWords, storage).length;
+}
+
+export function getDifficultWordCountForWordIds(storage: SpelioStorage, lists: WordList[], wordIds: string[]) {
+  const scopedWordIds = new Set(wordIds);
+  if (!scopedWordIds.size) return 0;
+
+  const activeWords = mainWordLists(lists)
+    .filter(list => list.isActive)
+    .flatMap(list => list.words)
+    .filter(word => scopedWordIds.has(word.id));
   return getDifficultCandidates(activeWords, storage).length;
 }
 

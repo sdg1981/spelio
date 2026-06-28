@@ -20,7 +20,7 @@ import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStor
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
-import { getDifficultWordCount, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
+import { getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
@@ -159,6 +159,8 @@ export default function App() {
   const [storage, setStorage] = useState<SpelioStorage>(initialAppState.storage);
   const [screen, setScreen] = useState<Screen>(() => getInitialPublicScreen());
   const [reviewMode, setReviewMode] = useState(false);
+  const [reviewScope, setReviewScope] = useState<'session' | 'global'>('global');
+  const [reviewWordIds, setReviewWordIds] = useState<string[] | undefined>(undefined);
   const [recapMode, setRecapMode] = useState(false);
   const [wordListReturnScreen, setWordListReturnScreen] = useState<Screen | null>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -197,6 +199,18 @@ export default function App() {
   );
   const difficultWords = useMemo(() => hasDifficultWords(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const difficultWordCount = useMemo(() => getDifficultWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
+  const lastSessionReviewWordIds = useMemo(() => {
+    if (lastResult?.wordIds?.length) return lastResult.wordIds;
+    const resultListIds = new Set(lastResult?.listIds ?? []);
+    if (!resultListIds.size) return [];
+    return publicWordLists
+      .filter(list => resultListIds.has(list.id))
+      .flatMap(list => list.words.map(word => word.id));
+  }, [lastResult, publicWordLists]);
+  const lastSessionDifficultWordCount = useMemo(
+    () => getDifficultWordCountForWordIds(storage, publicWordLists, lastSessionReviewWordIds),
+    [lastSessionReviewWordIds, publicWordLists, storage.settings.dialectPreference, storage.wordProgress]
+  );
   const recapWordCount = useMemo(() => getRecapWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo<Recommendation>(
     () => sharedList
@@ -394,6 +408,8 @@ export default function App() {
   ) {
     if (start.review && !difficultWords) {
       setReviewMode(false);
+      setReviewScope('global');
+      setReviewWordIds(undefined);
       setScreen('home');
       return;
     }
@@ -453,6 +469,8 @@ export default function App() {
     setPracticeStartStorage(start.storage);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(start.review);
+    setReviewScope(start.reviewScope ?? 'global');
+    setReviewWordIds(start.reviewWordIds);
     setRecapMode(start.recap);
     setScreen('practice');
   }
@@ -491,6 +509,13 @@ export default function App() {
     beginPractice(createReviewPracticeStart(storage));
   }
 
+  function startEndScreenReviewPractice() {
+    beginPractice(createReviewPracticeStart(storage, {
+      reviewScope: 'session',
+      reviewWordIds: lastSessionReviewWordIds
+    }));
+  }
+
   function startCompletedSupportReviewPractice() {
     if (!completedSupportPractice || !completedSupportList || !practiceStartStorage) return;
     const start = createDetachedSupportReviewPracticeStart(practiceStartStorage, completedSupportList);
@@ -509,6 +534,8 @@ export default function App() {
     setPracticeStartStorage(start.storage);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(true);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setScreen('practice');
   }
@@ -574,6 +601,8 @@ export default function App() {
     setPracticeStartStorage(start.storage);
     setPracticeSessionKey(key => key + 1);
     setReviewMode(false);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setScreen('practice');
   }
@@ -624,6 +653,8 @@ export default function App() {
     setActiveSupportPractice(null);
     setPracticeStartStorage(null);
     setReviewMode(false);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setPracticeTestMode(false);
     setScreen(returnTo === '/spelling-basics' ? 'spelling-basics' : 'spelling-basics-topic');
@@ -646,6 +677,8 @@ export default function App() {
     setPendingPrimerLaunch(null);
     setPracticeTestMode(false);
     setReviewMode(false);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setScreen('home');
   }
@@ -782,6 +815,8 @@ export default function App() {
     setActiveSupportPractice(null);
     setActiveCustomList(null);
     setReviewMode(false);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
@@ -813,6 +848,8 @@ export default function App() {
     setActiveSupportPractice(null);
     setActiveCustomList(null);
     setReviewMode(false);
+    setReviewScope('global');
+    setReviewWordIds(undefined);
     setRecapMode(false);
     setPracticeTestMode(false);
     setPracticeStartStorage(null);
@@ -936,6 +973,8 @@ export default function App() {
       storage={storage}
       sessionStorage={practiceStartStorage ?? storage}
       reviewDifficult={reviewMode}
+      reviewScope={reviewScope}
+      reviewWordIds={reviewWordIds}
       includeRecapDue={recapMode}
       sessionKey={practiceSessionKey}
       practiceTestMode={practiceTestMode}
@@ -958,9 +997,9 @@ export default function App() {
       result={lastResult}
       recommendation={recommendation}
       progressSummary={getEndScreenProgressSummary(endProgressSummary, completedSupportPractice)}
-      hasDifficultWords={difficultWords}
+      hasDifficultWords={lastSessionDifficultWordCount > 0}
       onContinue={startNormalContinuationPractice}
-      onReview={startReviewPractice}
+      onReview={startEndScreenReviewPractice}
       onChangeLists={() => openWordListsPage('end')}
       onHome={completedSharedContext ? returnToLearning : completedSupportPractice ? returnToCompletedSupportPracticeOrigin : () => setScreen('home')}
       contextualReturn={completedSupportPractice ? {
