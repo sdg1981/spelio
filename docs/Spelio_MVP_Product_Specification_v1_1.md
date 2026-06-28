@@ -326,6 +326,7 @@ Behaviour:
 - If the last session is classified as “struggled” and difficult words exist, review becomes the primary action.
 - If the last session is classified as “struggled” but no eligible difficult words currently exist, do not show a review action. Fall back to the appropriate continue-learning recommendation.
 - Homepage Review difficult words uses the global unresolved difficult-word pool across normal learning, filtered by the active Welsh style.
+- Homepage Review difficult words must be prioritised whenever that global unresolved pool is non-empty, even if the most recent session was a clean session-scoped review from a different list.
 - Review difficult words and From earlier are different pools and actions: Review difficult words fixes current unresolved difficulty; From earlier revisits previously weak words through `recapDue`.
 - Review difficult words must never fall back to ordinary words when empty.
 - The user can still continue learning or choose another word list.
@@ -1598,7 +1599,7 @@ Example:
 
 This should happen immediately as progress updates.
 
-Resolved recap-due words must not keep the visible Review difficult words option on the homepage or end screen. From earlier/Revisit a few words is a separate `recapDue` system and must not be confused with Review difficult words.
+Resolved recap-due words must not keep the visible Review difficult words option on the homepage or end screen. From earlier/Revisit a few words is a separate `recapDue` system and must not be confused with Review difficult words. Current unresolved difficult words must remain in Review difficult words and must not be hidden under Revisit.
 
 ## 14. Recommendation logic
 

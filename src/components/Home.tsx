@@ -100,7 +100,7 @@ export function Home({
   const showRecapEntry = !isSharedEntry && mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
   const supportText = isFirst
     ? showFirstTimeManualSelection ? recommendation.subtitle : recommendedStartingCollectionTitle
-    : shouldPrioritiseReview ? t('home.basedOnLastSession') : recommendation.subtitle;
+    : recommendation.subtitle;
 
   return (
     <main className="homepage-bg">

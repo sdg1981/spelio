@@ -18,6 +18,7 @@ export const en = {
     browseWordLists: 'Explore practice library',
     changeWordList: 'Explore practice library',
     basedOnLastSession: 'Based on your last session',
+    currentDifficultWords: 'Current difficult words',
     fromWhereLeftOff: 'From where you left off',
     chooseDifferentList: 'Choose a different list',
     fromEarlier: 'From earlier',

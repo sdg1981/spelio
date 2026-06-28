@@ -1342,6 +1342,111 @@ test('homepage difficult review remains global across unresolved normal-learning
   assert(reviewSession.words.some(word => word.id === bathroom.id), 'Global homepage review should include unresolved difficult words from normal Practice Library lists.');
 });
 
+test('homepage still prioritises older unresolved difficult words after session-scoped review resolves a later list', () => {
+  const list1 = makeLargeList('test_homepage_old_difficult', 1, 3);
+  const list2 = makeLargeList('test_homepage_later_session', 2, 3);
+  const lists = [list1, list2];
+  const oldDifficultWord = list1.words[0];
+  const laterDifficultWord = list2.words[0];
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [list1.id],
+    currentPathPosition: list1.id
+  };
+
+  storage = completeListCleanlyInLists(storage, lists, list1.id);
+  storage = applyWordProgressPatch(storage, oldDifficultWord, { incorrect: true }, '2026-05-05T00:01:00.000Z');
+  assertEqual(isListFullyComplete(storage, list1), false, 'Unresolved List 1 difficulty should block the full completion tick.');
+
+  storage = {
+    ...completeListCleanlyInLists({
+      ...storage,
+      selectedListIds: [list2.id],
+      currentPathPosition: list2.id
+    }, lists, list2.id),
+    selectedListIds: [list2.id],
+    currentPathPosition: list2.id
+  };
+  storage = applyWordProgressPatch(storage, laterDifficultWord, { incorrect: true }, '2026-05-05T00:02:00.000Z');
+
+  const sessionReviewStart = createSessionReviewPracticeStart(storage, list2.words.map(word => word.id));
+  const sessionReview = createPracticeSession(lists, sessionReviewStart.storage, sessionReviewStart.review, sessionReviewStart.recap, {
+    reviewScope: sessionReviewStart.reviewScope,
+    reviewWordIds: sessionReviewStart.reviewWordIds
+  });
+  assertEqual(sessionReview.words.some(word => word.id === oldDifficultWord.id), false, 'End-screen session-scoped review should not include the older List 1 difficult word.');
+  assertEqual(sessionReview.words[0]?.id, laterDifficultWord.id, 'End-screen session-scoped review should include only the later list difficult word.');
+
+  storage = applyWordProgressPatch(storage, laterDifficultWord, {
+    completed: true,
+    cleanCompleted: true,
+    reviewResolvedClean: true
+  }, '2026-05-05T00:03:00.000Z');
+  const sessionReviewResult: SessionResult = {
+    totalWords: 1,
+    correctWords: 1,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [list2.id],
+    wordIds: [laterDifficultWord.id],
+    state: 'strong'
+  };
+  storage = updateReviewCompletion({
+    ...storage,
+    lastSessionDate: '2026-05-05T00:03:30.000Z',
+    lastSessionResult: sessionReviewResult
+  }, lists, sessionReviewResult);
+
+  const homepageRecommendation = getRecommendation(storage, lists);
+  const recapStart = createRecapPracticeStart(storage);
+  const recapSession = createPracticeSession(lists, recapStart.storage, recapStart.review, recapStart.recap);
+  const homepageReviewStart = createReviewPracticeStart(storage);
+  const homepageReview = createPracticeSession(lists, homepageReviewStart.storage, homepageReviewStart.review, homepageReviewStart.recap);
+
+  assertEqual(storage.wordProgress[oldDifficultWord.id]?.difficult, true, 'The older List 1 word should remain unresolved after List 2 review.');
+  assertEqual(storage.wordProgress[laterDifficultWord.id]?.difficult, false, 'The later List 2 word should be resolved by session-scoped review.');
+  assertEqual(homepageRecommendation.kind, 'review', 'Homepage should prioritise global Review Difficult Words while any eligible difficult word remains.');
+  assertEqual(recapSession.words.some(word => word.id === oldDifficultWord.id), false, 'From Earlier should not include unresolved difficult words.');
+  assertEqual(homepageReview.words.some(word => word.id === oldDifficultWord.id), true, 'Homepage global review should include the older unresolved difficult word.');
+
+  storage = applyWordProgressPatch(storage, oldDifficultWord, {
+    completed: true,
+    cleanCompleted: true,
+    reviewResolvedClean: true
+  }, '2026-05-05T00:04:00.000Z');
+  const homepageReviewResult: SessionResult = {
+    totalWords: 1,
+    correctWords: 1,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [list1.id],
+    wordIds: [oldDifficultWord.id],
+    state: 'strong'
+  };
+  storage = updateReviewCompletion({
+    ...storage,
+    lastSessionDate: '2026-05-05T00:04:30.000Z',
+    lastSessionResult: homepageReviewResult
+  }, lists, homepageReviewResult);
+
+  const finalRecommendation = getRecommendation(storage, lists);
+  const finalRecapStart = createRecapPracticeStart(storage);
+  const finalRecapSession = createPracticeSession(lists, finalRecapStart.storage, finalRecapStart.review, finalRecapStart.recap);
+
+  assertEqual(storage.wordProgress[oldDifficultWord.id]?.difficult, false, 'Homepage review should clear the older word difficulty after clean completion.');
+  assertEqual(isListFullyComplete(storage, list1), true, 'Resolving the older difficult word should allow the source list tick to update.');
+  assertEqual(hasDifficultWords(storage, lists), false, 'Homepage Review Difficult Words should disappear when no eligible difficult words remain.');
+  assertEqual(finalRecommendation.kind, 'list', 'Homepage should return to Continue Learning once global difficult words are resolved.');
+  assert(finalRecapSession.words.some(word => word.id === oldDifficultWord.id), 'From Earlier should still work for resolved recapDue words separately.');
+});
+
 test('session-scoped difficult review resolves the exact reviewed word variant cleanly', () => {
   const wanting = wordLists.find(list => list.id === 'stage2_phrases_wanting');
   assert(wanting, 'Expected stage2_phrases_wanting to exist');
@@ -1925,11 +2030,13 @@ test('normal progression does not skip foundations_places when eligible difficul
   storage = applyWordProgressPatch(storage, places.words[0], { incorrect: true }, '2026-05-05T00:01:00.000Z');
   storage = completeListCleanly(storage, 'foundations_actions');
 
-  const recommendation = getRecommendation(storage, wordLists);
+  const primaryRecommendation = getRecommendation(storage, wordLists);
+  const normalRecommendation = getNormalContinuationRecommendation(storage, wordLists);
 
   assertEqual(isListProgressionReady(storage, places), true, 'Setup should keep foundations_places progression-complete');
   assertEqual(isListFullyComplete(storage, places), false, 'Eligible difficult words should block the modal tick');
-  assertEqual(recommendation.listId, 'foundations_places', 'A progression-complete list with unresolved eligible difficulty should not be skipped');
+  assertEqual(primaryRecommendation.kind, 'review', 'Eligible unresolved difficult words should be the homepage primary action.');
+  assertEqual(normalRecommendation.listId, 'foundations_places', 'Secondary normal continuation should not skip a progression-complete list with unresolved eligible difficulty.');
 });
 
 test('review difficult words still overrides skipped sequential progression', () => {

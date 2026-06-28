@@ -142,12 +142,12 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
   const difficultWordsExist = hasDifficultWords(storage, recommendationLists);
   const selectedLists = getSelectedLists(normalizeSingleSelectedListIds(storage.selectedListIds, recommendationLists), recommendationLists);
 
-  if (storage.lastSessionResult?.state === 'struggled' && difficultWordsExist) {
+  if (difficultWordsExist) {
     return {
       kind: 'review',
       listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,
       title: t ? t('home.reviewDifficult') : 'Review difficult words',
-      subtitle: t ? t('home.basedOnLastSession') : 'Based on your last session'
+      subtitle: t ? t('home.currentDifficultWords') : 'Current difficult words'
     };
   }
 
