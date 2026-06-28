@@ -225,6 +225,12 @@ export function compareWordListsForProgression(a: WordList, b: WordList, interfa
     a.id.localeCompare(b.id);
 }
 
+export function getPracticeLibraryCatalogueLists(lists: WordList[], interfaceLanguage?: InterfaceLanguage) {
+  return mainWordLists(lists)
+    .filter(list => list.isActive && list.words.length > 0 && (list.collectionId === PRACTICE_LIBRARY_COLLECTION_ID || list.collection?.id === PRACTICE_LIBRARY_COLLECTION_ID))
+    .sort((a, b) => compareWordListsForCatalogue(a, b, interfaceLanguage));
+}
+
 export function buildPublicCatalogueGroups(lists: WordList[], interfaceLanguage?: InterfaceLanguage): PublicCatalogueCollectionGroup[] {
   const groupsByCollectionId = new Map<string, PublicCatalogueCollectionGroup>();
 

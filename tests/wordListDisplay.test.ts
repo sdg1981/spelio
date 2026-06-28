@@ -1,5 +1,9 @@
 import type { WordList } from '../src/data/wordLists';
-import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+
+declare function require(name: string): { readFileSync(path: string, encoding: string): string };
+
+const { readFileSync } = require('fs');
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -199,6 +203,22 @@ function createPracticeLibraryList(id: string, name: string, order: number, over
     stage: 'Core',
     focus: 'Topic Vocabulary',
     order,
+    words: [
+      {
+        id: `${id}_word`,
+        listId: id,
+        prompt: name,
+        answer: name,
+        englishPrompt: name,
+        welshAnswer: name,
+        sourceLanguage: 'en',
+        targetLanguage: 'cy',
+        acceptedAlternatives: [],
+        order: 1,
+        difficulty: 1,
+        dialect: 'Both'
+      }
+    ],
     ...overrides
   });
 }
@@ -378,4 +398,27 @@ assertEqual(
   displayOrderWithExplicitProgression[0]?.listGroups.flatMap(group => group.lists.map(list => list.name)).join('|'),
   'Animals Entry|Animals Browsable Extra|Animals Progression Target',
   'Public catalogue display order should not be changed by explicit nextListId progression links.'
+);
+
+const shuffledPracticeLibraryPageLists = [
+  createPracticeLibraryList('practice_most_common_weather', 'Most Common Weather', 7),
+  createPracticeLibraryList('practice_most_common_home_and_household', 'Most Common Home & Household', 4),
+  createPracticeLibraryList('practice_most_common_animals', 'Most Common Animals', 1),
+  createPracticeLibraryList('practice_most_common_places', 'Most Common Places', 5),
+  createPracticeLibraryList('practice_most_common_food_and_drink', 'Most Common Food & Drink', 2)
+];
+assertEqual(
+  getPracticeLibraryCatalogueLists(shuffledPracticeLibraryPageLists).map(list => list.id).join('|'),
+  'practice_most_common_animals|practice_most_common_food_and_drink|practice_most_common_home_and_household|practice_most_common_places|practice_most_common_weather',
+  'Practice Library page cards should render from database/admin order, not hard-coded visual order or input order.'
+);
+
+const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+assert(
+  !practiceSource.includes('PRACTICE_LIBRARY_MAIN_LIST_IDS'),
+  'Practice Library page rendering should not use a hard-coded visual ID order.'
+);
+assert(
+  practiceSource.includes('return Icon ?? BookOpen;') && !practiceSource.includes("typeof Icon === 'function'"),
+  'Lucide icon resolution should accept React component object exports and only fall back to BookOpen when no icon resolves.'
 );

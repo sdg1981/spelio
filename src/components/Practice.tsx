@@ -1,9 +1,9 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, ComponentType, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
+import type { CSSProperties, ElementType, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import * as LucideIcons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { ArrowRight, ArrowUp, BookOpen, CheckCircle2, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, ChevronUp, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { FirstPracticeHint } from './FirstPracticeHint';
@@ -15,7 +15,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { PRACTICE_LIBRARY_COLLECTION_ID, WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, compareWordListsForCatalogue, getListDisplayDescription, getListDisplayName, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
+import { WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, compareWordListsForCatalogue, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -1988,26 +1988,10 @@ const WordListRow = memo(function WordListRow({
   );
 });
 
-const catalogueIconComponents = LucideIcons as unknown as Record<string, ComponentType<LucideProps> | undefined>;
+const catalogueIconComponents = LucideIcons as unknown as Record<string, ElementType<LucideProps> | undefined>;
 const catalogueIconNameByNormalizedName = new Map(
   Object.keys(catalogueIconComponents).map(name => [normalizeCatalogueIconName(name), name])
 );
-const PRACTICE_LIBRARY_MAIN_LIST_IDS = [
-  'practice_most_common_animals',
-  'practice_most_common_food_and_drink',
-  'practice_most_common_people_and_family',
-  'practice_most_common_home_and_household',
-  'practice_most_common_places',
-  'practice_most_common_travel_and_transport',
-  'practice_most_common_weather',
-  'practice_most_common_time_and_calendar',
-  'practice_most_common_colours',
-  'practice_most_common_clothing',
-  'practice_most_common_work',
-  'practice_most_common_school_and_learning',
-  'practice_most_common_nature_and_landscape',
-  'practice_most_common_shopping'
-];
 const FOUNDATION_PREVIEW_CHIP_LABELS = ['D / DD', 'Y', 'F / FF'];
 
 function normalizeCatalogueIconName(name: string) {
@@ -2020,7 +2004,7 @@ function resolveCatalogueIcon(iconName: string | undefined, fallbackIconName = '
   const normalizedFallbackName = normalizeCatalogueIconName(fallbackIconName);
   const resolvedFallbackName = catalogueIconNameByNormalizedName.get(normalizedFallbackName) ?? 'BookOpen';
   const Icon = resolvedName ? catalogueIconComponents[resolvedName] : catalogueIconComponents[resolvedFallbackName];
-  return typeof Icon === 'function' ? Icon : BookOpen;
+  return Icon ?? BookOpen;
 }
 
 function getPracticeLibrarySubtitle(list: WordList, interfaceLanguage: InterfaceLanguage) {
@@ -2053,28 +2037,6 @@ function isFoundationsCatalogueList(list: WordList) {
     list.collection?.id === WELSH_FOUNDATIONS_COLLECTION_ID ||
     list.stageId === 'foundations' ||
     list.stage.trim().toLowerCase() === 'foundations';
-}
-
-function getPracticeLibraryCatalogueLists(selectableLists: WordList[]) {
-  const practiceListsById = new Map(
-    selectableLists
-      .filter(list => list.collectionId === PRACTICE_LIBRARY_COLLECTION_ID || list.collection?.id === PRACTICE_LIBRARY_COLLECTION_ID)
-      .map(list => [list.id, list])
-  );
-  const configuredPracticeLists = PRACTICE_LIBRARY_MAIN_LIST_IDS
-    .map(id => practiceListsById.get(id))
-    .filter((list): list is WordList => Boolean(list));
-  const configuredIds = new Set(configuredPracticeLists.map(list => list.id));
-  const additionalPracticeLists = Array.from(practiceListsById.values())
-    .filter(list => !configuredIds.has(list.id))
-    .sort((a, b) => compareWordListsForCatalogue(a, b));
-
-  if (configuredPracticeLists.length > 0) return [...configuredPracticeLists, ...additionalPracticeLists];
-
-  return selectableLists
-    .filter(list => !isFoundationsCatalogueList(list))
-    .sort((a, b) => compareWordListsForCatalogue(a, b))
-    .slice(0, 12);
 }
 
 function findNextSelectableList(lists: WordList[], completedSet: Set<string>, current?: WordList) {
@@ -2152,7 +2114,7 @@ function WordListPageCatalogue({
     ? nextFoundationList ?? currentFoundationAnchor
     : currentFoundationAnchor;
   const foundationsProgress = foundationsTotal > 0 ? Math.round((foundationsCompleted / foundationsTotal) * 100) : 0;
-  const practiceLists = getPracticeLibraryCatalogueLists(selectableLists);
+  const practiceLists = getPracticeLibraryCatalogueLists(selectableLists, interfaceLanguage);
   const searchResultLists = collectionGroups.flatMap(group => group.listGroups.flatMap(listGroup => listGroup.lists));
   const foundationsProgressLabel = t('wordLists.foundationsProgress')
     .replace('{completed}', String(foundationsCompleted))
@@ -2299,7 +2261,7 @@ function WordListPageCatalogue({
         <div className="upcoming-journey-grid">
           {[
             { title: t('wordLists.upcomingMutationAwareness'), icon: GitBranch },
-            { title: t('wordLists.upcomingAccents'), icon: ArrowUp },
+            { title: t('wordLists.upcomingAccents'), icon: ChevronUp },
             { title: t('wordLists.upcomingYesNo'), icon: MessageCircle }
           ].map(({ title, icon: Icon }) => (
             <article className="upcoming-journey-card" key={title}>
