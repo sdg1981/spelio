@@ -35,6 +35,7 @@ function AdminRoute({ path, navigate, repository }: { path: string; navigate: (p
   if (path === '/admin/word-lists') return <WordListsPage navigate={navigate} repository={repository} />;
   if (path === '/admin/custom-lists') return <CustomListsPage repository={repository} />;
   if (path === '/admin/collections') return <CollectionsPage navigate={navigate} repository={repository} />;
+  if (path === '/admin/collections/new') return <CollectionEditPage mode="create" navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/collections/')) return <CollectionEditPage id={decodeURIComponent(path.replace('/admin/collections/', ''))} navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/word-lists/')) return <WordListEditPage id={decodeURIComponent(path.replace('/admin/word-lists/', ''))} navigate={navigate} repository={repository} />;
   if (path.startsWith('/admin/words/')) return <WordEditPage id={decodeURIComponent(path.replace('/admin/words/', ''))} navigate={navigate} repository={repository} />;

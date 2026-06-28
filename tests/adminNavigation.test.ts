@@ -1,6 +1,7 @@
 import { adminNavGroups } from '../src/admin/navigation';
+import { createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../src/admin/services/collectionDraft';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder } from '../src/admin/services/collectionOrdering';
-import type { AdminWordList } from '../src/admin/types';
+import type { AdminWordList, AdminWordListCollection } from '../src/admin/types';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
 
@@ -110,6 +111,30 @@ function makeList(id: string, collectionId: string, order: number, nextListId: s
   };
 }
 
+function makeCollection(id: string, slug: string, order: number, overrides: Partial<AdminWordListCollection> = {}): AdminWordListCollection {
+  return {
+    id,
+    slug,
+    name: id,
+    nameCy: '',
+    description: '',
+    descriptionCy: '',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    curriculumKeyStage: null,
+    curriculumArea: null,
+    ownerType: 'spelio',
+    ownerId: null,
+    order,
+    isActive: true,
+    introContent: null,
+    createdAt: '',
+    updatedAt: '',
+    ...overrides
+  };
+}
+
 const catalogueLists = [
   makeList('animals', 'practice', 7, 'food'),
   makeList('food', 'practice', 8, null),
@@ -190,6 +215,35 @@ assertEqual(
   'Collection progression ordering should not depend on legacy stage or focus metadata.'
 );
 
+const draftCollection = createDraftAdminCollection({
+  existingCollections: [
+    makeCollection('core', 'core', 2),
+    makeCollection('practice', 'practice', 5)
+  ],
+  now: '2026-06-28T00:00:00.000Z'
+});
+
+assertEqual(draftCollection.type, 'spelio_core', 'New collection drafts should default to the Spelio core type.');
+assertEqual(draftCollection.sourceLanguage, 'en', 'New collection drafts should default to English source language.');
+assertEqual(draftCollection.targetLanguage, 'cy', 'New collection drafts should default to Welsh target language.');
+assertEqual(draftCollection.ownerType, 'spelio', 'New collection drafts should default to Spelio ownership.');
+assertEqual(draftCollection.isActive, true, 'New collection drafts should default to active.');
+assertEqual(draftCollection.order, 6, 'New collection drafts should use the next available collection order.');
+assertEqual(createCollectionSlug('Most Common Places!'), 'most-common-places', 'Collection names should generate editable URL-safe slugs.');
+assertEqual(
+  validateAdminCollectionDraft({ ...draftCollection, name: 'Most Common Places', slug: 'most-common-places' }, [makeCollection('animals', 'animals', 1)]).length,
+  0,
+  'Valid collection drafts should pass validation.'
+);
+assert(
+  validateAdminCollectionDraft({ ...draftCollection, name: 'Bad Slug', slug: 'Bad Slug' }, []).some(error => error.includes('lowercase letters')),
+  'Collection slug validation should reject spaces and uppercase characters.'
+);
+assert(
+  validateAdminCollectionDraft({ ...draftCollection, name: 'Duplicate', slug: 'practice' }, [makeCollection('practice', 'practice', 1)]).some(error => error.includes('unique')),
+  'Collection slug validation should reject duplicate slugs.'
+);
+
 const collectionsPageSource = readFileSync('src/admin/pages/CollectionsPage.tsx', 'utf8');
 const collectionEditPageSource = readFileSync('src/admin/pages/CollectionEditPage.tsx', 'utf8');
 const wordListsPageSource = readFileSync('src/admin/pages/WordListsPage.tsx', 'utf8');
@@ -206,8 +260,26 @@ assertEqual(
   'Clear content should not appear on the main collections table.'
 );
 assert(
-  collectionsPageSource.includes('Collection creation is not exposed in this MVP editor yet.'),
-  'Disabled Add collection button should explain why collection creation is not available.'
+  collectionsPageSource.includes("navigate('/admin/collections/new')") &&
+    collectionsPageSource.includes('<Plus size={16} /> Add collection'),
+  'Add collection button should navigate to the collection creation flow.'
+);
+assert(
+  adminAppSource.includes("path === '/admin/collections/new'") &&
+    adminAppSource.includes('mode="create"'),
+  'Admin router should expose the collection creation route.'
+);
+assert(
+  collectionEditPageSource.includes('repository.createCollection') &&
+    collectionEditPageSource.includes('Create collection') &&
+    collectionEditPageSource.includes('validateAdminCollectionDraft') &&
+    collectionEditPageSource.includes('createCollectionSlug'),
+  'Collection editor should reuse the edit surface for successful creation with slug validation.'
+);
+assert(
+  !collectionEditPageSource.includes('stageId') &&
+    !collectionEditPageSource.includes('focusCategoryId'),
+  'Collection creation should not reintroduce stage or focus category fields.'
 );
 assert(
   collectionEditPageSource.includes('Danger zone') && collectionEditPageSource.includes('Clear content'),

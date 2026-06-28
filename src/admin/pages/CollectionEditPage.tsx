@@ -7,11 +7,13 @@ import { AudioStatusPill } from '../components/audioStatus';
 import type { AdminRepository } from '../repositories';
 import type { AdminWordList, AdminWordListCollection } from '../types';
 import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
+import { buildCollectionId, collectionOwnerTypeOptions, collectionTypeOptions, createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../services/collectionDraft';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder, deriveInitialProgressionListIds, moveItem, sortCollectionWordLists } from '../services/collectionOrdering';
 import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
 
-export function CollectionEditPage({ id, navigate, repository }: { id: string; navigate: (path: string) => void; repository: AdminRepository }) {
+export function CollectionEditPage({ id = '', mode = 'edit', navigate, repository }: { id?: string; mode?: 'create' | 'edit'; navigate: (path: string) => void; repository: AdminRepository }) {
   const [collection, setCollection] = useState<AdminWordListCollection | null>(null);
+  const [collections, setCollections] = useState<AdminWordListCollection[]>([]);
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -26,22 +28,38 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   const [generatingLanguage, setGeneratingLanguage] = useState<'en' | 'cy' | null>(null);
   const [clearingAudioLanguage, setClearingAudioLanguage] = useState<'en' | 'cy' | null>(null);
   const deleteAllowed = isAdminContentDeleteAllowed(import.meta.env.VITE_ALLOW_ADMIN_CONTENT_DELETE);
+  const isCreating = mode === 'create';
 
   useEffect(() => {
-    Promise.all([repository.getCollection(id), repository.listWordLists()])
-      .then(([nextCollection, nextWordLists]) => {
+    if (isCreating) {
+      Promise.all([repository.listCollections(), repository.listWordLists()])
+        .then(([nextCollections, nextWordLists]) => {
+          setCollections(nextCollections);
+          setCollection(createDraftAdminCollection({ existingCollections: nextCollections }));
+          setWordLists(nextWordLists);
+        })
+        .catch(error => setErrorMessage(error instanceof Error ? error.message : 'Could not prepare new collection.'));
+      return;
+    }
+
+    Promise.all([repository.getCollection(id), repository.listCollections(), repository.listWordLists()])
+      .then(([nextCollection, nextCollections, nextWordLists]) => {
         if (!nextCollection) {
           setErrorMessage('Collection not found.');
           return;
         }
+        setCollections(nextCollections);
         setCollection({
           ...nextCollection,
           introContent: normalizeCollectionIntroContent(nextCollection.introContent, nextCollection.id)
         });
         setWordLists(nextWordLists);
+        if (new URLSearchParams(window.location.search).get('created') === '1') {
+          setStatusMessage('Collection created.');
+        }
       })
       .catch(error => setErrorMessage(error instanceof Error ? error.message : 'Could not load collection.'));
-  }, [id, repository]);
+  }, [id, isCreating, repository]);
 
   const intro = useMemo(() => normalizeCollectionIntroContent(collection?.introContent, collection?.id ?? id), [collection, id]);
   const collectionWordLists = useMemo(() => sortCollectionWordLists(wordLists, id), [wordLists, id]);
@@ -80,6 +98,20 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
     setCollection(previous => previous ? ({ ...previous, ...patch }) : previous);
   }
 
+  function updateCollectionName(name: string) {
+    setCollection(previous => {
+      if (!previous) return previous;
+      const previousGeneratedSlug = createCollectionSlug(previous.name);
+      const nextGeneratedSlug = createCollectionSlug(name);
+      const shouldUpdateSlug = isCreating && (!previous.slug || previous.slug === previousGeneratedSlug);
+      return {
+        ...previous,
+        name,
+        slug: shouldUpdateSlug ? nextGeneratedSlug : previous.slug
+      };
+    });
+  }
+
   function updateIntro(patch: Partial<typeof intro>) {
     setCollection(previous => previous ? ({
       ...previous,
@@ -92,19 +124,40 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
 
   async function saveCollection() {
     if (!collection) return null;
+    const collectionId = isCreating ? buildCollectionId(collection.slug) : collection.id;
+    const collectionToSave = {
+      ...collection,
+      id: collectionId,
+      slug: collection.slug.trim(),
+      name: collection.name.trim(),
+      sourceLanguage: collection.sourceLanguage.trim(),
+      targetLanguage: collection.targetLanguage.trim(),
+      ownerId: collection.ownerId?.trim() || null
+    };
+    const validationErrors = isCreating ? validateAdminCollectionDraft(collectionToSave, collections) : [];
+    if (validationErrors.length) {
+      setErrorMessage(validationErrors.join(' '));
+      setStatusMessage('');
+      return null;
+    }
     setSaving(true);
     setErrorMessage('');
     setStatusMessage('');
     try {
-      const saved = await repository.saveCollection({
-        ...collection,
-        introContent: toCollectionIntroStorage(intro, collection.id)
+      const save = isCreating ? repository.createCollection.bind(repository) : repository.saveCollection.bind(repository);
+      const saved = await save({
+        ...collectionToSave,
+        introContent: toCollectionIntroStorage(intro, collectionId)
       });
       setCollection({ ...saved, introContent: normalizeCollectionIntroContent(saved.introContent, saved.id) });
-      setStatusMessage('Collection saved.');
+      if (isCreating) {
+        navigate(`/admin/collections/${encodeURIComponent(saved.id)}?created=1`);
+      } else {
+        setStatusMessage('Collection saved.');
+      }
       return saved;
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Could not save collection.');
+      setErrorMessage(error instanceof Error ? error.message : isCreating ? 'Could not create collection.' : 'Could not save collection.');
       return null;
     } finally {
       setSaving(false);
@@ -300,8 +353,8 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
   return (
     <>
       <AdminPageHeader
-        title={collection ? `Edit ${collection.name}` : 'Edit collection'}
-        description="Manage collection ordering and learner introduction content."
+        title={isCreating ? 'Add collection' : collection ? `Edit ${collection.name}` : 'Edit collection'}
+        description={isCreating ? 'Create a top-level collection for word lists.' : 'Manage collection ordering and learner introduction content.'}
         actions={<AdminButton onClick={() => navigate('/admin/collections')}><ArrowLeft size={16} /> Back to collections</AdminButton>}
       />
 
@@ -324,6 +377,45 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 </span>
               </div>
               <div className="text-slate-600">{collection.description}</div>
+              {isCreating && (
+                <div className="grid gap-4 border-t border-slate-100 pt-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="Name">
+                      <AdminInput value={collection.name} onChange={event => updateCollectionName(event.target.value)} autoFocus />
+                    </Field>
+                    <Field label="Slug" helper="Lowercase letters, numbers, and hyphens only.">
+                      <AdminInput value={collection.slug} onChange={event => updateCollection({ slug: event.target.value })} />
+                    </Field>
+                  </div>
+                  <Field label="Description">
+                    <AdminTextarea value={collection.description} onChange={event => updateCollection({ description: event.target.value })} />
+                  </Field>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Field label="Type">
+                      <AdminSelect value={collection.type} onChange={event => updateCollection({ type: event.target.value as typeof collection.type })}>
+                        {collectionTypeOptions.map(type => <option key={type} value={type}>{type}</option>)}
+                      </AdminSelect>
+                    </Field>
+                    <Field label="Source language">
+                      <AdminInput value={collection.sourceLanguage} onChange={event => updateCollection({ sourceLanguage: event.target.value })} />
+                    </Field>
+                    <Field label="Target language">
+                      <AdminInput value={collection.targetLanguage} onChange={event => updateCollection({ targetLanguage: event.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="Owner type">
+                      <AdminSelect value={collection.ownerType ?? ''} onChange={event => updateCollection({ ownerType: event.target.value ? event.target.value as typeof collection.ownerType : null })}>
+                        <option value="">None</option>
+                        {collectionOwnerTypeOptions.map(ownerType => <option key={ownerType} value={ownerType}>{ownerType}</option>)}
+                      </AdminSelect>
+                    </Field>
+                    <Field label="Owner ID" helper="Optional. Leave blank for Spelio-owned collections.">
+                      <AdminInput value={collection.ownerId ?? ''} onChange={event => updateCollection({ ownerId: event.target.value })} />
+                    </Field>
+                  </div>
+                </div>
+              )}
               <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
                 <Field label="Order" helper="Controls public collection order. Lower numbers appear first.">
                   <AdminInput type="number" min={0} value={collection.order} onChange={event => updateCollection({ order: Number(event.target.value) })} />
@@ -340,19 +432,27 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                   </label>
                 </Field>
               </div>
-              <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>
-              <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
-                <AdminButton onClick={openCatalogueOrdering} disabled={anyBusy || !collectionWordLists.length}>
-                  <ListOrdered size={16} /> Arrange word list order
-                </AdminButton>
-                <AdminButton onClick={openProgressionOrdering} disabled={anyBusy || !collectionWordLists.length}>
-                  <Route size={16} /> Arrange progression order
-                </AdminButton>
-              </div>
+              {!isCreating && <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>}
+              {isCreating ? (
+                <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
+                  <AdminButton variant="primary" onClick={saveCollection} disabled={anyBusy}>
+                    <Save size={16} /> {saving ? 'Creating...' : 'Create collection'}
+                  </AdminButton>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
+                  <AdminButton onClick={openCatalogueOrdering} disabled={anyBusy || !collectionWordLists.length}>
+                    <ListOrdered size={16} /> Arrange word list order
+                  </AdminButton>
+                  <AdminButton onClick={openProgressionOrdering} disabled={anyBusy || !collectionWordLists.length}>
+                    <Route size={16} /> Arrange progression order
+                  </AdminButton>
+                </div>
+              )}
             </div>
           </AdminCard>
 
-          <AdminCard className="overflow-hidden">
+          {!isCreating && <AdminCard className="overflow-hidden">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 p-5">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-black text-slate-950">
@@ -398,9 +498,9 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 Showing the first {visibleCollectionWordLists.length}. Use Manage word lists to review {hiddenCollectionWordListCount} more.
               </div>
             )}
-          </AdminCard>
+          </AdminCard>}
 
-          <AdminCard className="p-5">
+          {!isCreating && <AdminCard className="p-5">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-black text-slate-950">Collection introduction</h2>
@@ -508,9 +608,9 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
               </div>
               <p className="text-xs leading-5 text-slate-500">ElevenLabs generation is not exposed here yet; the current reusable ElevenLabs path is tuned for Welsh word and primer audio, not English collection introductions.</p>
             </div>
-          </AdminCard>
+          </AdminCard>}
 
-          <AdminCard className="border-red-100 p-5">
+          {!isCreating && <AdminCard className="border-red-100 p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-black text-red-700">Danger zone</h2>
@@ -534,7 +634,7 @@ export function CollectionEditPage({ id, navigate, repository }: { id: string; n
                 <Trash2 size={16} /> Clear content
               </AdminButton>
             </div>
-          </AdminCard>
+          </AdminCard>}
         </div>
       )}
 

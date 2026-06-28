@@ -44,11 +44,9 @@ export function CollectionsPage({ navigate, repository }: { navigate: (path: str
         description="Collection metadata for grouping word lists. Ownership and permissions are future work."
         actions={(
           <div className="grid gap-1 justify-items-start lg:justify-items-end">
-            {/* TODO: Add a collection creation form after ownership/default-metadata rules are defined. */}
-            <AdminButton variant="primary" disabled title="Collection creation needs a dedicated create form before this button can be enabled.">
+            <AdminButton variant="primary" onClick={() => navigate('/admin/collections/new')}>
               <Plus size={16} /> Add collection
             </AdminButton>
-            <span className="text-xs font-semibold text-slate-500">Collection creation is not exposed in this MVP editor yet.</span>
           </div>
         )}
       />
