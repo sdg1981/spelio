@@ -8295,7 +8295,7 @@
 }
 
 .word-lists-section-heading > svg{
-  transform:translateY(-2px);
+  transform:translateY(-8px);
 }
 
 .word-lists-section-heading h2,
@@ -9236,6 +9236,10 @@
 
   .word-lists-section-heading{
     align-items:flex-start;
+  }
+
+  .word-lists-section-heading > svg{
+    transform:translateY(-4px);
   }
 
   .word-lists-section-heading h2,
