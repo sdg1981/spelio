@@ -1402,6 +1402,7 @@ test('homepage still prioritises older unresolved difficult words after session-
   }, lists, sessionReviewResult);
 
   const homepageRecommendation = getRecommendation(storage, lists);
+  const homepageStart = createPrimaryRecommendationPracticeStart(storage, lists);
   const recapStart = createRecapPracticeStart(storage);
   const recapSession = createPracticeSession(lists, recapStart.storage, recapStart.review, recapStart.recap);
   const homepageReviewStart = createReviewPracticeStart(storage);
@@ -1410,6 +1411,7 @@ test('homepage still prioritises older unresolved difficult words after session-
   assertEqual(storage.wordProgress[oldDifficultWord.id]?.difficult, true, 'The older List 1 word should remain unresolved after List 2 review.');
   assertEqual(storage.wordProgress[laterDifficultWord.id]?.difficult, false, 'The later List 2 word should be resolved by session-scoped review.');
   assertEqual(homepageRecommendation.kind, 'review', 'Homepage should prioritise global Review Difficult Words while any eligible difficult word remains.');
+  assertEqual(homepageStart.mode, 'review', 'Returning home without refresh should immediately start global review from the primary action.');
   assertEqual(recapSession.words.some(word => word.id === oldDifficultWord.id), false, 'From Earlier should not include unresolved difficult words.');
   assertEqual(homepageReview.words.some(word => word.id === oldDifficultWord.id), true, 'Homepage global review should include the older unresolved difficult word.');
 

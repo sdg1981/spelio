@@ -226,12 +226,7 @@ export default function App() {
       interfaceLanguage,
       publicWordLists,
       sharedList,
-      storage.currentPathPosition,
-      storage.lastSessionResult,
-      storage.listProgress,
-      storage.settings.dialectPreference,
-      storage.selectedListIds,
-      storage.wordProgress,
+      storage,
       t
     ]
   );
@@ -999,7 +994,7 @@ export default function App() {
       onContinue={startNormalContinuationPractice}
       onReview={startEndScreenReviewPractice}
       onChangeLists={() => openWordListsPage('end')}
-      onHome={completedSharedContext ? returnToLearning : completedSupportPractice ? returnToCompletedSupportPracticeOrigin : () => setScreen('home')}
+      onHome={completedSharedContext ? returnToLearning : completedSupportPractice ? returnToCompletedSupportPracticeOrigin : returnToLearning}
       contextualReturn={completedSupportPractice ? {
         label: t('end.backToSpellingBasics'),
         onClick: returnToCompletedSupportPracticeOrigin
