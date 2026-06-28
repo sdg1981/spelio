@@ -127,7 +127,7 @@ const mixedPrimer = getFoundationsPrimer('foundation_patterns_mixed_confidence_1
 assert(mixedPrimer, 'Mixed Confidence list should resolve primer body even without sound buttons.');
 assertEqual(
   mixedPrimer.body,
-  'This review brings together the D / DD, Y, F / FF, and W patterns you’ve just practised.',
+  'This review brings together the D / DD, Y, F / FF, W, and SI patterns you’ve just practised.',
   'Mixed Confidence 1 English primer should stay pattern-focused.'
 );
 assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons should expose an empty sound item list.');
@@ -135,7 +135,7 @@ const mixedPrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence
 assert(mixedPrimerCy, 'Mixed Confidence 1 should resolve a Welsh primer body.');
 assertEqual(
   mixedPrimerCy.body,
-  "Mae'r adolygiad hwn yn dod â'r patrymau D / DD, Y, F / FF a W rydych chi newydd eu hymarfer ynghyd.",
+  "Mae'r adolygiad hwn yn dod â'r patrymau D / DD, Y, F / FF, W a SI rydych chi newydd eu hymarfer ynghyd.",
   'Mixed Confidence 1 Welsh primer should stay pattern-focused.'
 );
 const mixedConfidence2Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'en');
@@ -363,7 +363,7 @@ async function runPrimerAudioTests() {
     });
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: { localStorage: mockLocalStorage }
+      value: { localStorage: mockLocalStorage, location: { origin: '' } }
     });
 
     assert(foundationsIntro, 'Foundations intro should be available for local seen-state tests.');
