@@ -195,7 +195,6 @@ export function AboutPage({
         <p>{t('footer.aboutBody2')}</p>
         <p>{t('footer.aboutBody3')}</p>
         <p>{t('footer.aboutBody4')}</p>
-        <p>{t('footer.aboutBody5')}</p>
         <p>
           {t('footer.aboutBody5ResourcePrefix')}
           <a href="https://www.saysomethingin.com/" target="_blank" rel="noopener noreferrer">
