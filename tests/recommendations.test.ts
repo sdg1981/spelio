@@ -3206,6 +3206,19 @@ test('word list selected-row highlight styling is preserved', () => {
   assert(styles.includes('background:#fff2ee'), 'Selected rows should preserve the pink highlighted background.');
 });
 
+test('expanded Foundations pattern pills render inside the learning journey card', () => {
+  const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+  const cardStart = practiceSource.indexOf('<article className={`learning-journey-card');
+  const patternList = practiceSource.indexOf('<div className="foundations-pattern-list"', cardStart);
+  const cardEnd = practiceSource.indexOf('</article>', cardStart);
+  const nextSection = practiceSource.indexOf('<section className="word-lists-section upcoming-journeys"', cardStart);
+
+  assert(cardStart >= 0, 'Foundations learning journey card should remain present.');
+  assert(patternList > cardStart, 'Expanded Foundations pattern pills should render after the Foundations card starts.');
+  assert(patternList < cardEnd, 'Expanded Foundations pattern pills should render inside the Foundations card.');
+  assert(cardEnd < nextSection, 'Upcoming learning journeys should remain outside the Foundations card.');
+});
+
 test('older storage without dialectPreference defaults to Mixed Welsh', () => {
   const storage = normaliseStorage({
     selectedListIds: ['foundations_first_words'],

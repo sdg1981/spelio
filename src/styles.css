@@ -8503,13 +8503,18 @@
 }
 
 .foundations-pattern-list{
+  width:100%;
+  min-width:0;
+  max-width:100%;
   display:flex;
   flex-wrap:wrap;
   gap:10px;
+  margin-top:18px;
 }
 
 .foundations-pattern-item{
   min-width:0;
+  max-width:100%;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -8552,6 +8557,7 @@
 .foundations-pattern-label{
   display:block;
   min-width:0;
+  overflow-wrap:anywhere;
   font-size:15px;
   font-weight:900;
   line-height:1.2;

@@ -2217,42 +2217,42 @@ function WordListPageCatalogue({
                   {foundationsExpanded ? t('wordLists.hideAllPatterns') : t('wordLists.viewAllPatterns')}
                 </button>
               )}
+              {foundationsExpanded && foundationsLists.length > 0 && (
+                <div className="foundations-pattern-list" aria-label={t('wordLists.allFoundationsPatterns')}>
+                  {foundationsLists.map(list => {
+                    const selected = selectedId === list.id;
+                    const completed = completedSet.has(list.id);
+                    const inProgress = !completed && inProgressSet.has(list.id);
+                    const statusClass = selected ? 'selected' : completed ? 'completed' : inProgress ? 'in-progress' : '';
+                    const displayName = getListDisplayName(list, interfaceLanguage);
+                    const patternLabel = getFoundationPatternLabel(list, interfaceLanguage);
+                    return (
+                      <button
+                        className={`foundations-pattern-item ${statusClass}`}
+                        type="button"
+                        key={list.id}
+                        aria-label={`${patternLabel} - ${displayName}`}
+                        aria-pressed={selected}
+                        title={displayName}
+                        onClick={() => onSelect(list.id)}
+                      >
+                        <span className="foundations-pattern-label">{patternLabel}</span>
+                        <span className="foundations-pattern-meta">
+                          {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.completed')}</span>}
+                          {!completed && selected && <span className="foundations-pattern-selected">{t('wordLists.selected')}</span>}
+                          {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <button className="learning-journey-cta" type="button" onClick={() => onStartPracticeList ? onStartPracticeList(currentFoundationList.id) : onCommitSelection(currentFoundationList.id)}>
               {t('wordLists.continueJourney')}
               <ArrowRight size={20} strokeWidth={2.1} aria-hidden="true" />
             </button>
           </article>
-        )}
-        {foundationsExpanded && foundationsLists.length > 0 && (
-          <div className="foundations-pattern-list" aria-label={t('wordLists.allFoundationsPatterns')}>
-            {foundationsLists.map(list => {
-              const selected = selectedId === list.id;
-              const completed = completedSet.has(list.id);
-              const inProgress = !completed && inProgressSet.has(list.id);
-              const statusClass = selected ? 'selected' : completed ? 'completed' : inProgress ? 'in-progress' : '';
-              const displayName = getListDisplayName(list, interfaceLanguage);
-              const patternLabel = getFoundationPatternLabel(list, interfaceLanguage);
-              return (
-                <button
-                  className={`foundations-pattern-item ${statusClass}`}
-                  type="button"
-                  key={list.id}
-                  aria-label={`${patternLabel} - ${displayName}`}
-                  aria-pressed={selected}
-                  title={displayName}
-                  onClick={() => onSelect(list.id)}
-                >
-                  <span className="foundations-pattern-label">{patternLabel}</span>
-                  <span className="foundations-pattern-meta">
-                    {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.completed')}</span>}
-                    {!completed && selected && <span className="foundations-pattern-selected">{t('wordLists.selected')}</span>}
-                    {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
         )}
       </section>
 
