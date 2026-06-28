@@ -101,7 +101,8 @@ type WordRow = {
 };
 
 const WORD_LIST_SELECT_WITH_SLUG = 'id,slug,collection_id,icon_name,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue,primer_content';
-const WORD_LIST_SELECT_WITHOUT_SLUG = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active';
+const WORD_LIST_SELECT_WITH_OPTIONAL_METADATA_WITHOUT_SLUG = 'id,collection_id,icon_name,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active,list_type,hidden_from_main_catalogue,primer_content';
+const WORD_LIST_SELECT_LEGACY_MINIMAL = 'id,collection_id,name,name_cy,description,description_cy,language,source_language,target_language,dialect,stage_id,stages(name),focus_category_id,difficulty,order_index,next_list_id,is_active';
 
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
 const validOwnerTypes: Exclude<WordListCollectionOwnerType, null>[] = ['spelio', 'school', 'teacher', 'user'];
@@ -312,13 +313,26 @@ export async function loadSupabasePublicContent(): Promise<PublicContent> {
 
     const retryListsResult = await client
       .from('word_lists')
-      .select(WORD_LIST_SELECT_WITHOUT_SLUG)
+      .select(WORD_LIST_SELECT_WITH_OPTIONAL_METADATA_WITHOUT_SLUG)
       .eq('is_active', true)
       .order('order_index', { ascending: true })
       .order('id', { ascending: true });
 
-    if (retryListsResult.error) throw retryListsResult.error;
-    listsData = retryListsResult.data;
+    if (retryListsResult.error) {
+      if (!isMissingOptionalWordListColumnError(retryListsResult.error)) throw retryListsResult.error;
+
+      const legacyListsResult = await client
+        .from('word_lists')
+        .select(WORD_LIST_SELECT_LEGACY_MINIMAL)
+        .eq('is_active', true)
+        .order('order_index', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (legacyListsResult.error) throw legacyListsResult.error;
+      listsData = legacyListsResult.data;
+    } else {
+      listsData = retryListsResult.data;
+    }
   }
 
   const collections = (collectionsResult.data ?? []).map(row => mapCollection(row as CollectionRow));

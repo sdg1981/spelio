@@ -21,7 +21,7 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 
@@ -2041,6 +2041,60 @@ test('Practice Library fallback follows the public catalogue sequence after manu
     'practice_most_common_time_and_calendar',
     'Completing Most Common Clothing should recommend Most Common Time & Calendar next.'
   );
+});
+
+test('Practice Library fallback uses live order instead of seen-count heuristics', () => {
+  const lists = makePracticeLibraryProgressionLists();
+  let storage = completeListCleanlyInLists({
+    ...createDefaultStorage(),
+    selectedListIds: ['practice_most_common_around_town'],
+    currentPathPosition: 'practice_most_common_around_town',
+    hasManualWordListSelection: true
+  }, lists, 'practice_most_common_around_town');
+  const animals = lists.find(list => list.id === 'practice_most_common_animals');
+  assert(animals, 'Expected Most Common Animals to exist.');
+
+  storage = applyWordProgressPatch(storage, animals.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:01:00.000Z');
+  storage = applyWordProgressPatch(storage, animals.words[1], { completed: true, cleanCompleted: true }, '2026-05-05T00:02:00.000Z');
+
+  assertEqual(
+    getRecommendation(storage, lists).listId,
+    'practice_most_common_animals',
+    'When progression wraps, the next Practice Library fallback should be the first active incomplete list in live order, not the least-started list.'
+  );
+});
+
+test('direct list practice start clears stale end-screen session state', () => {
+  const nextFoundationsList = wordLists
+    .filter(list => list.isActive && list.words.length > 0 && (list.collectionId === 'spelio_welsh_foundations' || list.stageId === 'foundations' || list.stage === 'Foundations'))
+    .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id))[1];
+  assert(nextFoundationsList, 'Expected at least two active Foundations lists to exist.');
+  const staleStorage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: ['foundation_patterns_d_dd'],
+    currentPathPosition: 'foundation_patterns_d_dd',
+    lastSessionResult: {
+      totalWords: 10,
+      correctWords: 10,
+      incorrectWords: 0,
+      revealedWords: 0,
+      incorrectAttempts: 0,
+      revealedLetters: 0,
+      durationSeconds: 30,
+      listIds: ['foundation_patterns_d_dd'],
+      state: 'strong'
+    }
+  };
+
+  const start = createDirectListPracticeStart(staleStorage, nextFoundationsList);
+
+  assertEqual(start.mode, 'normal', 'Direct list start should create a normal practice start.');
+  assertEqual(start.review, false, 'Direct list start should not open difficult-word review.');
+  assertEqual(start.recap, false, 'Direct list start should not open recap.');
+  assertEqual(start.storage.selectedListIds[0], nextFoundationsList.id, 'Direct list start should select the resolved next Foundations list.');
+  assertEqual(start.storage.currentPathPosition, nextFoundationsList.id, 'Direct list start should move the current path to the resolved next Foundations list.');
+  assertEqual(start.storage.lastSessionResult, null, 'Direct list start should clear stale completion state so it cannot reopen the previous end screen.');
+  assertEqual(start.storage.hasStartedPracticeSession, true, 'Direct list start should mark practice as started.');
 });
 
 test('Word Lists completion ticks distinguish completed and attempted lists', () => {

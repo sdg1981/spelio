@@ -79,6 +79,29 @@ export function createPrimaryRecommendationPracticeStart(
   };
 }
 
+export function createDirectListPracticeStart(
+  storage: SpelioStorage,
+  list: WordList,
+  t?: Translate,
+  interfaceLanguage?: InterfaceLanguage
+): PracticeStart {
+  return {
+    mode: 'normal',
+    review: false,
+    recap: false,
+    storage: withPracticeStarted({
+      ...applyPracticeStartListSelection(storage, list.id),
+      lastSessionResult: null
+    }),
+    recommendation: {
+      kind: 'list',
+      listId: list.id,
+      title: t ? t('home.continueLearning') : 'Continue learning',
+      subtitle: getListDisplayName(list, interfaceLanguage)
+    }
+  };
+}
+
 export function createDetachedSupportPracticeStart(
   storage: SpelioStorage,
   list: WordList,

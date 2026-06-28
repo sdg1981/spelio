@@ -19,7 +19,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practic
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, isFirstTimeManualWordListSelection, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
@@ -471,6 +471,20 @@ export default function App() {
 
   function startNormalContinuationPractice() {
     beginPractice(createNormalContinuationPracticeStart(storage, publicWordLists, t, interfaceLanguage), sharedContext, { returnScreen: screen });
+  }
+
+  function startWordListPractice(listId: string) {
+    const list = publicWordLists.find(item => item.id === listId && item.isActive && item.words.length > 0);
+    if (!list) return;
+
+    if (typeof window !== 'undefined' && window.location.pathname === '/word-lists') {
+      window.history.replaceState(null, '', getHomePathForLanguage(interfaceLanguage));
+      resetPublicPageScrollToTop();
+    }
+
+    setWordListReturnScreen(null);
+    setLastResult(null);
+    beginPractice(createDirectListPracticeStart(storage, list, t, interfaceLanguage), null, { returnScreen: 'word-lists' });
   }
 
   function startReviewPractice() {
@@ -974,6 +988,7 @@ export default function App() {
       onBack={returnFromWordListsPage}
       onHome={returnToLearning}
       onDone={saveSelectedWordLists}
+      onStartPracticeList={startWordListPractice}
       onCreateCustomList={openCustomListCreate}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}

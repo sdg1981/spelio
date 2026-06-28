@@ -54,7 +54,7 @@ const PRACTICE_LIBRARY_CATEGORY_ICON_NAMES: Record<string, string> = {
   practice_most_common_shopping: 'ShoppingBag',
   practice_most_common_body_parts: 'Hand',
   practice_most_common_sports: 'Trophy',
-  practice_most_common_leisure: 'Drama',
+  practice_most_common_leisure: 'Sparkles',
   practice_most_common_numbers: 'Hash',
   practice_most_common_meals_and_eating: 'Utensils',
   practice_most_common_around_town: 'Map'
@@ -184,6 +184,11 @@ export function getPracticeLibraryIconName(list: Pick<WordList, 'id' | 'iconName
   if (iconById) return iconById;
 
   const normalizedName = list.name?.toLowerCase() ?? '';
+  if (/\baround town\b|\btown\b|\bcity\b/.test(normalizedName)) return 'Map';
+  if (/\bbody\b|\bparts?\b|\bhand\b/.test(normalizedName)) return 'Hand';
+  if (/\bsports?\b|\btrophy\b|\bdumbbell\b/.test(normalizedName)) return 'Trophy';
+  if (/\bleisure\b|\bfree time\b|\bactivities\b/.test(normalizedName)) return 'Sparkles';
+  if (/\bnumbers?\b|\bcounting\b/.test(normalizedName)) return 'Hash';
   if (/\banimals?\b/.test(normalizedName)) return 'Dog';
   if (/\bfood\b|\bdrink\b|\bmeals?\b|\beating\b/.test(normalizedName)) return 'Apple';
   if (/\bpeople\b|\bfamily\b|\bhome\b|\bhousehold\b/.test(normalizedName)) return 'UserRound';

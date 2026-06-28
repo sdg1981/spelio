@@ -88,11 +88,7 @@ function findNextUnfinishedList(storage: SpelioStorage, lists: WordList[], curre
     if (nextByCollectionOrder) return nextByCollectionOrder;
   }
 
-  return [...incompleteLists].sort((left, right) => {
-    const leftSeenCount = groupLearningItems(left.words).filter(group => isLearningItemSeen(storage, group)).length;
-    const rightSeenCount = groupLearningItems(right.words).filter(group => isLearningItemSeen(storage, group)).length;
-    return leftSeenCount - rightSeenCount || compareListsByCollectionProgression(left, right);
-  })[0];
+  return orderedIncompleteLists[0];
 }
 
 function compareListsByCollectionProgression(left: WordList, right: WordList) {

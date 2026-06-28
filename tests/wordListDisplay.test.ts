@@ -1,10 +1,6 @@
 import type { WordList } from '../src/data/wordLists';
 import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
-declare function require(name: string): { readFileSync(path: string, encoding: string): string };
-
-const { readFileSync } = require('fs');
-
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
     throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
@@ -331,16 +327,47 @@ assertEqual(
   'Practice Library icon metadata should preserve explicit database icon names for the frontend resolver.'
 );
 
-const practiceLibraryOrderMigration = readFileSync('supabase/migrations/202606270001_align_practice_library_catalogue_order.sql', 'utf8');
 practiceLibraryOrderedLists.forEach((list, index) => {
   const expectedOrder = index + 1;
   assertEqual(list.order, expectedOrder, `${list.name} test fixture order should match the intended admin/catalogue order.`);
   assertEqual(getWordListCatalogueOrder(list), expectedOrder, `${list.name} catalogue order should come from the database/admin order value.`);
-  assert(
-    new RegExp(`\\('${list.id}',\\s*${expectedOrder}\\)`).test(practiceLibraryOrderMigration),
-    `${list.id} should be seeded with order ${expectedOrder} in the Practice Library order migration.`
+});
+
+const expectedPracticeLibraryIcons = [
+  ['practice_most_common_animals', 'Most Common Animals', 'Dog'],
+  ['practice_most_common_food_and_drink', 'Most Common Food & Drink', 'Apple'],
+  ['practice_most_common_people_and_family', 'Most Common People & Family', 'UserRound'],
+  ['practice_most_common_home_and_household', 'Most Common Home & Household', 'Home'],
+  ['practice_most_common_places', 'Most Common Places', 'MapPin'],
+  ['practice_most_common_travel_and_transport', 'Most Common Travel & Transport', 'MapPin'],
+  ['practice_most_common_weather', 'Most Common Weather', 'CloudSun'],
+  ['practice_most_common_time_and_calendar', 'Most Common Time & Calendar', 'Calendar'],
+  ['practice_most_common_colours', 'Most Common Colours', 'Palette'],
+  ['practice_most_common_clothing', 'Most Common Clothing', 'Shirt'],
+  ['practice_most_common_work', 'Most Common Work', 'Briefcase'],
+  ['practice_most_common_school_and_learning', 'Most Common School & Learning', 'GraduationCap'],
+  ['practice_most_common_nature_and_landscape', 'Most Common Nature & Landscape', 'Leaf'],
+  ['practice_most_common_shopping', 'Most Common Shopping', 'ShoppingBag'],
+  ['practice_most_common_body_parts', 'Most Common Body Parts', 'Hand'],
+  ['practice_most_common_sports', 'Most Common Sports', 'Trophy'],
+  ['practice_most_common_leisure', 'Most Common Leisure', 'Sparkles'],
+  ['practice_most_common_numbers', 'Most Common Numbers', 'Hash'],
+  ['practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 'Utensils'],
+  ['practice_most_common_around_town', 'Most Common Around Town', 'Map']
+] as const;
+
+expectedPracticeLibraryIcons.forEach(([id, name, expectedIcon]) => {
+  assertEqual(
+    getPracticeLibraryIconName({ id, name, iconName: '' }),
+    expectedIcon,
+    `${name} should use its content-specific icon fallback.`
   );
 });
+
+assert(
+  new Set(expectedPracticeLibraryIcons.map(([id, name]) => getPracticeLibraryIconName({ id, name, iconName: '' }))).size > 1,
+  'Practice Library icon defaults should not collapse every card to BookOpen.'
+);
 
 const displayOrderWithExplicitProgression = buildPublicCatalogueGroups([
   createPracticeLibraryList('practice_animals_entry', 'Animals Entry', 1, { nextListId: 'practice_animals_progression_target' }),

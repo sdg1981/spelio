@@ -18,6 +18,7 @@ export function WordListsPage({
   onBack,
   onHome,
   onDone,
+  onStartPracticeList,
   onCreateCustomList,
   onInterfaceLanguageChange,
   t
@@ -30,6 +31,7 @@ export function WordListsPage({
   onBack: () => void;
   onHome: () => void;
   onDone: (selectedIds: string[]) => void;
+  onStartPracticeList?: (listId: string) => void;
   onCreateCustomList: () => void;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
@@ -127,6 +129,7 @@ export function WordListsPage({
           inProgressListIds={inProgressListIds}
           onClose={onBack}
           onDone={onDone}
+          onStartPracticeList={onStartPracticeList}
           onCreateCustomList={onCreateCustomList}
           onPageShareBackChange={handlePageShareBackChange}
           afterListGridContent={recentCustomListsCard}

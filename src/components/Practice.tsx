@@ -2024,14 +2024,14 @@ function resolveCatalogueIcon(iconName: string | undefined, fallbackIconName = '
 }
 
 function getPracticeLibrarySubtitle(list: WordList, interfaceLanguage: InterfaceLanguage) {
-  const displayName = getListDisplayName(list, interfaceLanguage);
-  return displayName.replace(/^Most Common\s+/i, interfaceLanguage === 'cy' ? '' : 'Most common ').trim() || displayName;
+  return getListDisplayName(list, interfaceLanguage);
 }
 
 function getFoundationPatternLabel(list: WordList, interfaceLanguage: InterfaceLanguage) {
   const displayName = getListDisplayName(list, interfaceLanguage);
   return displayName
     .replace(/^Spelling (?:Pattern|Contrast|Focus)\s+[—-]\s*/i, '')
+    .replace(/^Mixed Confidence\s+[—-]\s*Foundations\s*(\d+)\b/i, 'Mixed Confidence $1')
     .replace(/^Mixed Confidence\s+[—-]\s*/i, 'Mixed Confidence - ')
     .replace(/^Foundations\s*\d+\s*[—-]\s*/i, '')
     .trim() || displayName;
@@ -2114,6 +2114,7 @@ function WordListPageCatalogue({
   query,
   onSelect,
   onCommitSelection,
+  onStartPracticeList,
   onShare,
   afterListGridContent,
   interfaceLanguage,
@@ -2127,6 +2128,7 @@ function WordListPageCatalogue({
   query: string;
   onSelect: (listId: string) => void;
   onCommitSelection: (listId: string) => void;
+  onStartPracticeList?: (listId: string) => void;
   onShare: (list: WordList) => void;
   afterListGridContent?: ReactNode;
   interfaceLanguage: InterfaceLanguage;
@@ -2254,7 +2256,7 @@ function WordListPageCatalogue({
                 </button>
               )}
             </div>
-            <button className="learning-journey-cta" type="button" onClick={() => onCommitSelection(currentFoundationList.id)}>
+            <button className="learning-journey-cta" type="button" onClick={() => onStartPracticeList ? onStartPracticeList(currentFoundationList.id) : onCommitSelection(currentFoundationList.id)}>
               {t('wordLists.continueJourney')}
               <ArrowRight size={20} strokeWidth={2.1} aria-hidden="true" />
             </button>
@@ -2266,16 +2268,20 @@ function WordListPageCatalogue({
               const selected = selectedId === list.id;
               const completed = completedSet.has(list.id);
               const inProgress = !completed && inProgressSet.has(list.id);
-              const statusClass = completed ? 'completed' : selected ? 'selected' : inProgress ? 'in-progress' : '';
+              const statusClass = selected ? 'selected' : completed ? 'completed' : inProgress ? 'in-progress' : '';
+              const displayName = getListDisplayName(list, interfaceLanguage);
+              const patternLabel = getFoundationPatternLabel(list, interfaceLanguage);
               return (
                 <button
                   className={`foundations-pattern-item ${statusClass}`}
                   type="button"
                   key={list.id}
+                  aria-label={`${patternLabel} - ${displayName}`}
                   aria-pressed={selected}
+                  title={displayName}
                   onClick={() => onSelect(list.id)}
                 >
-                  <span className="foundations-pattern-label">{getFoundationPatternLabel(list, interfaceLanguage)}</span>
+                  <span className="foundations-pattern-label">{patternLabel}</span>
                   <span className="foundations-pattern-meta">
                     {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.completed')}</span>}
                     {!completed && selected && <span className="foundations-pattern-selected">{t('wordLists.selected')}</span>}
@@ -2551,6 +2557,7 @@ export function WordListSelectorPanel({
   inProgressListIds = [],
   onClose,
   onDone,
+  onStartPracticeList,
   onCreateCustomList,
   onSuggestWordList,
   onPageShareBackChange,
@@ -2565,6 +2572,7 @@ export function WordListSelectorPanel({
   inProgressListIds?: string[];
   onClose: () => void;
   onDone: (selectedIds: string[]) => void;
+  onStartPracticeList?: (listId: string) => void;
   onCreateCustomList?: () => void;
   onSuggestWordList?: () => void;
   onPageShareBackChange?: (handler: (() => void) | null) => void;
@@ -2717,6 +2725,7 @@ export function WordListSelectorPanel({
             query={query}
             onSelect={selectList}
             onCommitSelection={listId => onDone(selectSingleWordList(listId))}
+            onStartPracticeList={onStartPracticeList}
             onShare={openShareList}
             afterListGridContent={afterListGridContent}
             interfaceLanguage={interfaceLanguage}
