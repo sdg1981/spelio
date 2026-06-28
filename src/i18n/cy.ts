@@ -337,7 +337,7 @@ export const cy = {
     foundationsCurrentSection: 'Patrymau Sillafu',
     foundationsProgress: '{completed} / {total} wedi cwblhau',
     foundationsChipsLabel: 'Pynciau’r sylfeini',
-    moreFoundationsChips: '+{count} arall',
+    moreFoundationsChips: 'Gweld pob un ({count})',
     viewAllPatterns: 'Gweld pob patrwm',
     hideAllPatterns: 'Cuddio patrymau',
     allFoundationsPatterns: 'Holl batrymau’r Sylfeini',

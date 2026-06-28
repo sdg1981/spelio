@@ -337,7 +337,7 @@ export const en = {
     foundationsCurrentSection: 'Spelling Patterns',
     foundationsProgress: '{completed} / {total} complete',
     foundationsChipsLabel: 'Foundations topics',
-    moreFoundationsChips: '+{count} more',
+    moreFoundationsChips: 'View all ({count})',
     viewAllPatterns: 'View all patterns',
     hideAllPatterns: 'Hide patterns',
     allFoundationsPatterns: 'All Foundations patterns',
