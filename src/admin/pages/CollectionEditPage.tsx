@@ -7,7 +7,7 @@ import { AudioStatusPill } from '../components/audioStatus';
 import type { AdminRepository } from '../repositories';
 import type { AdminWordList, AdminWordListCollection } from '../types';
 import { normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
-import { buildCollectionId, collectionOwnerTypeOptions, collectionTypeOptions, createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../services/collectionDraft';
+import { buildCollectionId, collectionMetadataFieldLabels, collectionOwnerTypeOptions, collectionTypeOptions, createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../services/collectionDraft';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder, deriveInitialProgressionListIds, moveItem, sortCollectionWordLists } from '../services/collectionOrdering';
 import { ADMIN_CONTENT_DELETE_FLAG, getDeleteConfirmationPhrase, isAdminContentDeleteAllowed, isDeleteConfirmationValid } from '../services/contentDeleteSafety';
 
@@ -134,7 +134,7 @@ export function CollectionEditPage({ id = '', mode = 'edit', navigate, repositor
       targetLanguage: collection.targetLanguage.trim(),
       ownerId: collection.ownerId?.trim() || null
     };
-    const validationErrors = isCreating ? validateAdminCollectionDraft(collectionToSave, collections) : [];
+    const validationErrors = validateAdminCollectionDraft(collectionToSave, collections);
     if (validationErrors.length) {
       setErrorMessage(validationErrors.join(' '));
       setStatusMessage('');
@@ -377,62 +377,12 @@ export function CollectionEditPage({ id = '', mode = 'edit', navigate, repositor
                 </span>
               </div>
               <div className="text-slate-600">{collection.description}</div>
-              {isCreating && (
-                <div className="grid gap-4 border-t border-slate-100 pt-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Field label="Name">
-                      <AdminInput value={collection.name} onChange={event => updateCollectionName(event.target.value)} autoFocus />
-                    </Field>
-                    <Field label="Slug" helper="Lowercase letters, numbers, and hyphens only.">
-                      <AdminInput value={collection.slug} onChange={event => updateCollection({ slug: event.target.value })} />
-                    </Field>
-                  </div>
-                  <Field label="Description">
-                    <AdminTextarea value={collection.description} onChange={event => updateCollection({ description: event.target.value })} />
-                  </Field>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Field label="Type">
-                      <AdminSelect value={collection.type} onChange={event => updateCollection({ type: event.target.value as typeof collection.type })}>
-                        {collectionTypeOptions.map(type => <option key={type} value={type}>{type}</option>)}
-                      </AdminSelect>
-                    </Field>
-                    <Field label="Source language">
-                      <AdminInput value={collection.sourceLanguage} onChange={event => updateCollection({ sourceLanguage: event.target.value })} />
-                    </Field>
-                    <Field label="Target language">
-                      <AdminInput value={collection.targetLanguage} onChange={event => updateCollection({ targetLanguage: event.target.value })} />
-                    </Field>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Field label="Owner type">
-                      <AdminSelect value={collection.ownerType ?? ''} onChange={event => updateCollection({ ownerType: event.target.value ? event.target.value as typeof collection.ownerType : null })}>
-                        <option value="">None</option>
-                        {collectionOwnerTypeOptions.map(ownerType => <option key={ownerType} value={ownerType}>{ownerType}</option>)}
-                      </AdminSelect>
-                    </Field>
-                    <Field label="Owner ID" helper="Optional. Leave blank for Spelio-owned collections.">
-                      <AdminInput value={collection.ownerId ?? ''} onChange={event => updateCollection({ ownerId: event.target.value })} />
-                    </Field>
-                  </div>
-                </div>
-              )}
-              <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
-                <Field label="Order" helper="Controls public collection order. Lower numbers appear first.">
-                  <AdminInput type="number" min={0} value={collection.order} onChange={event => updateCollection({ order: Number(event.target.value) })} />
-                </Field>
-                <Field label="Public visibility" helper="Inactive collections and their word lists stay out of the public catalogue.">
-                  <label className="flex min-h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-slate-300"
-                      checked={collection.isActive}
-                      onChange={event => updateCollection({ isActive: event.target.checked })}
-                    />
-                    Active collection
-                  </label>
-                </Field>
-              </div>
-              {!isCreating && <div className="text-xs font-semibold text-slate-500">Core collection metadata is preserved and remains read-only in this MVP editor.</div>}
+              <CollectionMetadataForm
+                collection={collection}
+                autoFocusName={isCreating}
+                onNameChange={updateCollectionName}
+                onUpdate={updateCollection}
+              />
               {isCreating ? (
                 <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
                   <AdminButton variant="primary" onClick={saveCollection} disabled={anyBusy}>
@@ -765,6 +715,79 @@ export function CollectionEditPage({ id = '', mode = 'edit', navigate, repositor
         </div>
       )}
     </>
+  );
+}
+
+function CollectionMetadataForm({
+  collection,
+  autoFocusName,
+  onNameChange,
+  onUpdate
+}: {
+  collection: AdminWordListCollection;
+  autoFocusName: boolean;
+  onNameChange: (name: string) => void;
+  onUpdate: (patch: Partial<AdminWordListCollection>) => void;
+}) {
+  return (
+    <div className="grid gap-4 border-t border-slate-100 pt-4" data-collection-metadata-fields={collectionMetadataFieldLabels.join('|')}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Name">
+          <AdminInput value={collection.name} onChange={event => onNameChange(event.target.value)} autoFocus={autoFocusName} />
+        </Field>
+        <Field label="Slug" helper="Lowercase letters, numbers, and hyphens only.">
+          <AdminInput value={collection.slug} onChange={event => onUpdate({ slug: event.target.value })} />
+        </Field>
+      </div>
+      <Field label="Description">
+        <AdminTextarea value={collection.description} onChange={event => onUpdate({ description: event.target.value })} />
+      </Field>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Field label="Type">
+          <AdminSelect value={collection.type} onChange={event => onUpdate({ type: event.target.value as typeof collection.type })}>
+            {collectionTypeOptions.map(type => <option key={type} value={type}>{type}</option>)}
+          </AdminSelect>
+        </Field>
+        <Field label="Source language">
+          <AdminInput value={collection.sourceLanguage} onChange={event => onUpdate({ sourceLanguage: event.target.value })} />
+        </Field>
+        <Field label="Target language">
+          <AdminInput value={collection.targetLanguage} onChange={event => onUpdate({ targetLanguage: event.target.value })} />
+        </Field>
+      </div>
+      <details className="rounded-md border border-slate-200 bg-slate-50 p-4">
+        <summary className="cursor-pointer text-xs font-black uppercase tracking-wide text-slate-500">Advanced metadata</summary>
+        <div className="mt-4 grid gap-4">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+            <Field label="Order" helper="Controls public collection order. Lower numbers appear first.">
+              <AdminInput type="number" min={0} value={collection.order} onChange={event => onUpdate({ order: Number(event.target.value) })} />
+            </Field>
+            <Field label="Public visibility" helper="Inactive collections and their word lists stay out of the public catalogue.">
+              <label className="flex min-h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300"
+                  checked={collection.isActive}
+                  onChange={event => onUpdate({ isActive: event.target.checked })}
+                />
+                Active collection
+              </label>
+            </Field>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Owner type">
+              <AdminSelect value={collection.ownerType ?? ''} onChange={event => onUpdate({ ownerType: event.target.value ? event.target.value as typeof collection.ownerType : null })}>
+                <option value="">None</option>
+                {collectionOwnerTypeOptions.map(ownerType => <option key={ownerType} value={ownerType}>{ownerType}</option>)}
+              </AdminSelect>
+            </Field>
+            <Field label="Owner ID" helper="Optional. Leave blank for Spelio-owned collections.">
+              <AdminInput value={collection.ownerId ?? ''} onChange={event => onUpdate({ ownerId: event.target.value })} />
+            </Field>
+          </div>
+        </div>
+      </details>
+    </div>
   );
 }
 

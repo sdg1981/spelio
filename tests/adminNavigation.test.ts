@@ -1,5 +1,5 @@
 import { adminNavGroups } from '../src/admin/navigation';
-import { createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../src/admin/services/collectionDraft';
+import { collectionMetadataFieldLabels, createCollectionSlug, createDraftAdminCollection, validateAdminCollectionDraft } from '../src/admin/services/collectionDraft';
 import { applyCollectionCatalogueOrder, applyCollectionProgressionOrder } from '../src/admin/services/collectionOrdering';
 import type { AdminWordList, AdminWordListCollection } from '../src/admin/types';
 
@@ -229,6 +229,11 @@ assertEqual(draftCollection.targetLanguage, 'cy', 'New collection drafts should 
 assertEqual(draftCollection.ownerType, 'spelio', 'New collection drafts should default to Spelio ownership.');
 assertEqual(draftCollection.isActive, true, 'New collection drafts should default to active.');
 assertEqual(draftCollection.order, 6, 'New collection drafts should use the next available collection order.');
+assertEqual(
+  collectionMetadataFieldLabels.join('|'),
+  'Name|Slug|Description|Type|Source language|Target language|Order|Public visibility|Owner type|Owner ID',
+  'Create and edit should share the same collection metadata field set.'
+);
 assertEqual(createCollectionSlug('Most Common Places!'), 'most-common-places', 'Collection names should generate editable URL-safe slugs.');
 assertEqual(
   validateAdminCollectionDraft({ ...draftCollection, name: 'Most Common Places', slug: 'most-common-places' }, [makeCollection('animals', 'animals', 1)]).length,
@@ -271,10 +276,35 @@ assert(
 );
 assert(
   collectionEditPageSource.includes('repository.createCollection') &&
+    collectionEditPageSource.includes('repository.saveCollection') &&
     collectionEditPageSource.includes('Create collection') &&
     collectionEditPageSource.includes('validateAdminCollectionDraft') &&
     collectionEditPageSource.includes('createCollectionSlug'),
   'Collection editor should reuse the edit surface for successful creation with slug validation.'
+);
+assertEqual(
+  collectionEditPageSource.split('<CollectionMetadataForm').length - 1,
+  1,
+  'Create and edit should render collection metadata through one shared form call.'
+);
+assert(
+  collectionEditPageSource.includes('data-collection-metadata-fields={collectionMetadataFieldLabels.join') &&
+    collectionEditPageSource.includes('value={collection.name}') &&
+    collectionEditPageSource.includes('value={collection.slug}') &&
+    collectionEditPageSource.includes('value={collection.description}') &&
+    collectionEditPageSource.includes('value={collection.type}') &&
+    collectionEditPageSource.includes('value={collection.sourceLanguage}') &&
+    collectionEditPageSource.includes('value={collection.targetLanguage}') &&
+    collectionEditPageSource.includes('value={collection.order}') &&
+    collectionEditPageSource.includes('checked={collection.isActive}') &&
+    collectionEditPageSource.includes('value={collection.ownerType ??') &&
+    collectionEditPageSource.includes('value={collection.ownerId ??'),
+  'Shared collection metadata form should bind existing edit values for every collection field.'
+);
+assertEqual(
+  collectionEditPageSource.includes('Core collection metadata is preserved and remains read-only in this MVP editor.'),
+  false,
+  'Edit mode should no longer present collection metadata as read-only while create mode exposes those fields.'
 );
 assert(
   !collectionEditPageSource.includes('stageId') &&

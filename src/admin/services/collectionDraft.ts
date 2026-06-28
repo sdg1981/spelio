@@ -70,6 +70,18 @@ export function buildCollectionId(slug: string) {
 
 export const collectionTypeOptions: AdminCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
 export const collectionOwnerTypeOptions: Exclude<AdminCollectionOwnerType, null>[] = ['spelio', 'school', 'teacher', 'user'];
+export const collectionMetadataFieldLabels = [
+  'Name',
+  'Slug',
+  'Description',
+  'Type',
+  'Source language',
+  'Target language',
+  'Order',
+  'Public visibility',
+  'Owner type',
+  'Owner ID'
+] as const;
 
 function isSupportedOwnerType(value: AdminCollectionOwnerType): value is Exclude<AdminCollectionOwnerType, null> {
   return value === 'spelio' || value === 'school' || value === 'teacher' || value === 'user';
