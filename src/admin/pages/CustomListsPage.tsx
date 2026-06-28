@@ -1,15 +1,16 @@
 import { ExternalLink, RefreshCcw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AdminPageHeader } from '../components/AdminPageHeader';
-import { AdminButton, AdminCard } from '../components/primitives';
+import { AdminButton, AdminCard, AdminSpinner } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
-import type { AdminCustomWordListSummary, AdminRepository } from '../repositories';
+import { formatCustomWordListCleanupSuccess, type AdminCustomWordListSummary, type AdminRepository } from '../repositories';
 import { formatAdminDate } from '../utils/dateFormat';
 
 export function CustomListsPage({ repository }: { repository: AdminRepository }) {
   const [lists, setLists] = useState<AdminCustomWordListSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('');
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [status, setStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -25,9 +26,21 @@ export function CustomListsPage({ repository }: { repository: AdminRepository })
   }, [repository]);
 
   async function cleanupExpired() {
-    const deleted = await repository.cleanupExpiredCustomWordLists();
-    setStatus(`Cleaned up ${deleted} expired custom list${deleted === 1 ? '' : 's'}.`);
-    await load();
+    setCleanupLoading(true);
+    setStatus(null);
+    try {
+      const result = await repository.cleanupExpiredCustomWordLists();
+      setStatus({ tone: 'success', message: formatCustomWordListCleanupSuccess(result) });
+      await load();
+    } catch (error) {
+      console.error('Expired custom list cleanup failed', error);
+      setStatus({
+        tone: 'error',
+        message: 'Cleanup could not be completed. Please try again from the admin page in a moment.'
+      });
+    } finally {
+      setCleanupLoading(false);
+    }
   }
 
   return (
@@ -37,18 +50,29 @@ export function CustomListsPage({ repository }: { repository: AdminRepository })
         description="Temporary custom spelling lists created through the public preview flow."
         actions={(
           <div className="flex gap-2">
-            <AdminButton variant="secondary" onClick={() => load()}>
+            <AdminButton variant="secondary" onClick={() => load()} disabled={loading || cleanupLoading}>
               <RefreshCcw size={16} />
               Refresh
             </AdminButton>
-            <AdminButton variant="secondary" onClick={cleanupExpired}>
-              <Trash2 size={16} />
-              Cleanup expired
+            <AdminButton variant="secondary" onClick={cleanupExpired} disabled={cleanupLoading}>
+              {cleanupLoading ? <AdminSpinner /> : <Trash2 size={16} />}
+              {cleanupLoading ? 'Cleaning...' : 'Cleanup expired'}
             </AdminButton>
           </div>
         )}
       />
-      {status && <div className="mb-4 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">{status}</div>}
+      {status && (
+        <div
+          className={`mb-4 rounded-md border px-4 py-3 text-sm font-bold ${
+            status.tone === 'error'
+              ? 'border-red-100 bg-red-50 text-red-700'
+              : 'border-slate-200 bg-white text-slate-700'
+          }`}
+          role="status"
+        >
+          {status.message}
+        </div>
+      )}
       <AdminCard className="overflow-hidden">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-lg font-black tracking-[-0.02em]">Recent custom lists</h2>

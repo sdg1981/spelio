@@ -21,6 +21,11 @@ export interface AdminCustomWordListSummary {
   shareUrl: string;
 }
 
+export interface AdminCustomWordListCleanupResult {
+  expiredListCount: number;
+  audioFileCount: number;
+}
+
 export interface AdminAudioSettings {
   defaultAudioProvider: DefaultAudioProvider;
   interfaceAudioClips: InterfaceAudioClip[];
@@ -67,7 +72,7 @@ export interface AdminRepository {
   saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
   generateInterfaceAudioClip(clip: InterfaceAudioClip): Promise<InterfaceAudioClip>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
-  cleanupExpiredCustomWordLists(): Promise<number>;
+  cleanupExpiredCustomWordLists(): Promise<AdminCustomWordListCleanupResult>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;
   importContent(payload: unknown): Promise<ImportContentResult>;
   validateImport(payload: unknown): Promise<ImportValidationResult>;
@@ -75,6 +80,31 @@ export interface AdminRepository {
   listStages(): Promise<AdminStructureOption[]>;
   listFocusCategories(): Promise<AdminStructureOption[]>;
   listDialects(): Promise<AdminStructureOption[]>;
+}
+
+export function normalizeCustomWordListCleanupResult(value: unknown): AdminCustomWordListCleanupResult {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return { expiredListCount: Math.max(0, Math.trunc(value)), audioFileCount: 0 };
+  }
+  if (!value || typeof value !== 'object') {
+    return { expiredListCount: 0, audioFileCount: 0 };
+  }
+  const row = value as Record<string, unknown>;
+  return {
+    expiredListCount: normalizeCleanupCount(row.expiredListCount ?? row.expired_list_count),
+    audioFileCount: normalizeCleanupCount(row.audioFileCount ?? row.audio_file_count)
+  };
+}
+
+export function formatCustomWordListCleanupSuccess(result: AdminCustomWordListCleanupResult) {
+  const listLabel = result.expiredListCount === 1 ? 'expired custom list' : 'expired custom lists';
+  const audioLabel = result.audioFileCount === 1 ? 'audio file' : 'audio files';
+  return `Cleaned up ${result.expiredListCount} ${listLabel} and ${result.audioFileCount} generated ${audioLabel}.`;
+}
+
+function normalizeCleanupCount(value: unknown) {
+  const count = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : 0;
+  return Number.isFinite(count) ? Math.max(0, Math.trunc(count)) : 0;
 }
 
 export function getAudioHealth(list: AdminWordList) {

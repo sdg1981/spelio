@@ -1,6 +1,6 @@
 import { adminDialects, adminFocusCategories, adminStages, adminWordListCollections, adminWordLists } from '../data/mockAdminData';
 import type { AdminFocusFilters } from './filters';
-import type { AdminRepository, AdminWordWithListName } from './adminRepository';
+import type { AdminCustomWordListSummary, AdminRepository, AdminWordWithListName } from './adminRepository';
 import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, ImportContentResult, ImportValidationResult } from '../types';
 import { validateImportPayload } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
@@ -16,6 +16,7 @@ let audioSettings: AdminAudioSettings = {
   defaultAudioProvider: 'azure',
   interfaceAudioClips: createDefaultInterfaceAudioClips()
 };
+let customWordLists: AdminCustomWordListSummary[] = createMockCustomWordLists();
 
 function cloneList(list: AdminWordList): AdminWordList {
   return {
@@ -41,6 +42,35 @@ function collectionName(id: string) {
 
 function structureOption(name: string, order: number): AdminStructureOption {
   return { id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name, order, active: true };
+}
+
+function createMockCustomWordLists(): AdminCustomWordListSummary[] {
+  return [
+    {
+      id: 'mock-custom-list-1',
+      publicId: 'cl_mockpreview1234567890',
+      createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ready',
+      moderationStatus: 'pass',
+      wordCount: 3,
+      audioReady: 3,
+      audioFailed: 0,
+      shareUrl: '/custom-list/cl_mockpreview1234567890/share'
+    },
+    {
+      id: 'mock-custom-list-expired',
+      publicId: 'cl_mockexpired123456789',
+      createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ready',
+      moderationStatus: 'pass',
+      wordCount: 2,
+      audioReady: 2,
+      audioFailed: 0,
+      shareUrl: '/custom-list/cl_mockexpired123456789/share'
+    }
+  ];
 }
 
 export const mockAdminRepository: AdminRepository = {
@@ -371,24 +401,17 @@ export const mockAdminRepository: AdminRepository = {
   },
 
   async listCustomWordLists() {
-    return [
-      {
-        id: 'mock-custom-list-1',
-        publicId: 'cl_mockpreview1234567890',
-        createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        expiresAt: new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'ready',
-        moderationStatus: 'pass',
-        wordCount: 3,
-        audioReady: 3,
-        audioFailed: 0,
-        shareUrl: '/custom-list/cl_mockpreview1234567890/share'
-      }
-    ];
+    return customWordLists.map(list => ({ ...list }));
   },
 
   async cleanupExpiredCustomWordLists() {
-    return 0;
+    const now = Date.now();
+    const expired = customWordLists.filter(list => new Date(list.expiresAt).getTime() <= now);
+    customWordLists = customWordLists.filter(list => new Date(list.expiresAt).getTime() > now);
+    return {
+      expiredListCount: expired.length,
+      audioFileCount: expired.reduce((count, list) => count + list.audioReady + list.audioFailed, 0)
+    };
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {

@@ -1,7 +1,7 @@
 import { supabase } from '../../lib/supabaseClient';
 import type { AdminCollectionOwnerType, AdminCollectionType, AdminStructureOption, AdminWord, AdminWordList, AdminWordListCollection, AudioReviewStatus, AudioStatus, DefaultAudioProvider, ElevenLabsAudioStatus, ElevenLabsGenerationMode, ImportContentResult, ImportValidationResult } from '../types';
 import { DEFAULT_COLLECTION_ID } from '../types';
-import type { AdminRepository, AdminWordWithListName } from './adminRepository';
+import { normalizeCustomWordListCleanupResult, type AdminRepository, type AdminWordWithListName } from './adminRepository';
 import type { AdminFocusFilters } from './filters';
 import { validateImportPayload, type ImportPreview } from './importValidation';
 import { buildAdminContentExportPayload } from './contentExport';
@@ -711,7 +711,7 @@ export const supabaseAdminRepository: AdminRepository = {
     const client = await requireAdminSupabase();
     const { data, error } = await client.rpc('cleanup_expired_custom_word_lists');
     if (error) throw error;
-    return typeof data === 'number' ? data : 0;
+    return normalizeCustomWordListCleanupResult(data);
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {
