@@ -19,7 +19,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practic
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, isFirstTimeManualWordListSelection, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
@@ -510,10 +510,8 @@ export default function App() {
   }
 
   function startEndScreenReviewPractice() {
-    beginPractice(createReviewPracticeStart(storage, {
-      reviewScope: 'session',
-      reviewWordIds: lastSessionReviewWordIds
-    }));
+    if (lastSessionDifficultWordCount <= 0) return;
+    beginPractice(createSessionReviewPracticeStart(storage, lastSessionReviewWordIds));
   }
 
   function startCompletedSupportReviewPractice() {

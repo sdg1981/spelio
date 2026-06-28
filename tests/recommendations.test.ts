@@ -21,7 +21,7 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart } from '../src/lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 
@@ -1292,10 +1292,7 @@ test('end-screen difficult review is scoped to the just-completed session words'
   storage = applyWordProgressPatch(storage, mixedWord, { incorrect: true }, '2026-05-05T00:00:00.000Z');
   storage = applyWordProgressPatch(storage, bathroom, { incorrect: true }, '2026-05-05T00:01:00.000Z');
 
-  const reviewStart = createReviewPracticeStart(storage, {
-    reviewScope: 'session',
-    reviewWordIds: mixedConfidence3.words.map(word => word.id)
-  });
+  const reviewStart = createSessionReviewPracticeStart(storage, mixedConfidence3.words.map(word => word.id));
   const reviewSession = createPracticeSession(lists, reviewStart.storage, reviewStart.review, reviewStart.recap, {
     reviewScope: reviewStart.reviewScope,
     reviewWordIds: reviewStart.reviewWordIds

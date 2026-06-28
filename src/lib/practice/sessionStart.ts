@@ -22,16 +22,23 @@ function withPracticeStarted(storage: SpelioStorage): SpelioStorage {
   };
 }
 
-export function createReviewPracticeStart(
-  storage: SpelioStorage,
-  options: { reviewScope?: 'session' | 'global'; reviewWordIds?: string[] } = {}
-): PracticeStart {
+export function createReviewPracticeStart(storage: SpelioStorage): PracticeStart {
   return {
     mode: 'review',
     review: true,
     recap: false,
-    reviewScope: options.reviewScope ?? 'global',
-    reviewWordIds: options.reviewWordIds,
+    reviewScope: 'global',
+    storage: withPracticeStarted(storage)
+  };
+}
+
+export function createSessionReviewPracticeStart(storage: SpelioStorage, reviewWordIds: string[]): PracticeStart {
+  return {
+    mode: 'review',
+    review: true,
+    recap: false,
+    reviewScope: 'session',
+    reviewWordIds: [...reviewWordIds],
     storage: withPracticeStarted(storage)
   };
 }
