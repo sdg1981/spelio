@@ -335,7 +335,7 @@ export const en = {
     foundationsJourneyTitle: 'Welsh Spelling Foundations',
     currentlyOn: 'You’re currently on:',
     foundationsCurrentSection: 'Spelling Patterns',
-    foundationsProgress: '{completed} of {total} lists completed',
+    foundationsProgress: '{completed} / {total} complete',
     foundationsChipsLabel: 'Foundations topics',
     moreFoundationsChips: '+{count} more',
     viewAllPatterns: 'View all patterns',

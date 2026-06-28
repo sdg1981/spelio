@@ -335,7 +335,7 @@ export const cy = {
     foundationsJourneyTitle: 'Sylfeini Sillafu Cymraeg',
     currentlyOn: 'Rydych chi ar hyn o bryd ar:',
     foundationsCurrentSection: 'Patrymau Sillafu',
-    foundationsProgress: '{completed} o {total} rhestr wedi’u cwblhau',
+    foundationsProgress: '{completed} / {total} wedi cwblhau',
     foundationsChipsLabel: 'Pynciau’r sylfeini',
     moreFoundationsChips: '+{count} arall',
     viewAllPatterns: 'Gweld pob patrwm',

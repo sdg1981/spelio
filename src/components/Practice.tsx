@@ -2119,6 +2119,7 @@ function WordListPageCatalogue({
   const foundationsProgressLabel = t('wordLists.foundationsProgress')
     .replace('{completed}', String(foundationsCompleted))
     .replace('{total}', String(foundationsTotal));
+  const toggleFoundationsExpanded = () => setFoundationsExpanded(value => !value);
   const previewChipLabels = FOUNDATION_PREVIEW_CHIP_LABELS;
   const hiddenFoundationsCount = Math.max(0, foundationsLists.length - previewChipLabels.length);
 
@@ -2191,8 +2192,17 @@ function WordListPageCatalogue({
                   const selected = selectedId === list.id;
                   const completed = completedSet.has(list.id);
                   const inProgress = !completed && inProgressSet.has(list.id);
+                  const displayName = getListDisplayName(list, interfaceLanguage);
+                  const patternLabel = getFoundationPatternLabel(list, interfaceLanguage);
+                  const statusLabel = selected
+                    ? t('wordLists.selected')
+                    : completed
+                      ? t('wordLists.completed')
+                      : inProgress
+                        ? t('wordLists.inProgress')
+                        : '';
                   return (
-                    <span
+                    <button
                       className={[
                         'learning-journey-chip',
                         completed ? 'completed' : '',
@@ -2200,23 +2210,36 @@ function WordListPageCatalogue({
                         inProgress ? 'in-progress' : ''
                       ].filter(Boolean).join(' ')}
                       key={list.id}
+                      type="button"
+                      aria-label={[patternLabel, displayName, statusLabel].filter(Boolean).join(' - ')}
+                      aria-pressed={selected}
+                      title={displayName}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onSelect(list.id);
+                      }}
                     >
                       {completed && <CheckCircle2 size={13} strokeWidth={2.2} aria-hidden="true" />}
-                      {getFoundationPatternLabel(list, interfaceLanguage)}
-                    </span>
+                      {patternLabel}
+                    </button>
                   );
                 })}
                 {hiddenFoundationsCount > 0 && (
-                  <button className="learning-journey-chip-button" type="button" onClick={() => setFoundationsExpanded(true)}>
-                    {t('wordLists.moreFoundationsChips').replace('{count}', String(hiddenFoundationsCount))}
+                  <button
+                    className="learning-journey-chip-button"
+                    type="button"
+                    aria-expanded={foundationsExpanded}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleFoundationsExpanded();
+                    }}
+                  >
+                    {foundationsExpanded
+                      ? t('wordLists.hideAllPatterns')
+                      : t('wordLists.moreFoundationsChips').replace('{count}', String(hiddenFoundationsCount))}
                   </button>
                 )}
               </div>
-              {foundationsLists.length > previewChipLabels.length && (
-                <button className="learning-journey-secondary-action" type="button" onClick={() => setFoundationsExpanded(value => !value)}>
-                  {foundationsExpanded ? t('wordLists.hideAllPatterns') : t('wordLists.viewAllPatterns')}
-                </button>
-              )}
               {foundationsExpanded && foundationsLists.length > 0 && (
                 <div className="foundations-pattern-list" aria-label={t('wordLists.allFoundationsPatterns')}>
                   {foundationsLists.map(list => {
@@ -2226,19 +2249,26 @@ function WordListPageCatalogue({
                     const statusClass = selected ? 'selected' : completed ? 'completed' : inProgress ? 'in-progress' : '';
                     const displayName = getListDisplayName(list, interfaceLanguage);
                     const patternLabel = getFoundationPatternLabel(list, interfaceLanguage);
+                    const statusLabel = selected
+                      ? t('wordLists.selected')
+                      : completed
+                        ? t('wordLists.completed')
+                        : inProgress
+                          ? t('wordLists.inProgress')
+                          : '';
                     return (
                       <button
                         className={`foundations-pattern-item ${statusClass}`}
                         type="button"
                         key={list.id}
-                        aria-label={`${patternLabel} - ${displayName}`}
+                        aria-label={[patternLabel, displayName, statusLabel].filter(Boolean).join(' - ')}
                         aria-pressed={selected}
                         title={displayName}
                         onClick={() => onSelect(list.id)}
                       >
                         <span className="foundations-pattern-label">{patternLabel}</span>
                         <span className="foundations-pattern-meta">
-                          {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" />{t('wordLists.completed')}</span>}
+                          {completed && <span className="foundations-pattern-completed"><CheckCircle2 size={15} strokeWidth={2} aria-hidden="true" /></span>}
                           {!completed && selected && <span className="foundations-pattern-selected">{t('wordLists.selected')}</span>}
                           {!selected && inProgress && <span>{t('wordLists.inProgress')}</span>}
                         </span>
