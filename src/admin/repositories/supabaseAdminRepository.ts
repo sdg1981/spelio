@@ -12,6 +12,7 @@ import { clearCollectionContentWithClient, deleteWordListWithClient } from './co
 import { normalizePrimerContent, toPrimerContentStorage } from '../../content/foundationsPrimer';
 import { getCollectionIntroAudioGenerationText, normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
+import { getApiUrl } from '../../lib/nativeOrigin';
 
 type CustomWordListRow = {
   id: string;
@@ -133,6 +134,17 @@ async function requireAdminSupabase() {
 function assertDestructiveContentImportAllowed() {
   if (import.meta.env.VITE_ALLOW_ADMIN_CONTENT_IMPORT === 'true') return;
   throw new Error('Content import is disabled. Set VITE_ALLOW_ADMIN_CONTENT_IMPORT=true only for an intentional, reviewed import.');
+}
+
+async function cleanupExpiredCustomWordListsViaRpc(client: { rpc: (functionName: string) => unknown }) {
+  const { data, error } = await client.rpc('cleanup_expired_custom_word_lists') as { data: unknown; error: unknown };
+  if (error) {
+    console.error('Admin custom list cleanup RPC fallback failed', {
+      error
+    });
+    throw error;
+  }
+  return normalizeCustomWordListCleanupResult(data);
 }
 
 export const supabaseAdminRepository: AdminRepository = {
@@ -709,9 +721,28 @@ export const supabaseAdminRepository: AdminRepository = {
 
   async cleanupExpiredCustomWordLists() {
     const client = await requireAdminSupabase();
-    const { data, error } = await client.rpc('cleanup_expired_custom_word_lists');
-    if (error) throw error;
-    return normalizeCustomWordListCleanupResult(data);
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (sessionError || !accessToken) {
+      throw new Error('Admin Supabase session required. Sign in again before cleaning up custom lists.');
+    }
+
+    const response = await fetch(getApiUrl('/api/admin-custom-lists-cleanup'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+    const payload = await response.json().catch(() => null) as Record<string, unknown> | null;
+    if (!response.ok) {
+      console.error('Admin custom list cleanup API failed', {
+        status: response.status,
+        payload
+      });
+      if (response.status === 404) return cleanupExpiredCustomWordListsViaRpc(client);
+      throw new Error(typeof payload?.error === 'string' ? payload.error : `Cleanup API failed (${response.status}).`);
+    }
+    return normalizeCustomWordListCleanupResult(payload);
   },
 
   async previewImport(payload: unknown): Promise<ImportValidationResult> {

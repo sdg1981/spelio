@@ -55,7 +55,6 @@ export const adminNavGroups: AdminNavGroup[] = [
         label: 'Custom Lists',
         path: '/admin/custom-lists',
         icon: 'customLists',
-        badge: 'Preview',
         description: 'Temporary user-created share lists and their moderation/audio state.'
       }
     ]

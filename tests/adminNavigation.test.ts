@@ -30,6 +30,14 @@ assertEqual(
   'Content group should keep learner-facing content maintenance separate from audio, system, and internal reference metadata.'
 );
 
+const customListsNavItem = contentGroup.items.find(item => item.path === '/admin/custom-lists');
+assert(customListsNavItem, 'Custom Lists admin navigation item should remain available.');
+assertEqual(
+  customListsNavItem.badge ?? '',
+  '',
+  'Custom Lists admin navigation item should not render a Preview badge.'
+);
+
 const audioGroup = adminNavGroups.find(group => group.label === 'Audio');
 assert(audioGroup, 'Audio group should exist.');
 assertEqual(
@@ -78,6 +86,7 @@ function makeList(id: string, collectionId: string, order: number, nextListId: s
     slug: id,
     collectionId,
     collectionName: collectionId,
+    iconName: '',
     name: id,
     nameCy: '',
     description: '',
