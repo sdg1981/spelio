@@ -18,7 +18,7 @@ export const cy = {
     browseWordLists: 'Archwilio’r llyfrgell ymarfer',
     changeWordList: 'Archwilio’r llyfrgell ymarfer',
     basedOnLastSession: 'Yn seiliedig ar eich sesiwn ddiwethaf',
-    currentDifficultWords: 'Geiriau anodd presennol',
+    currentDifficultWords: 'Eich geiriau anodd presennol',
     fromWhereLeftOff: 'O ble wnaethoch chi stopio',
     chooseDifferentList: 'Dewis rhestr wahanol',
     fromEarlier: 'O gynharach',

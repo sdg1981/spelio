@@ -1187,6 +1187,27 @@ test('wrong letter then correct completion keeps word difficult and prioritises 
   assertEqual(recommendation.title, 'Review difficult words', 'Primary action should review difficult words');
 });
 
+test('review recommendation subtitle describes the learner’s current difficult words', () => {
+  const numbers = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(numbers, 'Expected foundations_numbers to exist');
+
+  const difficultWord = numbers.words[0];
+  let storage = numbersStorage();
+  storage = applyWordProgressPatch(storage, difficultWord, { completed: true, incorrect: true }, '2026-05-05T00:00:00.000Z');
+  storage = finishNumbersSession(storage, numbersResult({
+    correctWords: 9,
+    incorrectWords: 1,
+    incorrectAttempts: 1,
+    state: 'struggled'
+  }));
+
+  const englishRecommendation = getRecommendation(storage, wordLists);
+  const welshRecommendation = getRecommendation(storage, wordLists, key => translate('cy', key), 'cy');
+
+  assertEqual(englishRecommendation.subtitle, 'Your current difficult words', 'English subtitle should identify the learner’s own current difficult words');
+  assertEqual(welshRecommendation.subtitle, 'Eich geiriau anodd presennol', 'Welsh subtitle should identify the learner’s own current difficult words');
+});
+
 test('reveal then correct completion keeps word difficult and prioritises review', () => {
   const numbers = wordLists.find(list => list.id === 'foundations_numbers');
   assert(numbers, 'Expected foundations_numbers to exist');

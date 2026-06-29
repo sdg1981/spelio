@@ -147,7 +147,7 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
       kind: 'review',
       listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,
       title: t ? t('home.reviewDifficult') : 'Review difficult words',
-      subtitle: t ? t('home.currentDifficultWords') : 'Current difficult words'
+      subtitle: t ? t('home.currentDifficultWords') : 'Your current difficult words'
     };
   }
 
