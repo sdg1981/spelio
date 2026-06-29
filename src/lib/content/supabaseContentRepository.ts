@@ -14,8 +14,7 @@ import { DEFAULT_AUDIO_PROVIDER, normalizeAudioReviewStatus, normalizeDefaultAud
 import { createInterfaceAudioRegistry, normalizeInterfaceAudioClips } from '../interfaceAudio';
 import { normalizePrimerContent } from '../../content/foundationsPrimer';
 import { normalizeCollectionIntroContent } from '../../content/collectionIntro';
-
-type AudioStatus = NonNullable<PracticeWord['audioStatus']>;
+import { normalizePublicWordAudioFields } from './publicAudioFields';
 
 type CollectionRow = {
   id: string;
@@ -107,8 +106,6 @@ const WORD_LIST_SELECT_LEGACY_MINIMAL = 'id,collection_id,name,name_cy,descripti
 const validCollectionTypes: WordListCollectionType[] = ['spelio_core', 'curriculum', 'course', 'school', 'teacher', 'personal', 'custom'];
 const validOwnerTypes: Exclude<WordListCollectionOwnerType, null>[] = ['spelio', 'school', 'teacher', 'user'];
 const validDialects: Dialect[] = ['Both', 'Mixed', 'North Wales', 'South Wales / Standard', 'Standard', 'Other'];
-const validAudioStatuses: AudioStatus[] = ['missing', 'queued', 'generating', 'ready', 'failed'];
-
 function requireSupabase() {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase is not configured.');
@@ -134,10 +131,6 @@ function asDialect(value: string | null): Dialect {
 function asWordDialect(value: string | null): PracticeWord['dialect'] {
   const dialect = asDialect(value);
   return dialect === 'Mixed' ? 'Both' : dialect;
-}
-
-function asAudioStatus(value: string | null): AudioStatus {
-  return validAudioStatuses.includes(value as AudioStatus) ? value as AudioStatus : 'missing';
 }
 
 function asDifficulty(value: number | null): WordList['difficulty'] {
@@ -196,8 +189,7 @@ function mapWord(row: WordRow, list: WordListRow): PracticeWord | null {
     sourceLanguage: list.source_language ?? 'en',
     targetLanguage: list.target_language ?? 'cy',
     acceptedAlternatives: asAcceptedAlternatives(row.accepted_alternatives),
-    audioUrl: row.audio_url ?? '',
-    audioStatus: asAudioStatus(row.audio_status),
+    ...normalizePublicWordAudioFields(row),
     elevenLabsAudioUrl: row.elevenlabs_audio_url ?? '',
     elevenLabsAudioStatus: normalizeElevenLabsAudioStatus(row.elevenlabs_audio_status),
     elevenLabsGenerationMode: normalizeElevenLabsGenerationMode(row.elevenlabs_generation_mode),

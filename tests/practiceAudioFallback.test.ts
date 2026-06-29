@@ -100,6 +100,15 @@ assertEqual(
 );
 
 assertEqual(
+  isAudioUnavailableForPrompt(makeWord({
+    audioUrl: 'https://example.com/audio/generated-ready.mp3',
+    audioStatus: 'ready'
+  })),
+  false,
+  'Generated/ready live audio with a valid URL should be treated as playable in practice.'
+);
+
+assertEqual(
   shouldShowPostAnswerEnglishConfirmation({
     englishVisible: false,
     practiceTestMode: false,

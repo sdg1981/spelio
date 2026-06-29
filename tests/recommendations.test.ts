@@ -3476,6 +3476,40 @@ test('North Wales preference selects the North Wales variant where available', (
   assertEqual(nowVariant.welshAnswer, 'rwan', 'North preference should choose rwan for now');
 });
 
+test('dialect variant selection keeps the selected variant audio metadata', () => {
+  const list = singleVariantGroupList('test_variant_audio', 1);
+  const audioList: WordList = {
+    ...list,
+    words: list.words.map(word => word.dialect === 'North Wales'
+      ? {
+          ...word,
+          audioUrl: 'https://example.com/audio/north-variant.mp3',
+          audioStatus: 'ready'
+        }
+      : {
+          ...word,
+          audioUrl: '',
+          audioStatus: 'missing'
+        })
+  };
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [audioList.id],
+    currentPathPosition: audioList.id,
+    settings: {
+      ...createDefaultStorage().settings,
+      dialectPreference: 'north'
+    }
+  };
+  const session = createPracticeSession([audioList], storage);
+  const variant = session.words.find(word => word.variantGroupId === 'shared');
+
+  assert(variant, 'Expected variant group to be selected');
+  assertEqual(variant.dialect, 'North Wales', 'North preference should select the North Wales variant');
+  assertEqual(variant.audioUrl, 'https://example.com/audio/north-variant.mp3', 'Selected dialect variant should keep its own audio URL');
+  assertEqual(variant.audioStatus, 'ready', 'Selected dialect variant should keep its own audio status');
+});
+
 test('South Wales / Standard preference selects the South/Standard variant where available', () => {
   const session = createPracticeSession(wordLists, firstWordsStorage('south_standard'));
   const nowVariant = session.words.find(word => word.variantGroupId === 'now');
