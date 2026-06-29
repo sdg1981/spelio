@@ -47,7 +47,7 @@ export async function shareCurrentPublicPage(t: Translate, showShareStatus: (sta
 export function Footer({ className = '', variant = 'default', showLinks = false, t }: FooterProps) {
   const [shareStatus, setShareStatus] = useState<ShareStatus | null>(null);
   const shareStatusTimer = useRef<number | null>(null);
-  const copyrightText = '© 2023–2026 Spelio';
+  const year = 2026;
   const classes = ['footer-copy', className].filter(Boolean).join(' ');
   const showFooterLinks = showLinks;
 
@@ -88,7 +88,7 @@ export function Footer({ className = '', variant = 'default', showLinks = false,
               {' · '}
             </>
           )}
-          {copyrightText}
+          © {year} Spelio
         </span>
         {showFooterLinks && (
           <span className="footer-links" aria-label={t('footer.linksLabel')}>

@@ -457,7 +457,7 @@ export const en = {
     chooseDifferentNext: 'Choose a different list for your next session'
   },
   footer: {
-    ariaLabel: 'Made with love for Wales. Copyright 2023–2026 Spelio',
+    ariaLabel: 'Made with love for Wales. Copyright 2023-2026 Spelio',
     madeWith: 'Made with',
     forWales: 'for Wales',
     linksLabel: 'Footer links',
