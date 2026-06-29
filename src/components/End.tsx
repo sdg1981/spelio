@@ -67,6 +67,10 @@ function ProgressSummaryLine({ summary }: { summary: string }) {
   );
 }
 
+function formatRecommendationBridge(recommendationText: string, t: Translate) {
+  return t('end.nextRecommendationBridge').replace('{recommendation}', recommendationText);
+}
+
 export function EndScreen({
   result,
   recommendation,
@@ -118,6 +122,9 @@ export function EndScreen({
   const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
     ? t('end.keepBuilding')
     : recommendation.subtitle;
+  const milestoneRecommendationBridge = hasMilestone && recommendedListName
+    ? formatRecommendationBridge(recommendedListName, t)
+    : null;
   const primaryTitle = isSharedSession
     ? sharedSession?.hasPriorLearningHistory ? t('end.returnToYourLearning') : t('end.keepLearning')
     : isFullCatalogueMilestone
@@ -172,9 +179,9 @@ export function EndScreen({
 
         {milestone && !isSharedSession && !isContextualSession && (
           <section className={`end-milestone end-milestone-${milestone.kind}`} aria-labelledby="end-milestone-title">
-            <p className="end-milestone-kicker">{t('end.completionMilestone')}</p>
             <h2 id="end-milestone-title">{formatCompletionMilestoneTitle(milestone, t)}</h2>
             <p>{formatCompletionMilestoneBody(milestone, t)}</p>
+            {milestoneRecommendationBridge && <p className="end-milestone-bridge">{milestoneRecommendationBridge}</p>}
             {isFullCatalogueMilestone && <p>{t('end.foundingLearnerFeedbackLine')}</p>}
           </section>
         )}

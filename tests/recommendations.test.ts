@@ -2853,6 +2853,7 @@ test('completion milestone translation keys exist in English and Welsh', () => {
     'end.fullSpelioCompleteHeading',
     'end.fullSpelioCompleteBody',
     'end.foundingLearnerFeedbackLine',
+    'end.nextRecommendationBridge',
     'end.continueLearning',
     'end.exploreWordLists',
     'end.leaveFeedback',
@@ -2864,6 +2865,16 @@ test('completion milestone translation keys exist in English and Welsh', () => {
     assert(translate('en', key) !== key, `English translation should exist for ${key}.`);
     assert(translate('cy', key) !== key, `Welsh translation should exist for ${key}.`);
   }
+});
+
+test('milestone end-screen copy uses title hierarchy and a localized recommendation bridge', () => {
+  const endSource = readFileSync('src/components/End.tsx', 'utf8');
+  const styleSource = readFileSync('src/styles.css', 'utf8');
+
+  assert(!endSource.includes('end.completionMilestone'), 'Milestone card should not render a generic all-caps kicker label.');
+  assert(endSource.includes('formatRecommendationBridge'), 'Milestone card should render a localized next-recommendation bridge.');
+  assert(endSource.includes('end-milestone-bridge'), 'Milestone bridge should have a dedicated restrained style hook.');
+  assert(styleSource.includes('.end-milestone::before'), 'Milestone card should use a subtle accent treatment rather than a badge or icon.');
 });
 
 test('milestone actions do not auto-start a practice session from the end screen', () => {
