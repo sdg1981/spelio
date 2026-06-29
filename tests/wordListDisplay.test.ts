@@ -246,6 +246,25 @@ const practiceLibraryOrderedLists = [
   createPracticeLibraryList('practice_most_common_around_town', 'Most Common Around Town', 20)
 ];
 
+const practiceWelshMetadataMigration = readFileSync('supabase/migrations/202606290001_add_practice_welsh_display_metadata.sql', 'utf8');
+for (const list of practiceLibraryOrderedLists) {
+  const rowPattern = new RegExp(`\\('${list.id}',\\s*'((?:[^']|'')+)',\\s*'((?:[^']|'')+)'\\)`);
+  const row = practiceWelshMetadataMigration.match(rowPattern);
+  assert(row, `${list.name} should be included in the Practice Welsh display metadata migration.`);
+  assert(
+    Boolean(row[1]?.trim()) && Boolean(row[2]?.trim()),
+    `${list.name} should receive a non-empty Welsh display name and description.`
+  );
+}
+assert(
+  /name_cy\s*=\s*case/.test(practiceWelshMetadataMigration) && /description_cy\s*=\s*case/.test(practiceWelshMetadataMigration),
+  'Practice Welsh display metadata migration should update Welsh display fields conditionally.'
+);
+assert(
+  !/next_list_id\s*=|order_index\s*=|audio_url\s*=|audio_status\s*=|insert into public\.words/i.test(practiceWelshMetadataMigration),
+  'Practice Welsh display metadata migration should not change progression, ordering, audio, or word membership.'
+);
+
 const inactiveCollectionList = createList({
   id: 'inactive_topic',
   collectionId: 'inactive',
