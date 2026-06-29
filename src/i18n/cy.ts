@@ -457,7 +457,7 @@ export const cy = {
     chooseDifferentNext: 'Dewis rhestr wahanol ar gyfer eich sesiwn nesaf'
   },
   footer: {
-    ariaLabel: 'Wedi’i wneud gyda chariad i Gymru. Hawlfraint 2023-2026 Spelio',
+    ariaLabel: 'Wedi’i wneud gyda chariad i Gymru. Hawlfraint 2026 Spelio',
     madeWith: 'Wedi’i wneud gyda',
     forWales: 'i Gymru',
     linksLabel: 'Dolenni troedyn',
