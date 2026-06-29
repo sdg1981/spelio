@@ -22,7 +22,7 @@ with practice_welsh_metadata (
     ('practice_most_common_sports', 'Geiriau Cyffredin: Chwaraeon', 'Ymarfer geiriau Cymraeg cyffredin am chwaraeon.'),
     ('practice_most_common_leisure', 'Geiriau Cyffredin: Hamdden', 'Ymarfer geiriau Cymraeg cyffredin am hamdden a gweithgareddau bob dydd.'),
     ('practice_most_common_numbers', 'Geiriau Cyffredin: Rhifau', 'Ymarfer geiriau Cymraeg ar gyfer rhifau cyffredin.'),
-    ('practice_most_common_meals_and_eating', 'Bwyta ac Amser Bwyd Mwyaf Cyffredin', 'Ymarferwch eiriau Cymraeg cyffredin am amser bwyd a bwyta.'),
+    ('practice_most_common_meals_and_eating', 'Prydau a Bwyta Allan Mwyaf Cyffredin', 'Ymarferwch eiriau Cymraeg cyffredin am brydau bwyd a bwyta allan.'),
     ('practice_most_common_around_town', 'Geiriau Cyffredin: O Gwmpas y Dref', 'Ymarfer geiriau Cymraeg cyffredin am leoedd o gwmpas y dref.')
 ),
 updated as (

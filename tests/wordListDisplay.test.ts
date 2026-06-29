@@ -242,7 +242,7 @@ const practiceLibraryOrderedLists = [
   createPracticeLibraryList('practice_most_common_sports', 'Most Common Sports', 16),
   createPracticeLibraryList('practice_most_common_leisure', 'Most Common Leisure', 17),
   createPracticeLibraryList('practice_most_common_numbers', 'Most Common Numbers', 18),
-  createPracticeLibraryList('practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 19),
+  createPracticeLibraryList('practice_most_common_meals_and_eating', 'Most Common Meals & Dining', 19),
   createPracticeLibraryList('practice_most_common_around_town', 'Most Common Around Town', 20)
 ];
 
@@ -348,7 +348,7 @@ assertEqual(
     'Most Common Sports',
     'Most Common Leisure',
     'Most Common Numbers',
-    'Most Common Meals & Eating',
+    'Most Common Meals & Dining',
     'Most Common Around Town'
   ].join('|'),
   'Practice Library public display should follow the intended admin/catalogue order sequence.'
@@ -391,7 +391,7 @@ const expectedPracticeLibraryIcons = [
   ['practice_most_common_sports', 'Most Common Sports', 'Trophy'],
   ['practice_most_common_leisure', 'Most Common Leisure', 'Sparkles'],
   ['practice_most_common_numbers', 'Most Common Numbers', 'Hash'],
-  ['practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 'Utensils'],
+  ['practice_most_common_meals_and_eating', 'Most Common Meals & Dining', 'Utensils'],
   ['practice_most_common_around_town', 'Most Common Around Town', 'Map']
 ] as const;
 

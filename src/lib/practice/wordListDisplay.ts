@@ -33,7 +33,7 @@ const PRACTICE_LIBRARY_CATEGORY_LABELS: Record<string, { en: string; cy?: string
   practice_most_common_sports: { en: 'Sports', cy: 'Chwaraeon' },
   practice_most_common_leisure: { en: 'Leisure', cy: 'Hamdden' },
   practice_most_common_numbers: { en: 'Numbers', cy: 'Rhifau' },
-  practice_most_common_meals_and_eating: { en: 'Meals & Eating', cy: 'Prydau a Bwyta' },
+  practice_most_common_meals_and_eating: { en: 'Meals & Dining', cy: 'Prydau a Bwyta Allan' },
   practice_most_common_around_town: { en: 'Around Town', cy: 'O Gwmpas y Dref' }
 };
 

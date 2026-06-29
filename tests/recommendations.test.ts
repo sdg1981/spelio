@@ -319,7 +319,7 @@ function makePracticeLibraryProgressionLists(): WordList[] {
     ['practice_most_common_sports', 'Most Common Sports', 16],
     ['practice_most_common_leisure', 'Most Common Leisure', 17],
     ['practice_most_common_numbers', 'Most Common Numbers', 18],
-    ['practice_most_common_meals_and_eating', 'Most Common Meals & Eating', 19],
+    ['practice_most_common_meals_and_eating', 'Most Common Meals & Dining', 19],
     ['practice_most_common_around_town', 'Most Common Around Town', 20]
   ] as const;
 
