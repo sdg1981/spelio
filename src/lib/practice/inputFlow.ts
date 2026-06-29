@@ -18,20 +18,30 @@ export interface PracticeInputProcessingResult {
   completed: boolean;
 }
 
+const dashPunctuation = /^[-–—‑]$/;
+
+export function isFixedAnswerPunctuation(char: string) {
+  return dashPunctuation.test(char);
+}
+
+function isEditableAnswerCharacter(char: string) {
+  return char !== ' ' && !isFixedAnswerPunctuation(char);
+}
+
 export function createInitialPracticeLetters(answer: string): PracticeLetterState[] {
-  return answer.split('').map(char => ({ value: char === ' ' ? ' ' : '' }));
+  return answer.split('').map(char => ({ value: isEditableAnswerCharacter(char) ? '' : char }));
 }
 
 export function findNextInputIndex(answer: string, letters: PracticeLetterState[], start = 0) {
   for (let index = start; index < answer.length; index += 1) {
-    if (answer[index] !== ' ' && !letters[index]?.value) return index;
+    if (isEditableAnswerCharacter(answer[index]) && !letters[index]?.value) return index;
   }
   return -1;
 }
 
 export function isCommittedAnswerComplete(answer: string, letters: PracticeLetterState[], mode: WelshSpellingMode) {
   return answer.split('').every((expected, index) => {
-    if (expected === ' ') return letters[index]?.value === ' ';
+    if (!isEditableAnswerCharacter(expected)) return letters[index]?.value === expected;
     const committed = letters[index]?.value;
     return Boolean(committed) && validateLetter(committed, expected, mode);
   });
@@ -41,10 +51,19 @@ function isInputSpace(char: string) {
   return /\s/.test(char);
 }
 
+function hasPendingFixedPunctuation(answer: string, letters: PracticeLetterState[], inputPosition: number) {
+  for (let index = inputPosition - 1; index >= 0; index -= 1) {
+    if (isFixedAnswerPunctuation(answer[index])) return true;
+    if (isEditableAnswerCharacter(answer[index]) && !letters[index]?.value) return false;
+    if (isEditableAnswerCharacter(answer[index]) && letters[index]?.value) return false;
+  }
+  return false;
+}
+
 function validatesAtIndex(char: string, candidates: string[], index: number, mode: WelshSpellingMode) {
   return candidates.some(candidate => {
     const expected = candidate[index];
-    if (!expected || expected === ' ') return false;
+    if (!expected || !isEditableAnswerCharacter(expected)) return false;
     return validateLetter(char, expected, mode);
   });
 }
@@ -75,6 +94,11 @@ export function processPracticeInput({
 
     const inputPosition = findNextInputIndex(targetAnswer, nextLetters);
     if (inputPosition < 0) {
+      outcomes.push({ type: 'ignored', attempted });
+      continue;
+    }
+
+    if (isFixedAnswerPunctuation(attempted) && hasPendingFixedPunctuation(targetAnswer, nextLetters, inputPosition)) {
       outcomes.push({ type: 'ignored', attempted });
       continue;
     }

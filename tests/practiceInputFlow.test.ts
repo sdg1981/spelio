@@ -2,6 +2,7 @@ import {
   createInitialPracticeLetters,
   findNextInputIndex,
   isCommittedAnswerComplete,
+  isFixedAnswerPunctuation,
   processPracticeInput
 } from '../src/lib/practice/inputFlow';
 import { findSupportWordList } from '../src/data/supportWordLists';
@@ -15,6 +16,88 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 
 function committedValue(letters: Array<{ value: string }>) {
   return letters.map(letter => letter.value || '_').join('');
+}
+
+{
+  const answer = 'e-bost';
+  const initialLetters = createInitialPracticeLetters(answer);
+
+  assertEqual(isFixedAnswerPunctuation('-'), true, 'Hyphens should be classified as fixed answer punctuation.');
+  assertEqual(committedValue(initialLetters), '_-____', 'Hyphens should render from the initial letter state instead of as hidden slots.');
+  assertEqual(findNextInputIndex(answer, initialLetters), 0, 'The first editable slot in a hyphenated answer should be the first letter.');
+
+  const afterFirstLetter = processPracticeInput({
+    targetAnswer: answer,
+    letters: initialLetters,
+    rawInput: 'e',
+    mode: 'strict'
+  });
+
+  assertEqual(findNextInputIndex(answer, afterFirstLetter.letters), 2, 'Input should skip the fixed hyphen and advance to the next real letter.');
+}
+
+{
+  const answer = 'e-bost';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'ebost',
+    mode: 'strict'
+  });
+
+  assertEqual(result.completed, true, 'Typing a hyphenated answer without the hyphen should complete successfully.');
+  assertEqual(committedValue(result.letters), answer, 'No-separator input should preserve the canonical hyphenated answer.');
+}
+
+{
+  const answer = 'e-bost';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'e-bost',
+    mode: 'strict'
+  });
+
+  assertEqual(result.completed, true, 'Typing a hyphenated answer with the hyphen should complete successfully.');
+  assertEqual(committedValue(result.letters), answer, 'Manual hyphen input should preserve the canonical hyphenated answer.');
+}
+
+{
+  const answer = 'e-bost';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'e bost',
+    mode: 'strict'
+  });
+
+  assertEqual(result.completed, true, 'Typing a hyphenated answer with a normal space at the separator should complete successfully.');
+  assertEqual(committedValue(result.letters), answer, 'Manual space input should preserve the canonical hyphenated answer.');
+}
+
+{
+  const answer = 'e-bost';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'ex',
+    mode: 'strict'
+  });
+
+  assertEqual(result.wrongFeedback?.inputPosition, 2, 'A wrong next letter after a fixed hyphen should be rejected on the next editable slot.');
+  assertEqual(result.completed, false, 'A wrong next letter after a fixed hyphen should not complete the answer.');
+  assertEqual(committedValue(result.letters), 'e-____', 'A wrong next letter after a fixed hyphen should not overwrite the canonical punctuation.');
+}
+
+{
+  const answer = 'e-bost';
+  const firstRevealIndex = findNextInputIndex(answer, createInitialPracticeLetters(answer));
+  const afterFirstReveal = createInitialPracticeLetters(answer).map((letter, index) =>
+    index === firstRevealIndex ? { value: answer[index], revealed: true } : letter
+  );
+
+  assertEqual(firstRevealIndex, 0, 'Reveal should start with the first editable character in a hyphenated answer.');
+  assertEqual(findNextInputIndex(answer, afterFirstReveal, firstRevealIndex + 1), 2, 'Reveal should skip fixed hyphen punctuation when finding the next editable character.');
 }
 
 {

@@ -987,6 +987,11 @@
   animation:letter-correct-pop .13s ease-out both;
 }
 
+.letter-slot.fixed-punctuation:not(.mistake),
+.word-complete .letter-slot.fixed-punctuation.filled:not(.mistake){
+  animation:none;
+}
+
 .letter-slot.revealed:not(.mistake){
   animation:letter-reveal .12s ease-out both,letter-reveal-warm-glow .5s ease-out both;
 }
@@ -4383,6 +4388,12 @@
   letter-spacing:0;
 }
 
+.practice-app .letter-slot.fixed-punctuation{
+  min-width:auto;
+  border-bottom:0;
+  color:#071522;
+}
+
 .practice-app .letter-slot.empty{
   color:transparent;
 }
@@ -6304,6 +6315,12 @@
   color:transparent;
 }
 
+.letter-slot.fixed-punctuation,
+.practice-app .letter-slot.fixed-punctuation{
+  color:var(--text-primary);
+  border-bottom:0;
+}
+
 .letter-slot.mistake,
 .practice-app .letter-slot.mistake,
 .status-line-error,
@@ -6914,6 +6931,11 @@
 
 .public-app[data-theme="dark"] .practice-app .letter-slot.empty{
   color:transparent;
+}
+
+.public-app[data-theme="dark"] .practice-app .letter-slot.fixed-punctuation{
+  color:var(--text-primary);
+  border-bottom:0;
 }
 
 .public-app[data-theme="dark"] .practice-app .letter-slot.active:not(.mistake){

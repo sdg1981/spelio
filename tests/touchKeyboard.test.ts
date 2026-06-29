@@ -78,6 +78,19 @@ function committedValue(letters: Array<{ value: string }>) {
 }
 
 {
+  const answer = 'e-chwarae';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'eCHwarae',
+    mode: 'flexible'
+  });
+
+  assertEqual(result.completed, true, 'Digraph taps should use the same validation path safely after fixed hyphen punctuation.');
+  assertEqual(committedValue(result.letters), answer, 'Digraph input after a fixed hyphen should preserve the canonical hyphenated answer.');
+}
+
+{
   const result = processPracticeInput({
     targetAnswer: 'coffi',
     letters: createInitialPracticeLetters('coffi'),

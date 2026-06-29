@@ -426,7 +426,8 @@ Rules:
 - Preserve clear visual spaces between words in multi-word phrases.
 - Spaces are not rendered as input slots.
 - User-typed spaces are ignored silently and should not count as errors.
-- Letter-by-letter validation uses comparison-only normalisation for apostrophe variants, dash/hyphen variants, and case; it must not change stored answers or letter-slot rendering.
+- Hyphens/dashes in canonical answers are displayed as fixed punctuation, not editable letter slots. Input should skip them automatically and tolerate typed hyphens/dashes, spaces, or no separator without mutating the stored or displayed answer.
+- Letter-by-letter validation uses comparison-only normalisation for apostrophe variants, dash/hyphen variants, and case; it must not change stored answers or displayed final answers.
 
 Answer layout rules:
 
@@ -675,6 +676,7 @@ Answer comparison uses comparison-only normalisation:
 
 - Apostrophe variants compare as equivalent.
 - Dash and hyphen variants compare as equivalent.
+- Hyphens/dashes in canonical answers remain visible fixed punctuation in answer slots and are skipped/tolerated during letter input.
 - Comparison is case-insensitive.
 - Full-answer comparison trims leading/trailing whitespace and collapses repeated whitespace.
 - This normalisation must not mutate stored answers, `acceptedAlternatives`, letter-slot rendering, or displayed correct answers.

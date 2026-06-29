@@ -21,7 +21,7 @@ import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailable
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
-import { isCommittedAnswerComplete } from '../lib/practice/inputFlow';
+import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
 import { detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
@@ -79,11 +79,11 @@ export function Progress({ value = 30, count = '3 / 10' }: { value?: number; cou
 }
 
 function getAnswerLayoutClass(answer: string) {
-  const lettersOnly = answer.replace(/\s/g, '');
+  const lettersOnly = Array.from(answer).filter(char => char !== ' ' && !isFixedAnswerPunctuation(char)).join('');
   const totalLetters = lettersOnly.length;
   const longestWordLength = answer
     .split(/\s+/)
-    .reduce((max, part) => Math.max(max, part.length), 0);
+    .reduce((max, part) => Math.max(max, Array.from(part).filter(char => !isFixedAnswerPunctuation(char)).length), 0);
 
   if (totalLetters >= 14 || longestWordLength >= 9) return 'extra-compact';
   if (totalLetters >= 9 || longestWordLength >= 6) return 'compact';
@@ -120,17 +120,19 @@ function LetterSlots({
           <span key={`${wordPart}-${wordIndex}-${startIndex}`} className="letter-word">
             {wordPart.split('').map((_, localIndex) => {
               const index = startIndex + localIndex;
+              const expected = word[index];
               const slot = letters[index];
               const animationIndex = visibleLetterIndex;
-              visibleLetterIndex += 1;
+              if (!isFixedAnswerPunctuation(expected)) visibleLetterIndex += 1;
               const isMistake = wrongIndex === index;
+              const isFixedPunctuation = isFixedAnswerPunctuation(expected);
               const displayValue = isMistake ? '×' : slot?.value;
               const hasValue = Boolean(displayValue);
 
               return (
                 <span
                   key={`${index}-${slot?.value || 'empty'}-${slot?.revealed ? 'revealed' : 'typed'}-${isMistake ? 'wrong' : 'ok'}`}
-                  className={`letter-slot ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed ? 'typed' : ''}`}
+                  className={`letter-slot ${isFixedPunctuation ? 'fixed-punctuation' : ''} ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed && !isFixedPunctuation ? 'typed' : ''}`}
                   style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 42}ms` } as CSSProperties : undefined}
                 >
                   {displayValue || '_'}
@@ -158,7 +160,7 @@ function GhostAnswer({
       {answer.split(' ').map((wordPart, wordIndex) => (
         <span key={`${wordPart}-${wordIndex}`} className="letter-word">
           {wordPart.split('').map((char, localIndex) => (
-            <span key={`${char}-${localIndex}`} className="letter-slot peek-letter">
+            <span key={`${char}-${localIndex}`} className={`letter-slot peek-letter ${isFixedAnswerPunctuation(char) ? 'fixed-punctuation' : ''}`.trim()}>
               {char}
             </span>
           ))}
