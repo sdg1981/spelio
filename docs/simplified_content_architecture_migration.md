@@ -44,6 +44,12 @@ Catalogue order and progression order are related but distinct product concepts:
 - Do not introduce a separate progression order number unless a future content need proves it necessary.
 - Do not reintroduce stages or focus categories for progression.
 
+Collection-complete milestones should use the same full-completion source of truth as the Word Lists green tick. They are shown only when a completed session or clean review recovery has just made the final active learner-facing list in an active Spelio-owned collection fully complete, and their shown state is persisted locally so the same collection message is not repeated every later session.
+
+Full-catalogue completion takes priority when every active Learning Journey and Practice Library list currently available is fully complete. These milestones are calm recognition only: no badges, streaks, XP, confetti, dashboards, or per-collection custom completion-copy editor are required for the MVP. Copy should come from generic i18n keys and message variants should be derived from existing collection identity where possible.
+
+Detached custom lists, shared-list detached sessions, practice-test sessions, support-only lists, draft lists, inactive lists, expired custom lists, and hidden/support content are excluded from milestone triggering and should not block collection/full-catalogue completion.
+
 For the current launch Practice Library, catalogue order and fallback progression order intentionally use the same Most Common topic sequence from each list's `order` value so the homepage recommendation does not contradict the public library or admin editing UI.
 
 Practice Library categories such as Animals, Food & Drink, Places & Travel, and People & Home are catalogue/display groupings. They are not Focus Categories. If those groupings need durable metadata later, represent them with explicit catalogue/display metadata rather than resurrecting legacy `focus_categories`.

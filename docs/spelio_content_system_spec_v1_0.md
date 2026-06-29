@@ -163,6 +163,8 @@ Learning Journey content may include:
 
 Learning Journeys should remain compact, recommendation-friendly, teacher-friendly, emotionally achievable, and mastery-oriented. Learners should be able to feel that they have completed a meaningful spelling-confidence journey.
 
+When every active learner-facing word list in a Learning Journey reaches the same full-completion state used for the Word Lists green tick, the end screen may show a calm Learning Journey complete milestone. This is recognition of a meaningful finish line, not a badge, streak, XP, confetti moment, or public progress dashboard.
+
 ### Practice Library
 
 The Practice Library is separate from the curriculum. It is the focused spelling-reinforcement layer: open-ended, topical, browsable, and designed for repeated vocabulary practice.
@@ -175,6 +177,8 @@ Purpose:
 - support adult learners, teachers, and GCSE learners
 
 Practice Library collections are not teaching journeys. They do not need to form a strict progression, and learners should generally be free to browse, revisit, and follow interest.
+
+When every active learner-facing word list in a Practice Library collection reaches the Word Lists green-tick completion state, the end screen may show a Practice Library complete milestone. If unfinished Learning Journey content remains, Spelio should still recommend the next unfinished Learning Journey/list while acknowledging the Practice Library completion.
 
 Example categories:
 
@@ -200,6 +204,10 @@ Practice Library categories such as Animals, Food & Drink, Places & Travel, and 
 Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the learner-facing catalogue model or normal admin editing model. Any remaining `stages`, `stage_id`, `focus_categories`, or `focus_category_id` handling is compatibility metadata for old data and import/export only. New content should not rely on stages or Focus Categories.
 
 Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated progression is controlled by `nextListId`. Continue learning should walk the explicit `nextListId` chain and skip only active lists that already have the same full-completion state used for the Word Lists completion tick. Attempted, amber/in-progress, progression-complete, or unresolved-difficulty lists are still unfinished for this purpose and should not be skipped. If `nextListId` is empty, exhausted, broken, looping, or otherwise unusable, recommendation fallback may use collection/list order. Do not add a separate progression order number unless a future content need proves it necessary, and do not reintroduce stages or focus categories for progression.
+
+Collection-complete and full-catalogue milestones should use generic interface translation keys. They should not require per-collection custom copy fields for the MVP. Derive message variant from existing collection identity where possible: Learning Journey, Practice Library, or ordinary collection.
+
+Milestone eligibility is limited to active normal learner-facing Spelio-owned lists. Detached custom lists, shared-list detached sessions, practice-test sessions, support-only lists, draft lists, inactive lists, expired custom lists, and hidden/support content must not trigger or block these milestones. Full-catalogue completion means every active Learning Journey and Practice Library word list currently available is fully complete, and it takes priority over an ordinary collection-complete message. Shown milestone state is stored locally so each completion message appears once per device/progress state.
 
 ### Build as an Optional Learning-Journey Technique
 

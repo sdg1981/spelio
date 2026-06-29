@@ -1,10 +1,11 @@
 import type { CSSProperties } from 'react';
 import { ActionRow, PrimaryButton } from './Buttons';
 import { Logo } from './Logo';
-import { ListCheck, Play, SlidersHorizontal } from './Icons';
+import { ListCheck, MessageSquareQuote, Play, SlidersHorizontal } from './Icons';
 import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult } from '../lib/practice/storage';
 import type { Recommendation } from '../lib/practice/recommendations';
+import { formatCompletionMilestoneBody, formatCompletionMilestoneTitle, type CompletionMilestone } from '../lib/practice/completionMilestones';
 
 function clampScore(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min;
@@ -69,11 +70,14 @@ function ProgressSummaryLine({ summary }: { summary: string }) {
 export function EndScreen({
   result,
   recommendation,
+  milestone,
   progressSummary,
   hasDifficultWords,
   onContinue,
   onReview,
   onChangeLists,
+  onFeedback,
+  onMilestoneContinue,
   onHome,
   contextualReturn,
   contextualHasDifficultWords = false,
@@ -85,11 +89,14 @@ export function EndScreen({
 }: {
   result: SessionResult;
   recommendation: Recommendation;
+  milestone?: CompletionMilestone | null;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
   onContinue: () => void;
   onReview: () => void;
   onChangeLists: () => void;
+  onFeedback: () => void;
+  onMilestoneContinue: () => void;
   onHome: () => void;
   contextualReturn?: { label: string; onClick: () => void } | null;
   contextualHasDifficultWords?: boolean;
@@ -104,6 +111,8 @@ export function EndScreen({
   const isSharedSession = Boolean(sharedSession);
   const isContextualSession = Boolean(contextualReturn);
   const shouldPrioritiseContextualReview = isContextualSession && contextualHasDifficultWords && Boolean(onContextualReview);
+  const hasMilestone = !isSharedSession && !isContextualSession && Boolean(milestone);
+  const isFullCatalogueMilestone = milestone?.kind === 'full-catalogue';
   const shouldPrioritiseReview = !isSharedSession && !isContextualSession && hasDifficultWords && recommendation.kind === 'review';
   const shouldChooseAnotherList = !isSharedSession && !isContextualSession && recommendation.kind === 'choose_list';
   const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
@@ -111,6 +120,10 @@ export function EndScreen({
     : recommendation.subtitle;
   const primaryTitle = isSharedSession
     ? sharedSession?.hasPriorLearningHistory ? t('end.returnToYourLearning') : t('end.keepLearning')
+    : isFullCatalogueMilestone
+    ? t('end.practiseAgain')
+    : hasMilestone
+    ? t('end.continueLearning')
     : shouldPrioritiseContextualReview
     ? t('home.reviewDifficult')
     : isContextualSession
@@ -122,6 +135,10 @@ export function EndScreen({
       : t('home.continueLearning');
   const handlePrimary = isSharedSession
     ? onReturnToLearning ?? onHome
+    : isFullCatalogueMilestone
+    ? onChangeLists
+    : hasMilestone
+    ? onMilestoneContinue
     : shouldPrioritiseContextualReview
     ? onContextualReview ?? onHome
     : isContextualSession
@@ -152,6 +169,15 @@ export function EndScreen({
             <ProgressSummaryLine summary={progressSummary} />
           )}
         </div>
+
+        {milestone && !isSharedSession && !isContextualSession && (
+          <section className={`end-milestone end-milestone-${milestone.kind}`} aria-labelledby="end-milestone-title">
+            <p className="end-milestone-kicker">{t('end.completionMilestone')}</p>
+            <h2 id="end-milestone-title">{formatCompletionMilestoneTitle(milestone, t)}</h2>
+            <p>{formatCompletionMilestoneBody(milestone, t)}</p>
+            {isFullCatalogueMilestone && <p>{t('end.foundingLearnerFeedbackLine')}</p>}
+          </section>
+        )}
 
         <div className={`end-recommendation ${shouldPrioritiseReview ? '' : 'end-recommendation-next'}`.trim()}>
           {isSharedSession ? (
@@ -202,9 +228,33 @@ export function EndScreen({
           {!isContextualSession && (
             <ActionRow
               icon={secondaryActionIcon}
-              title={shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
+              title={isFullCatalogueMilestone
+                ? t('end.exploreWordLists')
+                : hasMilestone
+                  ? t('end.leaveFeedback')
+                  : shouldChooseAnotherList ? t('practice.backToHome') : t('home.changeWordList')}
               arrowVariant="arrow"
-              onClick={shouldChooseAnotherList ? onHome : onChangeLists}
+              onClick={isFullCatalogueMilestone
+                ? onChangeLists
+                : hasMilestone
+                  ? onFeedback
+                : shouldChooseAnotherList ? onHome : onChangeLists}
+            />
+          )}
+          {isFullCatalogueMilestone && (
+            <ActionRow
+              icon={<MessageSquareQuote size={30} />}
+              title={t('end.leaveFeedback')}
+              arrowVariant="arrow"
+              onClick={onFeedback}
+            />
+          )}
+          {hasMilestone && (
+            <ActionRow
+              icon={<ListCheck size={30} />}
+              title={t('end.backToHome')}
+              arrowVariant="arrow"
+              onClick={onHome}
             />
           )}
         </div>

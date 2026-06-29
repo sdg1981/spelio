@@ -5344,6 +5344,44 @@
   line-height:1.3;
 }
 
+.end-milestone{
+  width:min(100%,520px);
+  margin:22px auto 0;
+  padding:18px 20px;
+  border:1px solid rgba(47,143,91,.2);
+  border-radius:8px;
+  background:rgba(255,255,255,.74);
+  box-shadow:0 16px 40px rgba(7,21,34,.06);
+  text-align:left;
+}
+
+.end-milestone-kicker{
+  margin:0 0 8px;
+  color:#2f8f5b;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.end-milestone h2{
+  margin:0 0 8px;
+  color:#071522;
+  font-size:22px;
+  line-height:1.16;
+}
+
+.end-milestone p{
+  margin:0;
+  color:rgba(7,21,34,.72);
+  font-size:15px;
+  line-height:1.48;
+}
+
+.end-milestone p + p{
+  margin-top:10px;
+}
+
 .end-stats-line{
   display:flex;
   align-items:center;

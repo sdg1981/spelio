@@ -19,6 +19,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage } from './lib/practic
 import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStorage, getFullyCompletedListIds, getInProgressListIds, isFirstTimeManualWordListSelection, loadSpelioStorage, saveSpelioStorage } from './lib/practice/storage';
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
+import { getCompletionMilestoneForSession, markCompletionMilestoneShown, type CompletionMilestone } from './lib/practice/completionMilestones';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
@@ -176,6 +177,7 @@ export default function App() {
   const [sharedContext, setSharedContext] = useState<SharedWordListContext | null>(initialAppState.sharedContext);
   const [activeSharedContext, setActiveSharedContext] = useState<SharedWordListContext | null>(null);
   const [completedSharedContext, setCompletedSharedContext] = useState<SharedWordListContext | null>(null);
+  const [activeCompletionMilestone, setActiveCompletionMilestone] = useState<CompletionMilestone | null>(null);
   const [practiceTestMode, setPracticeTestMode] = useState(false);
   const [activeSupportPractice, setActiveSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
   const [completedSupportPractice, setCompletedSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
@@ -341,6 +343,7 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCompletionMilestone(null);
     setCompletedSupportPractice(null);
     setActiveSupportPractice(null);
     setActiveCustomList(null);
@@ -449,12 +452,14 @@ export default function App() {
 
     if (isDetachedSharedStart && detachedContext) {
       setActiveSharedContext(detachedContext);
+      setActiveCompletionMilestone(null);
       setActiveSupportPractice(null);
       setCompletedSupportPractice(null);
       setPracticeTestMode(detachedContext.mode === 'practice-test');
     } else {
       setActiveSharedContext(null);
       setCompletedSharedContext(null);
+      setActiveCompletionMilestone(null);
       setActiveCustomList(null);
       setActiveSupportPractice(null);
       setCompletedSupportPractice(null);
@@ -618,17 +623,21 @@ export default function App() {
     setLastResult(result);
     if (activeSupportPractice) {
       setCompletedSupportPractice(activeSupportPractice);
+      setActiveCompletionMilestone(null);
       setActiveSupportPractice(null);
       setPracticeStartStorage(nextStorage);
       setPracticeTestMode(false);
     } else if (activeSharedContext) {
       setStorage(restoreSharedWordListProgression(nextStorage, activeSharedContext));
       setCompletedSharedContext(activeSharedContext);
+      setActiveCompletionMilestone(null);
       setActiveSharedContext(null);
       setSharedContext(null);
       setPracticeTestMode(false);
     } else {
-      setStorage(nextStorage);
+      const milestone = getCompletionMilestoneForSession(storage, nextStorage, publicWordLists, result);
+      setStorage(markCompletionMilestoneShown(nextStorage, milestone));
+      setActiveCompletionMilestone(milestone);
       setCompletedSharedContext(null);
       setCompletedSupportPractice(null);
     }
@@ -662,6 +671,7 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCompletionMilestone(null);
     setCompletedSupportPractice(null);
     setActiveSupportPractice(null);
     setActiveCustomList(null);
@@ -791,6 +801,7 @@ export default function App() {
       setSharedContext(null);
       setCompletedSharedContext(null);
       setActiveSharedContext(null);
+      setActiveCompletionMilestone(null);
       setCompletedSupportPractice(null);
       setActiveSupportPractice(null);
       setActiveCustomList(null);
@@ -804,6 +815,7 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCompletionMilestone(null);
     setCompletedSupportPractice(null);
     setActiveSupportPractice(null);
     setActiveCustomList(null);
@@ -837,6 +849,7 @@ export default function App() {
     setSharedContext(null);
     setCompletedSharedContext(null);
     setActiveSharedContext(null);
+    setActiveCompletionMilestone(null);
     setCompletedSupportPractice(null);
     setActiveSupportPractice(null);
     setActiveCustomList(null);
@@ -989,11 +1002,14 @@ export default function App() {
     <EndScreen
       result={lastResult}
       recommendation={recommendation}
+      milestone={activeCompletionMilestone}
       progressSummary={getEndScreenProgressSummary(endProgressSummary, completedSupportPractice)}
       hasDifficultWords={lastSessionDifficultWordCount > 0}
       onContinue={startNormalContinuationPractice}
       onReview={startEndScreenReviewPractice}
       onChangeLists={() => openWordListsPage('end')}
+      onFeedback={() => openPublicPage('feedback', '/feedback')}
+      onMilestoneContinue={returnToLearning}
       onHome={completedSharedContext ? returnToLearning : completedSupportPractice ? returnToCompletedSupportPracticeOrigin : returnToLearning}
       contextualReturn={completedSupportPractice ? {
         label: t('end.backToSpellingBasics'),

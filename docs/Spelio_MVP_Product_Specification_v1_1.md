@@ -1568,6 +1568,8 @@ When a review word is completed cleanly, the current difficulty for that exact w
 
 Clean Review difficult words completion should also refresh completion eligibility for the affected source word list. If all conceptual learning items in that list have already been seen and no eligible unresolved difficult words remain, the original list may become fully complete and receive the Word Lists green tick. This review recovery must not move normal progression: do not update `selectedListIds` or `currentPathPosition` from Review difficult words.
 
+If clean review recovery makes the final active learner-facing word list in a Spelio-owned collection fully complete, the end screen may show the same collection-complete milestone used after an ordinary clean session. This must still use the Word Lists green-tick source of truth, not the lighter progression-complete state.
+
 Review session:
 
 - Up to 10 words.
@@ -1618,6 +1620,14 @@ Recommendation order after a session:
 When resolving ordinary Continue learning progression through `nextListId`, the app should not recommend a sequential next list that already meets the stricter full-completion / Word Lists tick state. It should walk forward through the `nextListId` chain and skip fully completed/ticked lists until it finds the first active list that is not fully completed. This skip rule must use the same full-completion source of truth as the Word Lists tick, not the lighter progression-complete state. Lists that are merely progression-complete but not fully completed/ticked must not be skipped.
 
 This refinement should be invisible to learners and must not introduce any new public completion status, badge, label, or second tick state.
+
+Collection-complete milestones are allowed as calm end-screen recognition, not as a dashboard, badge system, streak, XP, confetti, or gamified reward. A collection milestone appears only when the completed session or clean review recovery has just made the final active learner-facing word list in that collection fully complete. Shown milestone IDs are persisted locally so each collection message is shown once per device/progress state.
+
+Milestones must be excluded for detached custom lists, shared-list detached sessions, practice-test sessions, support-only lists, draft lists, inactive lists, expired custom lists, and any list outside active normal learner-facing Spelio-owned content. Full-catalogue completion takes priority over ordinary collection completion when every active Learning Journey and Practice Library list currently available is fully complete.
+
+Milestone copy should be generic, i18n-based interface copy. MVP collections do not need per-collection custom completion-message editors or CMS-style completion copy fields. Message variant may be derived from existing collection identity such as Learning Journey, Practice Library, or ordinary collection metadata/name.
+
+When a Practice Library collection is completed but Learning Journey lists remain unfinished, the end screen should acknowledge the Practice Library completion while the recommendation continues to point to the next unfinished Learning Journey/list. Milestone actions should route calmly to continue learning, explore word lists, leave feedback, or return home; they must not auto-start a new session.
 
 Manual user selection resets the current path position.
 

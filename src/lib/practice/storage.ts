@@ -74,6 +74,7 @@ export interface SpelioStorage {
   lastSessionDate: string | null;
   lastSessionResult: SessionResult | null;
   completedNormalSessionCount?: number;
+  shownCompletionMilestoneIds?: string[];
   recentlyResolvedReviewWordIds?: string[];
   learningStats?: LearningStats;
   mixedWelshExposure?: MixedWelshExposure;
@@ -140,6 +141,7 @@ export const defaultStorage: SpelioStorage = {
   lastSessionDate: null,
   lastSessionResult: null,
   completedNormalSessionCount: 0,
+  shownCompletionMilestoneIds: [],
   recentlyResolvedReviewWordIds: [],
   learningStats: createDefaultLearningStats(),
   mixedWelshExposure: createDefaultMixedWelshExposure(),
@@ -232,6 +234,9 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
     lastSessionResult: isObject(source.lastSessionResult) ? source.lastSessionResult as unknown as SessionResult : null,
     completedNormalSessionCount: typeof source.completedNormalSessionCount === 'number' ? source.completedNormalSessionCount : 0,
+    shownCompletionMilestoneIds: Array.isArray(source.shownCompletionMilestoneIds)
+      ? source.shownCompletionMilestoneIds.filter(id => typeof id === 'string')
+      : [],
     recentlyResolvedReviewWordIds: Array.isArray(source.recentlyResolvedReviewWordIds)
       ? source.recentlyResolvedReviewWordIds.filter(id => typeof id === 'string')
       : [],

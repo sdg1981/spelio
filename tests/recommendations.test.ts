@@ -1,5 +1,5 @@
 import { wordLists } from '../src/data/wordLists';
-import type { PracticeWord, WordList } from '../src/data/wordLists';
+import type { PracticeWord, WordList, WordListCollection } from '../src/data/wordLists';
 import { createSupportWordLists, findSupportWordList, isSupportWordList, mainWordLists, withSupportWordLists } from '../src/data/supportWordLists';
 import { classifySession, createPracticeSession, formatRecapWordCount, getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords, selectPreSessionRecapWord } from '../src/lib/practice/sessionEngine';
 import { getSelectedListLabel, normalizeSingleSelectedListIds, normalizeStorageWordListSelection, selectSingleWordList } from '../src/lib/practice/wordListSelection';
@@ -21,9 +21,11 @@ import {
   type SpelioStorage
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
+import { getCompletionMilestoneForSession, markCompletionMilestoneShown } from '../src/lib/practice/completionMilestones';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
+import { translate } from '../src/i18n';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
 
@@ -212,6 +214,65 @@ function makeLargeList(id: string, startOrder: number, wordCount: number): WordL
       englishPrompt: `${id} ${index + 1}`,
       welshAnswer: `${id}${index + 1}`
     }))
+  };
+}
+
+function makeTestCollection(id: string, name: string, order: number, overrides: Partial<WordListCollection> = {}): WordListCollection {
+  return {
+    id,
+    slug: id,
+    name,
+    description: '',
+    type: 'spelio_core',
+    sourceLanguage: 'en',
+    targetLanguage: 'cy',
+    ownerType: 'spelio',
+    ownerId: null,
+    order,
+    isActive: true,
+    ...overrides
+  };
+}
+
+function withCollection(list: WordList, collection: WordListCollection, order = list.order): WordList {
+  return {
+    ...list,
+    collectionId: collection.id,
+    collection,
+    order
+  };
+}
+
+function completeListForMilestone(storage: SpelioStorage, list: WordList) {
+  let next = storage;
+  for (const word of list.words) {
+    next = applyWordProgressPatch(next, word, { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  }
+
+  return updateListCompletion(next, [list], {
+    totalWords: list.words.length,
+    correctWords: list.words.length,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [list.id],
+    state: 'strong'
+  });
+}
+
+function completionResult(listId: string): SessionResult {
+  return {
+    totalWords: 3,
+    correctWords: 3,
+    incorrectWords: 0,
+    revealedWords: 0,
+    incorrectAttempts: 0,
+    revealedLetters: 0,
+    durationSeconds: 30,
+    listIds: [listId],
+    state: 'strong'
   };
 }
 
@@ -2657,6 +2718,139 @@ test('clean Review difficult recovery after reveal marks original list complete 
   assertEqual(getFullyCompletedListIds(storage, wordLists).includes(people.id), true, 'Clean review recovery should show the original list green tick.');
   assertEqual(storage.selectedListIds[0], 'stage2_work', 'Review recovery must not advance or rewrite selected list.');
   assertEqual(storage.currentPathPosition, 'stage2_work', 'Review recovery must not advance or rewrite current path.');
+});
+
+test('collection completion milestone appears when the final active list becomes fully complete', () => {
+  const collection = makeTestCollection('test_collection_completion', 'Topic Collection', 1);
+  const otherCollection = makeTestCollection('test_collection_completion_other', 'Other Collection', 2);
+  const listA = withCollection(makeLargeList('test_collection_completion_a', 1, 3), collection, 1);
+  const listB = withCollection(makeLargeList('test_collection_completion_b', 2, 3), collection, 2);
+  const unfinishedList = withCollection(makeLargeList('test_collection_completion_unfinished', 1, 3), otherCollection, 1);
+  const previous = completeListForMilestone(createDefaultStorage(), listA);
+  const next = completeListForMilestone(previous, listB);
+
+  const milestone = getCompletionMilestoneForSession(previous, next, [listA, listB, unfinishedList], completionResult(listB.id));
+
+  assertEqual(milestone?.kind, 'collection', 'Final active list should produce a collection completion milestone.');
+  assertEqual(milestone?.collectionId, collection.id, 'Milestone should identify the completed collection.');
+});
+
+test('collection completion milestone does not appear before every active list is fully complete', () => {
+  const collection = makeTestCollection('test_collection_incomplete', 'Topic Collection', 1);
+  const listA = withCollection(makeLargeList('test_collection_incomplete_a', 1, 3), collection, 1);
+  const listB = withCollection(makeLargeList('test_collection_incomplete_b', 2, 3), collection, 2);
+  const previous = createDefaultStorage();
+  const next = completeListForMilestone(previous, listA);
+
+  const milestone = getCompletionMilestoneForSession(previous, next, [listA, listB], completionResult(listA.id));
+
+  assertEqual(milestone, null, 'Collection milestone should wait until the collection is fully complete.');
+});
+
+test('collection completion milestone appears only once after it has been marked shown', () => {
+  const collection = makeTestCollection('test_collection_once', 'Topic Collection', 1);
+  const otherCollection = makeTestCollection('test_collection_once_other', 'Other Collection', 2);
+  const listA = withCollection(makeLargeList('test_collection_once_a', 1, 3), collection, 1);
+  const unfinishedList = withCollection(makeLargeList('test_collection_once_unfinished', 1, 3), otherCollection, 1);
+  const previous = createDefaultStorage();
+  const next = completeListForMilestone(previous, listA);
+  const firstMilestone = getCompletionMilestoneForSession(previous, next, [listA, unfinishedList], completionResult(listA.id));
+  assert(firstMilestone, 'Setup should produce a first collection milestone.');
+  const shownStorage = markCompletionMilestoneShown(previous, firstMilestone);
+
+  const repeated = getCompletionMilestoneForSession(shownStorage, next, [listA, unfinishedList], completionResult(listA.id));
+
+  assertEqual(repeated, null, 'Shown milestone state should suppress repeats on this device.');
+});
+
+test('full catalogue completion milestone takes priority over collection completion', () => {
+  const journey = makeTestCollection('spelio_welsh_foundations', 'Welsh Spelling Foundations', 1);
+  const practice = makeTestCollection('practice', 'Practice Library', 2);
+  const journeyList = withCollection(makeLargeList('test_full_catalogue_journey', 1, 3), journey, 1);
+  const practiceList = withCollection(makeLargeList('test_full_catalogue_practice', 1, 3), practice, 1);
+  const previous = completeListForMilestone(createDefaultStorage(), journeyList);
+  const next = completeListForMilestone(previous, practiceList);
+
+  const milestone = getCompletionMilestoneForSession(previous, next, [journeyList, practiceList], completionResult(practiceList.id));
+
+  assertEqual(milestone?.kind, 'full-catalogue', 'Full catalogue completion should win over ordinary collection completion.');
+});
+
+test('completed Practice Library milestone can still recommend unfinished Learning Journey list', () => {
+  const journey = makeTestCollection('spelio_welsh_foundations', 'Welsh Spelling Foundations', 1);
+  const practice = makeTestCollection('practice', 'Practice Library', 2);
+  const journeyList = withCollection(makeLargeList('test_practice_complete_journey_unfinished', 1, 3), journey, 1);
+  const practiceList = withCollection(makeLargeList('test_practice_complete_practice', 1, 3), practice, 1);
+  const previous = {
+    ...createDefaultStorage(),
+    selectedListIds: [practiceList.id],
+    currentPathPosition: practiceList.id
+  };
+  const result = completionResult(practiceList.id);
+  const next = {
+    ...completeListForMilestone(previous, practiceList),
+    lastSessionResult: result
+  };
+
+  const milestone = getCompletionMilestoneForSession(previous, next, [journeyList, practiceList], result);
+  const recommendation = getNormalContinuationRecommendation(next, [journeyList, practiceList]);
+
+  assertEqual(milestone?.kind, 'practice-library', 'Practice Library completion should be acknowledged.');
+  assertEqual(recommendation.listId, journeyList.id, 'Recommendation should point to the unfinished Learning Journey list.');
+});
+
+test('detached custom, inactive, and support lists do not trigger or block completion milestones', () => {
+  const collection = makeTestCollection('test_collection_exclusions', 'Topic Collection', 1);
+  const otherCollection = makeTestCollection('test_collection_exclusions_other', 'Other Collection', 2);
+  const activeList = withCollection(makeLargeList('test_collection_exclusions_active', 1, 3), collection, 1);
+  const unfinishedList = withCollection(makeLargeList('test_collection_exclusions_unfinished', 1, 3), otherCollection, 1);
+  const inactiveList = withCollection(makeLargeList('test_collection_exclusions_inactive', 2, 3), collection, 2);
+  inactiveList.isActive = false;
+  const supportList = withCollection(makeLargeList('test_collection_exclusions_support', 3, 3), collection, 3);
+  supportList.listType = 'support';
+  supportList.isSupportList = true;
+  const customCollection = makeTestCollection('custom_collection_exclusions', 'Custom', 4, { type: 'custom', ownerType: 'user' });
+  const customList = withCollection(makeLargeList('test_collection_exclusions_custom', 1, 3), customCollection, 1);
+  const previous = createDefaultStorage();
+  const next = completeListForMilestone(previous, activeList);
+
+  const milestone = getCompletionMilestoneForSession(previous, next, [activeList, inactiveList, supportList, unfinishedList], completionResult(activeList.id));
+  const customMilestone = getCompletionMilestoneForSession(previous, completeListForMilestone(previous, customList), [customList], completionResult(customList.id));
+
+  assertEqual(milestone?.kind, 'collection', 'Inactive and support lists should not block active collection completion.');
+  assertEqual(customMilestone, null, 'Detached custom/shared custom lists should not trigger Spelio-owned milestones.');
+});
+
+test('completion milestone translation keys exist in English and Welsh', () => {
+  const keys = [
+    'end.collectionCompleteHeading',
+    'end.collectionCompleteBody',
+    'end.practiceLibraryCompleteHeading',
+    'end.practiceLibraryCompleteBody',
+    'end.learningJourneyCompleteHeading',
+    'end.learningJourneyCompleteBody',
+    'end.fullSpelioCompleteHeading',
+    'end.fullSpelioCompleteBody',
+    'end.foundingLearnerFeedbackLine',
+    'end.continueLearning',
+    'end.exploreWordLists',
+    'end.leaveFeedback',
+    'end.practiseAgain',
+    'end.backToHome'
+  ] as const;
+
+  for (const key of keys) {
+    assert(translate('en', key) !== key, `English translation should exist for ${key}.`);
+    assert(translate('cy', key) !== key, `Welsh translation should exist for ${key}.`);
+  }
+});
+
+test('milestone actions do not auto-start a practice session from the end screen', () => {
+  const endSource = readFileSync('src/components/End.tsx', 'utf8');
+
+  assert(endSource.includes('hasMilestone\n    ? onMilestoneContinue'), 'Collection milestone primary action should route without using onContinue.');
+  assert(endSource.includes('isFullCatalogueMilestone\n    ? onChangeLists'), 'Full catalogue primary action should open word lists rather than start practice.');
+  assert(!endSource.includes('hasMilestone\n    ? onContinue'), 'Milestone actions should not auto-start normal continuation practice.');
 });
 
 test('recap-only recovery does not mark a list complete', () => {
