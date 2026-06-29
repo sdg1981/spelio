@@ -38,8 +38,9 @@ Catalogue order and progression order are related but distinct product concepts:
 
 - Catalogue/display order is the word-list order used when active public lists are grouped and displayed on the Word Lists page or inside a Practice Library category.
 - Curated progression is the explicit `nextListId` path after the current list is progression-complete.
-- `nextListId` is the strongest progression signal. If it points to an active incomplete list, it overrides catalogue/display order.
-- If no usable `nextListId` path remains, recommendations may fall back to collection/list order, then the existing weakest/least-seen fallback.
+- `nextListId` is the strongest progression signal. Continue learning should walk the explicit chain and skip only active lists that already have the same full-completion state used for the Word Lists completion tick.
+- Attempted, amber/in-progress, progression-complete, or unresolved-difficulty lists are still unfinished for this purpose and should not be skipped.
+- If no usable `nextListId` path remains because the chain is empty, exhausted, broken, looping, or only contains tick-completed lists, recommendations may fall back to collection/list order, then the existing weakest/least-seen fallback.
 - Do not introduce a separate progression order number unless a future content need proves it necessary.
 - Do not reintroduce stages or focus categories for progression.
 

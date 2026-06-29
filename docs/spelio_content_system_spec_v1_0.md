@@ -199,7 +199,7 @@ Practice Library categories such as Animals, Food & Drink, Places & Travel, and 
 
 Older abstract stage groupings such as Core, Usage, and Confidence should not be treated as the learner-facing catalogue model or normal admin editing model. Any remaining `stages`, `stage_id`, `focus_categories`, or `focus_category_id` handling is compatibility metadata for old data and import/export only. New content should not rely on stages or Focus Categories.
 
-Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated progression is controlled by `nextListId`. If `nextListId` is empty or unusable, recommendation fallback may use collection/list order. Do not add a separate progression order number unless a future content need proves it necessary, and do not reintroduce stages or focus categories for progression.
+Catalogue/display order is controlled by word-list order within the relevant collection/category display. Curated progression is controlled by `nextListId`. Continue learning should walk the explicit `nextListId` chain and skip only active lists that already have the same full-completion state used for the Word Lists completion tick. Attempted, amber/in-progress, progression-complete, or unresolved-difficulty lists are still unfinished for this purpose and should not be skipped. If `nextListId` is empty, exhausted, broken, looping, or otherwise unusable, recommendation fallback may use collection/list order. Do not add a separate progression order number unless a future content need proves it necessary, and do not reintroduce stages or focus categories for progression.
 
 ### Build as an Optional Learning-Journey Technique
 

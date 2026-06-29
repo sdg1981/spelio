@@ -1936,6 +1936,36 @@ test('normal progression skips a fully completed ticked next list', () => {
   assertEqual(recommendation.listId, 'stage2_adverbs', 'Fully completed immediate next list should be skipped for the following list');
 });
 
+test('manual completion skips fully completed ticked next list in nextListId chain', () => {
+  let storage = applyManualWordListSelection(createDefaultStorage(), ['stage2_weather']);
+  storage = completeListCleanly(storage, 'stage2_adjectives');
+  storage = completeListCleanly(storage, 'stage2_weather');
+
+  const adjectives = wordLists.find(list => list.id === 'stage2_adjectives');
+  assert(adjectives, 'Expected stage2_adjectives to exist');
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListFullyComplete(storage, adjectives), true, 'Setup should make the manually selected list next target fully completed/ticked');
+  assertEqual(recommendation.kind, 'list', 'Manual completion should still return Continue learning');
+  assertEqual(recommendation.listId, 'stage2_adverbs', 'Manual completion should skip a ticked nextListId target and continue along the chain');
+});
+
+test('normal progression does not skip a partially completed amber next list', () => {
+  const adjectives = wordLists.find(list => list.id === 'stage2_adjectives');
+  assert(adjectives, 'Expected stage2_adjectives to exist');
+
+  let storage = weatherAndWorkStorage();
+  storage = applyWordProgressPatch(storage, adjectives.words[0], { completed: true, cleanCompleted: true }, '2026-05-05T00:00:00.000Z');
+  storage = completeListCleanly(storage, 'stage2_weather');
+
+  const recommendation = getRecommendation(storage, wordLists);
+
+  assertEqual(isListProgressionReady(storage, adjectives), false, 'Setup should leave the immediate next list only partially complete');
+  assertEqual(isListFullyComplete(storage, adjectives), false, 'Setup should leave the immediate next list without the completion tick');
+  assertEqual(getInProgressListIds(storage, wordLists).includes(adjectives.id), true, 'Setup should make the immediate next list amber/in progress');
+  assertEqual(recommendation.listId, 'stage2_adjectives', 'Partially completed amber next list should not be skipped');
+});
+
 test('normal progression skips ticked foundations_places after foundations_actions', () => {
   let storage: SpelioStorage = {
     ...createDefaultStorage(),
@@ -2106,6 +2136,27 @@ test('normal progression falls back when sequential next lists are complete or u
   assertEqual(isListFullyComplete(storage, done), true, 'Setup should make the sequential next list fully complete');
   assertEqual(recommendation.kind, 'list', 'Normal progression should fall back to a list recommendation');
   assertEqual(recommendation.listId, fallback.id, 'Unavailable sequential continuation should use the existing unfinished-list fallback');
+});
+
+test('normal progression falls back safely when nextListId chain loops', () => {
+  const current: WordList = { ...makeLargeList('test_loop_current', 1, 2), nextListId: 'test_loop_done' };
+  const done: WordList = { ...makeLargeList('test_loop_done', 2, 2), nextListId: 'test_loop_current' };
+  const fallback: WordList = makeLargeList('test_loop_fallback', 3, 2);
+  const lists = [current, done, fallback];
+
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  };
+  storage = completeListCleanlyInLists(storage, lists, done.id);
+  storage = completeListCleanlyInLists(storage, lists, current.id);
+
+  const recommendation = getRecommendation(storage, lists);
+
+  assertEqual(isListFullyComplete(storage, done), true, 'Setup should make the looping sequential list fully complete');
+  assertEqual(recommendation.kind, 'list', 'Looping progression should not crash or produce review');
+  assertEqual(recommendation.listId, fallback.id, 'Looping nextListId chains should use the existing unfinished-list fallback');
 });
 
 test('explicit nextListId overrides fallback progression order', () => {
