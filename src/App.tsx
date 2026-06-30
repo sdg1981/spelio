@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Home } from './components/Home';
 import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from './components/CustomLists';
 import { HowSpelioWorks } from './components/HowSpelioWorks';
+import { InstallPage } from './components/InstallPage';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
 import { WelshSpellingBasicsOverview, WelshSpellingBasicsTopicPage } from './components/WelshSpellingBasics';
 import { CollectionIntro } from './components/CollectionIntro';
@@ -128,6 +129,7 @@ function getScreenForPath(pathname: string): Screen {
   if (pathname === '/feedback') return 'feedback';
   if (pathname === '/privacy') return 'privacy';
   if (pathname === '/about') return 'about';
+  if (pathname === '/install') return 'install';
   if (pathname === '/word-lists') return 'word-lists';
   if (pathname === '/spelling-basics') return 'spelling-basics';
   if (getSpellingBasicsTopicSlugFromPath(pathname)) return 'spelling-basics-topic';
@@ -704,7 +706,7 @@ export default function App() {
     setScreen('spelling-basics');
   }
 
-  function openPublicPage(nextScreen: Extract<Screen, 'feedback' | 'privacy' | 'about'>, path: string) {
+  function openPublicPage(nextScreen: Extract<Screen, 'feedback' | 'privacy' | 'about' | 'install'>, path: string) {
     if (typeof window !== 'undefined' && window.location.pathname !== path) {
       window.history.pushState({ spelioPublicPage: true }, '', path);
       resetPublicPageScrollToTop();
@@ -930,6 +932,14 @@ export default function App() {
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}
     />
+  ) : activeScreen === 'install' ? (
+    <InstallPage
+      onBack={returnFromStandalonePublicPage}
+      onHome={returnToLearning}
+      interfaceLanguage={interfaceLanguage}
+      onInterfaceLanguageChange={updateInterfaceLanguage}
+      t={t}
+    />
   ) : activeScreen === 'spelling-basics' ? (
     <WelshSpellingBasicsOverview
       onBack={returnFromStandalonePublicPage}
@@ -1089,6 +1099,7 @@ export default function App() {
       onHowSpelioWorks={openHowSpelioWorks}
       onWelshSpellingBasics={openWelshSpellingBasics}
       onFeedback={() => openPublicPage('feedback', '/feedback')}
+      onInstall={() => openPublicPage('install', '/install')}
       onPrivacy={() => openPublicPage('privacy', '/privacy')}
       onAbout={() => openPublicPage('about', '/about')}
       settings={storage.settings}
@@ -1104,7 +1115,7 @@ export default function App() {
   const useActionPublicBackground = activeScreen === 'home' || activeScreen === 'end';
   const useReadingPublicBackground = activeScreen === 'spelling-basics' || activeScreen === 'spelling-basics-topic' || activeScreen === 'primer' || activeScreen === 'collection-intro';
   const usePracticePublicBackground = activeScreen === 'practice';
-  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'word-lists', 'custom-new', 'custom-share', 'custom-entry', 'primer', 'collection-intro'].includes(activeScreen);
+  const useUtilityPublicBackground = ['how', 'feedback', 'privacy', 'about', 'install', 'word-lists', 'custom-new', 'custom-share', 'custom-entry', 'primer', 'collection-intro'].includes(activeScreen);
   const useNeutralPublicBackground = showSharedPublicBackground && !useActionPublicBackground;
   const useEndPublicBackground = activeScreen === 'end';
   const publicAppClassName = [

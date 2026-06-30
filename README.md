@@ -15,6 +15,8 @@ The Android wrapper for Google Play internal testing lives in `android/`.
 
 It is a minimal Trusted Web Activity for the existing PWA at `https://spelio.app` using package name `app.spelio.twa`. It does not add native login, sync, analytics, ads, subscriptions, push notifications, or native-only behaviour.
 
+The public `/install` page keeps one install destination for learners. It makes the primary option device-aware: App Store for iPhone and iPad, web app/browser install for Android until Google Play is live, and web app/browser install for desktop. The Google Play link is controlled by `GOOGLE_PLAY_URL` and `GOOGLE_PLAY_STATUS` in `src/lib/installOptions.ts`; keep Android marked coming soon until a real Play URL is configured.
+
 See [android/README.md](android/README.md) for build, local testing, signing, Digital Asset Links, and Play Console steps.
 
 ## iOS Capacitor App

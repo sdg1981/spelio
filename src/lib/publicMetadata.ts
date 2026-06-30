@@ -11,7 +11,7 @@ import {
   isPracticeTestShareMode
 } from './wordListSharing';
 
-export type PublicScreenForMetadata = 'home' | 'collection-intro' | 'primer' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
+export type PublicScreenForMetadata = 'home' | 'collection-intro' | 'primer' | 'practice' | 'end' | 'how' | 'feedback' | 'privacy' | 'about' | 'install' | 'word-lists' | 'custom-new' | 'custom-share' | 'custom-entry' | 'spelling-basics' | 'spelling-basics-topic';
 
 export type PageMetadata = {
   title: string;
@@ -69,6 +69,10 @@ const staticPages: Record<string, { title: string; description: string; robots?:
     title: 'Feedback - Spelio',
     description: 'Send feedback, corrections, or suggestions for Spelio and its Welsh spelling practice.',
     robots: 'noindex, follow'
+  },
+  '/install': {
+    title: 'Install Spelio',
+    description: 'Install Spelio from the App Store, use it in your browser, or add it as a web app where supported.'
   },
   '/custom-list/new': {
     title: 'Create a custom Welsh spelling list - Spelio',

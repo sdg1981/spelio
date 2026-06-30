@@ -173,6 +173,29 @@ export const en = {
   publicPages: {
     backLabel: 'Go back'
   },
+  install: {
+    title: 'Install Spelio',
+    intro: 'You can also use Spelio directly in your browser.',
+    optionsLabel: 'Ways to use Spelio',
+    appStoreEyebrow: 'iPhone and iPad',
+    appStoreTitle: 'Download on the App Store',
+    appStoreBody: 'The iPhone and iPad app is now available from Apple.',
+    appStoreBadgeAlt: 'Download on the App Store',
+    googlePlayEyebrow: 'Android',
+    googlePlayTitle: 'Get it on Google Play',
+    googlePlayBody: 'Install Spelio from Google Play.',
+    googlePlayComingSoonTitle: 'Google Play coming soon',
+    googlePlayComingSoonBody: 'For now, Android users can use Spelio in the browser or install it as a web app where supported.',
+    googlePlayBadgeAlt: 'Get it on Google Play',
+    comingSoon: 'Coming soon',
+    webAppEyebrow: 'Web app',
+    webAppTitle: 'Use or install the web app',
+    webAppAvailableBody: 'Your browser can install Spelio as a web app on this device.',
+    webAppIosFallbackBody: 'You can use Spelio in Safari. You may also be able to add it to your Home Screen from the browser menu.',
+    webAppAndroidFallbackBody: 'You can use Spelio in your browser. On some browsers, choose Add to Home Screen or Install app from the menu.',
+    webAppDesktopFallbackBody: 'You can use Spelio in your browser. Some desktop browsers also let you install it from the browser menu.',
+    webAppButton: 'Install web app'
+  },
   spellingBasics: {
     menuLabel: 'Welsh spelling basics',
     overview: {

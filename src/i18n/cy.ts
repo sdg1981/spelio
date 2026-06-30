@@ -173,6 +173,29 @@ export const cy = {
   publicPages: {
     backLabel: 'Mynd yn ôl'
   },
+  install: {
+    title: 'Gosod Spelio',
+    intro: 'Gallwch hefyd ddefnyddio Spelio yn uniongyrchol yn eich porwr.',
+    optionsLabel: 'Ffyrdd o ddefnyddio Spelio',
+    appStoreEyebrow: 'iPhone ac iPad',
+    appStoreTitle: 'Lawrlwytho o’r App Store',
+    appStoreBody: 'Mae’r ap iPhone ac iPad bellach ar gael gan Apple.',
+    appStoreBadgeAlt: 'Lawrlwytho o’r App Store',
+    googlePlayEyebrow: 'Android',
+    googlePlayTitle: 'Cael ar Google Play',
+    googlePlayBody: 'Gosodwch Spelio o Google Play.',
+    googlePlayComingSoonTitle: 'Google Play yn dod yn fuan',
+    googlePlayComingSoonBody: 'Am nawr, gall defnyddwyr Android ddefnyddio Spelio yn y porwr neu ei osod fel ap gwe lle bo hynny ar gael.',
+    googlePlayBadgeAlt: 'Cael ar Google Play',
+    comingSoon: 'Yn dod yn fuan',
+    webAppEyebrow: 'Ap gwe',
+    webAppTitle: 'Defnyddio neu osod yr ap gwe',
+    webAppAvailableBody: 'Gall eich porwr osod Spelio fel ap gwe ar y ddyfais hon.',
+    webAppIosFallbackBody: 'Gallwch ddefnyddio Spelio yn Safari. Efallai y gallwch hefyd ei ychwanegu at eich Sgrin Gartref o ddewislen y porwr.',
+    webAppAndroidFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mewn rhai porwyr, dewiswch Ychwanegu at y Sgrin Gartref neu Osod ap o’r ddewislen.',
+    webAppDesktopFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mae rhai porwyr bwrdd gwaith hefyd yn gadael i chi ei osod o ddewislen y porwr.',
+    webAppButton: 'Gosod ap gwe'
+  },
   spellingBasics: {
     menuLabel: 'Hanfodion sillafu Cymraeg',
     overview: {
