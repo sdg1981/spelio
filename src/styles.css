@@ -2617,19 +2617,6 @@
   height:auto;
 }
 
-.install-coming-soon{
-  display:inline-flex;
-  align-items:center;
-  min-height:38px;
-  border-radius:999px;
-  background:var(--bg-surface-soft, #ebe7e1);
-  color:var(--text-secondary, #5f6b78);
-  padding:0 15px;
-  font-size:14px;
-  font-weight:760;
-  white-space:nowrap;
-}
-
 .install-web-button{
   min-height:42px;
   border:0;

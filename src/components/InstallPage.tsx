@@ -5,6 +5,7 @@ import {
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
   getCurrentInstallDevice,
+  getInstallOptionOrder,
   isGooglePlayLive,
   type InstallDevice
 } from '../lib/installOptions';
@@ -27,8 +28,62 @@ export function InstallPage({
   t
 }: InstallPageProps) {
   const installDevice = useMemo(() => getCurrentInstallDevice(), []);
-  const { canInstall, promptInstall } = useInstallPrompt();
+  const installOptionOrder = useMemo(() => getInstallOptionOrder(installDevice), [installDevice]);
+  const { canInstall, isInstalled, isStandalone, promptInstall } = useInstallPrompt();
   const googlePlayLive = isGooglePlayLive();
+  const webAppInstalled = isInstalled || isStandalone;
+  const webAppButtonLabel = webAppInstalled
+    ? t('install.webAppOpenButton')
+    : canInstall
+      ? t('install.webAppButton')
+      : t('install.webAppUseButton');
+  const handleWebAppAction = canInstall && !webAppInstalled
+    ? () => void promptInstall()
+    : onHome;
+  const installOptions = {
+    appStore: (
+      <InstallOption
+        key="appStore"
+        primary={installDevice === 'ios'}
+        eyebrow={t('install.appStoreEyebrow')}
+        title={t('install.appStoreTitle')}
+        body={t('install.appStoreBody')}
+        action={(
+          <a className="install-badge-link" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <img src="/store-badges/app-store.svg" alt={t('install.appStoreBadgeAlt')} />
+          </a>
+        )}
+      />
+    ),
+    android: (
+      <InstallOption
+        key="android"
+        primary={installDevice === 'android'}
+        eyebrow={t('install.googlePlayEyebrow')}
+        title={googlePlayLive ? t('install.googlePlayTitle') : t('install.androidTitle')}
+        body={googlePlayLive ? t('install.googlePlayBody') : t('install.androidComingSoonBody')}
+        action={googlePlayLive ? (
+          <a className="install-badge-link" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+            <img src="/store-badges/google-play.svg" alt={t('install.googlePlayBadgeAlt')} />
+          </a>
+        ) : null}
+      />
+    ),
+    webApp: (
+      <InstallOption
+        key="webApp"
+        primary={installDevice === 'desktop'}
+        eyebrow={t('install.webAppEyebrow')}
+        title={t('install.webAppTitle')}
+        body={webAppInstalled ? t('install.webAppInstalledBody') : canInstall ? t('install.webAppAvailableBody') : getWebAppFallbackCopy(installDevice, t)}
+        action={(
+          <button className="install-web-button" type="button" onClick={handleWebAppAction}>
+            {webAppButtonLabel}
+          </button>
+        )}
+      />
+    )
+  };
 
   return (
     <PublicPageShell
@@ -44,42 +99,7 @@ export function InstallPage({
       <p className="install-page-intro">{t('install.intro')}</p>
 
       <div className="install-options" aria-label={t('install.optionsLabel')}>
-        <InstallOption
-          primary={installDevice === 'ios'}
-          eyebrow={t('install.appStoreEyebrow')}
-          title={t('install.appStoreTitle')}
-          body={t('install.appStoreBody')}
-          action={(
-            <a className="install-badge-link" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-              <img src="/store-badges/app-store.svg" alt={t('install.appStoreBadgeAlt')} />
-            </a>
-          )}
-        />
-
-        <InstallOption
-          eyebrow={t('install.googlePlayEyebrow')}
-          title={googlePlayLive ? t('install.googlePlayTitle') : t('install.googlePlayComingSoonTitle')}
-          body={googlePlayLive ? t('install.googlePlayBody') : t('install.googlePlayComingSoonBody')}
-          action={googlePlayLive ? (
-            <a className="install-badge-link" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
-              <img src="/store-badges/google-play.svg" alt={t('install.googlePlayBadgeAlt')} />
-            </a>
-          ) : (
-            <span className="install-coming-soon">{t('install.comingSoon')}</span>
-          )}
-        />
-
-        <InstallOption
-          primary={installDevice !== 'ios'}
-          eyebrow={t('install.webAppEyebrow')}
-          title={t('install.webAppTitle')}
-          body={canInstall ? t('install.webAppAvailableBody') : getWebAppFallbackCopy(installDevice, t)}
-          action={canInstall ? (
-            <button className="install-web-button" type="button" onClick={() => void promptInstall()}>
-              {t('install.webAppButton')}
-            </button>
-          ) : null}
-        />
+        {installOptionOrder.map(optionId => installOptions[optionId])}
       </div>
     </PublicPageShell>
   );

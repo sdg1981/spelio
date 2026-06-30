@@ -175,7 +175,7 @@ export const en = {
   },
   install: {
     title: 'Install Spelio',
-    intro: 'You can also use Spelio directly in your browser.',
+    intro: 'Use Spelio on your device or directly in your browser.',
     optionsLabel: 'Ways to use Spelio',
     appStoreEyebrow: 'iPhone and iPad',
     appStoreTitle: 'Download on the App Store',
@@ -184,17 +184,19 @@ export const en = {
     googlePlayEyebrow: 'Android',
     googlePlayTitle: 'Get it on Google Play',
     googlePlayBody: 'Install Spelio from Google Play.',
-    googlePlayComingSoonTitle: 'Google Play coming soon',
-    googlePlayComingSoonBody: 'For now, Android users can use Spelio in the browser or install it as a web app where supported.',
+    androidTitle: 'Install on Android',
+    androidComingSoonBody: 'Google Play is coming soon. In the meantime, you can use Spelio in your browser or install it as a web app using Chrome.',
     googlePlayBadgeAlt: 'Get it on Google Play',
-    comingSoon: 'Coming soon',
     webAppEyebrow: 'Web app',
     webAppTitle: 'Use or install the web app',
     webAppAvailableBody: 'Your browser can install Spelio as a web app on this device.',
+    webAppInstalledBody: 'Spelio is already running as an installed web app on this device.',
     webAppIosFallbackBody: 'You can use Spelio in Safari. You may also be able to add it to your Home Screen from the browser menu.',
     webAppAndroidFallbackBody: 'You can use Spelio in your browser. On some browsers, choose Add to Home Screen or Install app from the menu.',
     webAppDesktopFallbackBody: 'You can use Spelio in your browser. Some desktop browsers also let you install it from the browser menu.',
-    webAppButton: 'Install web app'
+    webAppButton: 'Install web app',
+    webAppOpenButton: 'Open Spelio',
+    webAppUseButton: 'Use web app'
   },
   spellingBasics: {
     menuLabel: 'Welsh spelling basics',

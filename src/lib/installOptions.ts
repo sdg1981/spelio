@@ -3,6 +3,7 @@ export const GOOGLE_PLAY_URL = '';
 export const GOOGLE_PLAY_STATUS: 'coming-soon' | 'live' = 'coming-soon';
 
 export type InstallDevice = 'ios' | 'android' | 'desktop';
+export type InstallOptionId = 'appStore' | 'android' | 'webApp';
 
 export function detectInstallDevice(userAgent: string, maxTouchPoints = 0): InstallDevice {
   const isiPadOSDesktopMode = /Macintosh/i.test(userAgent) && maxTouchPoints > 1;
@@ -18,4 +19,10 @@ export function getCurrentInstallDevice(): InstallDevice {
 
 export function isGooglePlayLive() {
   return GOOGLE_PLAY_STATUS === 'live' && GOOGLE_PLAY_URL.trim().length > 0;
+}
+
+export function getInstallOptionOrder(device: InstallDevice): InstallOptionId[] {
+  if (device === 'ios') return ['appStore', 'webApp', 'android'];
+  if (device === 'android') return ['android', 'webApp', 'appStore'];
+  return ['webApp', 'appStore', 'android'];
 }

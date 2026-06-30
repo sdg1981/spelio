@@ -175,7 +175,7 @@ export const cy = {
   },
   install: {
     title: 'Gosod Spelio',
-    intro: 'Gallwch hefyd ddefnyddio Spelio yn uniongyrchol yn eich porwr.',
+    intro: 'Defnyddiwch Spelio ar eich dyfais neu yn uniongyrchol yn eich porwr.',
     optionsLabel: 'Ffyrdd o ddefnyddio Spelio',
     appStoreEyebrow: 'iPhone ac iPad',
     appStoreTitle: 'Lawrlwytho o’r App Store',
@@ -184,17 +184,19 @@ export const cy = {
     googlePlayEyebrow: 'Android',
     googlePlayTitle: 'Cael ar Google Play',
     googlePlayBody: 'Gosodwch Spelio o Google Play.',
-    googlePlayComingSoonTitle: 'Google Play yn dod yn fuan',
-    googlePlayComingSoonBody: 'Am nawr, gall defnyddwyr Android ddefnyddio Spelio yn y porwr neu ei osod fel ap gwe lle bo hynny ar gael.',
+    androidTitle: 'Gosod ar Android',
+    androidComingSoonBody: 'Mae Google Play yn dod yn fuan. Yn y cyfamser, gallwch ddefnyddio Spelio yn eich porwr neu ei osod fel ap gwe gan ddefnyddio Chrome.',
     googlePlayBadgeAlt: 'Cael ar Google Play',
-    comingSoon: 'Yn dod yn fuan',
     webAppEyebrow: 'Ap gwe',
     webAppTitle: 'Defnyddio neu osod yr ap gwe',
     webAppAvailableBody: 'Gall eich porwr osod Spelio fel ap gwe ar y ddyfais hon.',
+    webAppInstalledBody: 'Mae Spelio eisoes yn rhedeg fel ap gwe wedi’i osod ar y ddyfais hon.',
     webAppIosFallbackBody: 'Gallwch ddefnyddio Spelio yn Safari. Efallai y gallwch hefyd ei ychwanegu at eich Sgrin Gartref o ddewislen y porwr.',
     webAppAndroidFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mewn rhai porwyr, dewiswch Ychwanegu at y Sgrin Gartref neu Osod ap o’r ddewislen.',
     webAppDesktopFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mae rhai porwyr bwrdd gwaith hefyd yn gadael i chi ei osod o ddewislen y porwr.',
-    webAppButton: 'Gosod ap gwe'
+    webAppButton: 'Gosod ap gwe',
+    webAppOpenButton: 'Agor Spelio',
+    webAppUseButton: 'Defnyddio’r ap gwe'
   },
   spellingBasics: {
     menuLabel: 'Hanfodion sillafu Cymraeg',
