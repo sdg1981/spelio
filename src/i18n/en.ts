@@ -189,13 +189,14 @@ export const en = {
     googlePlayBadgeAlt: 'Get it on Google Play',
     webAppEyebrow: 'Web app',
     webAppTitle: 'Use or install the web app',
-    webAppAvailableBody: 'Your browser can install Spelio as a web app on this device.',
+    webAppAvailableBody: 'Use Spelio in your browser, or install it as a web app where supported.',
     webAppInstalledBody: 'Spelio is already running as an installed web app on this device.',
     webAppIosFallbackBody: 'You can use Spelio in Safari. You may also be able to add it to your Home Screen from the browser menu.',
     webAppAndroidFallbackBody: 'You can use Spelio in your browser. On some browsers, choose Add to Home Screen or Install app from the menu.',
-    webAppDesktopFallbackBody: 'You can use Spelio in your browser. Some desktop browsers also let you install it from the browser menu.',
+    webAppDesktopFallbackBody: 'Use Spelio in your browser, or install it as a web app where supported.',
     webAppButton: 'Install web app',
     webAppOpenButton: 'Open Spelio',
+    webAppInstalledBadge: 'Already installed',
     webAppUseButton: 'Use web app'
   },
   spellingBasics: {

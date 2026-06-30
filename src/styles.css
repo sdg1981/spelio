@@ -2640,6 +2640,21 @@
   transform:scale(.98);
 }
 
+.install-installed-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:42px;
+  border-radius:999px;
+  border:1px solid var(--border-subtle, #dfd9d1);
+  background:var(--bg-surface-soft, #ebe7e1);
+  color:var(--text-secondary, #5f6b78);
+  padding:0 16px;
+  font-size:14px;
+  font-weight:780;
+  line-height:1;
+  white-space:nowrap;
+}
+
 .spelio-social-links{
   width:min(100%,520px);
   margin:clamp(32px,6vw,52px) auto 0;

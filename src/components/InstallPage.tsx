@@ -31,13 +31,13 @@ export function InstallPage({
   const installOptionOrder = useMemo(() => getInstallOptionOrder(installDevice), [installDevice]);
   const { canInstall, isInstalled, isStandalone, promptInstall } = useInstallPrompt();
   const googlePlayLive = isGooglePlayLive();
-  const webAppInstalled = isInstalled || isStandalone;
-  const webAppButtonLabel = webAppInstalled
+  const webAppKnownInstalled = isInstalled && !isStandalone;
+  const webAppButtonLabel = webAppKnownInstalled
     ? t('install.webAppOpenButton')
     : canInstall
       ? t('install.webAppButton')
       : t('install.webAppUseButton');
-  const handleWebAppAction = canInstall && !webAppInstalled
+  const handleWebAppAction = canInstall
     ? () => void promptInstall()
     : onHome;
   const installOptions = {
@@ -75,8 +75,10 @@ export function InstallPage({
         primary={installDevice === 'desktop'}
         eyebrow={t('install.webAppEyebrow')}
         title={t('install.webAppTitle')}
-        body={webAppInstalled ? t('install.webAppInstalledBody') : canInstall ? t('install.webAppAvailableBody') : getWebAppFallbackCopy(installDevice, t)}
-        action={(
+        body={isStandalone ? t('install.webAppInstalledBody') : canInstall ? t('install.webAppAvailableBody') : getWebAppFallbackCopy(installDevice, t)}
+        action={isStandalone ? (
+          <span className="install-installed-badge">{t('install.webAppInstalledBadge')}</span>
+        ) : (
           <button className="install-web-button" type="button" onClick={handleWebAppAction}>
             {webAppButtonLabel}
           </button>

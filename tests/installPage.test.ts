@@ -56,7 +56,9 @@ assert(!homeSource.includes('promptInstall'), 'Homepage menu should not directly
 const installPageSource = readFileSync('src/components/InstallPage.tsx', 'utf8');
 assert(installPageSource.includes('useInstallPrompt'), 'Install page should reuse the existing PWA install prompt hook.');
 assert(installPageSource.includes("t('install.webAppButton')"), 'Install page should render an install web app button when the prompt is available.');
-assert(installPageSource.includes("t('install.webAppOpenButton')"), 'Install page should render an open CTA when the web app is already installed.');
+assert(installPageSource.includes("t('install.webAppOpenButton')"), 'Install page should preserve the browser open CTA when a web app is known installed.');
+assert(installPageSource.includes("t('install.webAppInstalledBadge')"), 'Install page should render a passive installed badge in standalone mode.');
+assert(installPageSource.includes('install-installed-badge'), 'Standalone installed state should not use the primary install CTA.');
 assert(installPageSource.includes("t('install.webAppUseButton')"), 'Install page should render a safe use CTA when the browser prompt is unavailable.');
 assert(installPageSource.includes('getWebAppFallbackCopy'), 'Install page should render calm fallback instructions when the prompt is not available.');
 assert(installPageSource.includes("t('install.androidTitle')"), 'Install page should render Android-first guidance while Google Play is not live.');
@@ -68,8 +70,11 @@ const cySource = readFileSync('src/i18n/cy.ts', 'utf8');
 assert(enSource.includes('Install Spelio'), 'English install page title should be translated.');
 assert(enSource.includes('Use Spelio on your device or directly in your browser.'), 'English install intro should be warmer and device-aware.');
 assert(enSource.includes('Install on Android'), 'English Android guidance should not be centred on a dead-end coming-soon title.');
+assert(enSource.includes('Already installed'), 'English installed state should be passive.');
+assert(enSource.includes('Use Spelio in your browser, or install it as a web app where supported.'), 'English browser fallback should be concise.');
 assert(cySource.includes('Gosod Spelio'), 'Welsh install page title should be translated.');
 assert(cySource.includes('Defnyddiwch Spelio ar eich dyfais neu yn uniongyrchol yn eich porwr.'), 'Welsh install intro should be translated.');
 assert(cySource.includes('Gosod ar Android'), 'Welsh Android guidance should be translated.');
+assert(cySource.includes('Eisoes wedi’i osod'), 'Welsh installed state should be translated.');
 
 console.log('install page tests passed');

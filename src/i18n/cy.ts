@@ -189,13 +189,14 @@ export const cy = {
     googlePlayBadgeAlt: 'Cael ar Google Play',
     webAppEyebrow: 'Ap gwe',
     webAppTitle: 'Defnyddio neu osod yr ap gwe',
-    webAppAvailableBody: 'Gall eich porwr osod Spelio fel ap gwe ar y ddyfais hon.',
+    webAppAvailableBody: 'Defnyddiwch Spelio yn eich porwr, neu ei osod fel ap gwe lle bo hynny ar gael.',
     webAppInstalledBody: 'Mae Spelio eisoes yn rhedeg fel ap gwe wedi’i osod ar y ddyfais hon.',
     webAppIosFallbackBody: 'Gallwch ddefnyddio Spelio yn Safari. Efallai y gallwch hefyd ei ychwanegu at eich Sgrin Gartref o ddewislen y porwr.',
     webAppAndroidFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mewn rhai porwyr, dewiswch Ychwanegu at y Sgrin Gartref neu Osod ap o’r ddewislen.',
-    webAppDesktopFallbackBody: 'Gallwch ddefnyddio Spelio yn eich porwr. Mae rhai porwyr bwrdd gwaith hefyd yn gadael i chi ei osod o ddewislen y porwr.',
+    webAppDesktopFallbackBody: 'Defnyddiwch Spelio yn eich porwr, neu ei osod fel ap gwe lle bo hynny ar gael.',
     webAppButton: 'Gosod ap gwe',
     webAppOpenButton: 'Agor Spelio',
+    webAppInstalledBadge: 'Eisoes wedi’i osod',
     webAppUseButton: 'Defnyddio’r ap gwe'
   },
   spellingBasics: {
