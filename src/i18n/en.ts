@@ -267,6 +267,7 @@ export const en = {
     nowTryFromMemory: 'Now try from memory',
     peekUsed: 'Peek used',
     audioUnavailable: 'Audio unavailable',
+    audioUnavailableOffline: 'Audio unavailable while offline.',
     audioFallbackPromptShown: 'Text prompt shown because audio is unavailable',
     incorrectTryAgain: 'Incorrect. Try again.',
     correct: 'Correct',

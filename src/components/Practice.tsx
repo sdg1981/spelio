@@ -17,7 +17,7 @@ import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioP
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
 import { WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, compareWordListsForCatalogue, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
-import { getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
+import { getAudioUnavailableStatusText, getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
@@ -1273,7 +1273,7 @@ export function Practice({
 
     logAudioPlaybackClick('learner-word-pill', currentWord?.audioUrl);
     if (currentWord && isAudioUnavailableForPrompt(currentWord, audioPlaybackFailedWordIds.has(currentWord.id), defaultAudioProvider)) {
-      showLocalStatus(t('practice.audioUnavailable'));
+      showLocalStatus(getAudioUnavailableStatusText(t));
       if (shouldUseMobileKeyboard()) {
         window.setTimeout(focusMobileInput, 40);
       }

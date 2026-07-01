@@ -1,6 +1,7 @@
-const CACHE_NAME = 'spelio-app-shell-v1';
+const CACHE_NAME = 'spelio-app-shell-v2';
 const APP_SHELL_URLS = [
   '/',
+  '/offline.html',
   '/manifest.webmanifest',
   '/spelio-favicon.svg',
   '/spelio-icon-192.png',
@@ -58,6 +59,10 @@ async function networkFirst(request, fallbackPath) {
   } catch {
     const cached = await cache.match(fallbackPath);
     if (cached) return cached;
+    if (request.mode === 'navigate') {
+      const offlineFallback = await cache.match('/offline.html');
+      if (offlineFallback) return offlineFallback;
+    }
     throw new Error('Spelio app shell is not cached.');
   }
 }

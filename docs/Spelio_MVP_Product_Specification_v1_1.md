@@ -2724,9 +2724,18 @@ Show admin warning or user message:
 
 ### 20.4 Offline / audio unavailable
 
-- App should still allow text-based practice.
-- Audio failures should not break session.
-- Audio failures should produce only subtle temporary feedback.
+- Spelio does not claim full offline support.
+- If the app shell loads and bundled/static content is available, text-based practice should remain usable where practical.
+- Public content loading should prefer live Supabase content, then fall back to bundled static content.
+- If the app cannot load enough content to function, show a simple public-facing offline state:
+  - "Spelio needs an internet connection to load."
+  - "Please reconnect and try again."
+  - Retry button.
+- For PWA/browser navigations where the service worker is installed but the app shell cannot be served, use the same minimal offline message instead of a raw browser/network failure where practical.
+- iOS Capacitor builds package the Vite web assets and should launch the React shell offline after build/sync, subject to the same content/audio limits.
+- The Android TWA opens `https://spelio.app`; it can benefit from the web app's service-worker cache after a successful online load, but a first-ever offline launch can still depend on the browser/TWA host because no remote shell has been cached yet.
+- Audio failures should not break a session or block practice.
+- Audio failures should reveal text prompts where needed and produce only subtle temporary feedback, using "Audio unavailable while offline." when the browser reports it is offline.
 
 ### 20.5 Older multiple selected lists
 

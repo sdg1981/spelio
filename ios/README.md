@@ -75,7 +75,7 @@ This app is intentionally a thin wrapper around the Spelio learning experience. 
 
 Before submission, test on a real iPhone and confirm:
 
-- Core spelling practice works offline enough for already-packaged screens and data.
+- The packaged app shell opens offline and, where bundled/static content is available, text-based practice can continue; audio, custom lists, feedback, and live content refresh still require network access.
 - Any feature that needs serverless routes, such as feedback, custom list creation, or generated fallback audio, can reach `https://spelio.app`.
 - External share links point to `https://spelio.app`, not `capacitor://localhost`.
 - The app does not expose broken install-PWA prompts inside the native shell.

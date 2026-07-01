@@ -118,6 +118,12 @@
 .wordlist-large-qr-close:hover,.wordlist-large-qr-close:focus-visible{outline:0;box-shadow:0 0 0 3px var(--focus-ring),0 10px 28px rgba(7,21,34,.08);}
 .practice-test-utility-bar{grid-template-columns:1fr;max-width:220px;}
 .practice-test-utility-bar button+button{border-left:0;}
+.offline-app{display:grid;place-items:center;}
+.offline-shell{justify-content:center;min-height:100svh;text-align:center;}
+.offline-copy{margin-top:42px;display:grid;gap:14px;}
+.offline-copy h1{margin:0;color:var(--ink);font-size:clamp(24px,6vw,34px);font-weight:950;letter-spacing:-.04em;line-height:1.08;text-wrap:balance;}
+.offline-copy p{margin:0;color:#687481;font-size:17px;font-weight:650;line-height:1.45;text-wrap:balance;}
+.offline-retry-button{margin-top:38px;min-width:132px;}
 
 @media (min-width:900px){
   .modal-small{max-width:520px;padding:38px;}

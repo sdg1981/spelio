@@ -17,7 +17,7 @@ import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } 
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, markFirstPracticeHintSeen, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
 import { getPlayableAudioUrl } from '../lib/audioPlayback';
-import { getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
+import { getAudioUnavailableStatusText, getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
 
@@ -233,21 +233,21 @@ export function usePracticeSession({
 
     const wordForPlayback = currentWord;
     if (!wordForPlayback) {
-      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
       return false;
     }
 
     const resolvedAudioUrl = getResolvedPracticeAudioUrl(wordForPlayback, defaultAudioProvider);
     if (!resolvedAudioUrl) {
       markAudioPlaybackFailed(wordForPlayback.id);
-      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
       return false;
     }
 
     const playableUrl = getPlayableAudioUrl(resolvedAudioUrl);
     if (!playableUrl) {
       markAudioPlaybackFailed(wordForPlayback.id);
-      if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+      if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
       return false;
     }
 
@@ -282,7 +282,7 @@ export function usePracticeSession({
     } catch {
       if (audioRef.current === audio && audioUrlRef.current === playableUrl) {
         markAudioPlaybackFailed(wordForPlayback.id);
-        if (showUnavailableStatus) showStatus(t('practice.audioUnavailable'));
+        if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
       }
       return false;
     }

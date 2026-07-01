@@ -267,6 +267,7 @@ export const cy = {
     nowTryFromMemory: 'Nawr ceisiwch o’r cof',
     peekUsed: 'Cipolwg wedi’i ddefnyddio',
     audioUnavailable: 'Dim sain ar gael',
+    audioUnavailableOffline: 'Dim sain ar gael tra all-lein.',
     audioFallbackPromptShown: 'Dangosir awgrym testun gan nad oes sain ar gael',
     incorrectTryAgain: 'Anghywir. Ceisiwch eto.',
     correct: 'Cywir',

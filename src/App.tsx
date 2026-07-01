@@ -3,6 +3,7 @@ import { Home } from './components/Home';
 import { CustomListCreatePage, CustomListEntryPage, CustomListSharePage } from './components/CustomLists';
 import { HowSpelioWorks } from './components/HowSpelioWorks';
 import { InstallPage } from './components/InstallPage';
+import { OfflineState } from './components/OfflineState';
 import { AboutPage, FeedbackPage, PrivacyPage } from './components/PublicInfoPages';
 import { WelshSpellingBasicsOverview, WelshSpellingBasicsTopicPage } from './components/WelshSpellingBasics';
 import { CollectionIntro } from './components/CollectionIntro';
@@ -172,7 +173,7 @@ export default function App() {
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
-  const [publicContentLoaded, setPublicContentLoaded] = useState(false);
+  const [publicContentStatus, setPublicContentStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClipRegistry>(() => createInterfaceAudioRegistry(createDefaultInterfaceAudioClips()));
   const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
@@ -299,23 +300,34 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
-    loadPublicContent().then(content => {
-      if (cancelled) return;
-      setPublicWordLists(content.lists);
-      setDefaultAudioProvider(content.defaultAudioProvider);
-      setInterfaceAudioClips(content.interfaceAudioClips);
-      setPublicContentLoaded(true);
-      setStorage(previous => {
-        const normalized = normalizeStorageWordListSelection(previous, content.lists);
-        setSharedContext(createSharedContextFromRoute(normalized, content.lists));
-        return normalized;
+    setPublicContentStatus('loading');
+    loadPublicContent()
+      .then(content => {
+        if (cancelled) return;
+        setPublicWordLists(content.lists);
+        setDefaultAudioProvider(content.defaultAudioProvider);
+        setInterfaceAudioClips(content.interfaceAudioClips);
+        setPublicContentStatus('ready');
+        setStorage(previous => {
+          const normalized = normalizeStorageWordListSelection(previous, content.lists);
+          setSharedContext(createSharedContextFromRoute(normalized, content.lists));
+          return normalized;
+        });
+      })
+      .catch(error => {
+        if (cancelled) return;
+        console.info('Spelio public content could not be loaded.', error);
+        setPublicContentStatus('failed');
       });
-    });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  function retryPublicContentLoad() {
+    window.location.reload();
+  }
 
   function updateStorage(next: SpelioStorage) {
     setStorage(activeSharedContext ? restoreSharedWordListProgression(next, activeSharedContext) : next);
@@ -900,6 +912,11 @@ export default function App() {
   const activeCollectionIntro = activePrimerList?.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID
     ? getCollectionIntroForPracticeStart(activePrimerList, interfaceLanguage)
     : null;
+
+  if (publicContentStatus === 'failed' && publicWordLists.length === 0) {
+    return <OfflineState onRetry={retryPublicContentLoad} />;
+  }
+
   const screenContent = activeScreen === 'how' ? (
     <HowSpelioWorks
       onHome={returnToLearning}
@@ -996,7 +1013,7 @@ export default function App() {
       practiceTestMode={practiceTestMode}
       defaultAudioProvider={defaultAudioProvider}
       interfaceAudioClips={interfaceAudioClips}
-      interfaceAudioReady={publicContentLoaded}
+      interfaceAudioReady={publicContentStatus === 'ready'}
       disableQuickRecap={Boolean(activeSharedContext) || Boolean(activeSupportPractice) || practiceTestMode}
       detached={Boolean(activeSupportPractice)}
       onStorageChange={updatePracticeSessionStorage}

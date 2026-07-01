@@ -1,4 +1,5 @@
 import { getResolvedPracticeAudioUrl, type DefaultAudioProvider, type ElevenLabsAudioStatus } from '../audioProvider';
+import type { Translate } from '../../i18n';
 
 export type AudioStatus = 'missing' | 'queued' | 'generating' | 'ready' | 'failed';
 
@@ -32,6 +33,14 @@ export function getPlayableAudioUrl(audioUrl?: string | null) {
 
 export function hasPlayableAudioUrl(audioUrl?: string | null) {
   return getPlayableAudioUrl(audioUrl) !== null;
+}
+
+export function isBrowserOffline(navigatorLike: Pick<Navigator, 'onLine'> | undefined = typeof navigator === 'undefined' ? undefined : navigator) {
+  return navigatorLike?.onLine === false;
+}
+
+export function getAudioUnavailableStatusText(t: Translate, navigatorLike?: Pick<Navigator, 'onLine'>) {
+  return isBrowserOffline(navigatorLike) ? t('practice.audioUnavailableOffline') : t('practice.audioUnavailable');
 }
 
 export function shouldAllowAudioPlayback(_audioPrompts: boolean, _forceAudioAvailable = false) {

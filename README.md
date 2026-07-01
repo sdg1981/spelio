@@ -9,6 +9,12 @@ npm install
 npm run dev
 ```
 
+## Offline Behaviour
+
+Spelio does not claim full offline support. The public app prefers live Supabase content, then falls back to bundled static content so text-based practice can continue where practical if the app shell is already available.
+
+If the shell cannot load enough content to function, Spelio shows a minimal offline state with a Retry button. The service worker also precaches `/offline.html` as a navigation fallback for installed/cached PWA sessions where the app shell cannot be served. Practice audio failures do not block typing practice; when the browser reports it is offline, the temporary feedback says "Audio unavailable while offline."
+
 ## Android Trusted Web Activity
 
 The Android wrapper for Google Play internal testing lives in `android/`.
