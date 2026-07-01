@@ -18,7 +18,7 @@ insert into public.word_list_collections (
   'practice',
   'practice',
   'Practice',
-  null,
+  'Ymarfer',
   'Useful Welsh spelling practice organised by topic.',
   null,
   'spelio_core',

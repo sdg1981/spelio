@@ -1,4 +1,4 @@
-import { buildAdminContentExportPayload, createAdminContentExportFilename } from '../src/admin/repositories/contentExport';
+import { buildAdminContentExportPayload, createAdminContentExportFilename, createValidatedAdminContentExportJson } from '../src/admin/repositories/contentExport';
 import { shouldFlagEnglishPromptCapitalization, validateImportPayload } from '../src/admin/repositories/importValidation';
 import { createDraftAdminWordList } from '../src/admin/services/wordListDraft';
 import type { AdminStructureOption, AdminWordList, AdminWordListCollection } from '../src/admin/types';
@@ -26,7 +26,7 @@ const collections: AdminWordListCollection[] = [
     id: 'spelio_core_welsh',
     slug: 'spelio-core-welsh',
     name: 'Spelio Core Welsh',
-    nameCy: 'Spelio Cymraeg Craidd',
+    nameCy: 'Spelio Craidd Cymraeg',
     description: 'Core Welsh spelling practice.',
     descriptionCy: 'Ymarfer sillafu Cymraeg craidd.',
     type: 'spelio_core',
@@ -238,7 +238,7 @@ assertEqual(payload.lists[1].focusCategoryId, '', 'export should allow new lists
 assertEqual(payload.lists[0].words[0].id, 'first_list_001', 'words should sort by order');
 assertEqual(payload.collections[0].ownerType, 'spelio', 'collection owner type should be preserved');
 assertEqual(payload.collections[0].order, 2, 'collection order should be exported');
-assertEqual(payload.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'collection Welsh display name should be exported');
+assertEqual(payload.collections[0].nameCy, 'Spelio Craidd Cymraeg', 'collection Welsh display name should be exported');
 assertEqual(payload.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'collection Welsh display description should be exported');
 assertEqual(payload.collections[0].introContent?.enabled, true, 'collection intro enabled state should be exported');
 assertEqual(payload.collections[0].introContent?.audioUrlEn, 'https://example.test/collection-intro-en.mp3', 'collection intro English audio metadata should be exported');
@@ -258,13 +258,20 @@ const preview = validateImportPayload(payload, {
 });
 
 assertArrayEqual(preview.errors, [], 'export should validate against the current importer');
+const exportJson = createValidatedAdminContentExportJson(payload);
+const parsedPreview = validateImportPayload(exportJson, {
+  existingCollectionIds: [],
+  existingListIds: [],
+  existingWordIds: []
+});
+assertArrayEqual(parsedPreview.errors, [], 'serialized export JSON should parse and validate against the current importer');
 assertEqual(preview.totalLists, 2, 'export should include all lists');
 assertEqual(preview.totalWords, 2, 'export should include all words');
 assertEqual(preview.content.lists[0].isActive, true, 'import validation should preserve active list status.');
 assertEqual(preview.content.lists[1].isActive, false, 'import validation should preserve inactive list status.');
 assertEqual(preview.content.lists[1].stageId, '', 'import validation should preserve missing stage metadata.');
 assertEqual(preview.content.lists[1].focusCategoryId, '', 'import validation should preserve missing focus category metadata.');
-assertEqual(preview.content.collections[0].nameCy, 'Spelio Cymraeg Craidd', 'import validation should preserve collection Welsh display name.');
+assertEqual(preview.content.collections[0].nameCy, 'Spelio Craidd Cymraeg', 'import validation should preserve collection Welsh display name.');
 assertEqual(preview.content.collections[0].descriptionCy, 'Ymarfer sillafu Cymraeg craidd.', 'import validation should preserve collection Welsh display description.');
 assertEqual(preview.content.collections[0].order, 2, 'import validation should preserve collection order.');
 assertEqual(preview.content.collections[0].introContent?.titleEn, 'Collection Intro', 'import validation should preserve collection intro title.');

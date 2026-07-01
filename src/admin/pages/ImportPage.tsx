@@ -5,7 +5,7 @@ import { ImportDropzone } from '../components/ImportDropzone';
 import { AdminButton, AdminCard, AdminTextarea } from '../components/primitives';
 import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
-import { createAdminContentExportFilename } from '../repositories/contentExport';
+import { createAdminContentExportFilename, createValidatedAdminContentExportJson } from '../repositories/contentExport';
 import type { ImportContentResult, ImportValidationResult } from '../types';
 
 const sampleJson = `{
@@ -81,7 +81,7 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
       setExportMessage('');
       const payload = await repository.exportContent();
       const filename = createAdminContentExportFilename(payload.exportedAt);
-      downloadJson(filename, JSON.stringify(payload, null, 2));
+      downloadJson(filename, createValidatedAdminContentExportJson(payload));
       setExportMessage(`Downloaded ${filename}`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Export failed.');
@@ -211,6 +211,7 @@ export function ImportPage({ repository }: { repository: AdminRepository }) {
 }
 
 function downloadJson(filename: string, json: string) {
+  JSON.parse(json);
   const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -219,7 +220,7 @@ function downloadJson(filename: string, json: string) {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function PreviewRow({ label, value, tone = 'slate' }: { label: string; value: number; tone?: 'red' | 'amber' | 'slate' }) {

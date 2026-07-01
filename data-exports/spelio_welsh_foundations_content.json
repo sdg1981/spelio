@@ -27,7 +27,7 @@
       "ownerType": "spelio",
       "order": 2,
       "isActive": true,
-      "nameCy": "Spelio Cymraeg Craidd",
+      "nameCy": "Spelio Craidd Cymraeg",
       "descriptionCy": "Rhestrau ymarfer sillafu Cymraeg craidd ar gyfer MVP Spelio."
     },
     {
@@ -74,7 +74,7 @@
       "ownerType": "spelio",
       "order": 99,
       "isActive": true,
-      "nameCy": "Cymorth Cymraeg Spelio",
+      "nameCy": "Cymorth Spelio Cymraeg",
       "descriptionCy": "Rhestrau cymorth cyd-destunol mewnol ar gyfer ymarfer ffocysedig."
     }
   ],
@@ -788,7 +788,7 @@
         {
           "id": "foundations_first_phrases_010",
           "listId": "foundations_first_phrases",
-          "englishPrompt": "seeing you",
+          "englishPrompt": "seeing you (informal)",
           "welshAnswer": "gweld ti",
           "acceptedAlternatives": [],
           "audioUrl": "https://pybyqcmzattdmdxuhrtl.supabase.co/storage/v1/object/public/audio/cy/foundations-first-phrases/foundations-first-phrases-010.mp3",

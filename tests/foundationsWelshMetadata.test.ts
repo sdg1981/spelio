@@ -94,6 +94,11 @@ assertEqual(siList?.words?.[3]?.welshAnswer, 'siop', 'SI shop answer should be s
 assertEqual(siList?.words?.[3]?.usageNote, 'Notice how **si** sounds before another vowel.', 'Only siop should carry the SI usage note.');
 assertEqual(siList?.words?.filter(word => word.usageNote?.trim()).length, 1, 'SI should not add extra usage notes.');
 assertEqual(mixedConfidence1?.words?.length, 10, 'Mixed Confidence — Foundations 1 should include ten words.');
+assertEqual(
+  exportPayload.lists?.find(list => list.id === 'foundations_first_phrases')?.words?.find(word => word.id === 'foundations_first_phrases_010')?.englishPrompt,
+  'seeing you (informal)',
+  'First Phrases should clarify the informal context for gweld ti in the prompt.'
+);
 assertEqual(mixedConfidence1?.words?.[8]?.englishPrompt, 'shop', 'Mixed Confidence — Foundations 1 should add shop ninth.');
 assertEqual(mixedConfidence1?.words?.[8]?.welshAnswer, 'siop', 'Mixed Confidence — Foundations 1 should add siop ninth.');
 assertEqual(mixedConfidence1?.words?.[9]?.englishPrompt, 'jacket', 'Mixed Confidence — Foundations 1 should add jacket tenth.');

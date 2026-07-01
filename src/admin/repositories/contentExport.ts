@@ -160,6 +160,16 @@ export function createAdminContentExportFilename(exportedAt = new Date().toISOSt
   return `spelio_live_content_export_${exportedAt.replace(/\.\d{3}Z$/, 'Z').replace(/[:.]/g, '-').replace('T', '_')}.json`;
 }
 
+export function createValidatedAdminContentExportJson(payload: AdminContentExportPayload) {
+  const json = JSON.stringify(payload, null, 2);
+  try {
+    JSON.parse(json);
+  } catch (error) {
+    throw new Error(error instanceof Error ? `Generated export JSON is invalid: ${error.message}` : 'Generated export JSON is invalid.');
+  }
+  return json;
+}
+
 function exportList(list: AdminWordList): ExportedWordList {
   return {
     id: list.id,

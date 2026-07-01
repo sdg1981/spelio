@@ -54,7 +54,7 @@ export const defaultWordListCollection: WordListCollection = {
   id: DEFAULT_WORD_LIST_COLLECTION_ID,
   slug: 'spelio-core-welsh',
   name: 'Spelio Core Welsh',
-  nameCy: 'Spelio Cymraeg Craidd',
+  nameCy: 'Spelio Craidd Cymraeg',
   description: 'Core Welsh spelling practice lists for the Spelio MVP.',
   descriptionCy: 'Rhestrau ymarfer sillafu Cymraeg craidd ar gyfer MVP Spelio.',
   type: 'spelio_core',

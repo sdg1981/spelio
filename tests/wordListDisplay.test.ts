@@ -82,7 +82,7 @@ assertEqual(
 );
 
 const sortedCollections = [
-  { id: 'spelio_core_welsh', name: 'Spelio Core Welsh', nameCy: 'Spelio Cymraeg Craidd', order: 2 },
+  { id: 'spelio_core_welsh', name: 'Spelio Core Welsh', nameCy: 'Spelio Craidd Cymraeg', order: 2 },
   { id: 'missing_order_b', name: 'Beta Collection', order: null },
   { id: 'missing_order_a', name: 'Alpha Collection', order: null },
   { id: 'spelio_welsh_foundations', name: 'Welsh Spelling Foundations', nameCy: 'Sylfeini Sillafu Cymraeg', order: 1 }

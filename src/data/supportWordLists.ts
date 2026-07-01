@@ -8,7 +8,7 @@ export const supportWordListCollection: WordListCollection = {
   id: SUPPORT_WORD_LIST_COLLECTION_ID,
   slug: 'spelio-support-welsh',
   name: 'Spelio Support Welsh',
-  nameCy: 'Cymorth Cymraeg Spelio',
+  nameCy: 'Cymorth Spelio Cymraeg',
   description: 'Built-in contextual support lists for focused practice.',
   descriptionCy: 'Rhestrau cymorth cyd-destunol mewnol ar gyfer ymarfer ffocysedig.',
   type: 'spelio_core',
