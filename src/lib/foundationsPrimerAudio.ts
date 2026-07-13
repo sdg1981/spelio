@@ -6,7 +6,6 @@ const primerAudioCache = new Map<string, HTMLAudioElement>();
 const generatedPrimerAudioCache = new Map<string, { audio: HTMLAudioElement; objectUrl: string }>();
 const generatedPrimerAudioPromises = new Map<string, Promise<HTMLAudioElement | null>>();
 const preloadedPrimerAudioUrls = new Set<string>();
-const preloadedPrimerTextKeys = new Set<string>();
 
 type PrimerSoundPlaybackItem = {
   audioText?: string;
@@ -20,8 +19,8 @@ export function getStoredPrimerAudioUrl(item: PrimerSoundPlaybackItem) {
   return getPlayableAudioUrl(item.audioUrl);
 }
 
-export function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
-  items.forEach(item => {
+export async function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
+  await Promise.all(items.map(async item => {
     const playableUrl = getStoredPrimerAudioUrl(item);
     if (playableUrl) {
       if (preloadedPrimerAudioUrls.has(playableUrl)) return;
@@ -37,12 +36,10 @@ export function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
     }
 
     const text = getPrimerSoundText(item);
-    const cacheKey = getGeneratedPrimerAudioCacheKey(text);
-    if (!text || preloadedPrimerTextKeys.has(cacheKey)) return;
+    if (!text) return;
 
-    preloadedPrimerTextKeys.add(cacheKey);
-    void getCachedGeneratedPrimerAudio(text);
-  });
+    await getCachedGeneratedPrimerAudio(text);
+  }));
 }
 
 export async function playPrimerSound(item: PrimerSoundPlaybackItem) {
@@ -53,6 +50,9 @@ export async function playPrimerSound(item: PrimerSoundPlaybackItem) {
 
   const text = getPrimerSoundText(item);
   if (!text) return false;
+
+  const cached = generatedPrimerAudioCache.get(getGeneratedPrimerAudioCacheKey(text));
+  if (cached) return playPrimerAudioElement(cached.audio);
 
   const audio = await getCachedGeneratedPrimerAudio(text);
   return audio ? playPrimerAudioElement(audio) : false;
@@ -65,7 +65,6 @@ export function clearPrimerAudioCacheForTests() {
   generatedPrimerAudioCache.clear();
   generatedPrimerAudioPromises.clear();
   preloadedPrimerAudioUrls.clear();
-  preloadedPrimerTextKeys.clear();
 }
 
 async function playStoredPrimerAudioUrl(playableUrl: string) {

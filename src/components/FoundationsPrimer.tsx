@@ -27,8 +27,17 @@ export function FoundationsPrimer({
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
+  const [soundsPrepared, setSoundsPrepared] = useState(false);
+
   useEffect(() => {
-    preloadPrimerSounds(primer.soundItems);
+    let cancelled = false;
+    setSoundsPrepared(primer.soundItems.length === 0);
+    void preloadPrimerSounds(primer.soundItems).finally(() => {
+      if (!cancelled) setSoundsPrepared(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [primer.soundItems]);
 
   return (
@@ -57,7 +66,7 @@ export function FoundationsPrimer({
         {primer.soundItems.length > 0 && (
           <div className="foundations-primer-sounds" aria-label={t('primer.soundButtonsLabel')}>
             {primer.soundItems.map(item => (
-              <PrimerSoundButton key={item.id} item={item} t={t} />
+              <PrimerSoundButton key={item.id} disabled={!soundsPrepared} item={item} t={t} />
             ))}
           </div>
         )}
@@ -84,7 +93,7 @@ export function FoundationsPrimer({
   );
 }
 
-function PrimerSoundButton({ item, t }: { item: PrimerSoundItem; t: Translate }) {
+function PrimerSoundButton({ disabled, item, t }: { disabled: boolean; item: PrimerSoundItem; t: Translate }) {
   const [state, setState] = useState<'idle' | 'playing' | 'failed'>('idle');
 
   async function playSound() {
@@ -102,7 +111,8 @@ function PrimerSoundButton({ item, t }: { item: PrimerSoundItem; t: Translate })
       className={`foundations-primer-sound ${state === 'playing' ? 'playing' : ''} ${state === 'failed' ? 'failed' : ''}`.trim()}
       type="button"
       onClick={playSound}
-      aria-busy={state === 'playing'}
+      disabled={disabled}
+      aria-busy={disabled || state === 'playing'}
       aria-label={`${t('primer.playSound')} ${item.label}`}
     >
       <Volume2 size={20} strokeWidth={2.2} aria-hidden="true" />

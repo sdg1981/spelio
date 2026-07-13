@@ -3,6 +3,10 @@ import { getCollectionIntro, getCollectionIntroAudioGenerationText, hasSeenColle
 import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds } from '../src/lib/foundationsPrimerAudio';
 import { shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange } from '../src/lib/interfaceLanguageNavigation';
 
+declare function require(name: string): {
+  readFileSync?: (path: string, encoding: string) => string;
+};
+
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -12,6 +16,22 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
     throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
   }
 }
+
+const { readFileSync } = require('fs') as {
+  readFileSync: (path: string, encoding: string) => string;
+};
+const documentShellSource = readFileSync('index.html', 'utf8');
+const stylesSource = readFileSync('src/styles.css', 'utf8');
+
+assert(documentShellSource.includes('viewport-fit=cover'), 'Document viewport should expose iOS safe-area insets.');
+assert(
+  stylesSource.includes('padding-top:calc(18px + env(safe-area-inset-top))'),
+  'Mobile public pages should include the iOS top safe area in their header layout.'
+);
+assert(
+  /\.how-back-button\{[\s\S]*?width:44px;[\s\S]*?height:44px;/.test(stylesSource),
+  'Shared public-page back control should keep a reliable 44px touch target.'
+);
 
 const dDdPrimer = getFoundationsPrimer('foundation_patterns_d_dd', 'en');
 assert(dDdPrimer, 'D/DD Foundations list should resolve a primer.');
@@ -50,6 +70,10 @@ const welshYPrimerFromDraft = getFoundationsPrimer('foundation_patterns_y', 'cy'
 assert(welshYPrimerFromDraft, 'Welsh interface should resolve Y primer from bundled primerDrafts when DB content is absent.');
 assertEqual(welshYPrimerFromDraft.title, 'Y llythyren Y', 'Welsh fallback primer should use primerDrafts.primerTitleCy.');
 assertEqual(welshYPrimerFromDraft.soundItems[0].label, 'Y (sillaf olaf)', 'Welsh primer sound labels should prefer labelCy from primerDrafts.');
+assertEqual(welshYPrimerFromDraft.soundItems.length, 2, 'Y primer should resolve both expected sound samples.');
+assertEqual(welshYPrimerFromDraft.soundItems[0].textToSpeak, 'byd', 'Y final-syllable sample should resolve its expected Welsh audio text.');
+assertEqual(welshYPrimerFromDraft.soundItems[1].textToSpeak, 'ysgol', 'Y earlier-syllable sample should resolve its expected Welsh audio text.');
+const welshYSoundItems = welshYPrimerFromDraft.soundItems;
 
 const databaseDddPrimer = getFoundationsPrimer({
   id: 'foundation_patterns_d_dd',
@@ -302,12 +326,15 @@ assert(
 
 class MockAudio {
   static instances: MockAudio[] = [];
+  static playShouldReject = false;
+  static userGestureActive = false;
 
   currentTime = 0;
   loadCalls = 0;
   onended: (() => void) | null = null;
   pauseCalls = 0;
   playCalls = 0;
+  playCallsDuringUserGesture = 0;
   preload = '';
   src = '';
 
@@ -325,7 +352,8 @@ class MockAudio {
 
   play() {
     this.playCalls += 1;
-    return Promise.resolve();
+    if (MockAudio.userGestureActive) this.playCallsDuringUserGesture += 1;
+    return MockAudio.playShouldReject ? Promise.reject(new Error('Playback rejected')) : Promise.resolve();
   }
 }
 
@@ -371,6 +399,26 @@ async function runPrimerAudioTests() {
     markCollectionIntroSeen(foundationsIntro);
     assert(hasSeenCollectionIntro(foundationsIntro), 'Collection intro should store seen state locally.');
 
+    clearPrimerAudioCacheForTests();
+    MockAudio.instances = [];
+    fetchCalls = 0;
+    await preloadPrimerSounds(welshYSoundItems);
+    assertEqual(fetchCalls, 2, 'Y primer should prepare both expected generated audio samples.');
+
+    MockAudio.userGestureActive = true;
+    const yFinalPlayback = playPrimerSound(welshYSoundItems[0]);
+    MockAudio.userGestureActive = false;
+    assert(await yFinalPlayback, 'Y final-syllable sample should play from its direct tap path.');
+    MockAudio.userGestureActive = true;
+    const yEarlierPlayback = playPrimerSound(welshYSoundItems[1]);
+    MockAudio.userGestureActive = false;
+    assert(await yEarlierPlayback, 'Y earlier-syllable sample should play from its direct tap path.');
+    assertEqual(
+      MockAudio.instances.reduce((total, audio) => total + audio.playCallsDuringUserGesture, 0),
+      2,
+      'Both prepared Y samples should call play before yielding their user gestures.'
+    );
+
     const storedItem = {
       audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/dd-sound/20260529T120000Z.mp3',
       textToSpeak: 'hedd'
@@ -379,7 +427,7 @@ async function runPrimerAudioTests() {
     clearPrimerAudioCacheForTests();
     MockAudio.instances = [];
     fetchCalls = 0;
-    preloadPrimerSounds([storedItem, storedItem]);
+    await preloadPrimerSounds([storedItem, storedItem]);
     assertEqual(MockAudio.instances.length, 1, 'Primer preload should create one cached audio element per stored URL.');
     assertEqual(MockAudio.instances[0].loadCalls, 1, 'Primer preload should only call load once for a stable stored URL.');
     assertEqual(MockAudio.instances[0].src, storedItem.audioUrl, 'Primer preload should use the stored URL without adding a click-time cache buster.');
@@ -406,8 +454,9 @@ async function runPrimerAudioTests() {
     clearPrimerAudioCacheForTests();
     MockAudio.instances = [];
     fetchCalls = 0;
+    fetchBodies.length = 0;
     const fallbackItem = { textToSpeak: 'lle', audioStatus: 'missing' };
-    preloadPrimerSounds([fallbackItem, fallbackItem]);
+    await preloadPrimerSounds([fallbackItem, fallbackItem]);
     const firstFallbackPlayback = await playPrimerSound(fallbackItem);
     const secondFallbackPlayback = await playPrimerSound(fallbackItem);
     assert(firstFallbackPlayback && secondFallbackPlayback, 'Primer audio should fall back to Azure TTS when no stored URL exists.');
@@ -423,6 +472,17 @@ async function runPrimerAudioTests() {
     assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one cached audio element across clicks.');
     assertEqual(MockAudio.instances[0].loadCalls, 1, 'Generated primer audio fallback should be loaded during preload.');
     assertEqual(MockAudio.instances[0].playCalls, 2, 'Generated primer audio fallback should replay the cached element on each click.');
+
+    MockAudio.userGestureActive = true;
+    const directGesturePlayback = playPrimerSound(fallbackItem);
+    MockAudio.userGestureActive = false;
+    assert(await directGesturePlayback, 'Prepared primer audio should play successfully from a direct user gesture.');
+    assertEqual(MockAudio.instances[0].playCallsDuringUserGesture, 1, 'Prepared primer audio should call play before yielding the user gesture.');
+
+    MockAudio.playShouldReject = true;
+    const rejectedPlayback = await playPrimerSound(fallbackItem);
+    MockAudio.playShouldReject = false;
+    assertEqual(rejectedPlayback, false, 'Primer playback rejection should be caught and reported without an unhandled rejection.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;

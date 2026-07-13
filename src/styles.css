@@ -2430,15 +2430,15 @@
 .public-page-left-control{
   position:relative;
   flex:0 0 auto;
-  min-width:42px;
+  min-width:44px;
 }
 
 .how-back-button{
   position:static;
   display:grid;
   place-items:center;
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
   border:0;
   border-radius:999px;
   background:transparent;
@@ -9296,6 +9296,11 @@
 .foundations-primer-sound.playing{
   cursor:progress;
   opacity:.78;
+}
+
+.foundations-primer-sound:disabled{
+  cursor:progress;
+  opacity:.68;
 }
 
 .foundations-primer-sound.failed{
