@@ -2,6 +2,8 @@ import { wordLists } from '../src/data/wordLists';
 import { resolvePublicMetadata } from '../src/lib/publicMetadata';
 import { getWordListPath } from '../src/lib/wordListSharing';
 
+declare function require(name: string): { readFileSync(path: string, encoding: string): string };
+
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -12,7 +14,13 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
   }
 }
 
+function getMetaContent(source: string, attribute: 'name' | 'property', value: string) {
+  return source.match(new RegExp(`<meta[^>]*${attribute}="${value}"[^>]*content="([^"]*)"`, 's'))?.[1];
+}
+
 const origin = 'https://spelio.app';
+const { readFileSync } = require('fs');
+const staticHomepage = readFileSync('index.html', 'utf8');
 
 const home = resolvePublicMetadata({
   origin,
@@ -20,7 +28,27 @@ const home = resolvePublicMetadata({
   interfaceLanguage: 'en',
   wordLists
 });
-assertEqual(home.title, 'Spelio - Welsh spelling practice', 'Homepage should use the English product title.');
+const homepageTitle = 'Spelio - Welsh Spelling Practice App';
+const homepageDescription = 'Spelio is a focused Welsh spelling practice app for learners. Listen to Welsh, learn spelling patterns, recall words and type the correct spelling.';
+
+assertEqual(staticHomepage.match(/<title>([^<]*)<\/title>/)?.[1], homepageTitle, 'Static homepage title should use the exact product title.');
+assertEqual(getMetaContent(staticHomepage, 'name', 'description'), homepageDescription, 'Static homepage description should use the exact product description.');
+assertEqual(getMetaContent(staticHomepage, 'property', 'og:title'), homepageTitle, 'Static homepage Open Graph title should match.');
+assertEqual(getMetaContent(staticHomepage, 'property', 'og:description'), homepageDescription, 'Static homepage Open Graph description should match.');
+assertEqual(getMetaContent(staticHomepage, 'name', 'twitter:title'), homepageTitle, 'Static homepage Twitter title should match.');
+assertEqual(getMetaContent(staticHomepage, 'name', 'twitter:description'), homepageDescription, 'Static homepage Twitter description should match.');
+assertEqual(getMetaContent(staticHomepage, 'name', 'robots'), 'index, follow', 'Static homepage robots behaviour should remain unchanged.');
+assert(
+  staticHomepage.includes('<link rel="canonical" href="https://spelio.app" />'),
+  'Static homepage canonical should remain unchanged.'
+);
+
+assertEqual(home.title, homepageTitle, 'Homepage should use the exact English product title.');
+assertEqual(home.description, homepageDescription, 'Homepage should use the exact English product description.');
+assertEqual(home.ogTitle, homepageTitle, 'Homepage Open Graph title should match the homepage title.');
+assertEqual(home.ogDescription, homepageDescription, 'Homepage Open Graph description should match the homepage description.');
+assertEqual(home.twitterTitle, homepageTitle, 'Homepage Twitter title should match the homepage title.');
+assertEqual(home.twitterDescription, homepageDescription, 'Homepage Twitter description should match the homepage description.');
 assertEqual(home.canonicalUrl, 'https://spelio.app/', 'Homepage should canonicalise to root.');
 assertEqual(home.robots, 'index, follow', 'Homepage should be indexable.');
 
@@ -33,6 +61,12 @@ const welshHome = resolvePublicMetadata({
 assertEqual(welshHome.title, 'Spelio - Ymarfer sillafu Cymraeg', 'Welsh homepage route should use Welsh metadata.');
 assertEqual(welshHome.canonicalUrl, 'https://spelio.app/', '/cy should canonicalise to root for MVP.');
 assertEqual(welshHome.robots, 'noindex, follow', '/cy should not be separately indexed for MVP.');
+
+const about = resolvePublicMetadata({ origin, pathname: '/about', interfaceLanguage: 'en', wordLists });
+assertEqual(about.title, 'About Spelio', 'About should retain its route-specific title.');
+
+const privacy = resolvePublicMetadata({ origin, pathname: '/privacy', interfaceLanguage: 'en', wordLists });
+assertEqual(privacy.title, 'Privacy - Spelio', 'Privacy should retain its route-specific title.');
 
 const spellingBasicsW = resolvePublicMetadata({
   origin,

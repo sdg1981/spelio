@@ -39,8 +39,8 @@ const DEFAULT_ORIGIN = 'https://spelio.app';
 
 const home = {
   en: {
-    title: 'Spelio - Welsh spelling practice',
-    description: 'Calm, focused Welsh spelling practice for adults. Hear a Welsh word, recall it, and type the spelling.'
+    title: 'Spelio - Welsh Spelling Practice App',
+    description: 'Spelio is a focused Welsh spelling practice app for learners. Listen to Welsh, learn spelling patterns, recall words and type the correct spelling.'
   },
   cy: {
     title: 'Spelio - Ymarfer sillafu Cymraeg',

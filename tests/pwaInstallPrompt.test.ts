@@ -74,6 +74,7 @@ const { existsSync, readFileSync } = require('fs') as {
 const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8')) as {
   name?: string;
   short_name?: string;
+  description?: string;
   start_url?: string;
   scope?: string;
   display?: string;
@@ -84,6 +85,11 @@ const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8'))
 
 assertEqual(manifest.name, 'Spelio', 'Manifest should use the full app name.');
 assertEqual(manifest.short_name, 'Spelio', 'Manifest should use the short app name.');
+assertEqual(
+  manifest.description,
+  'Spelio is a focused Welsh spelling practice app for learners. Listen to Welsh, learn spelling patterns, recall words and type the correct spelling.',
+  'Manifest should use the homepage app description.'
+);
 assertEqual(manifest.start_url, '/', 'Manifest should start at the app root.');
 assertEqual(manifest.scope, '/', 'Manifest should scope the app to root.');
 assertEqual(manifest.display, 'standalone', 'Manifest should request standalone display.');

@@ -204,8 +204,8 @@ Recommended OG rules:
 
 Recommended default social copy:
 
-- Title: `Spelio - Welsh spelling practice`
-- Description: `Calm, focused Welsh spelling practice for adults. Hear a Welsh word, recall it, and type the spelling.`
+- Title: `Spelio - Welsh Spelling Practice App`
+- Description: `Spelio is a focused Welsh spelling practice app for learners. Listen to Welsh, learn spelling patterns, recall words and type the correct spelling.`
 
 Avoid social text such as:
 

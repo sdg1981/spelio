@@ -1,7 +1,7 @@
 {
   "name": "Spelio",
   "short_name": "Spelio",
-  "description": "A calm Welsh spelling practice app for listening, recall, and focused typing.",
+  "description": "Spelio is a focused Welsh spelling practice app for learners. Listen to Welsh, learn spelling patterns, recall words and type the correct spelling.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
