@@ -28,7 +28,7 @@ export const cy = {
     continueMixedPractice: 'Parhau i ddysgu',
     customMixedWordList: 'Rhestr eiriau ddewisol',
     howSpelioWorks: 'Sut mae Spelio’n gweithio',
-    installSpelio: 'Gosod Spelio',
+    installSpelio: 'Opsiynau gosod',
     openMenu: 'Agor dewislen',
     menuLabel: 'Dewislen yr hafan'
   },

@@ -1,4 +1,5 @@
 import {
+  ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT,
   type BeforeInstallPromptEvent,
   createInstallPromptController,
   isStandaloneDisplayMode,
@@ -99,6 +100,7 @@ assert(manifest.icons?.some(icon => icon.src === '/spelio-icon-192.png' && icon.
 assert(manifest.icons?.some(icon => icon.src === '/spelio-icon-512.png' && icon.sizes === '512x512' && icon.type === 'image/png'), 'Manifest should include a 512px PNG icon.');
 assert(existsSync('public/spelio-icon-192.png'), '192px install icon should exist.');
 assert(existsSync('public/spelio-icon-512.png'), '512px install icon should exist.');
+assertEqual(ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT, false, 'Automatic PWA prompting should remain disabled during Google Play closed testing.');
 
 {
   const fakeWindow = new FakeWindow();
@@ -134,6 +136,8 @@ async function runPromptActionTest() {
   controller.initialize();
   fakeWindow.dispatchEvent(promptEvent);
 
+  assertEqual(promptEvent.defaultPrevented, true, 'Capturing the prompt should suppress unsolicited browser installation UI.');
+  assertEqual(promptEvent.promptCalls, 0, 'Capturing the prompt should not trigger installation automatically.');
   assertEqual(shouldShowInstallAction(controller.getState()), true, 'Install action should show after the browser prompt is captured.');
   await controller.promptInstall();
   assertEqual(promptEvent.promptCalls, 1, 'Install action should call the captured browser prompt.');

@@ -19,6 +19,9 @@ export type InstallPromptState = {
 
 type InstallPromptSubscriber = (state: InstallPromptState) => void;
 
+// Disabled during Google Play closed testing; reconsider after the wider Android release.
+export const ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT = false;
+
 type NavigatorWithInstallHints = Navigator & {
   standalone?: boolean;
   getInstalledRelatedApps?: () => Promise<unknown[]>;
@@ -75,7 +78,7 @@ export class InstallPromptController {
   private handleBeforeInstallPrompt = (event: Event) => {
     if (this.getState().isStandalone || this.installed) return;
 
-    event.preventDefault();
+    if (!ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT) event.preventDefault();
     this.deferredPrompt = event as BeforeInstallPromptEvent;
     this.notify();
   };

@@ -28,7 +28,7 @@ export const en = {
     continueMixedPractice: 'Continue learning',
     customMixedWordList: 'Selected word list',
     howSpelioWorks: 'How Spelio works',
-    installSpelio: 'Install Spelio',
+    installSpelio: 'Install options',
     openMenu: 'Open menu',
     menuLabel: 'Homepage menu'
   },

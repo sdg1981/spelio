@@ -50,7 +50,7 @@ assert(appSource.includes('<InstallPage'), 'App should render InstallPage for th
 
 const homeSource = readFileSync('src/components/Home.tsx', 'utf8');
 assert(homeSource.includes('onInstall'), 'Homepage should accept an install navigation callback.');
-assert(homeSource.includes("t('home.installSpelio')"), 'Homepage menu should keep the Install Spelio label.');
+assert(homeSource.includes("t('home.installSpelio')"), 'Homepage menu should keep the install-options navigation entry.');
 assert(!homeSource.includes('promptInstall'), 'Homepage menu should not directly trigger the browser install prompt.');
 
 const installPageSource = readFileSync('src/components/InstallPage.tsx', 'utf8');
@@ -70,6 +70,7 @@ assert(installPageSource.includes('APP_STORE_URL'), 'Install page should render 
 const enSource = readFileSync('src/i18n/en.ts', 'utf8');
 const cySource = readFileSync('src/i18n/cy.ts', 'utf8');
 assert(enSource.includes('Help improve Spelio before its wider launch'), 'English beta-period title should be translated.');
+assert(enSource.includes("installSpelio: 'Install options'"), 'English homepage navigation should describe the installation-options page.');
 assert(enSource.includes('Private feedback is incredibly valuable'), 'English intro should prioritise private feedback.');
 assert(enSource.includes('Join the Android beta'), 'English Android card should recruit beta testers.');
 assert(enSource.includes('Request Android beta access'), 'English Android beta request button should be translated.');
@@ -77,6 +78,7 @@ assert(enSource.includes('Help test on iPhone'), 'English iPhone testing card sh
 assert(enSource.includes('Already installed'), 'English installed state should be passive.');
 assert(enSource.includes('best testing experience during this pre-launch period'), 'English web app copy should present it as an alternative during testing.');
 assert(cySource.includes('Helpwch i wella Spelio cyn ei lansio’n ehangach'), 'Welsh beta-period title should be translated.');
+assert(cySource.includes("installSpelio: 'Opsiynau gosod'"), 'Welsh homepage navigation should describe the installation-options page.');
 assert(cySource.includes('Mae adborth preifat yn hynod werthfawr'), 'Welsh intro should prioritise private feedback.');
 assert(cySource.includes('Ymunwch â beta Android'), 'Welsh Android beta guidance should be translated.');
 assert(cySource.includes('Anfon adborth preifat'), 'Welsh private feedback link should be translated.');
