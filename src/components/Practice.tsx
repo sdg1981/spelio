@@ -15,12 +15,13 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { WELSH_FOUNDATIONS_COLLECTION_ID, buildPublicCatalogueGroups, compareWordListsForCatalogue, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getAudioUnavailableStatusText, getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
 import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practice/spellingPatternHints';
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
+import { getInitialWordListPageSelection, getPendingWelshFoundationsJourneyList, isWelshFoundationsJourneyList } from '../lib/practice/learningJourneySelection';
 import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
 import { detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
@@ -2040,41 +2041,6 @@ function handleCardKeyDown(event: ReactKeyboardEvent<HTMLDivElement>, onActivate
   onActivate();
 }
 
-function isFoundationsCatalogueList(list: WordList) {
-  return list.collectionId === WELSH_FOUNDATIONS_COLLECTION_ID ||
-    list.collection?.id === WELSH_FOUNDATIONS_COLLECTION_ID ||
-    list.stageId === 'foundations' ||
-    list.stage.trim().toLowerCase() === 'foundations';
-}
-
-function findNextSelectableList(lists: WordList[], completedSet: Set<string>, current?: WordList) {
-  if (!current) return undefined;
-  const activeLists = lists.filter(list => list.isActive && list.words.length > 0);
-  const activeById = new Map(activeLists.map(list => [list.id, list]));
-  const visited = new Set([current.id]);
-  let nextListId = current.nextListId;
-
-  while (nextListId) {
-    if (visited.has(nextListId)) break;
-    visited.add(nextListId);
-
-    const next = activeById.get(nextListId);
-    if (!next) break;
-    if (!completedSet.has(next.id)) return next;
-
-    nextListId = next.nextListId;
-  }
-
-  const orderedLists = [...activeLists].sort((a, b) => compareWordListsForCatalogue(a, b));
-  const currentIndex = orderedLists.findIndex(list => list.id === current.id);
-  if (currentIndex >= 0) {
-    const nextByOrder = orderedLists.slice(currentIndex + 1).find(list => !completedSet.has(list.id));
-    if (nextByOrder) return nextByOrder;
-  }
-
-  return orderedLists.find(list => !completedSet.has(list.id)) ?? current;
-}
-
 function WordListPageCatalogue({
   collectionGroups,
   selectableLists,
@@ -2107,20 +2073,17 @@ function WordListPageCatalogue({
   const [foundationsExpanded, setFoundationsExpanded] = useState(false);
   const normalizedQuery = query.trim();
   const foundationsLists = selectableLists
-    .filter(isFoundationsCatalogueList)
+    .filter(isWelshFoundationsJourneyList)
     .sort((a, b) => a.order - b.order || getListDisplayName(a, interfaceLanguage).localeCompare(getListDisplayName(b, interfaceLanguage)));
   const foundationsCompleted = foundationsLists.filter(list => completedSet.has(list.id)).length;
   const foundationsTotal = foundationsLists.length;
-  const selectedFoundationList = selectedId ? foundationsLists.find(list => list.id === selectedId) : undefined;
-  const currentFoundationAnchor =
-    selectedFoundationList ??
-    foundationsLists.find(list => inProgressSet.has(list.id) && !completedSet.has(list.id)) ??
-    foundationsLists.find(list => !completedSet.has(list.id)) ??
-    foundationsLists[0];
-  const nextFoundationList = findNextSelectableList(foundationsLists, completedSet, currentFoundationAnchor);
-  const currentFoundationList = completedSet.has(currentFoundationAnchor?.id ?? '')
-    ? nextFoundationList ?? currentFoundationAnchor
-    : currentFoundationAnchor;
+  const currentFoundationList = getPendingWelshFoundationsJourneyList(
+    foundationsLists,
+    selectedId,
+    completedSet,
+    inProgressSet,
+    interfaceLanguage
+  );
   const foundationsProgress = foundationsTotal > 0 ? Math.round((foundationsCompleted / foundationsTotal) * 100) : 0;
   const practiceLists = getPracticeLibraryCatalogueLists(selectableLists, interfaceLanguage);
   const searchResultLists = collectionGroups.flatMap(group => group.listGroups.flatMap(listGroup => listGroup.lists));
@@ -2585,7 +2548,11 @@ export function WordListSelectorPanel({
   const selectableLists = useMemo(() => buildPublicCatalogueGroups(lists, interfaceLanguage).flatMap(group => (
     group.listGroups.flatMap(listGroup => listGroup.lists)
   )), [interfaceLanguage, lists]);
-  const [selectedIds, setSelectedIds] = useState(() => normalizeSingleSelectedListIds(initialSelectedIds, selectableLists));
+  const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
+  const inProgressSet = useMemo(() => new Set(inProgressListIds), [inProgressListIds]);
+  const [selectedIds, setSelectedIds] = useState(() => variant === 'page'
+    ? getInitialWordListPageSelection(selectableLists, initialSelectedIds, completedSet, inProgressSet, interfaceLanguage)
+    : normalizeSingleSelectedListIds(initialSelectedIds, selectableLists));
   const [shareList, setShareList] = useState<WordList | null>(null);
   const selectedId = selectedIds[0];
   const normalizedInitialSelectedIds = useMemo(
@@ -2595,8 +2562,6 @@ export function WordListSelectorPanel({
   const hasPendingSelectionChange =
     selectedIds.length !== normalizedInitialSelectedIds.length ||
     selectedIds.some((id, index) => id !== normalizedInitialSelectedIds[index]);
-  const completedSet = useMemo(() => new Set(completedListIds), [completedListIds]);
-  const inProgressSet = useMemo(() => new Set(inProgressListIds), [inProgressListIds]);
   const filteredLists = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return selectableLists;

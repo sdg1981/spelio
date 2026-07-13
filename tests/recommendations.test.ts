@@ -1,3 +1,4 @@
+import './learningJourneySelection.test';
 import { wordLists } from '../src/data/wordLists';
 import type { PracticeWord, WordList, WordListCollection } from '../src/data/wordLists';
 import { createSupportWordLists, findSupportWordList, isSupportWordList, mainWordLists, withSupportWordLists } from '../src/data/supportWordLists';

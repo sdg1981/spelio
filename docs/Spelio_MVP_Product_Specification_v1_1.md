@@ -918,6 +918,8 @@ Rules:
 - If a completed list is manually selected, the homepage should continue recommending that manually selected list until another session is explicitly started and completed.
 - `nextListId` must not immediately override a freshly selected list.
 
+Within a Learning Journey, the next incomplete lesson may be selected initially as the default. If the learner explicitly selects another lesson, that pending selection overrides the automatic recommendation for the next explicit start action: the visible selected lesson, the primary journey CTA destination, and the page's Done / Use selected list action must remain aligned. Selecting a lesson is configuration only; it must not auto-start practice, mark the lesson complete, or alter word progress.
+
 Backward compatibility:
 
 - Existing `selectedListIds` storage may remain as a one-item array.
