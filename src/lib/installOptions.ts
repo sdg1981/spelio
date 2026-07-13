@@ -1,6 +1,6 @@
 export const APP_STORE_URL = 'https://apps.apple.com/app/spelio/id6783524504';
 export const GOOGLE_PLAY_URL = '';
-export const GOOGLE_PLAY_STATUS: 'coming-soon' | 'live' = 'coming-soon';
+export const GOOGLE_PLAY_STATUS: 'closed-testing' | 'live' = 'closed-testing';
 
 export type InstallDevice = 'ios' | 'android' | 'desktop';
 export type InstallOptionId = 'appStore' | 'android' | 'webApp';
@@ -21,8 +21,6 @@ export function isGooglePlayLive() {
   return GOOGLE_PLAY_STATUS === 'live' && GOOGLE_PLAY_URL.trim().length > 0;
 }
 
-export function getInstallOptionOrder(device: InstallDevice): InstallOptionId[] {
-  if (device === 'ios') return ['appStore', 'webApp', 'android'];
-  if (device === 'android') return ['android', 'webApp', 'appStore'];
-  return ['webApp', 'appStore', 'android'];
+export function getInstallOptionOrder(_device: InstallDevice): InstallOptionId[] {
+  return ['android', 'appStore', 'webApp'];
 }

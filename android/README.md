@@ -168,7 +168,7 @@ app.spelio.twa
 
 ### SHA-256 Fingerprint
 
-For Google Play internal testing, use the SHA-256 fingerprint for the certificate that signs the build users receive.
+For Google Play closed testing, use the SHA-256 fingerprint for the certificate that signs the build users receive.
 
 If Play App Signing is enabled, use the **App signing key certificate** SHA-256 from Google Play Console:
 
@@ -196,14 +196,14 @@ After publishing `assetlinks.json`, verify it is served as JSON over HTTPS at ex
 https://spelio.app/.well-known/assetlinks.json
 ```
 
-## Google Play Internal Testing Checklist
+## Google Play Closed Testing Checklist
 
 1. Create the app in Google Play Console with package name `app.spelio.twa`.
 2. Confirm Play App Signing settings and note the Play app signing SHA-256 fingerprint.
 3. Publish `https://spelio.app/.well-known/assetlinks.json` with that SHA-256 fingerprint.
 4. Build a signed release AAB from this Android project.
-5. Upload the AAB to an internal testing track.
+5. Upload the AAB to the closed testing track.
 6. Complete required store-listing, content rating, data safety, privacy policy, and tester setup fields.
-7. Install through the Play internal testing link and confirm the app opens `https://spelio.app` without browser UI after Digital Asset Links verification.
+7. Install through the private Play closed-testing link and confirm the app opens `https://spelio.app` without browser UI after Digital Asset Links verification. Do not publish this testing link on the public install page.
 
 Remaining manual steps are signing-key creation/storage, Play Console setup, the store listing, and publishing the live `assetlinks.json` file with the final Play signing certificate fingerprint.

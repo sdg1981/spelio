@@ -44,35 +44,45 @@ export function InstallPage({
     appStore: (
       <InstallOption
         key="appStore"
-        primary={installDevice === 'ios'}
         eyebrow={t('install.appStoreEyebrow')}
         title={t('install.appStoreTitle')}
         body={t('install.appStoreBody')}
         action={(
-          <a className="install-badge-link" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-            <img src="/store-badges/app-store.svg" alt={t('install.appStoreBadgeAlt')} />
-          </a>
+          <div className="install-option-actions">
+            <a className="install-badge-link" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <img src="/store-badges/app-store.svg" alt={t('install.appStoreBadgeAlt')} />
+            </a>
+            <a className="install-feedback-link" href="/feedback">{t('install.appStoreFeedbackLink')}</a>
+          </div>
         )}
       />
     ),
     android: (
       <InstallOption
         key="android"
-        primary={installDevice === 'android'}
+        primary
         eyebrow={t('install.googlePlayEyebrow')}
         title={googlePlayLive ? t('install.googlePlayTitle') : t('install.androidTitle')}
-        body={googlePlayLive ? t('install.googlePlayBody') : t('install.androidComingSoonBody')}
+        subheading={googlePlayLive ? undefined : t('install.androidSubheading')}
+        body={googlePlayLive ? t('install.googlePlayBody') : (
+          <>
+            <p>{t('install.androidTestingBody')}</p>
+            <p>{t('install.androidAccessBody')}</p>
+            <p>{t('install.androidFeedbackBody')}</p>
+          </>
+        )}
         action={googlePlayLive ? (
           <a className="install-badge-link" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
             <img src="/store-badges/google-play.svg" alt={t('install.googlePlayBadgeAlt')} />
           </a>
-        ) : null}
+        ) : (
+          <a className="install-web-button" href="/feedback">{t('install.androidButton')}</a>
+        )}
       />
     ),
     webApp: (
       <InstallOption
         key="webApp"
-        primary={installDevice === 'desktop'}
         eyebrow={t('install.webAppEyebrow')}
         title={t('install.webAppTitle')}
         body={isStandalone ? t('install.webAppInstalledBody') : canInstall ? t('install.webAppAvailableBody') : getWebAppFallbackCopy(installDevice, t)}
@@ -98,7 +108,11 @@ export function InstallPage({
       t={t}
     >
       <h1 className="public-info-title" id="install-page-title">{t('install.title')}</h1>
-      <p className="install-page-intro">{t('install.intro')}</p>
+      <div className="install-page-intro">
+        <p>{t('install.introRefining')}</p>
+        <p>{t('install.introMobile')}</p>
+        <p>{t('install.introFeedback')}</p>
+      </div>
 
       <div className="install-options" aria-label={t('install.optionsLabel')}>
         {installOptionOrder.map(optionId => installOptions[optionId])}
@@ -118,12 +132,14 @@ function InstallOption({
   body,
   eyebrow,
   primary,
+  subheading,
   title
 }: {
   action?: ReactNode;
-  body: string;
+  body: ReactNode;
   eyebrow: string;
   primary?: boolean;
+  subheading?: string;
   title: string;
 }) {
   return (
@@ -131,7 +147,8 @@ function InstallOption({
       <div className="install-option-copy">
         <p className="install-option-eyebrow">{eyebrow}</p>
         <h2>{title}</h2>
-        <p>{body}</p>
+        {subheading && <p className="install-option-subheading">{subheading}</p>}
+        <div className="install-option-body">{typeof body === 'string' ? <p>{body}</p> : body}</div>
       </div>
       {action && <div className="install-option-action">{action}</div>}
     </section>

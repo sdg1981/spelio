@@ -2546,6 +2546,14 @@
   text-align:center;
 }
 
+.install-page-intro p{
+  margin:0;
+}
+
+.install-page-intro p + p{
+  margin-top:10px;
+}
+
 .install-options{
   display:grid;
   gap:14px;
@@ -2592,17 +2600,34 @@
   line-height:1.2;
 }
 
-.install-option-copy p:last-child{
+.install-option-subheading,
+.install-option-body p{
   margin:10px 0 0;
   color:var(--text-secondary, #5f6b78);
   font-size:15px;
   line-height:1.5;
 }
 
+.install-option-subheading{
+  color:var(--text-primary, #071522);
+  font-weight:750;
+}
+
+.install-option-body p + p{
+  margin-top:8px;
+}
+
 .install-option-action{
   flex:0 0 auto;
   display:flex;
   align-items:center;
+}
+
+.install-option-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
 }
 
 .install-badge-link{
@@ -2624,6 +2649,9 @@
 }
 
 .install-web-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   min-height:42px;
   border:0;
   border-radius:999px;
@@ -2636,6 +2664,18 @@
   white-space:nowrap;
   box-shadow:0 16px 34px rgba(217,0,0,.16);
   transition:background .16s ease-out,transform .16s ease-out;
+  text-decoration:none;
+}
+
+.install-feedback-link{
+  color:var(--text-secondary, #5f6b78);
+  font-size:14px;
+  font-weight:700;
+  text-underline-offset:3px;
+}
+
+.install-feedback-link:hover{
+  color:var(--text-primary, #071522);
 }
 
 .install-web-button:hover{
