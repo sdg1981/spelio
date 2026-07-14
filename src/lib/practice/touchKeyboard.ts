@@ -1,5 +1,10 @@
 export const TOUCH_KEYBOARD_STORAGE_KEY = 'spelio-touch-keyboard-hint-v1';
 
+// Temporarily keep the custom keyboard out of learner use while native keyboard
+// behaviour is validated on iPhone. The implementation and saved preference
+// remain in place so this can be re-enabled after testing.
+export const ENABLE_CUSTOM_KEYBOARD = false;
+
 export const WELSH_DIGRAPH_KEYS = ['CH', 'DD', 'FF', 'NG', 'LL', 'PH', 'RH', 'TH'] as const;
 
 export const TOUCH_KEYBOARD_ROWS = [
@@ -71,12 +76,14 @@ function readCurrentTouchKeyboardEnvironment() {
 }
 
 export function detectCustomTouchKeyboardAvailability() {
+  if (!ENABLE_CUSTOM_KEYBOARD) return false;
   const environment = readCurrentTouchKeyboardEnvironment();
   if (!environment) return false;
   return isCustomTouchKeyboardAvailable(environment);
 }
 
 export function detectCustomTouchKeyboardEligibility(enabled: boolean) {
+  if (!ENABLE_CUSTOM_KEYBOARD) return false;
   const environment = readCurrentTouchKeyboardEnvironment();
   if (!environment) return false;
   return shouldUseCustomTouchKeyboard({ enabled, ...environment });

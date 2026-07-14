@@ -1,4 +1,5 @@
 import {
+  ENABLE_CUSTOM_KEYBOARD,
   TOUCH_KEYBOARD_ROWS,
   WELSH_ACCENT_VARIANTS,
   answerNeedsWelshAccent,
@@ -22,6 +23,11 @@ function committedValue(letters: Array<{ value: string }>) {
 }
 
 {
+  assertEqual(
+    ENABLE_CUSTOM_KEYBOARD,
+    false,
+    'The custom keyboard feature flag should keep native device input as the learner default.'
+  );
   assertEqual(
     shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true }),
     true,
@@ -126,6 +132,19 @@ function committedValue(letters: Array<{ value: string }>) {
 
   assertEqual(answerNeedsWelshAccent(answer), true, 'Accent hint should know when the current answer needs Welsh accents.');
   assertEqual(result.completed, true, 'Accent chooser input should feed strict accented validation.');
+}
+
+{
+  const answer = 'chŵn';
+  const result = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: answer,
+    mode: 'strict'
+  });
+
+  assertEqual(result.completed, true, 'Native keyboard input should accept Welsh digraphs and accented characters together.');
+  assertEqual(committedValue(result.letters), answer, 'Native keyboard input should preserve the canonical Welsh answer.');
 }
 
 console.log('touch keyboard tests passed');

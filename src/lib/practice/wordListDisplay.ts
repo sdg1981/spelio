@@ -78,6 +78,14 @@ export type PublicCatalogueCollectionGroup = {
   listGroups: PublicCatalogueListGroup[];
 };
 
+function clarifyCombinedReviewName(name: string, interfaceLanguage?: InterfaceLanguage) {
+  if (interfaceLanguage === 'cy') {
+    return name.replace(/^Hyder Cymysg\s+[—-]\s+Sylfeini\s+(\d+)$/i, 'Adolygiad Cyfun — Sylfeini $1');
+  }
+
+  return name.replace(/^Mixed Confidence\s+[—-]\s+Foundations\s+(\d+)$/i, 'Combined Review — Foundations $1');
+}
+
 type WordListDisplayFields = Pick<WordList, 'name' | 'description'> & {
   nameCy?: string | null;
   descriptionCy?: string | null;
@@ -88,10 +96,10 @@ type WordListDisplayFields = Pick<WordList, 'name' | 'description'> & {
 export function getListDisplayName(list: Pick<WordListDisplayFields, 'name' | 'nameCy' | 'name_cy'>, interfaceLanguage?: InterfaceLanguage) {
   if (interfaceLanguage === 'cy') {
     const welshName = list.nameCy?.trim() || list.name_cy?.trim();
-    if (welshName) return welshName;
+    if (welshName) return clarifyCombinedReviewName(welshName, interfaceLanguage);
   }
 
-  return list.name;
+  return clarifyCombinedReviewName(list.name, interfaceLanguage);
 }
 
 export function getListDisplayDescription(

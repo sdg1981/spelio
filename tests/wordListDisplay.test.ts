@@ -47,8 +47,14 @@ assertEqual(
 
 assertEqual(
   getListDisplayName({ name: 'Mixed Confidence — Foundations 1', nameCy: 'Hyder Cymysg — Sylfeini 1' }, 'cy'),
-  'Hyder Cymysg — Sylfeini 1',
-  'Welsh interface should prefer Welsh list display names.'
+  'Adolygiad Cyfun — Sylfeini 1',
+  'Welsh interface should clarify that mixed-pattern Foundations sessions are combined reviews.'
+);
+
+assertEqual(
+  getListDisplayName({ name: 'Mixed Confidence — Foundations 4', nameCy: 'Hyder Cymysg — Sylfeini 4' }, 'en'),
+  'Combined Review — Foundations 4',
+  'English interface should clarify that mixed-pattern Foundations sessions are combined reviews.'
 );
 
 assertEqual(

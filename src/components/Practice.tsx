@@ -2024,6 +2024,8 @@ function getFoundationPatternLabel(list: WordList, interfaceLanguage: InterfaceL
   const displayName = getListDisplayName(list, interfaceLanguage);
   return displayName
     .replace(/^Spelling (?:Pattern|Contrast|Focus)\s+[—-]\s*/i, '')
+    .replace(/^Combined Review\s+[—-]\s*Foundations\s*(\d+)\b/i, 'Combined Review $1')
+    .replace(/^Adolygiad Cyfun\s+[—-]\s*Sylfeini\s*(\d+)\b/i, 'Adolygiad Cyfun $1')
     .replace(/^Mixed Confidence\s+[—-]\s*Foundations\s*(\d+)\b/i, 'Mixed Confidence $1')
     .replace(/^Mixed Confidence\s+[—-]\s*/i, 'Mixed Confidence - ')
     .replace(/^Foundations\s*\d+\s*[—-]\s*/i, '')
