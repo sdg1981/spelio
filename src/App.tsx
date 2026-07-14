@@ -992,6 +992,9 @@ export default function App() {
   ) : activeScreen === 'primer' && activePrimer ? (
     <FoundationsPrimer
       primer={activePrimer}
+      wordList={activePrimerList ?? null}
+      wordLists={practiceLists}
+      defaultAudioProvider={defaultAudioProvider}
       audioPrompts={storage.settings.audioPrompts}
       onBack={returnFromPrimer}
       onHome={returnToLearning}

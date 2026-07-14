@@ -1,11 +1,13 @@
-import { getPlayableAudioUrl } from './audioPlayback';
+import type { PracticeWord } from '../data/wordLists';
+import type { DefaultAudioProvider } from './audioProvider';
+import { getResolvedPracticeAudioUrl } from './audioProvider';
+import { createAudioPlaybackController, getPlayableAudioUrl } from './audioPlayback';
 import { createWelshAzureTtsRequestPayload, getAzureTtsRoute } from './azureTtsRequest';
+import { isAudioUnavailableForPrompt } from './practice/audioAvailability';
 
-let currentPrimerAudio: HTMLAudioElement | null = null;
-const primerAudioCache = new Map<string, HTMLAudioElement>();
-const generatedPrimerAudioCache = new Map<string, { audio: HTMLAudioElement; objectUrl: string }>();
-const generatedPrimerAudioPromises = new Map<string, Promise<HTMLAudioElement | null>>();
-const preloadedPrimerAudioUrls = new Set<string>();
+const primerAudioPlayback = createAudioPlaybackController();
+const generatedPrimerAudioCache = new Map<string, string>();
+const generatedPrimerAudioPromises = new Map<string, Promise<string | null>>();
 
 type PrimerSoundPlaybackItem = {
   audioText?: string;
@@ -19,21 +21,31 @@ export function getStoredPrimerAudioUrl(item: PrimerSoundPlaybackItem) {
   return getPlayableAudioUrl(item.audioUrl);
 }
 
+export function resolvePrimerSoundPracticeAudio<T extends PrimerSoundPlaybackItem>(
+  item: T,
+  words: PracticeWord[],
+  provider: DefaultAudioProvider
+): T {
+  if (getStoredPrimerAudioUrl(item)) return item;
+
+  const target = getPrimerSoundText(item).toLocaleLowerCase('cy');
+  const matchingWord = words.find(word => (
+    !isAudioUnavailableForPrompt(word, false, provider) &&
+    (
+      word.welshAnswer.trim().toLocaleLowerCase('cy') === target ||
+      (word.acceptedAlternatives ?? []).some(alternative => alternative.trim().toLocaleLowerCase('cy') === target)
+    )
+  ));
+  const practiceAudioUrl = getPlayableAudioUrl(getResolvedPracticeAudioUrl(matchingWord ?? {}, provider));
+  if (!practiceAudioUrl) return item;
+
+  return { ...item, audioUrl: practiceAudioUrl, audioStatus: 'ready' };
+}
+
 export async function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
   await Promise.all(items.map(async item => {
     const playableUrl = getStoredPrimerAudioUrl(item);
-    if (playableUrl) {
-      if (preloadedPrimerAudioUrls.has(playableUrl)) return;
-
-      const audio = getCachedPrimerAudio(playableUrl);
-      preloadedPrimerAudioUrls.add(playableUrl);
-      try {
-        audio.load();
-      } catch {
-        // Browsers can reject eager media loading. Playback will retry on click.
-      }
-      return;
-    }
+    if (playableUrl) return;
 
     const text = getPrimerSoundText(item);
     if (!text) return;
@@ -44,49 +56,33 @@ export async function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
 
 export async function playPrimerSound(item: PrimerSoundPlaybackItem) {
   const playableUrl = getStoredPrimerAudioUrl(item);
-  if (playableUrl) {
-    return playStoredPrimerAudioUrl(playableUrl);
-  }
+  if (playableUrl) return primerAudioPlayback.playSource(playableUrl);
 
   const text = getPrimerSoundText(item);
   if (!text) return false;
 
   const cached = generatedPrimerAudioCache.get(getGeneratedPrimerAudioCacheKey(text));
-  if (cached) return playPrimerAudioElement(cached.audio);
+  if (cached) return primerAudioPlayback.playSource(cached);
 
-  const audio = await getCachedGeneratedPrimerAudio(text);
-  return audio ? playPrimerAudioElement(audio) : false;
+  const source = await getCachedGeneratedPrimerAudio(text);
+  return source ? primerAudioPlayback.playSource(source) : false;
 }
 
 export function clearPrimerAudioCacheForTests() {
-  stopCurrentPrimerAudio();
-  primerAudioCache.clear();
-  generatedPrimerAudioCache.forEach(({ objectUrl }) => URL.revokeObjectURL(objectUrl));
+  stopPrimerAudio();
+  generatedPrimerAudioCache.forEach(objectUrl => URL.revokeObjectURL(objectUrl));
   generatedPrimerAudioCache.clear();
   generatedPrimerAudioPromises.clear();
-  preloadedPrimerAudioUrls.clear();
 }
 
-async function playStoredPrimerAudioUrl(playableUrl: string) {
-  const audio = getCachedPrimerAudio(playableUrl);
-  return playPrimerAudioElement(audio);
-}
-
-function getCachedPrimerAudio(playableUrl: string) {
-  const cached = primerAudioCache.get(playableUrl);
-  if (cached) return cached;
-
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.src = playableUrl;
-  primerAudioCache.set(playableUrl, audio);
-  return audio;
+export function stopPrimerAudio() {
+  primerAudioPlayback.stop(true);
 }
 
 async function getCachedGeneratedPrimerAudio(text: string) {
   const cacheKey = getGeneratedPrimerAudioCacheKey(text);
   const cached = generatedPrimerAudioCache.get(cacheKey);
-  if (cached) return cached.audio;
+  if (cached) return cached;
 
   const pending = generatedPrimerAudioPromises.get(cacheKey);
   if (pending) return pending;
@@ -113,46 +109,8 @@ async function fetchGeneratedPrimerAudio(text: string) {
 
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.src = objectUrl;
-  generatedPrimerAudioCache.set(getGeneratedPrimerAudioCacheKey(text), { audio, objectUrl });
-
-  try {
-    audio.load();
-  } catch {
-    // Playback on click will retry if eager loading was rejected.
-  }
-
-  return audio;
-}
-
-async function playPrimerAudioElement(audio: HTMLAudioElement) {
-  stopCurrentPrimerAudio();
-  currentPrimerAudio = audio;
-  audio.onended = () => {
-    if (currentPrimerAudio === audio) currentPrimerAudio = null;
-  };
-  try {
-    audio.currentTime = 0;
-  } catch {
-    // Some browsers can throw while resetting an unloaded audio element.
-  }
-
-  try {
-    await audio.play();
-    return true;
-  } catch {
-    if (currentPrimerAudio === audio) stopCurrentPrimerAudio();
-    return false;
-  }
-}
-
-function stopCurrentPrimerAudio() {
-  if (currentPrimerAudio) {
-    currentPrimerAudio.pause();
-    currentPrimerAudio = null;
-  }
+  generatedPrimerAudioCache.set(getGeneratedPrimerAudioCacheKey(text), objectUrl);
+  return objectUrl;
 }
 
 function getPrimerSoundText(item: PrimerSoundPlaybackItem) {

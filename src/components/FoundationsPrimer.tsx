@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Volume2 } from 'lucide-react';
 import { PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
 import { Logo } from './Logo';
 import { PublicPageUtilityHeader } from './PublicInfoPages';
 import type { FoundationsPrimer as FoundationsPrimerContent, PrimerSoundItem } from '../content/foundationsPrimer';
+import type { WordList } from '../data/wordLists';
 import type { InterfaceLanguage, Translate } from '../i18n';
-import { playPrimerSound, preloadPrimerSounds } from '../lib/foundationsPrimerAudio';
+import type { DefaultAudioProvider } from '../lib/audioProvider';
+import { playPrimerSound, preloadPrimerSounds, resolvePrimerSoundPracticeAudio, stopPrimerAudio } from '../lib/foundationsPrimerAudio';
 
 export function FoundationsPrimer({
   primer,
+  wordList,
+  wordLists,
+  defaultAudioProvider,
   audioPrompts,
   interfaceLanguage,
   onBack,
@@ -19,6 +24,9 @@ export function FoundationsPrimer({
   t
 }: {
   primer: FoundationsPrimerContent;
+  wordList: WordList | null;
+  wordLists: WordList[];
+  defaultAudioProvider: DefaultAudioProvider;
   audioPrompts: boolean;
   interfaceLanguage: InterfaceLanguage;
   onBack: () => void;
@@ -28,17 +36,29 @@ export function FoundationsPrimer({
   t: Translate;
 }) {
   const [soundsPrepared, setSoundsPrepared] = useState(false);
+  const practiceWords = useMemo(
+    () => [
+      ...(wordList?.words ?? []),
+      ...wordLists.filter(list => list.id !== wordList?.id).flatMap(list => list.words)
+    ],
+    [wordList, wordLists]
+  );
+  const soundItems = useMemo(
+    () => primer.soundItems.map(item => resolvePrimerSoundPracticeAudio(item, practiceWords, defaultAudioProvider)),
+    [defaultAudioProvider, practiceWords, primer.soundItems]
+  );
 
   useEffect(() => {
     let cancelled = false;
-    setSoundsPrepared(primer.soundItems.length === 0);
-    void preloadPrimerSounds(primer.soundItems).finally(() => {
+    setSoundsPrepared(soundItems.length === 0);
+    void preloadPrimerSounds(soundItems).finally(() => {
       if (!cancelled) setSoundsPrepared(true);
     });
     return () => {
       cancelled = true;
+      stopPrimerAudio();
     };
-  }, [primer.soundItems]);
+  }, [soundItems]);
 
   return (
     <main className="how-page public-info-page foundations-primer-page">
@@ -63,10 +83,10 @@ export function FoundationsPrimer({
           ))}
         </div>
 
-        {primer.soundItems.length > 0 && (
+        {soundItems.length > 0 && (
           <div className="foundations-primer-sounds" aria-label={t('primer.soundButtonsLabel')}>
-            {primer.soundItems.map(item => (
-              <PrimerSoundButton key={item.id} disabled={!soundsPrepared} item={item} t={t} />
+            {soundItems.map(item => (
+              <PrimerSoundButton key={`${primer.listId}:${item.id}`} disabled={!soundsPrepared} item={item} t={t} />
             ))}
           </div>
         )}
@@ -96,14 +116,13 @@ export function FoundationsPrimer({
 function PrimerSoundButton({ disabled, item, t }: { disabled: boolean; item: PrimerSoundItem; t: Translate }) {
   const [state, setState] = useState<'idle' | 'playing' | 'failed'>('idle');
 
-  async function playSound() {
+  function playSound() {
     setState('playing');
-    try {
-      const played = await playPrimerSound(item);
-      setState(played ? 'idle' : 'failed');
-    } catch {
-      setState('failed');
-    }
+    const playback = playPrimerSound(item);
+    void playback.then(
+      played => setState(played ? 'idle' : 'failed'),
+      () => setState('failed')
+    );
   }
 
   return (

@@ -16,7 +16,7 @@ import { findNextSequentialRecommendationList, isListProgressionComplete } from 
 import type { SessionResult, SpelioSettings, SpelioStorage, WordProgressPatch } from '../lib/practice/storage';
 import { addLearningStats, addMixedWelshExposure, applyWordProgressPatch, markFirstPracticeHintSeen, updateListCompletion, updateReviewCompletion } from '../lib/practice/storage';
 import { addActiveInteractionTime, type ActiveWordTiming } from '../lib/practice/progress';
-import { getPlayableAudioUrl } from '../lib/audioPlayback';
+import { createAudioPlaybackController, getPlayableAudioUrl } from '../lib/audioPlayback';
 import { getAudioUnavailableStatusText, getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
@@ -183,8 +183,9 @@ export function usePracticeSession({
     lastInteractionAt: null,
     activeMs: 0
   });
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioUrlRef = useRef<string | null>(null);
+  const audioPlaybackRef = useRef<ReturnType<typeof createAudioPlaybackController> | null>(null);
+  if (!audioPlaybackRef.current) audioPlaybackRef.current = createAudioPlaybackController();
+  const audioPlayback = audioPlaybackRef.current;
 
   useEffect(() => {
     storageRef.current = detached ? sessionStorage : storage;
@@ -200,27 +201,8 @@ export function usePracticeSession({
   }
 
   const stopCurrentAudio = useCallback((releaseAudio = false) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.pause();
-    try {
-      audio.currentTime = 0;
-    } catch {
-      // Some browsers can reject seeking while media metadata is unavailable.
-    }
-
-    if (releaseAudio) {
-      audio.removeAttribute('src');
-      try {
-        audio.load();
-      } catch {
-        // Audio cleanup is best-effort.
-      }
-      audioRef.current = null;
-      audioUrlRef.current = null;
-    }
-  }, []);
+    audioPlayback.stop(releaseAudio);
+  }, [audioPlayback]);
 
   const restartCurrentAudio = useCallback(async ({
     recordInteraction = true,
@@ -251,42 +233,13 @@ export function usePracticeSession({
       return false;
     }
 
-    let audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      try {
-        audio.currentTime = 0;
-      } catch {
-        // Restart should still attempt playback even if seeking fails.
-      }
+    const played = await audioPlayback.playSource(playableUrl);
+    if (!played) {
+      markAudioPlaybackFailed(wordForPlayback.id);
+      if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
     }
-
-    if (!audio || audioUrlRef.current !== playableUrl) {
-      stopCurrentAudio(true);
-      audio = new Audio();
-      audio.preload = 'auto';
-      audio.src = playableUrl;
-      audioRef.current = audio;
-      audioUrlRef.current = playableUrl;
-    }
-
-    try {
-      audio.currentTime = 0;
-    } catch {
-      // Playback can continue from the browser's available start position.
-    }
-
-    try {
-      await audio.play();
-      return true;
-    } catch {
-      if (audioRef.current === audio && audioUrlRef.current === playableUrl) {
-        markAudioPlaybackFailed(wordForPlayback.id);
-        if (showUnavailableStatus) showStatus(getAudioUnavailableStatusText(t));
-      }
-      return false;
-    }
-  }, [currentWord?.audioUrl, currentWord?.elevenLabsAudioUrl, currentWord?.elevenLabsAudioStatus, currentWord?.id, defaultAudioProvider, forceAudioAvailable, stopCurrentAudio, t]);
+    return played;
+  }, [audioPlayback, currentWord?.audioUrl, currentWord?.elevenLabsAudioUrl, currentWord?.elevenLabsAudioStatus, currentWord?.id, defaultAudioProvider, forceAudioAvailable, stopCurrentAudio, t]);
 
   useEffect(() => {
     return () => {

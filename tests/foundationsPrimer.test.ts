@@ -1,6 +1,8 @@
+import foundationsExport from '../data-exports/spelio_welsh_foundations_content.json';
 import { getFoundationsPrimer, getPrimerAudioText, hasFoundationsPrimer } from '../src/content/foundationsPrimer';
 import { getCollectionIntro, getCollectionIntroAudioGenerationText, hasSeenCollectionIntro, markCollectionIntroSeen, normalizeCollectionIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
-import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds } from '../src/lib/foundationsPrimerAudio';
+import type { PracticeWord } from '../src/data/wordLists';
+import { clearPrimerAudioCacheForTests, getStoredPrimerAudioUrl, playPrimerSound, preloadPrimerSounds, resolvePrimerSoundPracticeAudio, stopPrimerAudio } from '../src/lib/foundationsPrimerAudio';
 import { shouldPreserveInterfaceLanguageScreen, shouldResetPracticeLaunchContextOnInterfaceLanguageChange } from '../src/lib/interfaceLanguageNavigation';
 
 declare function require(name: string): {
@@ -22,6 +24,8 @@ const { readFileSync } = require('fs') as {
 };
 const documentShellSource = readFileSync('index.html', 'utf8');
 const stylesSource = readFileSync('src/styles.css', 'utf8');
+const practiceSessionSource = readFileSync('src/hooks/usePracticeSession.ts', 'utf8');
+const primerAudioSource = readFileSync('src/lib/foundationsPrimerAudio.ts', 'utf8');
 
 assert(documentShellSource.includes('viewport-fit=cover'), 'Document viewport should expose iOS safe-area insets.');
 assert(
@@ -31,6 +35,10 @@ assert(
 assert(
   /\.how-back-button\{[\s\S]*?width:44px;[\s\S]*?height:44px;/.test(stylesSource),
   'Shared public-page back control should keep a reliable 44px touch target.'
+);
+assert(
+  practiceSessionSource.includes('createAudioPlaybackController') && primerAudioSource.includes('createAudioPlaybackController'),
+  'Practice sessions and Foundations samples should use the same playback controller.'
 );
 
 const dDdPrimer = getFoundationsPrimer('foundation_patterns_d_dd', 'en');
@@ -74,6 +82,46 @@ assertEqual(welshYPrimerFromDraft.soundItems.length, 2, 'Y primer should resolve
 assertEqual(welshYPrimerFromDraft.soundItems[0].textToSpeak, 'byd', 'Y final-syllable sample should resolve its expected Welsh audio text.');
 assertEqual(welshYPrimerFromDraft.soundItems[1].textToSpeak, 'ysgol', 'Y earlier-syllable sample should resolve its expected Welsh audio text.');
 const welshYSoundItems = welshYPrimerFromDraft.soundItems;
+const exportedLists = (foundationsExport as unknown as { lists: Array<{ id: string; words: PracticeWord[] }> }).lists;
+const orderedPracticeWords = (preferredListId: string) => [
+  ...(exportedLists.find(list => list.id === preferredListId)?.words ?? []),
+  ...exportedLists.filter(list => list.id !== preferredListId).flatMap(list => list.words)
+];
+const resolvedDddSoundItems = dDdPrimer.soundItems.map(item => resolvePrimerSoundPracticeAudio(item, orderedPracticeWords(dDdPrimer.listId), 'azure'));
+const resolvedYSoundItems = welshYSoundItems.map(item => resolvePrimerSoundPracticeAudio(item, orderedPracticeWords(welshYPrimerFromDraft.listId), 'azure'));
+assert(
+  resolvedDddSoundItems[0].audioUrl?.endsWith('/foundation-patterns-d-dd-001.mp3'),
+  'D sample should resolve the ready practice-session asset for da.'
+);
+assert(
+  resolvedDddSoundItems[1].audioUrl?.endsWith('/foundation-patterns-d-dd-004.mp3'),
+  'DD sample should resolve the ready practice-session asset for hedd.'
+);
+assert(
+  resolvedYSoundItems[0].audioUrl?.endsWith('/foundation-patterns-y-001.mp3'),
+  'Y final-syllable sample should resolve the ready practice-session asset for byd.'
+);
+assert(
+  resolvedYSoundItems[1].audioUrl?.endsWith('/foundation-patterns-y-008.mp3'),
+  'Y earlier-syllable sample should resolve the ready practice-session asset for ysgol.'
+);
+assert(
+  [resolvedDddSoundItems, resolvedYSoundItems].flat().every(item => item.audioStatus === 'ready'),
+  'D, DD, and Y samples should be promoted to ready only after a practice asset resolves.'
+);
+const unresolvedFoundationSamples = exportedLists.flatMap(list => {
+  const primer = getFoundationsPrimer(list.id, 'en');
+  if (!primer) return [];
+  return primer.soundItems
+    .map(item => resolvePrimerSoundPracticeAudio(item, orderedPracticeWords(list.id), 'azure'))
+    .filter(item => !getStoredPrimerAudioUrl(item))
+    .map(item => item.textToSpeak);
+}).sort();
+assertEqual(
+  unresolvedFoundationSamples.join(','),
+  'gwen,sinema',
+  'Every Foundations sample with an existing ready practice asset should resolve through that path; only samples without a ready file should retain generated fallback.'
+);
 
 const databaseDddPrimer = getFoundationsPrimer({
   id: 'foundation_patterns_d_dd',
@@ -327,6 +375,7 @@ assert(
 class MockAudio {
   static instances: MockAudio[] = [];
   static playShouldReject = false;
+  static playThrowsSynchronously = false;
   static userGestureActive = false;
 
   currentTime = 0;
@@ -350,9 +399,14 @@ class MockAudio {
     this.pauseCalls += 1;
   }
 
+  removeAttribute(name: string) {
+    if (name === 'src') this.src = '';
+  }
+
   play() {
     this.playCalls += 1;
     if (MockAudio.userGestureActive) this.playCallsDuringUserGesture += 1;
+    if (MockAudio.playThrowsSynchronously) throw new Error('Synchronous playback failure');
     return MockAudio.playShouldReject ? Promise.reject(new Error('Playback rejected')) : Promise.resolve();
   }
 }
@@ -428,16 +482,19 @@ async function runPrimerAudioTests() {
     MockAudio.instances = [];
     fetchCalls = 0;
     await preloadPrimerSounds([storedItem, storedItem]);
-    assertEqual(MockAudio.instances.length, 1, 'Primer preload should create one cached audio element per stored URL.');
-    assertEqual(MockAudio.instances[0].loadCalls, 1, 'Primer preload should only call load once for a stable stored URL.');
-    assertEqual(MockAudio.instances[0].src, storedItem.audioUrl, 'Primer preload should use the stored URL without adding a click-time cache buster.');
+    assertEqual(MockAudio.instances.length, 0, 'Ready practice audio should not create a media element before the user taps.');
 
-    const firstStoredPlayback = await playPrimerSound(storedItem);
+    MockAudio.userGestureActive = true;
+    const firstStoredPlaybackPromise = playPrimerSound(storedItem);
+    MockAudio.userGestureActive = false;
+    const firstStoredPlayback = await firstStoredPlaybackPromise;
     const secondStoredPlayback = await playPrimerSound(storedItem);
-    assert(firstStoredPlayback && secondStoredPlayback, 'Stored primer audio should play successfully from the cached audio element.');
+    assert(firstStoredPlayback && secondStoredPlayback, 'Stored primer audio should play successfully through the practice playback controller.');
     assertEqual(fetchCalls, 0, 'Stored primer audio should not call the dynamic Azure fallback.');
-    assertEqual(MockAudio.instances.length, 1, 'Stored primer audio should reuse the cached audio element across clicks.');
+    assertEqual(MockAudio.instances.length, 1, 'Repeated taps should reuse the current practice-style player for the same source.');
     assertEqual(MockAudio.instances[0].playCalls, 2, 'Stored primer audio should replay the cached element on each click.');
+    assertEqual(MockAudio.instances[0].playCallsDuringUserGesture, 1, 'Ready sample playback should call play synchronously inside the user interaction.');
+    assertEqual(MockAudio.instances[0].src, storedItem.audioUrl, 'Ready sample playback should keep the resolved practice URL unchanged.');
 
     const cacheBustedUrl = `${storedItem.audioUrl}?v=2026-05-29T12%3A00%3A00.000Z`;
     assertEqual(getStoredPrimerAudioUrl({ audioUrl: cacheBustedUrl }), cacheBustedUrl, 'Primer audio URL normalization should keep an existing stable cache-busting query intact.');
@@ -449,7 +506,11 @@ async function runPrimerAudioTests() {
       audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/dd-sound/20260529T121500Z.mp3'
     };
     await playPrimerSound(regeneratedItem);
-    assertEqual(MockAudio.instances.length, 2, 'A regenerated primer audio URL should get a fresh cached audio element.');
+    assertEqual(MockAudio.instances.length, 2, 'A changed source URL should get a fresh practice-style player.');
+
+    stopPrimerAudio();
+    await playPrimerSound(regeneratedItem);
+    assertEqual(MockAudio.instances.length, 3, 'Leaving and returning should create a fresh player instead of retaining stale screen state.');
 
     clearPrimerAudioCacheForTests();
     MockAudio.instances = [];
@@ -469,8 +530,8 @@ async function runPrimerAudioTests() {
         (fetchBodies[0] as { language?: unknown }).language === 'cy',
       'Primer Azure fallback should request Welsh generation for the primer text.'
     );
-    assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one cached audio element across clicks.');
-    assertEqual(MockAudio.instances[0].loadCalls, 1, 'Generated primer audio fallback should be loaded during preload.');
+    assertEqual(MockAudio.instances.length, 1, 'Generated primer audio fallback should reuse one player across repeated clicks.');
+    assertEqual(MockAudio.instances[0].loadCalls, 0, 'Generated fallback preparation should not pre-create or load the playback element.');
     assertEqual(MockAudio.instances[0].playCalls, 2, 'Generated primer audio fallback should replay the cached element on each click.');
 
     MockAudio.userGestureActive = true;
@@ -483,6 +544,11 @@ async function runPrimerAudioTests() {
     const rejectedPlayback = await playPrimerSound(fallbackItem);
     MockAudio.playShouldReject = false;
     assertEqual(rejectedPlayback, false, 'Primer playback rejection should be caught and reported without an unhandled rejection.');
+
+    MockAudio.playThrowsSynchronously = true;
+    const synchronouslyRejectedPlayback = await playPrimerSound(fallbackItem);
+    MockAudio.playThrowsSynchronously = false;
+    assertEqual(synchronouslyRejectedPlayback, false, 'Synchronous media failures should also remain caught and non-blocking.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;
