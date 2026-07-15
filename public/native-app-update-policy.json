@@ -1,0 +1,16 @@
+{
+  "ios": {
+    "latestVersion": "1.0.1",
+    "minimumSupportedVersion": "1.0.0",
+    "noticeEnabled": false,
+    "releaseNotes": "Latest fixes and improvements.",
+    "storeUrl": "https://apps.apple.com/app/spelio/id6783524504"
+  },
+  "android": {
+    "latestVersion": "0.3.0",
+    "minimumSupportedVersion": "0.3.0",
+    "noticeEnabled": false,
+    "releaseNotes": "Latest fixes and improvements.",
+    "storeUrl": null
+  }
+}

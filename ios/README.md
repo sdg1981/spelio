@@ -17,6 +17,8 @@ It packages the existing Vite web build into a native iOS WebView shell. It does
 
 The checked-in native project uses Swift Package Manager for Capacitor. Generated web assets under `ios/App/App/public` are intentionally ignored by Git; rebuild and sync them before opening Xcode for release work.
 
+The bundled web app uses `@capacitor/app` and `App.getInfo()` to read the installed native marketing version and build for the optional update notice. The remotely hosted policy and release procedure are documented in [`docs/native_app_update_notices.md`](../docs/native_app_update_notices.md). Because this wrapper packages its web assets, bundled app changes require an App Store release; the checker cannot run in builds released before it was included.
+
 ## Build And Sync
 
 From the repo root:

@@ -31,6 +31,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
+  if (url.pathname === '/native-app-update-policy.json') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request, '/'));

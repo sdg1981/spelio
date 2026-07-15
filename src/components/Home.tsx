@@ -10,6 +10,7 @@ import type { Recommendation } from '../lib/practice/recommendations';
 import type { SpelioSettings } from '../lib/practice/storage';
 import { formatRecapWordCount } from '../lib/practice/sessionEngine';
 import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
+import { NativeUpdateNotice } from './NativeUpdateNotice';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 type SharedEntryMode = 'normal-share' | 'practice-test';
@@ -221,6 +222,7 @@ export function Home({
           t={t}
         />
       )}
+      <NativeUpdateNotice enabled={!settingsOpen} t={t} />
     </main>
   );
 }

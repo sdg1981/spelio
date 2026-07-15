@@ -32,6 +32,12 @@ export const en = {
     openMenu: 'Open menu',
     menuLabel: 'Homepage menu'
   },
+  nativeUpdate: {
+    title: 'A Spelio update is available',
+    body: 'Update to get the latest fixes and improvements.',
+    update: 'Update Spelio',
+    notNow: 'Not now'
+  },
   primer: {
     kicker: 'Notice this first',
     soundButtonsLabel: 'Primer sound buttons',

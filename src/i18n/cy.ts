@@ -32,6 +32,12 @@ export const cy = {
     openMenu: 'Agor dewislen',
     menuLabel: 'Dewislen yr hafan'
   },
+  nativeUpdate: {
+    title: 'Mae diweddariad i Spelio ar gael',
+    body: 'Diweddarwch i gael y cywiriadau a’r gwelliannau diweddaraf.',
+    update: 'Diweddaru Spelio',
+    notNow: 'Nid nawr'
+  },
   primer: {
     kicker: 'Sylwch ar hyn yn gyntaf',
     soundButtonsLabel: 'Botymau sain y cyflwyniad',

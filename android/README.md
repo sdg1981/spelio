@@ -14,6 +14,8 @@ It does not add native login, sync, analytics, ads, subscriptions, push notifica
 
 The TWA opens the existing PWA. When Digital Asset Links verification succeeds, Chrome removes the Custom Tab browser UI and presents the site in app form.
 
+The stock TWA launcher does not currently expose its installed native `versionName` or `versionCode` to web content. Spelio therefore does not guess from the Android user agent or show a Play update notice. Hosted web deployments are not native wrapper updates. See [`docs/native_app_update_notices.md`](../docs/native_app_update_notices.md) for the audit and future-safe options.
+
 Offline behaviour is inherited from the website and Chrome's PWA/service-worker cache. After Spelio has loaded successfully online, cached navigations can show the app shell or the minimal `/offline.html` fallback. A first-ever offline launch still depends on Chrome/TWA being able to reach `https://spelio.app`, because this wrapper does not package local web assets.
 
 ## Build

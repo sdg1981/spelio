@@ -33,6 +33,8 @@ It is a minimal Capacitor app for the existing Spelio web build using bundle ide
 
 See [ios/README.md](ios/README.md) for build, sync, Xcode signing, archive, upload, and App Store review notes.
 
+Native wrapper update notices and their remotely hosted policy are documented in [docs/native_app_update_notices.md](docs/native_app_update_notices.md). Browser and installed-PWA users do not receive native-store prompts.
+
 ## Audio generation
 
 Azure TTS post-processing uses the bundled `@ffmpeg-installer/ffmpeg` binary in serverless routes. Set `FFMPEG_PATH` only if a deployment environment needs to override that binary path.
