@@ -43,10 +43,26 @@ const QWERTY_ADJACENCY: Readonly<Record<string, readonly string[]>> = {
   m: ['j', 'k', 'n']
 };
 
+const WELSH_KEYBOARD_BASE_CHARACTERS: Readonly<Record<string, string>> = {
+  á: 'a', à: 'a', â: 'a', ä: 'a',
+  é: 'e', è: 'e', ê: 'e', ë: 'e',
+  í: 'i', ì: 'i', î: 'i', ï: 'i',
+  ó: 'o', ò: 'o', ô: 'o', ö: 'o',
+  ú: 'u', ù: 'u', û: 'u', ü: 'u',
+  ŵ: 'w', ŷ: 'y'
+};
+
+export function getKeyboardBaseCharacter(character: string) {
+  const normalized = character.normalize('NFC').toLocaleLowerCase('en-GB');
+  if (Array.from(normalized).length !== 1) return null;
+  if (/^[a-z]$/.test(normalized)) return normalized;
+  return WELSH_KEYBOARD_BASE_CHARACTERS[normalized] ?? null;
+}
+
 export function isAdjacentQwertyKey(attempted: string, expected: string) {
-  const attemptedKey = attempted.toLocaleLowerCase('en-GB');
-  const expectedKey = expected.toLocaleLowerCase('en-GB');
-  if (!/^[a-z]$/.test(attemptedKey) || !/^[a-z]$/.test(expectedKey)) return false;
+  const attemptedKey = getKeyboardBaseCharacter(attempted);
+  const expectedKey = getKeyboardBaseCharacter(expected);
+  if (!attemptedKey || !expectedKey) return false;
   return QWERTY_ADJACENCY[expectedKey]?.includes(attemptedKey) ?? false;
 }
 
@@ -78,6 +94,7 @@ export function isDirectMobileTypoReplacement({
   expected: string;
   mode: WelshSpellingMode;
 }) {
-  const characters = Array.from(rawInput);
+  const normalizedInput = rawInput.normalize('NFC');
+  const characters = Array.from(normalizedInput);
   return characters.length === 1 && validateLetter(characters[0], expected, mode);
 }

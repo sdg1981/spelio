@@ -15,11 +15,12 @@ const whitespace = /\s+/g;
 const terminalSentencePunctuation = /[?!.,:;]+$/;
 
 export function createPracticeAnswer(value: string): string {
-  return value.trimEnd().replace(terminalSentencePunctuation, '').trimEnd();
+  return value.normalize('NFC').trimEnd().replace(terminalSentencePunctuation, '').trimEnd();
 }
 
 export function normalizeForComparison(value: string): string {
   return value
+    .normalize('NFC')
     .replace(apostropheVariants, "'")
     .replace(dashVariants, '-')
     .toLowerCase()

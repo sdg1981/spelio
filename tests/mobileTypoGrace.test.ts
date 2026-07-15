@@ -1,6 +1,7 @@
-import { isAdjacentQwertyKey, isDirectMobileTypoReplacement, shouldOfferMobileTypoGrace } from '../src/lib/practice/mobileTypoGrace';
+import { getKeyboardBaseCharacter, isAdjacentQwertyKey, isDirectMobileTypoReplacement, shouldOfferMobileTypoGrace } from '../src/lib/practice/mobileTypoGrace';
 import { detectTypoGracePlatform, summarizeTypoGraceAggregates } from '../src/lib/practice/typoGraceAnalyticsModel';
 import { createInitialPracticeLetters, findNextInputIndex, processPracticeInput } from '../src/lib/practice/inputFlow';
+import { createPracticeAnswer, validateLetter } from '../src/lib/practice/validator';
 
 declare function require(name: string): { readFileSync?: (path: string, encoding: string) => string };
 const { readFileSync } = require('fs') as { readFileSync: (path: string, encoding: string) => string };
@@ -16,8 +17,31 @@ function assertIncludes(source: string, fragment: string, message: string) {
 assertEqual(isAdjacentQwertyKey('s', 'w'), true, 'A diagonal neighbour should be eligible.');
 assertEqual(isAdjacentQwertyKey('E', 'w'), true, 'QWERTY adjacency should be case-insensitive.');
 assertEqual(isAdjacentQwertyKey('p', 'q'), false, 'A distant key must not be eligible.');
-assertEqual(isAdjacentQwertyKey('ŵ', 'w'), false, 'Welsh accented characters must not be classified as adjacent slips.');
 assertEqual(isAdjacentQwertyKey('c', 'ch'), false, 'Welsh digraphs must continue through ordinary per-character validation.');
+
+const supportedKeyboardBases = {
+  á: 'a', à: 'a', â: 'a', ä: 'a',
+  é: 'e', è: 'e', ê: 'e', ë: 'e',
+  í: 'i', ì: 'i', î: 'i', ï: 'i',
+  ó: 'o', ò: 'o', ô: 'o', ö: 'o',
+  ú: 'u', ù: 'u', û: 'u', ü: 'u',
+  ŵ: 'w', ŷ: 'y'
+} as const;
+for (const [accented, base] of Object.entries(supportedKeyboardBases)) {
+  assertEqual(getKeyboardBaseCharacter(accented), base, `${accented} should resolve to its physical QWERTY key.`);
+  assertEqual(getKeyboardBaseCharacter(accented.toLocaleUpperCase('cy')), base, `${accented.toLocaleUpperCase('cy')} should resolve like its lowercase form.`);
+}
+assertEqual(getKeyboardBaseCharacter('o\u0302'), 'o', 'A decomposed accented character should resolve like its precomposed form.');
+assertEqual(getKeyboardBaseCharacter('ab'), null, 'Unsupported multi-character input should not receive adjacency classification.');
+assertEqual(isAdjacentQwertyKey('i', 'ô'), true, 'Expected ô should use the physical o key for adjacency.');
+assertEqual(isAdjacentQwertyKey('i', 'o\u0302'), true, 'Decomposed ô should use the same physical o key.');
+assertEqual(isAdjacentQwertyKey('a', 'ô'), false, 'A clearly non-adjacent key should remain an immediate error for ô.');
+for (const neighbour of ['q', 'e', 'a', 's']) {
+  assertEqual(isAdjacentQwertyKey(neighbour, 'ŵ'), true, `Expected ŵ should use w adjacency for ${neighbour}.`);
+}
+for (const neighbour of ['t', 'u', 'g', 'h']) {
+  assertEqual(isAdjacentQwertyKey(neighbour, 'ŷ'), true, `Expected ŷ should use y adjacency for ${neighbour}.`);
+}
 
 const eligibilityBase = { attempted: 's', expected: 'w', mobileTouchInput: true, strictAssessmentMode: false, alreadyUsedAtPosition: false };
 assertEqual(shouldOfferMobileTypoGrace(eligibilityBase), true, 'An adjacent mobile touch should receive grace.');
@@ -25,9 +49,17 @@ assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, mobileTouchInput: f
 assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, strictAssessmentMode: true }), false, 'Strict assessment mode must disable grace.');
 assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, alreadyUsedAtPosition: true }), false, 'Grace must be offered only once per position.');
 assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, attempted: 'p' }), false, 'Non-adjacent mobile errors must remain immediate.');
+assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, attempted: 'i', expected: 'ô' }), true, 'Mobile i should trigger pending grace when ô is expected.');
+assertEqual(shouldOfferMobileTypoGrace({ ...eligibilityBase, attempted: 'a', expected: 'ô' }), false, 'Mobile a should remain immediately wrong when ô is expected.');
 assertEqual(isDirectMobileTypoReplacement({ rawInput: 'h', expected: 'h', mode: 'strict' }), true, 'The expected character should directly replace a pending adjacent typo.');
 assertEqual(isDirectMobileTypoReplacement({ rawInput: 'k', expected: 'h', mode: 'strict' }), false, 'A second incorrect character must not directly replace a pending typo.');
 assertEqual(isDirectMobileTypoReplacement({ rawInput: 'hh', expected: 'h', mode: 'strict' }), false, 'Only one newly typed character can directly replace a pending typo.');
+assertEqual(isDirectMobileTypoReplacement({ rawInput: 'ô', expected: 'ô', mode: 'strict' }), true, 'Strict mode should directly replace a pending typo with the correct accent.');
+assertEqual(isDirectMobileTypoReplacement({ rawInput: 'o', expected: 'ô', mode: 'strict' }), false, 'Strict mode must not treat the unaccented base key as a correct replacement.');
+assertEqual(isDirectMobileTypoReplacement({ rawInput: 'o', expected: 'ô', mode: 'flexible' }), true, 'Flexible mode should preserve its accepted unaccented direct replacement.');
+assertEqual(isDirectMobileTypoReplacement({ rawInput: 'o\u0302', expected: 'ô', mode: 'strict' }), true, 'A decomposed correct accent should directly replace consistently.');
+assertEqual(validateLetter('o', 'ô', 'strict'), false, 'Strict correctness must still reject a missing accent.');
+assertEqual(validateLetter('o', 'ô', 'flexible'), true, 'Flexible correctness must still accept its supported unaccented equivalent.');
 
 const correct = processPracticeInput({ targetAnswer: 'wel', letters: createInitialPracticeLetters('wel'), rawInput: 'w', mode: 'strict' });
 assertEqual(findNextInputIndex('wel', correct.letters), 1, 'A correct mobile character should still advance immediately.');
@@ -35,6 +67,9 @@ const wrong = processPracticeInput({ targetAnswer: 'wel', letters: createInitial
 assertEqual(wrong.wrongFeedback?.inputPosition, 0, 'A non-adjacent wrong character should retain immediate feedback.');
 const accented = processPracticeInput({ targetAnswer: 'dŵr', letters: createInitialPracticeLetters('dŵr'), rawInput: 'dŵr', mode: 'strict' });
 assertEqual(accented.completed, true, 'Strict accented Welsh input must still complete normally.');
+const decomposedAnswer = createPracticeAnswer('ffo\u0302n');
+const decomposedInput = processPracticeInput({ targetAnswer: decomposedAnswer, letters: createInitialPracticeLetters(decomposedAnswer), rawInput: 'ffo\u0302n', mode: 'strict' });
+assertEqual(decomposedInput.completed, true, 'Decomposed Unicode input should complete as the same accented spelling.');
 const digraph = processPracticeInput({ targetAnswer: 'chwarae', letters: createInitialPracticeLetters('chwarae'), rawInput: 'ch', mode: 'strict' });
 assertEqual(findNextInputIndex('chwarae', digraph.letters), 2, 'Welsh digraph typing must still advance one authoritative character at a time.');
 

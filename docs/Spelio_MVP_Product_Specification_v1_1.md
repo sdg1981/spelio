@@ -2687,7 +2687,7 @@ Rules:
 
 #### Mobile adjacent-key typo grace
 
-Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. A conservative explicit QWERTY A-Z neighbour map is used; accented Welsh characters and unsupported layouts continue through normal validation. The entered character remains visible in the active position until it is deleted, directly overwritten by the correct expected character, or committed as wrong. Direct overwrite is available only while the adjacent-key character is pending, and the grace opportunity remains limited to once per answer position.
+Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. A conservative explicit QWERTY A-Z neighbour map is used. For adjacency detection only, supported accented Welsh letters resolve to their physical/base QWERTY key, including canonically equivalent precomposed and decomposed forms; strict and flexible spelling validation remain unchanged. The entered character remains visible in the active position until it is deleted, directly overwritten by the correct expected character, or committed as wrong. Direct overwrite is available only while the adjacent-key character is pending, and the grace opportunity remains limited to once per answer position.
 
 This grace is limited to touch-first mobile input and is disabled in Practice test and any future strict assessment context. Desktop and physical-keyboard input retains immediate incorrect feedback.
 

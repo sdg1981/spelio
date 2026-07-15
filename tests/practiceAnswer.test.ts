@@ -43,6 +43,18 @@ assertEqual(
 );
 
 assertEqual(
+  createPracticeAnswer('ffo\u0302n'),
+  'ffôn',
+  'Practice answers should use canonical NFC without removing Welsh accents.'
+);
+
+assertEqual(
+  validateLetter('o\u0302', 'ô', 'strict'),
+  true,
+  'Strict validation should treat canonically equivalent accent representations consistently.'
+);
+
+assertEqual(
   validateAnswer('Wyt ti’n barod', 'Wyt ti’n barod?', 'strict'),
   true,
   'Omitting terminal punctuation should still validate as complete.'

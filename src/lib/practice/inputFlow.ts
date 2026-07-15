@@ -99,7 +99,7 @@ export function processPracticeInput({
   const outcomes: PracticeInputOutcome[] = [];
   let wrongFeedback: PracticeInputProcessingResult['wrongFeedback'] = null;
 
-  for (const attempted of Array.from(rawInput)) {
+  for (const attempted of Array.from(rawInput.normalize('NFC'))) {
     if (isInputSpace(attempted)) {
       outcomes.push({ type: 'ignored', attempted });
       continue;
