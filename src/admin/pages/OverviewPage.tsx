@@ -6,12 +6,15 @@ import { StatusPill } from '../components/StatusPill';
 import type { AdminRepository } from '../repositories';
 import { getAudioHealth } from '../repositories';
 import type { AdminWordList } from '../types';
+import type { TypoGraceAggregateSummary } from '../../lib/practice/typoGraceAnalyticsModel';
 
 export function OverviewPage({ navigate, repository }: { navigate: (path: string) => void; repository: AdminRepository }) {
   const [wordLists, setWordLists] = useState<AdminWordList[]>([]);
+  const [typoGraceSummary, setTypoGraceSummary] = useState<TypoGraceAggregateSummary | null>(null);
 
   useEffect(() => {
     repository.listWordLists().then(setWordLists).catch(console.error);
+    repository.getTypoGraceAggregateSummary().then(setTypoGraceSummary).catch(console.error);
   }, [repository]);
 
   const activeLists = wordLists.filter(list => list.isActive).length;
@@ -30,6 +33,28 @@ export function OverviewPage({ navigate, repository }: { navigate: (path: string
         <OverviewMetric icon={<CheckCircle2 size={22} />} label="Words managed" value={totalWords} />
         <OverviewMetric icon={<Headphones size={22} />} label="Missing audio" value={missingAudio} accent />
       </div>
+      <AdminCard className="mt-6 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-black tracking-[-0.02em]">Mobile adjacent-key typo grace</h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+              Aggregate outcomes for probable adjacent-key touches on mobile. These are not confirmed spelling errors, and no words, letters, or learner answers are recorded.
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <CompactMetric label="Grace opportunities" value={typoGraceSummary?.triggered ?? 0} />
+          <CompactMetric label="Corrected before commitment" value={typoGraceSummary?.corrected ?? 0} />
+          <CompactMetric label="Committed as wrong" value={typoGraceSummary?.committedWrong ?? 0} />
+          <CompactMetric label="Correction rate" value={`${typoGraceSummary?.correctionRate ?? 0}%`} />
+        </div>
+        {typoGraceSummary && (typoGraceSummary.byPlatform.ios.triggered > 0 || typoGraceSummary.byPlatform.android.triggered > 0 || typoGraceSummary.byPlatform.other_mobile.triggered > 0) && (
+          <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
+            <span className="font-bold text-slate-700">Broad platform:</span>{' '}
+            iOS {typoGraceSummary.byPlatform.ios.triggered}, Android {typoGraceSummary.byPlatform.android.triggered}, other mobile {typoGraceSummary.byPlatform.other_mobile.triggered} opportunities
+          </div>
+        )}
+      </AdminCard>
       <AdminCard className="mt-6 overflow-hidden">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-lg font-black tracking-[-0.02em]">Recent content</h2>
@@ -47,6 +72,15 @@ export function OverviewPage({ navigate, repository }: { navigate: (path: string
         </div>
       </AdminCard>
     </>
+  );
+}
+
+function CompactMetric({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+      <div className="text-2xl font-black tracking-[-0.03em] text-slate-950">{value}</div>
+      <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">{label}</div>
+    </div>
   );
 }
 

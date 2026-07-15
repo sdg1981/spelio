@@ -3,6 +3,7 @@ import type { AdminStructureOption, AdminWord, AdminWordList, AdminWordListColle
 import type { InterfaceAudioClip } from '../../lib/interfaceAudio';
 import type { AudioGenerationResult, AudioQueueSnapshot, CollectionIntroAudioGenerationResult, PrimerAudioGenerationResult } from '../services/audioGeneration';
 import type { AdminContentExportPayload } from './contentExport';
+import type { TypoGraceAggregateSummary } from '../../lib/practice/typoGraceAnalyticsModel';
 
 export interface AdminWordWithListName extends AdminWord {
   listName: string;
@@ -72,6 +73,7 @@ export interface AdminRepository {
   saveAudioSettings(settings: AdminAudioSettings): Promise<AdminAudioSettings>;
   generateInterfaceAudioClip(clip: InterfaceAudioClip): Promise<InterfaceAudioClip>;
   listCustomWordLists(): Promise<AdminCustomWordListSummary[]>;
+  getTypoGraceAggregateSummary(): Promise<TypoGraceAggregateSummary>;
   cleanupExpiredCustomWordLists(): Promise<AdminCustomWordListCleanupResult>;
   previewImport(payload: unknown): Promise<ImportValidationResult>;
   importContent(payload: unknown): Promise<ImportContentResult>;

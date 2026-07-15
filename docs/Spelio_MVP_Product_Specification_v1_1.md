@@ -2684,6 +2684,14 @@ Rules:
 - Revealing a letter must not dismiss the active touch input system.
 - Switching to native fallback must not change scoring, reveal logic, difficult-word handling, recap, progression, or session generation.
 
+#### Mobile adjacent-key typo grace
+
+Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. A conservative explicit QWERTY A-Z neighbour map is used; accented Welsh characters and unsupported layouts continue through normal validation. The entered character remains visible in the active position until it is deleted or committed, is never silently replaced, and the opportunity is available only once per answer position.
+
+This grace is limited to touch-first mobile input and is disabled in Practice test and any future strict assessment context. Desktop and physical-keyboard input retains immediate incorrect feedback.
+
+Only aggregate typo-grace outcomes may be recorded: opportunity triggered, corrected before commitment, and committed as wrong, with broad platform and high-level practice context where useful. Raw words, expected or entered letters, letter pairs, answer strings, learner identities, and exact device details must never be included.
+
 ### 19.10 Desktop input handling
 
 Desktop input rules:

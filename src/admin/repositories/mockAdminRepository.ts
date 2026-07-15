@@ -9,6 +9,7 @@ import type { AdminAudioSettings } from './adminRepository';
 import { createDefaultInterfaceAudioClips, normalizeInterfaceAudioClips, type InterfaceAudioClip } from '../../lib/interfaceAudio';
 import { getCollectionIntroAudioGenerationText } from '../../content/collectionIntro';
 import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
+import { summarizeTypoGraceAggregates } from '../../lib/practice/typoGraceAnalyticsModel';
 
 let lists = adminWordLists.map(list => ({ ...list, words: list.words.map(word => ({ ...word })) }));
 let collections = adminWordListCollections.map(collection => ({ ...collection }));
@@ -402,6 +403,17 @@ export const mockAdminRepository: AdminRepository = {
 
   async listCustomWordLists() {
     return customWordLists.map(list => ({ ...list }));
+  },
+
+  async getTypoGraceAggregateSummary() {
+    return summarizeTypoGraceAggregates([
+      { eventName: 'mobile_adjacent_typo_grace_triggered', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 18 },
+      { eventName: 'mobile_adjacent_typo_corrected', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 12 },
+      { eventName: 'mobile_adjacent_typo_committed_wrong', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 4 },
+      { eventName: 'mobile_adjacent_typo_grace_triggered', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 10 },
+      { eventName: 'mobile_adjacent_typo_corrected', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 7 },
+      { eventName: 'mobile_adjacent_typo_committed_wrong', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 2 }
+    ]);
   },
 
   async cleanupExpiredCustomWordLists() {

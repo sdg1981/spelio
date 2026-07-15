@@ -13,6 +13,8 @@ import { normalizePrimerContent, toPrimerContentStorage } from '../../content/fo
 import { getCollectionIntroAudioGenerationText, normalizeCollectionIntroContent, toCollectionIntroStorage } from '../../content/collectionIntro';
 import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
 import { getApiUrl } from '../../lib/nativeOrigin';
+import { summarizeTypoGraceAggregates, type TypoGraceAggregateRow, type TypoGracePlatform, type TypoGracePracticeContext } from '../../lib/practice/typoGraceAnalyticsModel';
+import type { MobileTypoGraceEvent } from '../../lib/practice/mobileTypoGrace';
 
 type CustomWordListRow = {
   id: string;
@@ -717,6 +719,23 @@ export const supabaseAdminRepository: AdminRepository = {
       .limit(200);
     if (error) throw error;
     return (data ?? []).map(mapCustomWordListRow);
+  },
+
+  async getTypoGraceAggregateSummary() {
+    const client = await requireAdminSupabase();
+    const { data, error } = await client
+      .from('mobile_typo_grace_daily_counts')
+      .select('event_name,platform,practice_context,strict_mode,event_count');
+    if (error) throw error;
+
+    const rows: TypoGraceAggregateRow[] = (data ?? []).map(row => ({
+      eventName: row.event_name as MobileTypoGraceEvent,
+      platform: row.platform as TypoGracePlatform,
+      practiceContext: row.practice_context as TypoGracePracticeContext,
+      strictMode: row.strict_mode === true,
+      count: Number(row.event_count) || 0
+    }));
+    return summarizeTypoGraceAggregates(rows);
   },
 
   async cleanupExpiredCustomWordLists() {

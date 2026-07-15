@@ -1006,6 +1006,14 @@
   animation:letter-soft-shake .24s ease-in-out both;
 }
 
+.letter-slot.pending-typo,
+.letter-slot.pending-typo.active:not(.mistake){
+  color:#626d78;
+  border-bottom-color:#9aa3ac;
+  background:rgba(98,109,120,.045);
+  animation:none;
+}
+
 .letter-slot.active:not(.mistake){
   animation:active-letter-underline 1.8s ease-in-out infinite;
 }
@@ -4600,6 +4608,14 @@
   z-index:0;
   border-bottom-color:var(--red);
   border-bottom-width:3px;
+}
+
+.practice-app .letter-slot.pending-typo,
+.practice-app .letter-slot.pending-typo.active:not(.mistake){
+  color:#626d78;
+  border-bottom-color:#9aa3ac;
+  background:rgba(98,109,120,.045);
+  animation:none;
 }
 
 .practice-app .letter-slot.mistake{

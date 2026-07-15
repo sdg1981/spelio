@@ -393,6 +393,12 @@ Once account systems exist:
 
 - introduce server-side event storage progressively
 
+## 5.5 Mobile typo-grace aggregate exception
+
+Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. The grace is intended to distinguish motor slips from spelling uncertainty and is disabled in strict assessment contexts.
+
+For this interaction, MVP reporting is aggregate-only. Store counts for opportunities triggered, corrected before commitment, and committed as wrong, optionally grouped by broad mobile platform and high-level practice context. Never store raw answers, words, expected or entered letters, letter pairs, learner identities, or exact device details for typo-grace reporting.
+
 ---
 
 # 6. Derived Learning Signals

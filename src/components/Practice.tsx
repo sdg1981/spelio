@@ -23,6 +23,10 @@ import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practic
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { getInitialWordListPageSelection, getPendingWelshFoundationsJourneyList, isWelshFoundationsJourneyList } from '../lib/practice/learningJourneySelection';
 import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
+import type { PendingMobileTypo } from '../hooks/usePracticeSession';
+import type { MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
+import { recordMobileTypoGraceEvent } from '../lib/practice/typoGraceAnalytics';
+import { detectTypoGracePlatform, getTypoGracePracticeContext } from '../lib/practice/typoGraceAnalyticsModel';
 import { ENABLE_CUSTOM_KEYBOARD, detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
@@ -96,6 +100,7 @@ function LetterSlots({
   letters,
   wrongIndex,
   wrongAttempt,
+  pendingMobileTypo,
   activeIndex,
   layoutClass = '',
   wordComplete = false
@@ -104,6 +109,7 @@ function LetterSlots({
   letters: Array<{ value: string; revealed?: boolean }>;
   wrongIndex: number | null;
   wrongAttempt: string | null;
+  pendingMobileTypo: PendingMobileTypo | null;
   activeIndex: number;
   layoutClass?: string;
   wordComplete?: boolean;
@@ -126,14 +132,15 @@ function LetterSlots({
               const animationIndex = visibleLetterIndex;
               if (!isFixedAnswerPunctuation(expected)) visibleLetterIndex += 1;
               const isMistake = wrongIndex === index;
+              const isPendingTypo = pendingMobileTypo?.inputPosition === index;
               const isFixedPunctuation = isFixedAnswerPunctuation(expected);
-              const displayValue = isMistake ? '×' : slot?.value;
+              const displayValue = isMistake ? '×' : isPendingTypo ? pendingMobileTypo.attempted : slot?.value;
               const hasValue = Boolean(displayValue);
 
               return (
                 <span
-                  key={`${index}-${slot?.value || 'empty'}-${slot?.revealed ? 'revealed' : 'typed'}-${isMistake ? 'wrong' : 'ok'}`}
-                  className={`letter-slot ${isFixedPunctuation ? 'fixed-punctuation' : ''} ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${hasValue && !isMistake ? 'filled' : ''} ${hasValue && !isMistake && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !slot?.revealed && !isFixedPunctuation ? 'typed' : ''}`}
+                  key={`${index}-${displayValue || 'empty'}-${slot?.revealed ? 'revealed' : 'typed'}-${isMistake ? 'wrong' : isPendingTypo ? 'pending' : 'ok'}`}
+                  className={`letter-slot ${isFixedPunctuation ? 'fixed-punctuation' : ''} ${!hasValue ? 'empty' : ''} ${activeIndex === index ? 'active' : ''} ${isMistake ? 'mistake' : ''} ${isPendingTypo ? 'pending-typo' : ''} ${hasValue && !isMistake && !isPendingTypo ? 'filled' : ''} ${hasValue && !isMistake && !isPendingTypo && slot?.revealed ? 'revealed' : ''} ${hasValue && !isMistake && !isPendingTypo && !slot?.revealed && !isFixedPunctuation ? 'typed' : ''}`}
                   style={wordComplete ? { '--letter-wave-delay': `${animationIndex * 42}ms` } as CSSProperties : undefined}
                 >
                   {displayValue || '_'}
@@ -296,6 +303,16 @@ export function Practice({
     mobileInputRef.current?.blur();
   }
 
+  const recordTypoGraceOutcome = useCallback((eventName: MobileTypoGraceEvent, listId: string) => {
+    const list = lists.find(item => item.id === listId);
+    void recordMobileTypoGraceEvent({
+      eventName,
+      platform: detectTypoGracePlatform(typeof navigator === 'undefined' ? '' : navigator.userAgent),
+      practiceContext: getTypoGracePracticeContext(list),
+      strictMode: practiceTestMode
+    });
+  }, [lists, practiceTestMode]);
+
   const {
     currentWord,
     letters,
@@ -303,6 +320,7 @@ export function Practice({
     statusTone,
     wrongIndex,
     wrongAttempt,
+    pendingMobileTypo,
     activeIndex,
     practiceAnswer,
     isComplete,
@@ -333,6 +351,8 @@ export function Practice({
     onStorageChange,
     onComplete,
     onPostAnswerEnglishConfirmation: setPostAnswerEnglishConfirmationWordId,
+    strictAssessmentMode: practiceTestMode,
+    onMobileTypoGraceEvent: recordTypoGraceOutcome,
     t
   });
   const completedListIds = useMemo(
@@ -526,11 +546,11 @@ export function Practice({
     setSpellingHint(null);
   }, [clearScheduledSpellingHintAudioReplay]);
 
-  const handlePracticeInput = useCallback((input: string) => {
+  const handlePracticeInput = useCallback((input: string, options: { mobileTouchInput?: boolean } = {}) => {
     if (Array.from(input).some(char => !/\s/.test(char))) {
       setFirstPracticeHintVisible(false);
     }
-    const result = handleInput(input);
+    const result = handleInput(input, options);
     if (result.type !== 'incorrect' || !currentWord) return result;
 
     const assistResult = registerStruggleAssistIncorrectAttempt({
@@ -1416,7 +1436,7 @@ export function Practice({
             if (mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)) return;
 
             const value = event.target.value;
-            if (value) handlePracticeInput(value);
+            if (value) handlePracticeInput(value, { mobileTouchInput: true });
             event.target.value = '';
           }}
           onCompositionStart={() => {
@@ -1430,7 +1450,7 @@ export function Practice({
             }
 
             const value = event.currentTarget.value;
-            if (value) handlePracticeInput(value);
+            if (value) handlePracticeInput(value, { mobileTouchInput: true });
             event.currentTarget.value = '';
           }}
           onKeyDown={(event) => {
@@ -1459,7 +1479,7 @@ export function Practice({
             primaryText={t('practice.firstPracticeHint')}
             replayText={t('practice.firstPracticeReplayHint')}
           />
-          <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
+          <LetterSlots word={answer} letters={letters} wrongIndex={wrongIndex} wrongAttempt={wrongAttempt} pendingMobileTypo={pendingMobileTypo} activeIndex={activeIndex} layoutClass={answerLayoutClass} wordComplete={wordComplete} />
           <GhostAnswer answer={answer} layoutClass={answerLayoutClass} visible={isPeeking} />
         </div>
 
@@ -1536,7 +1556,7 @@ export function Practice({
         <SpelioTouchKeyboard
           answer={answer}
           disabled={false}
-          onInput={handlePracticeInput}
+          onInput={input => handlePracticeInput(input, { mobileTouchInput: true })}
           onUseNativeKeyboard={useNativeTouchKeyboard}
           t={t}
         />,

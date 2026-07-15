@@ -21,14 +21,18 @@ import { createAudioPlaybackController, getPlayableAudioUrl } from '../lib/audio
 import { getAudioUnavailableStatusText, getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
+import { shouldOfferMobileTypoGrace, type MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
 
 type LetterState = PracticeLetterState;
 
 export type PracticeStatusTone = 'success' | 'error' | 'neutral';
 export type PracticeInputResult =
   | { type: 'ignored' }
+  | { type: 'pending'; inputPosition: number; attempted: string }
   | { type: 'correct'; inputPosition: number; attempted: string }
   | { type: 'incorrect'; inputPosition: number; attempted: string };
+
+export type PendingMobileTypo = { inputPosition: number; attempted: string };
 
 const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
 const SUCCESS_UNDERLINE_STAGGER_MS = 42;
@@ -116,6 +120,8 @@ export function usePracticeSession({
   onStorageChange,
   onComplete,
   onPostAnswerEnglishConfirmation,
+  strictAssessmentMode = false,
+  onMobileTypoGraceEvent,
   t = key => key
 }: {
   lists: WordList[];
@@ -133,6 +139,8 @@ export function usePracticeSession({
   onStorageChange: (next: SpelioStorage) => void;
   onComplete: (result: SessionResult, nextStorage: SpelioStorage) => void;
   onPostAnswerEnglishConfirmation?: (wordId: string | null) => void;
+  strictAssessmentMode?: boolean;
+  onMobileTypoGraceEvent?: (eventName: MobileTypoGraceEvent, listId: string) => void;
   t?: Translate;
 }) {
   // A practice run must keep the word queue it started with. Storage and content can
@@ -172,6 +180,10 @@ export function usePracticeSession({
   const revealedCompletionTimerRef = useRef<number | null>(null);
   const completionAdvanceTimerRef = useRef<number | null>(null);
   const inputLockedRef = useRef(false);
+  const [pendingMobileTypo, setPendingMobileTypoState] = useState<PendingMobileTypo | null>(null);
+  const pendingMobileTypoRef = useRef<PendingMobileTypo | null>(null);
+  const mobileTypoGraceUsedPositionsRef = useRef(new Set<number>());
+  const mobileTypoAwaitingCorrectionPositionRef = useRef<number | null>(null);
   const isCompletingRevealedWordRef = useRef(false);
   const lettersRef = useRef<LetterState[]>(letters);
   const recapIssueRef = useRef(false);
@@ -199,6 +211,17 @@ export function usePracticeSession({
 
   function resetLetters(answer: string) {
     setLetters(createInitialPracticeLetters(answer));
+  }
+
+  function setPendingMobileTypo(next: PendingMobileTypo | null) {
+    pendingMobileTypoRef.current = next;
+    setPendingMobileTypoState(next);
+  }
+
+  function resetMobileTypoGrace() {
+    setPendingMobileTypo(null);
+    mobileTypoGraceUsedPositionsRef.current = new Set<number>();
+    mobileTypoAwaitingCorrectionPositionRef.current = null;
   }
 
   const stopCurrentAudio = useCallback((releaseAudio = false) => {
@@ -262,6 +285,7 @@ export function usePracticeSession({
     setAudioPlaybackFailedWordIds(new Set());
     setWrongIndex(null);
     setWrongAttempt(null);
+    resetMobileTypoGrace();
     setIsCompletingRevealedWord(false);
     isCompletingRevealedWordRef.current = false;
     inputLockedRef.current = false;
@@ -313,6 +337,7 @@ export function usePracticeSession({
     resetLetters(getPracticeAnswer(currentWord));
     setWrongIndex(null);
     setWrongAttempt(null);
+    resetMobileTypoGrace();
     setIsCompletingRevealedWord(false);
     isCompletingRevealedWordRef.current = false;
     recapIssueRef.current = false;
@@ -539,45 +564,9 @@ export function usePracticeSession({
     if (storage.settings.soundEffects) playTone('success');
   }
 
-  const handleInput = useCallback((rawInput: string): PracticeInputResult => {
-    if (!currentWord || isComplete || inputLockedRef.current) return { type: 'ignored' };
+  function commitIncorrectAttempt(inputPosition: number, attempted: string) {
+    if (!currentWord) return;
 
-    if (!Array.from(rawInput).some(char => !/\s/.test(char))) return { type: 'ignored' };
-    persistFirstPracticeHintSeen();
-    recordPracticeInteraction();
-
-    const answer = getPracticeAnswer(currentWord);
-    const processed = processPracticeInput({
-      targetAnswer: answer,
-      acceptedAnswers: getAnswerCandidates(currentWord).slice(1),
-      letters: lettersRef.current,
-      rawInput,
-      mode: storage.settings.welshSpelling
-    });
-    const lastOutcome = [...processed.outcomes].reverse().find(outcome => outcome.type !== 'ignored');
-    const result: PracticeInputResult = !lastOutcome
-      ? { type: 'ignored' }
-      : lastOutcome.type === 'correct'
-        ? { type: 'correct', inputPosition: lastOutcome.inputPosition, attempted: lastOutcome.attempted }
-        : { type: 'incorrect', inputPosition: lastOutcome.inputPosition, attempted: lastOutcome.attempted };
-
-    if (processed.letters !== lettersRef.current) {
-      setLetters(processed.letters);
-    }
-
-    if (!processed.wrongFeedback) {
-      setWrongIndex(null);
-      setWrongAttempt(null);
-
-      if (processed.completed && isCommittedAnswerComplete(answer, processed.letters, storage.settings.welshSpelling)) {
-        inputLockedRef.current = true;
-        completeWord();
-      }
-
-      return result;
-    }
-
-    const { inputPosition, attempted } = processed.wrongFeedback;
     inputLockedRef.current = true;
     setWrongIndex(inputPosition);
     setWrongAttempt(attempted);
@@ -586,9 +575,6 @@ export function usePracticeSession({
       recapIssueRef.current = true;
     } else {
       incorrectWordIdsRef.current.add(currentWord.id);
-    }
-
-    if (!isRecapActive) {
       setStats(previous => {
         const incorrectWordIds = new Set(previous.incorrectWordIds);
         incorrectWordIds.add(currentWord.id);
@@ -611,12 +597,111 @@ export function usePracticeSession({
       setWrongAttempt(null);
       inputLockedRef.current = false;
     }, 560);
+  }
+
+  const handleInput = useCallback((
+    rawInput: string,
+    options: { mobileTouchInput?: boolean } = {}
+  ): PracticeInputResult => {
+    if (!currentWord || isComplete || inputLockedRef.current) return { type: 'ignored' };
+
+    if (!Array.from(rawInput).some(char => !/\s/.test(char))) return { type: 'ignored' };
+    persistFirstPracticeHintSeen();
+    recordPracticeInteraction();
+
+    const answer = getPracticeAnswer(currentWord);
+    const pendingTypo = pendingMobileTypoRef.current;
+    const committedPendingWrong = Boolean(pendingTypo);
+    if (pendingTypo) {
+      setPendingMobileTypo(null);
+      mobileTypoAwaitingCorrectionPositionRef.current = null;
+      onMobileTypoGraceEvent?.('mobile_adjacent_typo_committed_wrong', currentWord.listId);
+      commitIncorrectAttempt(pendingTypo.inputPosition, pendingTypo.attempted);
+    }
+
+    const processed = processPracticeInput({
+      targetAnswer: answer,
+      acceptedAnswers: getAnswerCandidates(currentWord).slice(1),
+      letters: lettersRef.current,
+      rawInput,
+      mode: storage.settings.welshSpelling
+    });
+    const lastOutcome = [...processed.outcomes].reverse().find(outcome => outcome.type !== 'ignored');
+
+    if (
+      !committedPendingWrong &&
+      processed.wrongFeedback &&
+      Array.from(rawInput).length === 1 &&
+      shouldOfferMobileTypoGrace({
+        attempted: processed.wrongFeedback.attempted,
+        expected: answer[processed.wrongFeedback.inputPosition] ?? '',
+        mobileTouchInput: options.mobileTouchInput === true,
+        strictAssessmentMode,
+        alreadyUsedAtPosition: mobileTypoGraceUsedPositionsRef.current.has(processed.wrongFeedback.inputPosition)
+      })
+    ) {
+      const pending = {
+        inputPosition: processed.wrongFeedback.inputPosition,
+        attempted: processed.wrongFeedback.attempted
+      };
+      mobileTypoGraceUsedPositionsRef.current.add(pending.inputPosition);
+      mobileTypoAwaitingCorrectionPositionRef.current = null;
+      setPendingMobileTypo(pending);
+      setWrongIndex(null);
+      setWrongAttempt(null);
+      onMobileTypoGraceEvent?.('mobile_adjacent_typo_grace_triggered', currentWord.listId);
+      return { type: 'pending', ...pending };
+    }
+
+    const result: PracticeInputResult = !lastOutcome
+      ? { type: 'ignored' }
+      : lastOutcome.type === 'correct'
+        ? { type: 'correct', inputPosition: lastOutcome.inputPosition, attempted: lastOutcome.attempted }
+        : { type: 'incorrect', inputPosition: lastOutcome.inputPosition, attempted: lastOutcome.attempted };
+
+    if (processed.letters !== lettersRef.current) {
+      setLetters(processed.letters);
+    }
+
+    if (!processed.wrongFeedback) {
+      if (!committedPendingWrong) {
+        setWrongIndex(null);
+        setWrongAttempt(null);
+      }
+
+      const correctedPosition = mobileTypoAwaitingCorrectionPositionRef.current;
+      if (correctedPosition !== null && processed.outcomes.some(
+        outcome => outcome.type === 'correct' && outcome.inputPosition === correctedPosition
+      )) {
+        onMobileTypoGraceEvent?.('mobile_adjacent_typo_corrected', currentWord.listId);
+        mobileTypoAwaitingCorrectionPositionRef.current = null;
+      }
+
+      if (processed.completed && isCommittedAnswerComplete(answer, processed.letters, storage.settings.welshSpelling)) {
+        inputLockedRef.current = true;
+        completeWord();
+      }
+
+      return result;
+    }
+
+    const { inputPosition, attempted } = processed.wrongFeedback;
+    mobileTypoAwaitingCorrectionPositionRef.current = null;
+    commitIncorrectAttempt(inputPosition, attempted);
 
     return { type: 'incorrect', inputPosition, attempted };
-  }, [currentWord?.id, isComplete, isRecapActive, storage.settings.welshSpelling, storage.settings.soundEffects]);
+  }, [currentWord?.id, isComplete, isRecapActive, onMobileTypoGraceEvent, storage.settings.welshSpelling, storage.settings.soundEffects, strictAssessmentMode]);
 
   const removeLastInput = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current) return false;
+
+    const pendingTypo = pendingMobileTypoRef.current;
+    if (pendingTypo) {
+      setPendingMobileTypo(null);
+      mobileTypoAwaitingCorrectionPositionRef.current = pendingTypo.inputPosition;
+      recordPracticeInteraction();
+      return true;
+    }
 
     const answer = getPracticeAnswer(currentWord);
     const nextLetters = removeLastPracticeInput(answer, lettersRef.current);
@@ -632,6 +717,11 @@ export function usePracticeSession({
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
     recordPracticeInteraction();
+
+    if (pendingMobileTypoRef.current) {
+      setPendingMobileTypo(null);
+      mobileTypoAwaitingCorrectionPositionRef.current = null;
+    }
 
     const answer = getPracticeAnswer(currentWord);
     const nextIndex = findNextInputIndex(answer, lettersRef.current);
@@ -701,7 +791,7 @@ export function usePracticeSession({
     total: session.words.length
   };
   const activeIndex = currentWord && !isComplete && !isCompletingRevealedWord
-    ? findNextInputIndex(getPracticeAnswer(currentWord), letters)
+    ? pendingMobileTypo?.inputPosition ?? findNextInputIndex(getPracticeAnswer(currentWord), letters)
     : -1;
 
   return {
@@ -712,6 +802,7 @@ export function usePracticeSession({
     statusTone,
     wrongIndex,
     wrongAttempt,
+    pendingMobileTypo,
     activeIndex,
     isComplete,
     isCompletingRevealedWord,
