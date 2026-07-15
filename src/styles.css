@@ -4464,8 +4464,8 @@
 
 .practice-app .word-pill .prompt-audio-icon{
   display:block;
-  width:39px;
-  height:39px;
+  width:42.9px;
+  height:42.9px;
   flex:0 0 auto;
 }
 
@@ -5036,8 +5036,8 @@
   }
 
   .practice-app .word-pill .prompt-audio-icon{
-    width:37.5px;
-    height:37.5px;
+    width:33.75px;
+    height:33.75px;
   }
 
   .practice-app .dialect-label{
@@ -5216,8 +5216,8 @@
   }
 
   .practice-app .word-pill .prompt-audio-icon{
-    width:33px;
-    height:33px;
+    width:29.7px;
+    height:29.7px;
   }
 
   .practice-app .letter-input-tap-zone{
