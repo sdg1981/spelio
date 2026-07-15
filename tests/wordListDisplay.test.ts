@@ -1,5 +1,5 @@
 import type { WordList } from '../src/data/wordLists';
-import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, compareWordListCollectionsForDisplay, getCollectionDisplayName, getFoundationPatternLabel, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryIconName, getWelshFoundationsCollectionDisplayName, getWordListCatalogueOrder, getWordListStageDisplayName } from '../src/lib/practice/wordListDisplay';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
 
@@ -47,14 +47,20 @@ assertEqual(
 
 assertEqual(
   getListDisplayName({ name: 'Mixed Confidence — Foundations 1', nameCy: 'Hyder Cymysg — Sylfeini 1' }, 'cy'),
-  'Adolygiad Cyfun — Sylfeini 1',
-  'Welsh interface should clarify that mixed-pattern Foundations sessions are combined reviews.'
+  'Adolygiad — D/DD, Y, F/FF, W, SI',
+  'Welsh interface should identify the patterns represented by a legacy review name.'
 );
 
 assertEqual(
   getListDisplayName({ name: 'Mixed Confidence — Foundations 4', nameCy: 'Hyder Cymysg — Sylfeini 4' }, 'en'),
-  'Combined Review — Foundations 4',
-  'English interface should clarify that mixed-pattern Foundations sessions are combined reviews.'
+  'Review — U, C, G, TH/DD',
+  'English interface should identify the patterns represented by a legacy review name.'
+);
+
+assertEqual(
+  getFoundationPatternLabel({ name: 'Mixed Confidence — Foundations 5', nameCy: 'Hyder Cymysg — Sylfeini 5' }, 'en'),
+  'Final Foundations Review',
+  'Final review chips should use the clear final-review title.'
 );
 
 assertEqual(

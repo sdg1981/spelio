@@ -15,7 +15,7 @@ import type { InterfaceLanguage, Translate } from '../i18n';
 import type { SessionResult, SpelioSettings, SpelioStorage } from '../lib/practice/storage';
 import { DEFAULT_AUDIO_PROVIDER, type DefaultAudioProvider } from '../lib/audioProvider';
 import { getFullyCompletedListIds, getInProgressListIds, markFirstPracticeHintSeen, shouldShowFirstPracticeHint } from '../lib/practice/storage';
-import { buildPublicCatalogueGroups, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
+import { buildPublicCatalogueGroups, getFoundationPatternLabel, getListDisplayDescription, getListDisplayName, getPracticeLibraryCatalogueLists, getPracticeLibraryCategoryLabel, getPracticeLibraryIconName } from '../lib/practice/wordListDisplay';
 import { logAudioPlaybackClick } from '../lib/audioPlayback';
 import { getAudioUnavailableStatusText, getEnglishPromptDisplayState, getRecallPauseDelayMs, isAudioUnavailableForPrompt, shouldDelayEnglishPrompt, shouldShowEnglishPrompt } from '../lib/practice/audioAvailability';
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp } from '../lib/practice/revealShortcut';
@@ -2061,18 +2061,6 @@ function resolveCatalogueIcon(iconName: string | undefined, fallbackIconName = '
 
 function getPracticeLibrarySubtitle(list: WordList, interfaceLanguage: InterfaceLanguage) {
   return getListDisplayName(list, interfaceLanguage);
-}
-
-function getFoundationPatternLabel(list: WordList, interfaceLanguage: InterfaceLanguage) {
-  const displayName = getListDisplayName(list, interfaceLanguage);
-  return displayName
-    .replace(/^Spelling (?:Pattern|Contrast|Focus)\s+[—-]\s*/i, '')
-    .replace(/^Combined Review\s+[—-]\s*Foundations\s*(\d+)\b/i, 'Combined Review $1')
-    .replace(/^Adolygiad Cyfun\s+[—-]\s*Sylfeini\s*(\d+)\b/i, 'Adolygiad Cyfun $1')
-    .replace(/^Mixed Confidence\s+[—-]\s*Foundations\s*(\d+)\b/i, 'Mixed Confidence $1')
-    .replace(/^Mixed Confidence\s+[—-]\s*/i, 'Mixed Confidence - ')
-    .replace(/^Foundations\s*\d+\s*[—-]\s*/i, '')
-    .trim() || displayName;
 }
 
 function handleNestedCardAction(event: MouseEvent<HTMLButtonElement>) {

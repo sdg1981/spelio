@@ -134,15 +134,15 @@ Possible long-term spelling-confidence sequence:
 
 ---
 
-# Mixed confidence lists
+# Review lists
 
-Mixed confidence lists should be treated as important educational milestones rather than filler content.
+Review lists should be treated as important educational milestones rather than filler content. Their learner-facing titles should identify the spelling patterns being consolidated where practical, rather than relying only on abstract numbering such as “Combined Review 2”.
 
 Possible milestone structure:
 
-- Mixed Confidence — Foundations 1
-- Mixed Confidence — Foundations 2
-- Mixed Confidence — Foundations 3
+- Review — D/DD, Y, F/FF, W, SI
+- Review — CH, LL, RH, AE/AI
+- Final Foundations Review
 
 Purpose:
 

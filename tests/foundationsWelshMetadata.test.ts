@@ -1,4 +1,5 @@
 import foundationsExport from '../data-exports/spelio_welsh_foundations_content.json';
+import './foundationsReviewTitles.test';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -63,8 +64,8 @@ for (const [id, expectedName] of unchangedPatternLabels) {
 
 assertEqual(
   foundationsLists.find(list => list.id === 'foundation_patterns_mixed_confidence_1_revised')?.nameCy,
-  'Hyder Cymysg — Sylfeini 1',
-  'Mixed Confidence list names should receive natural Welsh display names.'
+  'Adolygiad — D/DD, Y, F/FF, W, SI',
+  'Foundations review lists should receive natural pattern-based Welsh display names.'
 );
 
 const wList = foundationsLists.find(list => list.id === 'foundation_patterns_w');

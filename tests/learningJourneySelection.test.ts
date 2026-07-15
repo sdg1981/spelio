@@ -6,7 +6,7 @@ import {
   isWelshFoundationsJourneyList
 } from '../src/lib/practice/learningJourneySelection';
 import { createDirectListPracticeStart } from '../src/lib/practice/sessionStart';
-import { createDefaultStorage } from '../src/lib/practice/storage';
+import { applyManualWordListSelection, createDefaultStorage } from '../src/lib/practice/storage';
 import { selectSingleWordList } from '../src/lib/practice/wordListSelection';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
@@ -27,10 +27,12 @@ const foundationsLists = ((foundationsExport.lists ?? []) as unknown as WordList
 const dDd = foundationsLists.find(list => list.id === 'foundation_patterns_d_dd');
 const y = foundationsLists.find(list => list.id === 'foundation_patterns_y');
 const fFf = foundationsLists.find(list => list.id === 'foundation_patterns_f_ff');
+const reviewFour = foundationsLists.find(list => list.id === 'foundation_patterns_mixed_confidence_4_revised');
 
 assert(dDd, 'Expected the D / DD Foundations lesson.');
 assert(y, 'Expected the Y Foundations lesson.');
 assert(fFf, 'Expected the F / FF Foundations lesson.');
+assert(reviewFour, 'Expected the U, C, G, TH/DD Foundations review.');
 
 const completedIds = new Set([dDd.id, y.id]);
 const inProgressIds = new Set([fFf.id]);
@@ -76,6 +78,15 @@ const manualStart = createDirectListPracticeStart(storageBeforeManualSelection, 
 assertEqual(manualStart.storage.selectedListIds[0], y.id, 'Continue journey should start manually selected Y, not recommended F / FF.');
 assertEqual(manualStart.storage.currentPathPosition, y.id, 'Starting the manual lesson should anchor the normal path to that lesson.');
 assertEqual(JSON.stringify(storageBeforeManualSelection.wordProgress), progressBeforeManualSelection, 'Starting selection setup must not retroactively mutate the original progress state.');
+
+const reviewSelection = selectSingleWordList(reviewFour.id);
+const selectedReview = getPendingWelshFoundationsJourneyList(foundationsLists, reviewSelection[0], completedIds, inProgressIds, 'en');
+assertEqual(selectedReview?.id, reviewFour.id, 'A manually selected review should remain the pending Foundations lesson.');
+const reviewStart = createDirectListPracticeStart(createDefaultStorage(), selectedReview);
+assertEqual(reviewStart.storage.selectedListIds[0], reviewFour.id, 'Continue journey should start the manually selected review.');
+const savedReview = applyManualWordListSelection(createDefaultStorage(), reviewSelection);
+assertEqual(savedReview.selectedListIds[0], reviewFour.id, 'Done / Use selected list should save the manually selected review.');
+assertEqual(savedReview.currentPathPosition, reviewFour.id, 'Done / Use selected list should align normal progression with the manually selected review.');
 
 const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
 assert(

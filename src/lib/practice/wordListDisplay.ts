@@ -78,12 +78,30 @@ export type PublicCatalogueCollectionGroup = {
   listGroups: PublicCatalogueListGroup[];
 };
 
-function clarifyCombinedReviewName(name: string, interfaceLanguage?: InterfaceLanguage) {
-  if (interfaceLanguage === 'cy') {
-    return name.replace(/^Hyder Cymysg\s+[—-]\s+Sylfeini\s+(\d+)$/i, 'Adolygiad Cyfun — Sylfeini $1');
-  }
+const FOUNDATIONS_REVIEW_TITLES = {
+  en: [
+    'Review — D/DD, Y, F/FF, W, SI',
+    'Review — CH, LL, RH, AE/AI',
+    'Review — WY, YW, OE, AU, AW',
+    'Review — U, C, G, TH/DD',
+    'Final Foundations Review'
+  ],
+  cy: [
+    'Adolygiad — D/DD, Y, F/FF, W, SI',
+    'Adolygiad — CH, LL, RH, AE/AI',
+    'Adolygiad — WY, YW, OE, AU, AW',
+    'Adolygiad — U, C, G, TH/DD',
+    'Adolygiad Terfynol y Sylfeini'
+  ]
+} as const;
 
-  return name.replace(/^Mixed Confidence\s+[—-]\s+Foundations\s+(\d+)$/i, 'Combined Review — Foundations $1');
+function clarifyFoundationsReviewName(name: string, interfaceLanguage?: InterfaceLanguage) {
+  const legacyMatch = interfaceLanguage === 'cy'
+    ? name.match(/^(?:Hyder Cymysg\s+[—-]\s+Sylfeini|Adolygiad Cyfun\s+[—-]\s+Sylfeini)\s+(\d+)$/i)
+    : name.match(/^(?:Mixed Confidence\s+[—-]\s+Foundations|Combined Review\s+[—-]\s+Foundations)\s+(\d+)$/i);
+  const reviewNumber = Number(legacyMatch?.[1]);
+  const titles = interfaceLanguage === 'cy' ? FOUNDATIONS_REVIEW_TITLES.cy : FOUNDATIONS_REVIEW_TITLES.en;
+  return titles[reviewNumber - 1] ?? name;
 }
 
 type WordListDisplayFields = Pick<WordList, 'name' | 'description'> & {
@@ -96,10 +114,21 @@ type WordListDisplayFields = Pick<WordList, 'name' | 'description'> & {
 export function getListDisplayName(list: Pick<WordListDisplayFields, 'name' | 'nameCy' | 'name_cy'>, interfaceLanguage?: InterfaceLanguage) {
   if (interfaceLanguage === 'cy') {
     const welshName = list.nameCy?.trim() || list.name_cy?.trim();
-    if (welshName) return clarifyCombinedReviewName(welshName, interfaceLanguage);
+    if (welshName) return clarifyFoundationsReviewName(welshName, interfaceLanguage);
   }
 
-  return clarifyCombinedReviewName(list.name, interfaceLanguage);
+  return clarifyFoundationsReviewName(list.name, interfaceLanguage);
+}
+
+export function getFoundationPatternLabel(
+  list: Pick<WordListDisplayFields, 'name' | 'nameCy' | 'name_cy'>,
+  interfaceLanguage: InterfaceLanguage
+) {
+  const displayName = getListDisplayName(list, interfaceLanguage);
+  return displayName
+    .replace(/^Spelling (?:Pattern|Contrast|Focus)\s+[—-]\s*/i, '')
+    .replace(/^Foundations\s*\d+\s*[—-]\s*/i, '')
+    .trim() || displayName;
 }
 
 export function getListDisplayDescription(

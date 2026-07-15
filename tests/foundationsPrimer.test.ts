@@ -199,7 +199,7 @@ const mixedPrimer = getFoundationsPrimer('foundation_patterns_mixed_confidence_1
 assert(mixedPrimer, 'Mixed Confidence list should resolve primer body even without sound buttons.');
 assertEqual(
   mixedPrimer.body,
-  'This review brings together the D / DD, Y, F / FF, W, and SI patterns you’ve just practised.',
+  'This review brings together the D/DD, Y, F/FF, W, and SI patterns you’ve just practised.',
   'Mixed Confidence 1 English primer should stay pattern-focused.'
 );
 assertEqual(mixedPrimer.soundItems.length, 0, 'Primer without sound buttons should expose an empty sound item list.');
@@ -207,21 +207,21 @@ const mixedPrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence
 assert(mixedPrimerCy, 'Mixed Confidence 1 should resolve a Welsh primer body.');
 assertEqual(
   mixedPrimerCy.body,
-  "Mae'r adolygiad hwn yn dod â'r patrymau D / DD, Y, F / FF, W a SI rydych chi newydd eu hymarfer ynghyd.",
+  "Mae'r adolygiad hwn yn dod â'r patrymau D/DD, Y, F/FF, W ac SI rydych chi newydd eu hymarfer ynghyd.",
   'Mixed Confidence 1 Welsh primer should stay pattern-focused.'
 );
 const mixedConfidence2Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'en');
 assert(mixedConfidence2Primer, 'Mixed Confidence 2 should resolve a primer body.');
 assertEqual(
   mixedConfidence2Primer.body,
-  'This review brings together the CH, LL, RH, and AE / AI patterns you’ve just practised.',
+  'This review brings together the CH, LL, RH, and AE/AI patterns you’ve just practised.',
   'Mixed Confidence 2 English primer should stay pattern-focused.'
 );
 const mixedConfidence2PrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence_2_revised', 'cy');
 assert(mixedConfidence2PrimerCy, 'Mixed Confidence 2 should resolve a Welsh primer body.');
 assertEqual(
   mixedConfidence2PrimerCy.body,
-  "Mae'r adolygiad hwn yn dod â'r patrymau CH, LL, RH ac AE / AI rydych chi newydd eu hymarfer ynghyd.",
+  "Mae'r adolygiad hwn yn dod â'r patrymau CH, LL, RH ac AE/AI rydych chi newydd eu hymarfer ynghyd.",
   'Mixed Confidence 2 Welsh primer should stay pattern-focused.'
 );
 const mixedConfidence3Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_3_revised', 'en');
@@ -242,14 +242,14 @@ const mixedConfidence4Primer = getFoundationsPrimer('foundation_patterns_mixed_c
 assert(mixedConfidence4Primer, 'Mixed Confidence 4 should resolve a primer body.');
 assertEqual(
   mixedConfidence4Primer.body,
-  'This review brings together the U, C, G, and TH vs DD patterns you’ve just practised.',
+  'This review brings together the U, C, G, and TH/DD patterns you’ve just practised.',
   'Mixed Confidence 4 English primer should stay pattern-focused.'
 );
 const mixedConfidence4PrimerCy = getFoundationsPrimer('foundation_patterns_mixed_confidence_4_revised', 'cy');
 assert(mixedConfidence4PrimerCy, 'Mixed Confidence 4 should resolve a Welsh primer body.');
 assertEqual(
   mixedConfidence4PrimerCy.body,
-  "Mae'r adolygiad hwn yn dod â'r patrymau U, C, G a TH vs DD rydych chi newydd eu hymarfer ynghyd.",
+  "Mae'r adolygiad hwn yn dod â'r patrymau U, C, G a TH/DD rydych chi newydd eu hymarfer ynghyd.",
   'Mixed Confidence 4 Welsh primer should stay pattern-focused.'
 );
 const mixedConfidence5Primer = getFoundationsPrimer('foundation_patterns_mixed_confidence_5', 'en');
