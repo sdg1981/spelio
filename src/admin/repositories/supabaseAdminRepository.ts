@@ -14,7 +14,7 @@ import { getCollectionIntroAudioGenerationText, normalizeCollectionIntroContent,
 import { getAzureTtsTextLimit } from '../../lib/azureTtsLimits';
 import { getApiUrl } from '../../lib/nativeOrigin';
 import { summarizeTypoGraceAggregates, type TypoGraceAggregateRow, type TypoGracePlatform, type TypoGracePracticeContext } from '../../lib/practice/typoGraceAnalyticsModel';
-import type { MobileTypoGraceEvent } from '../../lib/practice/mobileTypoGrace';
+import type { StoredMobileTypoGraceEvent } from '../../lib/practice/mobileTypoGrace';
 
 type CustomWordListRow = {
   id: string;
@@ -729,7 +729,7 @@ export const supabaseAdminRepository: AdminRepository = {
     if (error) throw error;
 
     const rows: TypoGraceAggregateRow[] = (data ?? []).map(row => ({
-      eventName: row.event_name as MobileTypoGraceEvent,
+      eventName: row.event_name as StoredMobileTypoGraceEvent,
       platform: row.platform as TypoGracePlatform,
       practiceContext: row.practice_context as TypoGracePracticeContext,
       strictMode: row.strict_mode === true,

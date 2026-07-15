@@ -219,6 +219,8 @@ The central learner problem is often:
 
 Spelio exists to reduce that gap.
 
+Spelio distinguishes between probable motor slips and genuine spelling uncertainty wherever it can do so confidently. Learners should be challenged by Welsh spelling, not by accidental touchscreen input.
+
 Spelio is increasingly becoming:
 
 > a Welsh written-confidence product built from spelling mastery.

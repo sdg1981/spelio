@@ -42,16 +42,17 @@ export function OverviewPage({ navigate, repository }: { navigate: (path: string
             </p>
           </div>
         </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <CompactMetric label="Grace opportunities" value={typoGraceSummary?.triggered ?? 0} />
-          <CompactMetric label="Corrected before commitment" value={typoGraceSummary?.corrected ?? 0} />
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <CompactMetric label="Adjacent typos detected" value={typoGraceSummary?.detected ?? 0} />
+          <CompactMetric label="Corrected with Backspace" value={typoGraceSummary?.correctedBackspace ?? 0} />
+          <CompactMetric label="Corrected by replacement" value={typoGraceSummary?.correctedDirect ?? 0} />
           <CompactMetric label="Committed as wrong" value={typoGraceSummary?.committedWrong ?? 0} />
           <CompactMetric label="Correction rate" value={`${typoGraceSummary?.correctionRate ?? 0}%`} />
         </div>
-        {typoGraceSummary && (typoGraceSummary.byPlatform.ios.triggered > 0 || typoGraceSummary.byPlatform.android.triggered > 0 || typoGraceSummary.byPlatform.other_mobile.triggered > 0) && (
+        {typoGraceSummary && (typoGraceSummary.byPlatform.ios.detected > 0 || typoGraceSummary.byPlatform.android.detected > 0 || typoGraceSummary.byPlatform.other_mobile.detected > 0) && (
           <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
             <span className="font-bold text-slate-700">Broad platform:</span>{' '}
-            iOS {typoGraceSummary.byPlatform.ios.triggered}, Android {typoGraceSummary.byPlatform.android.triggered}, other mobile {typoGraceSummary.byPlatform.other_mobile.triggered} opportunities
+            iOS {typoGraceSummary.byPlatform.ios.detected}, Android {typoGraceSummary.byPlatform.android.detected}, other mobile {typoGraceSummary.byPlatform.other_mobile.detected} detected
           </div>
         )}
       </AdminCard>

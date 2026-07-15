@@ -407,11 +407,13 @@ export const mockAdminRepository: AdminRepository = {
 
   async getTypoGraceAggregateSummary() {
     return summarizeTypoGraceAggregates([
-      { eventName: 'mobile_adjacent_typo_grace_triggered', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 18 },
-      { eventName: 'mobile_adjacent_typo_corrected', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 12 },
+      { eventName: 'mobile_adjacent_typo_detected', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 18 },
+      { eventName: 'mobile_adjacent_typo_corrected_backspace', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 5 },
+      { eventName: 'mobile_adjacent_typo_corrected_direct', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 7 },
       { eventName: 'mobile_adjacent_typo_committed_wrong', platform: 'ios', practiceContext: 'foundations', strictMode: false, count: 4 },
-      { eventName: 'mobile_adjacent_typo_grace_triggered', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 10 },
-      { eventName: 'mobile_adjacent_typo_corrected', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 7 },
+      { eventName: 'mobile_adjacent_typo_detected', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 10 },
+      { eventName: 'mobile_adjacent_typo_corrected_backspace', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 3 },
+      { eventName: 'mobile_adjacent_typo_corrected_direct', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 4 },
       { eventName: 'mobile_adjacent_typo_committed_wrong', platform: 'android', practiceContext: 'practice_library', strictMode: false, count: 2 }
     ]);
   },

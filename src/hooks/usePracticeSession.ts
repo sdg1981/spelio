@@ -21,7 +21,7 @@ import { createAudioPlaybackController, getPlayableAudioUrl } from '../lib/audio
 import { getAudioUnavailableStatusText, getPostAnswerEnglishConfirmationDelayMs, isAudioUnavailableForPrompt, shouldShowPostAnswerEnglishConfirmation } from '../lib/practice/audioAvailability';
 import { DEFAULT_AUDIO_PROVIDER, getResolvedPracticeAudioUrl, type DefaultAudioProvider } from '../lib/audioProvider';
 import { triggerIncorrectHaptic } from '../lib/haptics';
-import { shouldOfferMobileTypoGrace, type MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
+import { isDirectMobileTypoReplacement, shouldOfferMobileTypoGrace, type MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
 
 type LetterState = PracticeLetterState;
 
@@ -611,12 +611,21 @@ export function usePracticeSession({
 
     const answer = getPracticeAnswer(currentWord);
     const pendingTypo = pendingMobileTypoRef.current;
-    const committedPendingWrong = Boolean(pendingTypo);
+    const directPendingReplacement = Boolean(pendingTypo && isDirectMobileTypoReplacement({
+      rawInput,
+      expected: answer[pendingTypo.inputPosition] ?? '',
+      mode: storage.settings.welshSpelling
+    }));
+    const committedPendingWrong = Boolean(pendingTypo && !directPendingReplacement);
     if (pendingTypo) {
       setPendingMobileTypo(null);
       mobileTypoAwaitingCorrectionPositionRef.current = null;
-      onMobileTypoGraceEvent?.('mobile_adjacent_typo_committed_wrong', currentWord.listId);
-      commitIncorrectAttempt(pendingTypo.inputPosition, pendingTypo.attempted);
+      if (directPendingReplacement) {
+        onMobileTypoGraceEvent?.('mobile_adjacent_typo_corrected_direct', currentWord.listId);
+      } else {
+        onMobileTypoGraceEvent?.('mobile_adjacent_typo_committed_wrong', currentWord.listId);
+        commitIncorrectAttempt(pendingTypo.inputPosition, pendingTypo.attempted);
+      }
     }
 
     const processed = processPracticeInput({
@@ -649,7 +658,7 @@ export function usePracticeSession({
       setPendingMobileTypo(pending);
       setWrongIndex(null);
       setWrongAttempt(null);
-      onMobileTypoGraceEvent?.('mobile_adjacent_typo_grace_triggered', currentWord.listId);
+      onMobileTypoGraceEvent?.('mobile_adjacent_typo_detected', currentWord.listId);
       return { type: 'pending', ...pending };
     }
 
@@ -673,7 +682,7 @@ export function usePracticeSession({
       if (correctedPosition !== null && processed.outcomes.some(
         outcome => outcome.type === 'correct' && outcome.inputPosition === correctedPosition
       )) {
-        onMobileTypoGraceEvent?.('mobile_adjacent_typo_corrected', currentWord.listId);
+        onMobileTypoGraceEvent?.('mobile_adjacent_typo_corrected_backspace', currentWord.listId);
         mobileTypoAwaitingCorrectionPositionRef.current = null;
       }
 

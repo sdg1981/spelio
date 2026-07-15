@@ -1,7 +1,15 @@
+import type { WelshSpellingMode } from '../../data/wordLists';
+import { validateLetter } from './validator';
+
 export type MobileTypoGraceEvent =
-  | 'mobile_adjacent_typo_grace_triggered'
-  | 'mobile_adjacent_typo_corrected'
+  | 'mobile_adjacent_typo_detected'
+  | 'mobile_adjacent_typo_corrected_backspace'
+  | 'mobile_adjacent_typo_corrected_direct'
   | 'mobile_adjacent_typo_committed_wrong';
+
+export type StoredMobileTypoGraceEvent = MobileTypoGraceEvent
+  | 'mobile_adjacent_typo_grace_triggered'
+  | 'mobile_adjacent_typo_corrected';
 
 // Conservative QWERTY mobile-keyboard heuristic. Only immediate horizontal and
 // diagonal A-Z neighbours are included; accented characters and other layouts
@@ -59,4 +67,17 @@ export function shouldOfferMobileTypoGrace({
     !strictAssessmentMode &&
     !alreadyUsedAtPosition &&
     isAdjacentQwertyKey(attempted, expected);
+}
+
+export function isDirectMobileTypoReplacement({
+  rawInput,
+  expected,
+  mode
+}: {
+  rawInput: string;
+  expected: string;
+  mode: WelshSpellingMode;
+}) {
+  const characters = Array.from(rawInput);
+  return characters.length === 1 && validateLetter(characters[0], expected, mode);
 }
