@@ -4,6 +4,7 @@ import {
   WELSH_ACCENT_VARIANTS,
   answerNeedsWelshAccent,
   isCustomTouchKeyboardAvailable,
+  shouldEnableCustomTouchKeyboard,
   shouldUseCustomTouchKeyboard
 } from '../src/lib/practice/touchKeyboard';
 import {
@@ -11,6 +12,10 @@ import {
   findNextInputIndex,
   processPracticeInput
 } from '../src/lib/practice/inputFlow';
+
+declare function require(name: string): {
+  readFileSync?: (path: string, encoding: string) => string;
+};
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
@@ -22,11 +27,33 @@ function committedValue(letters: Array<{ value: string }>) {
   return letters.map(letter => letter.value || '_').join('');
 }
 
+const { readFileSync } = require('fs') as {
+  readFileSync: (path: string, encoding: string) => string;
+};
+const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+const appSource = readFileSync('src/App.tsx', 'utf8');
+
+assertEqual(
+  practiceSource.includes('const shouldShowCustomKeyboard = ENABLE_CUSTOM_KEYBOARD &&'),
+  true,
+  'The learner render path must retain a direct feature-flag guard.'
+);
+assertEqual(
+  (appSource.match(/<Practice\b/g) ?? []).length,
+  1,
+  'All learner-facing practice launches should share the single guarded Practice render path.'
+);
+
 {
   assertEqual(
     ENABLE_CUSTOM_KEYBOARD,
     false,
     'The custom keyboard feature flag should keep native device input as the learner default.'
+  );
+  assertEqual(
+    shouldEnableCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true }),
+    false,
+    'A saved custom-keyboard preference must not override the disabled feature flag.'
   );
   assertEqual(
     shouldUseCustomTouchKeyboard({ enabled: true, maxTouchPoints: 5, coarsePointer: true }),

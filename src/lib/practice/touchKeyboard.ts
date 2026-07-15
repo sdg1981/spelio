@@ -59,6 +59,10 @@ export function shouldUseCustomTouchKeyboard({
   return isCustomTouchKeyboardAvailable({ maxTouchPoints, coarsePointer, hoverNone, forcedColors });
 }
 
+export function shouldEnableCustomTouchKeyboard(input: TouchKeyboardDetectionInput) {
+  return ENABLE_CUSTOM_KEYBOARD && shouldUseCustomTouchKeyboard(input);
+}
+
 function readCurrentTouchKeyboardEnvironment() {
   if (typeof window === 'undefined') return false;
 
@@ -83,10 +87,9 @@ export function detectCustomTouchKeyboardAvailability() {
 }
 
 export function detectCustomTouchKeyboardEligibility(enabled: boolean) {
-  if (!ENABLE_CUSTOM_KEYBOARD) return false;
   const environment = readCurrentTouchKeyboardEnvironment();
   if (!environment) return false;
-  return shouldUseCustomTouchKeyboard({ enabled, ...environment });
+  return shouldEnableCustomTouchKeyboard({ enabled, ...environment });
 }
 
 export function hasSeenTouchKeyboardAccentHint(storage: Storage | null | undefined) {

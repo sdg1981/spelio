@@ -23,7 +23,7 @@ import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practic
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { getInitialWordListPageSelection, getPendingWelshFoundationsJourneyList, isWelshFoundationsJourneyList } from '../lib/practice/learningJourneySelection';
 import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
-import { detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
+import { ENABLE_CUSTOM_KEYBOARD, detectCustomTouchKeyboardAvailability, detectCustomTouchKeyboardEligibility } from '../lib/practice/touchKeyboard';
 import { resetPublicPageScrollToTop } from '../lib/scrollRestoration';
 import { getWordListCanonicalUrl, shouldShowSelectedListShareAction } from '../lib/wordListSharing';
 import { getPlayableInterfaceAudioUrl, PRACTICE_STRUGGLE_ASSIST_AUDIO_KEY, resolveInterfaceAudioClip, type InterfaceAudioClipRegistry } from '../lib/interfaceAudio';
@@ -233,6 +233,7 @@ export function Practice({
   const [localStatusSecondary, setLocalStatusSecondary] = useState<string | null>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
+  const mobileInputComposingRef = useRef(false);
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
   const [customTouchKeyboardAvailable, setCustomTouchKeyboardAvailable] = useState(false);
   const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
@@ -311,6 +312,7 @@ export function Practice({
     isRecapActive,
     hasWords,
     handleInput,
+    removeLastInput,
     revealNext,
     markCurrentWordRevealed,
     audioPlaybackFailedWordIds,
@@ -529,7 +531,7 @@ export function Practice({
       setFirstPracticeHintVisible(false);
     }
     const result = handleInput(input);
-    if (result.type !== 'incorrect' || !currentWord) return;
+    if (result.type !== 'incorrect' || !currentWord) return result;
 
     const assistResult = registerStruggleAssistIncorrectAttempt({
       state: struggleAssistStateRef.current,
@@ -576,7 +578,7 @@ export function Practice({
 
     if (assistResult.shouldTrigger) {
       triggerStruggleAssist(currentWord.id);
-      return;
+      return result;
     }
 
     const hint = getSpellingPatternHint({
@@ -590,10 +592,10 @@ export function Practice({
       interfaceLanguage
     });
 
-    if (!hint) return;
+    if (!hint) return result;
 
     const shownKey = `${currentWord.id}:${result.inputPosition}:${hint.id}`;
-    if (shownSpellingHintsRef.current.has(shownKey)) return;
+    if (shownSpellingHintsRef.current.has(shownKey)) return result;
     shownSpellingHintsRef.current.add(shownKey);
 
     if (spellingHintTimerRef.current) window.clearTimeout(spellingHintTimerRef.current);
@@ -611,6 +613,7 @@ export function Practice({
         void playAudio();
       }, SPELLING_HINT_AUDIO_REPLAY_DELAY_MS);
     }
+    return result;
   }, [
     audioPlaybackFailedWordIds,
     clearScheduledSpellingHintAudioReplay,
@@ -962,7 +965,7 @@ export function Practice({
         return;
       }
 
-      if (event.key.length === 1 && /[a-zA-ZÀ-žŵŷŴŶ'’‘`´ʻ\-–—‑]/.test(event.key)) {
+      if (event.target !== mobileInputRef.current && event.key.length === 1 && /[a-zA-ZÀ-žŵŷŴŶ'’‘`´ʻ\-–—‑]/.test(event.key)) {
         handlePracticeInput(event.key);
       }
     }
@@ -1355,7 +1358,7 @@ export function Practice({
     : [];
   const learnerNoteVisible = !practiceTestMode && Boolean(spellingHintText || dialectLabel || wordInsights.length);
   const practiceOverlayOpen = Boolean(modal) || settingsModalOpen;
-  const shouldShowCustomKeyboard = customTouchKeyboardActive && !isComplete && !practiceOverlayOpen;
+  const shouldShowCustomKeyboard = ENABLE_CUSTOM_KEYBOARD && customTouchKeyboardActive && !isComplete && !practiceOverlayOpen;
 
   return (
     <main className={`app-bg practice-app relative ${shouldShowCustomKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
@@ -1404,16 +1407,36 @@ export function Practice({
 
         <input
           ref={mobileInputRef}
-          value=""
           onChange={(event) => {
             if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
               event.target.value = '';
               return;
             }
 
+            if (mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)) return;
+
             const value = event.target.value;
             if (value) handlePracticeInput(value);
             event.target.value = '';
+          }}
+          onCompositionStart={() => {
+            mobileInputComposingRef.current = true;
+          }}
+          onCompositionEnd={(event) => {
+            mobileInputComposingRef.current = false;
+            if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
+              event.currentTarget.value = '';
+              return;
+            }
+
+            const value = event.currentTarget.value;
+            if (value) handlePracticeInput(value);
+            event.currentTarget.value = '';
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== 'Backspace') return;
+            event.stopPropagation();
+            removeLastInput();
           }}
           inputMode="text"
           autoCapitalize="off"

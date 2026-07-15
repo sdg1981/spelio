@@ -2678,7 +2678,7 @@ Rules:
 
 - When native fallback is active, the hidden input must retain focus during practice.
 - UI interactions, including reveal letter and word pill tap, must restore focus where appropriate.
-- Hidden input must not handle keydown events, to avoid desktop duplication.
+- The native input's resulting value is authoritative for printable characters; printable `keydown` events must not also update spelling. Use `keydown` only for control keys such as Backspace where needed.
 - Desktop input is handled separately through key events.
 - The active touch input system should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
 - Revealing a letter must not dismiss the active touch input system.

@@ -47,6 +47,19 @@ export function isCommittedAnswerComplete(answer: string, letters: PracticeLette
   });
 }
 
+export function removeLastPracticeInput(answer: string, letters: PracticeLetterState[]) {
+  for (let index = Math.min(answer.length, letters.length) - 1; index >= 0; index -= 1) {
+    if (!isEditableAnswerCharacter(answer[index])) continue;
+    if (!letters[index]?.value || letters[index]?.revealed) continue;
+
+    return letters.map((letter, letterIndex) =>
+      letterIndex === index ? { value: '' } : { ...letter }
+    );
+  }
+
+  return letters;
+}
+
 function isInputSpace(char: string) {
   return /\s/.test(char);
 }

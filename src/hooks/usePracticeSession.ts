@@ -8,6 +8,7 @@ import {
   findNextInputIndex,
   isCommittedAnswerComplete,
   processPracticeInput,
+  removeLastPracticeInput,
   type PracticeLetterState
 } from '../lib/practice/inputFlow';
 import { classifySession, createPracticeSession, selectPreSessionRecapWord, type ReviewScope } from '../lib/practice/sessionEngine';
@@ -614,6 +615,20 @@ export function usePracticeSession({
     return { type: 'incorrect', inputPosition, attempted };
   }, [currentWord?.id, isComplete, isRecapActive, storage.settings.welshSpelling, storage.settings.soundEffects]);
 
+  const removeLastInput = useCallback(() => {
+    if (!currentWord || isComplete || inputLockedRef.current) return false;
+
+    const answer = getPracticeAnswer(currentWord);
+    const nextLetters = removeLastPracticeInput(answer, lettersRef.current);
+    if (nextLetters === lettersRef.current) return false;
+
+    setLetters(nextLetters);
+    setWrongIndex(null);
+    setWrongAttempt(null);
+    recordPracticeInteraction();
+    return true;
+  }, [currentWord?.id, isComplete]);
+
   const revealNext = useCallback(() => {
     if (!currentWord || isComplete || inputLockedRef.current || isCompletingRevealedWordRef.current) return;
     recordPracticeInteraction();
@@ -707,6 +722,7 @@ export function usePracticeSession({
     isRecapActive,
     hasWords: session.words.length > 0,
     handleInput,
+    removeLastInput,
     revealNext,
     markCurrentWordRevealed,
     playAudio

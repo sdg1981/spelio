@@ -3,7 +3,8 @@ import {
   findNextInputIndex,
   isCommittedAnswerComplete,
   isFixedAnswerPunctuation,
-  processPracticeInput
+  processPracticeInput,
+  removeLastPracticeInput
 } from '../src/lib/practice/inputFlow';
 import { findSupportWordList } from '../src/data/supportWordLists';
 import { wordLists } from '../src/data/wordLists';
@@ -17,6 +18,32 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 function committedValue(letters: Array<{ value: string }>) {
   return letters.map(letter => letter.value || '_').join('');
 }
+
+declare function require(name: string): {
+  readFileSync?: (path: string, encoding: string) => string;
+};
+
+const { readFileSync } = require('fs') as {
+  readFileSync: (path: string, encoding: string) => string;
+};
+
+const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+
+assertEqual(
+  practiceSource.includes('event.target !== mobileInputRef.current && event.key.length === 1'),
+  true,
+  'Printable keys from the focused native input must not also run through the global keydown path.'
+);
+assertEqual(
+  practiceSource.includes('mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)'),
+  true,
+  'Interim composition input must not be committed as separate spelling characters.'
+);
+assertEqual(
+  practiceSource.includes('onCompositionEnd={(event) => {'),
+  true,
+  'A completed composition must be committed once from the native input value.'
+);
 
 {
   const answer = 'e-bost';
@@ -112,6 +139,55 @@ function committedValue(letters: Array<{ value: string }>) {
   assertEqual(result.wrongFeedback?.inputPosition, 3, 'A wrong character at position 3 should be reported on the current slot.');
   assertEqual(findNextInputIndex(answer, result.letters), 3, 'The cursor should not advance after a wrong character.');
   assertEqual(result.letters[3]?.value, '', 'The wrong character should not be committed.');
+}
+
+{
+  const answer = 'cath';
+  let letters = createInitialPracticeLetters(answer);
+  for (const character of answer) {
+    const previousPosition = findNextInputIndex(answer, letters);
+    const result = processPracticeInput({
+      targetAnswer: answer,
+      letters,
+      rawInput: character,
+      mode: 'strict'
+    });
+    letters = result.letters;
+    assertEqual(findNextInputIndex(answer, letters), previousPosition + 1 < answer.length ? previousPosition + 1 : -1, 'Each slow native input event should advance exactly one position.');
+  }
+  assertEqual(committedValue(letters), answer, 'Slow sequential native typing should complete a correct word without stale validation.');
+}
+
+{
+  const answer = 'dŵr';
+  const typed = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: answer,
+    mode: 'strict'
+  });
+  const deleted = removeLastPracticeInput(answer, typed.letters);
+  assertEqual(committedValue(deleted), 'dŵ_', 'Backspace should remove exactly the latest typed character.');
+
+  const retyped = processPracticeInput({
+    targetAnswer: answer,
+    letters: deleted,
+    rawInput: 'r',
+    mode: 'strict'
+  });
+  assertEqual(retyped.completed, true, 'Deleting and retyping should preserve strict accented Welsh validation.');
+}
+
+{
+  const answer = 'chwarae';
+  const typed = processPracticeInput({
+    targetAnswer: answer,
+    letters: createInitialPracticeLetters(answer),
+    rawInput: 'ch',
+    mode: 'strict'
+  });
+  const deleted = removeLastPracticeInput(answer, typed.letters);
+  assertEqual(committedValue(deleted), 'c______', 'Deleting after a Welsh digraph should move back one character, not two positions.');
 }
 
 {
