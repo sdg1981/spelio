@@ -5,7 +5,7 @@ import * as LucideIcons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { ArrowRight, BookOpen, CheckCircle2, ChevronUp, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Repeat, Settings, Trash2, Volume2, VolumeX } from './Icons';
+import { ArrowLeft, Check, CircleX, Eye, MessageSquareQuote, Settings, Trash2, Volume2, VolumeX } from './Icons';
 import { FirstPracticeHint } from './FirstPracticeHint';
 import { SpelioTouchKeyboard } from './SpelioTouchKeyboard';
 import { usePracticeSession } from '../hooks/usePracticeSession';
@@ -1370,7 +1370,6 @@ export function Practice({
   const promptDelayed = promptDisplay.reserved;
   const promptUsesRecallPauseShell = promptDelayed || (promptVisible && (shouldDelayCurrentEnglishPrompt || postAnswerEnglishConfirmationVisible));
   const wordPillAudioIconVisible = !currentWordAudioUnavailable;
-  const WordPillAudioIcon = storage.settings.audioPrompts ? Repeat : Volume2;
   const wordInsights = !practiceTestMode && interfaceLanguage === 'en'
     ? [currentWord.dialectNote, currentWord.usageNote]
       .map(note => note?.trim())
@@ -1394,8 +1393,12 @@ export function Practice({
       <PracticeTopNav onBackHome={onBackHome} />
 
       <section className="page-shell practice-shell">
-        <button className={`word-pill ${struggleAssistEmphasis === 'audio' ? 'assist-emphasis assist-emphasis-audio' : ''}`.trim()} onClick={handleWordPillClick}>
-          {wordPillAudioIconVisible && <WordPillAudioIcon className="prompt-audio-icon" size={23} />}
+        <button
+          className={`word-pill ${struggleAssistEmphasis === 'audio' ? 'assist-emphasis assist-emphasis-audio' : ''}`.trim()}
+          onClick={handleWordPillClick}
+          aria-label={t('practice.replayCurrentWordAudio')}
+        >
+          {wordPillAudioIconVisible && <img className="prompt-audio-icon" src="/replay-audio.svg" alt="" aria-hidden="true" />}
           {promptUsesRecallPauseShell ? (
             <span key={currentWord.id} className={`prompt-text ${promptVisible ? 'visible' : 'delayed'}`.trim()}>
               <span className="prompt-text-reserve" style={HIDDEN_PROMPT_STYLE} aria-hidden="true">{prompt}</span>

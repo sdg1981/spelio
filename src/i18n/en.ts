@@ -82,7 +82,7 @@ export const en = {
       },
       mixedDialect: {
         title: 'Mixed Welsh dialect support',
-        body: 'Supports North Wales and South Wales / Standard forms with intelligent mixed-dialect practice.'
+        body: 'Supports North Wales and South Wales forms with intelligent mixed-dialect practice.'
       },
       customListSharing: {
         title: 'Create and share custom lists',
@@ -262,6 +262,7 @@ export const en = {
     togglePrompt: 'Toggle prompt',
     toggleAudio: 'Toggle audio prompts',
     revealNext: 'Reveal next letter',
+    replayCurrentWordAudio: 'Replay the current word audio',
     promptToggle: 'English',
     audio: 'Audio',
     reveal: 'Reveal',
@@ -281,7 +282,7 @@ export const en = {
     quickRecapKicker: 'From an earlier session',
     quickRecap: 'Quick recap',
     northForm: 'North Wales form',
-    southStandardForm: 'South Wales / Standard form',
+    southStandardForm: 'South Wales form',
     standardForm: 'Standard form',
     dialectSpecificForm: 'Dialect-specific form',
     wordInsight: 'Word insight',
@@ -314,7 +315,7 @@ export const en = {
     welshStyleNote: 'Chooses which Welsh word forms you practise where regional forms differ. Audio pronunciation may still vary.',
     mixedWelsh: 'Mixed Welsh',
     northWales: 'North Wales',
-    southStandard: 'South Wales / Standard',
+    southStandard: 'South Wales',
     styleAppliesNextSession: 'Welsh style will apply from your next session.',
     audioPrompts: 'Audio prompts',
     audioPromptsNote: 'Play audio when each word appears.',

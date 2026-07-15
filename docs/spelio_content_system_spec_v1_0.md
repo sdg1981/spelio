@@ -731,7 +731,7 @@ Example:
 - nawr — South Wales / Standard
 - rwan — North Wales
 
-Spelio teaches Mixed Welsh by default and exposes a quiet Welsh style setting with three options: Mixed Welsh, North Wales, and South Wales / Standard. The setting is stored as `dialectPreference`, defaults to `mixed`, and older local storage without the field should default safely to `mixed`.
+Spelio teaches Mixed Welsh by default and exposes a quiet Welsh style setting with three options: Mixed Welsh, North Wales, and South Wales. The setting is stored as `dialectPreference`, defaults to `mixed`, and older local storage without the field should default safely to `mixed`. Internal content metadata may retain `South Wales / Standard` and `Standard` where required for compatibility or distinct content.
 
 Dialect preference affects word-level variant selection only. It must not affect word-list visibility. List-level dialect is internal/admin metadata only and should not appear as public badges beside word lists.
 

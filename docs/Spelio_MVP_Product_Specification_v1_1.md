@@ -359,19 +359,18 @@ The practice screen S mark must stay compact and must never push the answer area
 
 The word pill should contain:
 
-- Speaker icon
+- Supplied `/replay-audio.svg` icon
 - English prompt text, if English is enabled
 
 Example:
 
-🔊 To work
+Replay-audio icon + To work
 
 Behaviour:
 
 - The entire pill is clickable/tappable.
 - Clicking/tapping replays the current word audio.
-- If audio prompts are on, the pill may use a replay-style icon because the word audio has normally already played automatically.
-- If audio prompts are off, the pill may use a speaker/play-style icon to communicate learner-controlled manual playback.
+- The pill uses the supplied `public/replay-audio.svg` asset; do not recreate or substitute the icon.
 - In ordinary practice with audio prompts on, a second incorrect attempt on the same current word should automatically replay the current word audio once as a quiet listening nudge.
 - This repeated-error replay should happen at most once per word and should not show helper guidance text, play helper guidance audio, run replay/reveal visual emphasis, or mark contextual struggle assist as seen.
 - With audio prompts off, do not automatically replay on repeated wrong attempts; manual replay remains available from the pill and replay shortcut where supported.
@@ -614,7 +613,7 @@ Fields:
 - Welsh style
   - Mixed Welsh
   - North Wales
-  - South Wales / Standard
+  - South Wales
 - Audio prompts
   - On/off
 - Learning mode / Recall pause
@@ -838,8 +837,10 @@ Generated dialect label examples:
   - English: North Wales form
   - Welsh: Ffurf Gogledd Cymru
 - South Wales / Standard
-  - English: South Wales / Standard form
-  - Welsh: Ffurf De Cymru / Safonol
+  - Public preference label: South Wales / De Cymru
+  - English generated label: South Wales form
+  - Welsh generated label: Ffurf De Cymru
+  - Internal content metadata may retain `South Wales / Standard` for compatibility.
 - Standard
   - English: Standard form
   - Welsh: Ffurf safonol
@@ -2366,7 +2367,7 @@ Repeated taps may later become a quiet signal that the learner needs assisted li
 If the current word has dialect other than Both, the app may show a subtle dialect label only after the word is completed, revealed, or on a post-answer/end-of-session review surface, for example:
 
 - North Wales form
-- South Wales / Standard form
+- South Wales form
 - Standard form
 
 Generated dialect labels must come from translation keys and structured dialect metadata, not from free-text `dialectNote`.
@@ -2374,7 +2375,7 @@ Generated dialect labels must come from translation keys and structured dialect 
 Welsh generated dialect label examples:
 
 - Ffurf Gogledd Cymru
-- Ffurf De Cymru / Safonol
+- Ffurf De Cymru
 - Ffurf safonol
 
 If a word has a dialectNote:

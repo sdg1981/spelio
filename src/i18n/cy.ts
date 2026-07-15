@@ -82,7 +82,7 @@ export const cy = {
       },
       mixedDialect: {
         title: 'Cymorth i wahanol ffurfiau Cymraeg',
-        body: 'Mae’n cefnogi ffurfiau Gogledd Cymru a De Cymru / Safonol gyda ymarfer cymysg deallus.'
+        body: 'Mae’n cefnogi ffurfiau Gogledd Cymru a De Cymru gydag ymarfer cymysg deallus.'
       },
       customListSharing: {
         title: 'Creu a rhannu rhestrau personol',
@@ -262,6 +262,7 @@ export const cy = {
     togglePrompt: 'Dangos neu guddio’r awgrym',
     toggleAudio: 'Dangos neu guddio sain',
     revealNext: 'Dangos y llythyren nesaf',
+    replayCurrentWordAudio: 'Ailchwarae sain y gair presennol',
     promptToggle: 'Saesneg',
     audio: 'Sain',
     reveal: 'Dangos',
@@ -281,7 +282,7 @@ export const cy = {
     quickRecapKicker: 'O sesiwn gynharach',
     quickRecap: 'Adolygiad cyflym',
     northForm: 'Ffurf Gogledd Cymru',
-    southStandardForm: 'Ffurf De Cymru / Safonol',
+    southStandardForm: 'Ffurf De Cymru',
     standardForm: 'Ffurf safonol',
     dialectSpecificForm: 'Ffurf dafodieithol',
     wordInsight: 'Nodyn gair',
@@ -314,7 +315,7 @@ export const cy = {
     welshStyleNote: 'Mae’n dewis pa ffurfiau Cymraeg rydych chi’n eu hymarfer pan fo ffurfiau rhanbarthol yn wahanol. Gall ynganiad y sain amrywio o hyd.',
     mixedWelsh: 'Cymraeg cymysg',
     northWales: 'Gogledd Cymru',
-    southStandard: 'De Cymru / Safonol',
+    southStandard: 'De Cymru',
     styleAppliesNextSession: 'Bydd arddull Cymraeg yn newid o’ch sesiwn nesaf.',
     audioPrompts: 'Awgrymiadau sain',
     audioPromptsNote: 'Chwarae sain pan fydd pob gair yn ymddangos.',
