@@ -68,6 +68,10 @@ export function shouldShowInstallAction(state: InstallPromptState) {
   return state.canInstall && !state.isStandalone && !state.isInstalled && state.supportsPrompt;
 }
 
+export function shouldShowInstallOptionsNavigation(state: InstallPromptState, isNativeApp: boolean) {
+  return !isNativeApp && !state.isStandalone && !state.isInstalled;
+}
+
 export class InstallPromptController {
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
   private initialized = false;

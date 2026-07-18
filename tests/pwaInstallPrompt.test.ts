@@ -3,7 +3,9 @@ import {
   type BeforeInstallPromptEvent,
   createInstallPromptController,
   isStandaloneDisplayMode,
-  shouldShowInstallAction
+  shouldShowInstallAction,
+  shouldShowInstallOptionsNavigation,
+  type InstallPromptState
 } from '../src/lib/pwa/installPrompt';
 
 declare function require(name: string): {
@@ -101,6 +103,21 @@ assert(manifest.icons?.some(icon => icon.src === '/spelio-icon-512.png' && icon.
 assert(existsSync('public/spelio-icon-192.png'), '192px install icon should exist.');
 assert(existsSync('public/spelio-icon-512.png'), '512px install icon should exist.');
 assertEqual(ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT, false, 'Automatic PWA prompting should remain disabled during Google Play closed testing.');
+
+const browserInstallState: InstallPromptState = {
+  canInstall: false,
+  isInstalled: false,
+  isIosSafari: false,
+  isStandalone: false,
+  supportsPrompt: false
+};
+
+assertEqual(shouldShowInstallOptionsNavigation(browserInstallState, false), true, 'Normal desktop browsers should show Install options.');
+assertEqual(shouldShowInstallOptionsNavigation({ ...browserInstallState, isIosSafari: true }, false), true, 'Normal mobile browsers should show Install options.');
+assertEqual(shouldShowInstallOptionsNavigation({ ...browserInstallState, isStandalone: true }, false), false, 'Installed PWAs should hide Install options.');
+assertEqual(shouldShowInstallOptionsNavigation(browserInstallState, true), false, 'The native iOS Capacitor app should hide Install options.');
+assertEqual(shouldShowInstallOptionsNavigation({ ...browserInstallState, isStandalone: true }, false), false, 'The Android TWA standalone runtime should hide Install options.');
+assertEqual(shouldShowInstallOptionsNavigation({ ...browserInstallState, isInstalled: true }, false), false, 'Browsers that report an installed related app should hide Install options.');
 
 {
   const fakeWindow = new FakeWindow();

@@ -51,6 +51,7 @@ assert(appSource.includes('<InstallPage'), 'App should render InstallPage for th
 const homeSource = readFileSync('src/components/Home.tsx', 'utf8');
 assert(homeSource.includes('onInstall'), 'Homepage should accept an install navigation callback.');
 assert(homeSource.includes("t('home.installSpelio')"), 'Homepage menu should keep the install-options navigation entry.');
+assert(homeSource.includes('showInstallOptions &&'), 'Homepage menu should hide Install options in installed app runtimes.');
 assert(!homeSource.includes('promptInstall'), 'Homepage menu should not directly trigger the browser install prompt.');
 
 const installPageSource = readFileSync('src/components/InstallPage.tsx', 'utf8');

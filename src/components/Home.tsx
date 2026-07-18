@@ -11,6 +11,7 @@ import type { SpelioSettings } from '../lib/practice/storage';
 import { formatRecapWordCount } from '../lib/practice/sessionEngine';
 import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
 import { NativeUpdateNotice } from './NativeUpdateNotice';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 type SharedEntryMode = 'normal-share' | 'practice-test';
@@ -246,6 +247,7 @@ function HomepageMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState<'shared' | 'copied' | null>(null);
+  const { showInstallOptions } = useInstallPrompt();
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -350,12 +352,14 @@ function HomepageMenu({
             <button className="homepage-menu-item homepage-menu-mobile-only" type="button" onClick={sharePage} aria-label={t('footer.share')}>
               {t('footer.share')}
             </button>
-            <button className="homepage-menu-item" type="button" onClick={() => {
-              setOpen(false);
-              onInstall();
-            }}>
-              {t('home.installSpelio')}
-            </button>
+            {showInstallOptions && (
+              <button className="homepage-menu-item" type="button" onClick={() => {
+                setOpen(false);
+                onInstall();
+              }}>
+                {t('home.installSpelio')}
+              </button>
+            )}
             <button className="homepage-menu-item" type="button" onClick={() => {
               setOpen(false);
               onPrivacy();

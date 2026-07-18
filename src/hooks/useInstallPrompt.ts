@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { shouldShowInstallAction, spelioInstallPrompt } from '../lib/pwa/installPrompt';
+import { Capacitor } from '@capacitor/core';
+import {
+  shouldShowInstallAction,
+  shouldShowInstallOptionsNavigation,
+  spelioInstallPrompt
+} from '../lib/pwa/installPrompt';
 
 export function useInstallPrompt() {
   const [state, setState] = useState(() => spelioInstallPrompt.getState());
@@ -15,6 +20,7 @@ export function useInstallPrompt() {
   return {
     ...state,
     canInstall: shouldShowInstallAction(state),
+    showInstallOptions: shouldShowInstallOptionsNavigation(state, Capacitor.isNativePlatform()),
     promptInstall
   };
 }
