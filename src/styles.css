@@ -9851,9 +9851,36 @@
   z-index:140;
 }
 
+.settings-overlay{
+  height:100vh;
+  padding:
+    calc(28px + env(safe-area-inset-top, 0px))
+    calc(28px + env(safe-area-inset-right, 0px))
+    calc(28px + env(safe-area-inset-bottom, 0px))
+    calc(28px + env(safe-area-inset-left, 0px));
+}
+
+.settings-overlay .settings-modal{
+  max-height:100%;
+}
+
+@supports (height:100dvh){
+  .settings-overlay{
+    height:100dvh;
+  }
+}
+
 @media (max-width:620px){
   .how-page{
     padding-top:calc(18px + env(safe-area-inset-top));
+  }
+
+  .settings-overlay{
+    padding:
+      calc(18px + env(safe-area-inset-top, 0px))
+      calc(18px + env(safe-area-inset-right, 0px))
+      calc(18px + env(safe-area-inset-bottom, 0px))
+      calc(18px + env(safe-area-inset-left, 0px));
   }
 
   .public-page-utility-header{

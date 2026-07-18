@@ -32,6 +32,7 @@ const { readFileSync } = require('fs') as {
 };
 const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
 const appSource = readFileSync('src/App.tsx', 'utf8');
+const stylesSource = readFileSync('src/styles.css', 'utf8');
 
 assertEqual(
   practiceSource.includes('const shouldShowCustomKeyboard = ENABLE_CUSTOM_KEYBOARD &&'),
@@ -42,6 +43,60 @@ assertEqual(
   (appSource.match(/<Practice\b/g) ?? []).length,
   1,
   'All learner-facing practice launches should share the single guarded Practice render path.'
+);
+assertEqual(
+  practiceSource.includes('<Overlay className="settings-overlay">'),
+  true,
+  'Settings should use its safe-area-aware overlay without changing other modal layouts.'
+);
+assertEqual(
+  /\.settings-overlay\{[\s\S]*?height:100vh;[\s\S]*?env\(safe-area-inset-top, 0px\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)[\s\S]*?\}/.test(stylesSource),
+  true,
+  'Settings overlay should constrain its fallback viewport inside the iOS safe areas.'
+);
+assertEqual(
+  /@supports \(height:100dvh\)\{[\s\S]*?\.settings-overlay\{[\s\S]*?height:100dvh;/.test(stylesSource),
+  true,
+  'Settings overlay should prefer the dynamic viewport when the browser supports it.'
+);
+assertEqual(
+  stylesSource.includes('.settings-overlay .settings-modal{\n  max-height:100%;\n}'),
+  true,
+  'Settings modal height should be limited to the safe usable overlay area.'
+);
+assertEqual(
+  /\.settings-modal-body\{[^}]*flex:1 1 auto;[^}]*min-height:0;[^}]*overflow-y:auto;/.test(stylesSource),
+  true,
+  'Settings choices should scroll independently between the fixed header and footer.'
+);
+assertEqual(
+  /\.settings-modal-footer\{[^}]*flex:0 0 auto;/.test(stylesSource),
+  true,
+  'Settings Close action should remain outside the scrolling choices.'
+);
+assertEqual(
+  /\.overlay\{\s*z-index:140;\s*\}/.test(stylesSource) &&
+    /\.homepage-bg \.homepage-public-header,[\s\S]*?\{\s*z-index:12;\s*\}/.test(stylesSource),
+  true,
+  'Settings backdrop should cover the public navigation stacking layer.'
+);
+assertEqual(
+  practiceSource.includes('className="modal-close" onClick={onClose}') &&
+    practiceSource.includes('<button className="settings-close-button" onClick={onClose}>'),
+  true,
+  'Both existing Settings close controls should keep their close handlers.'
+);
+assertEqual(
+  practiceSource.includes("document.addEventListener('keydown', handleKeyDown)") &&
+    practiceSource.includes("if (event.key === 'Escape')") &&
+    practiceSource.includes("if (event.key !== 'Tab') return;"),
+  true,
+  'Settings should keep keyboard focus inside the active dialog and close on Escape.'
+);
+assertEqual(
+  practiceSource.includes('previouslyFocused?.focus({ preventScroll: true })'),
+  true,
+  'Closing Settings should restore focus to the control that opened it.'
 );
 
 {

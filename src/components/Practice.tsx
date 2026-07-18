@@ -1742,7 +1742,83 @@ export function SettingsModal({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [detectedKeyboardPreferenceVisible, setDetectedKeyboardPreferenceVisible] = useState(false);
   const [welshStyleNoticeVisible, setWelshStyleNoticeVisible] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+  const initialCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const resetProgressButtonRef = useRef<HTMLButtonElement>(null);
+  const resetDialogRef = useRef<HTMLElement>(null);
+  const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmingResetRef = useRef(confirmingReset);
+  const onCloseRef = useRef(onClose);
   const keyboardPreferenceVisible = showKeyboardPreference ?? detectedKeyboardPreferenceVisible;
+
+  confirmingResetRef.current = confirmingReset;
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusInitialControl = window.requestAnimationFrame(() => {
+      initialCloseButtonRef.current?.focus({ preventScroll: true });
+    });
+
+    function getFocusableElements(container: HTMLElement | null) {
+      if (!container) return [];
+
+      return Array.from(container.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(element => !element.hasAttribute('hidden') && element.getAttribute('aria-hidden') !== 'true');
+    }
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (confirmingResetRef.current) {
+          setConfirmingReset(false);
+          window.requestAnimationFrame(() => {
+            resetProgressButtonRef.current?.focus({ preventScroll: true });
+          });
+        } else {
+          onCloseRef.current();
+        }
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const activeDialog = confirmingResetRef.current ? resetDialogRef.current : dialogRef.current;
+      const focusableElements = getFocusableElements(activeDialog);
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        activeDialog?.focus({ preventScroll: true });
+        return;
+      }
+
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements[focusableElements.length - 1];
+      if (!activeDialog?.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? lastFocusable : firstFocusable).focus({ preventScroll: true });
+      } else if (event.shiftKey && document.activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable.focus({ preventScroll: true });
+      } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable.focus({ preventScroll: true });
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusInitialControl);
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus({ preventScroll: true });
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!confirmingReset) return;
+
+    resetCancelButtonRef.current?.focus({ preventScroll: true });
+  }, [confirmingReset]);
 
   useEffect(() => {
     if (showKeyboardPreference !== undefined || typeof window === 'undefined') return undefined;
@@ -1772,6 +1848,13 @@ export function SettingsModal({
     onResetProgress();
   }
 
+  function handleResetCancel() {
+    setConfirmingReset(false);
+    window.requestAnimationFrame(() => {
+      resetProgressButtonRef.current?.focus({ preventScroll: true });
+    });
+  }
+
   function handleDialectPreferenceChange(dialectPreference: SpelioSettings['dialectPreference']) {
     if (dialectPreference === settings.dialectPreference) return;
 
@@ -1782,11 +1865,11 @@ export function SettingsModal({
   }
 
   return (
-    <Overlay>
-      <section className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <Overlay className="settings-overlay">
+      <section ref={dialogRef} className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabIndex={-1}>
         <div className="settings-modal-header flex items-center justify-between">
           <h2 className="modal-title" id="settings-title">{t('settings.title')}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={t('settings.close')}>×</button>
+          <button ref={initialCloseButtonRef} className="modal-close" onClick={onClose} aria-label={t('settings.close')}>×</button>
         </div>
 
         <div className="settings-modal-body">
@@ -1938,7 +2021,7 @@ export function SettingsModal({
           <div className="settings-section settings-section-reset">
             <h3 className="text-[16px] md:text-[15px] font-extrabold text-[var(--red)]">{t('settings.resetProgress')}</h3>
             <p className="mt-2 field-note">{t('settings.localProgressNote')}</p>
-            <button className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
+            <button ref={resetProgressButtonRef} className="reset-progress-button" onClick={() => setConfirmingReset(true)} type="button">
               <Trash2 size={18} aria-hidden="true" />
               {t('settings.resetProgress')}
             </button>
@@ -1952,13 +2035,13 @@ export function SettingsModal({
 
       {confirmingReset && (
         <div className="confirm-layer" role="presentation">
-          <section className="modal modal-small reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title">
+          <section ref={resetDialogRef} className="modal modal-small reset-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title" tabIndex={-1}>
             <h2 className="modal-title" id="reset-progress-title">{t('settings.resetProgressTitle')}</h2>
             <p className="modal-text mt-5">
               {t('settings.resetProgressBody')}
             </p>
             <div className="mt-9 flex justify-end gap-3">
-              <button className="confirm-cancel-button" onClick={() => setConfirmingReset(false)} type="button">
+              <button ref={resetCancelButtonRef} className="confirm-cancel-button" onClick={handleResetCancel} type="button">
                 {t('settings.cancel')}
               </button>
               <button className="confirm-reset-button" onClick={handleResetConfirm} type="button">

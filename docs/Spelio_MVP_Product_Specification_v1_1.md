@@ -602,6 +602,8 @@ Language rule:
 
 Settings should be minimal.
 
+On short mobile viewports, the Settings shell must remain inside the current safe-area-adjusted dynamic viewport, with a fixed header and Close action around an independently scrollable settings body.
+
 Fields:
 
 - Interface language
