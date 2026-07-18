@@ -616,6 +616,9 @@ Fields:
   - Mixed Welsh
   - North Wales
   - South Wales
+
+These are learner-facing labels. The South Wales preference may continue to use the stored value `south_standard`, and structured content metadata may continue to use `South Wales / Standard` where required for dialect classification and fallback behaviour.
+
 - Audio prompts
   - On/off
 - Learning mode / Recall pause

@@ -18,6 +18,32 @@ const requiredFrontendMarkers = [
   'practice_most_common_animals'
 ];
 
+const learnerLabelPatterns = [
+  {
+    pattern: /southStandard\s*:\s*([`'"])South Wales\1/,
+    description: 'the English Settings label "South Wales"'
+  },
+  {
+    pattern: /southStandard\s*:\s*([`'"])De Cymru\1/,
+    description: 'the Welsh Settings label "De Cymru"'
+  },
+  {
+    pattern: /southStandardForm\s*:\s*([`'"])South Wales form\1/,
+    description: 'the generated English label "South Wales form"'
+  },
+  {
+    pattern: /southStandardForm\s*:\s*([`'"])Ffurf De Cymru\1/,
+    description: 'the generated Welsh label "Ffurf De Cymru"'
+  }
+];
+
+const obsoleteLearnerLabelPatterns = [
+  /southStandard\s*:\s*([`'"])South Wales \/ Standard\1/,
+  /southStandard\s*:\s*([`'"])De Cymru \/ Safonol\1/,
+  /southStandardForm\s*:\s*([`'"])South Wales \/ Standard form\1/,
+  /southStandardForm\s*:\s*([`'"])Ffurf De Cymru \/ Safonol\1/
+];
+
 async function listFiles(directory, baseDirectory = directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -63,6 +89,18 @@ const frontendJavaScript = (
 for (const marker of requiredFrontendMarkers) {
   if (!frontendJavaScript.includes(marker)) {
     fail(`the production frontend is missing the current catalogue marker "${marker}".`);
+  }
+}
+
+for (const { pattern, description } of learnerLabelPatterns) {
+  if (!pattern.test(frontendJavaScript)) {
+    fail(`the production frontend is missing ${description}.`);
+  }
+}
+
+for (const pattern of obsoleteLearnerLabelPatterns) {
+  if (pattern.test(frontendJavaScript)) {
+    fail('the production frontend contains an obsolete learner-facing South Wales / Standard label.');
   }
 }
 

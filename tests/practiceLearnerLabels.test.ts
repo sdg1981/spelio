@@ -19,6 +19,23 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 }
 
 const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+const settingsStart = practiceSource.indexOf("{t('settings.welshStyle')}");
+const settingsEnd = practiceSource.indexOf("{t('settings.audioPrompts')}", settingsStart);
+const welshStyleSettingsSource = practiceSource.slice(settingsStart, settingsEnd);
+
+assert(settingsStart >= 0 && settingsEnd > settingsStart, 'The learner-facing Welsh style Settings controls should remain present.');
+assert(
+  welshStyleSettingsSource.includes("onClick={() => handleDialectPreferenceChange('south_standard')}"),
+  'The South Wales display option should retain the existing south_standard stored value.'
+);
+assert(
+  welshStyleSettingsSource.includes("{t('settings.southStandard')}"),
+  'The South Wales display option should render through the learner-facing translation key.'
+);
+assert(
+  !welshStyleSettingsSource.includes('South Wales / Standard'),
+  'The public Settings interface should not contain the obsolete combined English label.'
+);
 
 assert(existsSync('public/replay-audio.svg'), 'The supplied replay-audio SVG should remain in Vite public assets.');
 assert(practiceSource.includes('src="/replay-audio.svg"'), 'The practice word/audio pill should use the Vite public path for the supplied replay icon.');
@@ -52,4 +69,4 @@ assert(
   'South Wales selection should continue supporting existing South Wales / Standard and distinct Standard metadata.'
 );
 
-console.log('Practice replay icon and learner dialect label tests passed.');
+console.log('Practice replay icon, learner dialect label, and stored preference tests passed.');
