@@ -2,16 +2,29 @@ export { getPlayableAudioUrl, hasPlayableAudioUrl } from './practice/audioAvaila
 import { getPlayableAudioUrl } from './practice/audioAvailability';
 
 export type AudioPlaybackController = ReturnType<typeof createAudioPlaybackController>;
+export type AudioPlaybackEndReason = 'ended' | 'failed' | 'interrupted';
 
 export function createAudioPlaybackController() {
   let currentAudio: HTMLAudioElement | null = null;
   let currentSource: string | null = null;
+  let currentPlaybackId = 0;
+  let currentOnEnd: ((reason: AudioPlaybackEndReason) => void) | null = null;
+
+  function finishCurrentPlayback(reason: AudioPlaybackEndReason, playbackId = currentPlaybackId) {
+    if (playbackId !== currentPlaybackId) return;
+    const onEnd = currentOnEnd;
+    currentOnEnd = null;
+    onEnd?.(reason);
+  }
 
   function stop(releaseAudio = false) {
     const audio = currentAudio;
+    finishCurrentPlayback('interrupted');
+    currentPlaybackId += 1;
     if (!audio) return;
 
     try {
+      audio.onpause = null;
       audio.pause();
     } catch {
       // Audio cleanup is best-effort.
@@ -34,10 +47,12 @@ export function createAudioPlaybackController() {
     }
   }
 
-  function playSource(source: string) {
+  function playSource(source: string, onEnd?: (reason: AudioPlaybackEndReason) => void) {
     try {
       let audio = currentAudio;
       if (audio) {
+        audio.onpause = null;
+        finishCurrentPlayback('interrupted');
         audio.pause();
         try {
           audio.currentTime = 0;
@@ -55,6 +70,13 @@ export function createAudioPlaybackController() {
         currentSource = source;
       }
 
+      const playbackId = currentPlaybackId + 1;
+      currentPlaybackId = playbackId;
+      currentOnEnd = onEnd ?? null;
+      audio.onended = () => finishCurrentPlayback('ended', playbackId);
+      audio.onerror = () => finishCurrentPlayback('failed', playbackId);
+      audio.onpause = () => finishCurrentPlayback('interrupted', playbackId);
+
       try {
         audio.currentTime = 0;
       } catch {
@@ -65,9 +87,15 @@ export function createAudioPlaybackController() {
       // initiating tap. Rejection is converted to a non-blocking false result.
       return audio.play().then(
         () => true,
-        () => false
+        () => {
+          finishCurrentPlayback('failed', playbackId);
+          return false;
+        }
       );
     } catch {
+      const hasRegisteredEndHandler = currentOnEnd !== null;
+      finishCurrentPlayback('failed');
+      if (!hasRegisteredEndHandler) onEnd?.('failed');
       return Promise.resolve(false);
     }
   }

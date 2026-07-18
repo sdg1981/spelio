@@ -1,13 +1,18 @@
 import type { PracticeWord } from '../data/wordLists';
 import type { DefaultAudioProvider } from './audioProvider';
 import { getResolvedPracticeAudioUrl } from './audioProvider';
-import { createAudioPlaybackController, getPlayableAudioUrl } from './audioPlayback';
+import { createAudioPlaybackController, getPlayableAudioUrl, type AudioPlaybackEndReason } from './audioPlayback';
 import { createWelshAzureTtsRequestPayload, getAzureTtsRoute } from './azureTtsRequest';
 import { isAudioUnavailableForPrompt } from './practice/audioAvailability';
 
 const primerAudioPlayback = createAudioPlaybackController();
 const generatedPrimerAudioCache = new Map<string, string>();
 const generatedPrimerAudioPromises = new Map<string, Promise<string | null>>();
+let activePrimerPlayback: {
+  id: number;
+  finish: (reason: AudioPlaybackEndReason) => void;
+} | null = null;
+let primerPlaybackId = 0;
 
 type PrimerSoundPlaybackItem = {
   audioText?: string;
@@ -54,18 +59,41 @@ export async function preloadPrimerSounds(items: PrimerSoundPlaybackItem[]) {
   }));
 }
 
-export async function playPrimerSound(item: PrimerSoundPlaybackItem) {
+export async function playPrimerSound(
+  item: PrimerSoundPlaybackItem,
+  onEnd?: (reason: AudioPlaybackEndReason) => void
+) {
+  activePrimerPlayback?.finish('interrupted');
+  const id = primerPlaybackId + 1;
+  primerPlaybackId = id;
+  let finished = false;
+  const finish = (reason: AudioPlaybackEndReason) => {
+    if (finished) return;
+    finished = true;
+    if (activePrimerPlayback?.id === id) activePrimerPlayback = null;
+    onEnd?.(reason);
+  };
+  activePrimerPlayback = { id, finish };
+
   const playableUrl = getStoredPrimerAudioUrl(item);
-  if (playableUrl) return primerAudioPlayback.playSource(playableUrl);
+  if (playableUrl) return primerAudioPlayback.playSource(playableUrl, finish);
 
   const text = getPrimerSoundText(item);
-  if (!text) return false;
+  if (!text) {
+    finish('failed');
+    return false;
+  }
 
   const cached = generatedPrimerAudioCache.get(getGeneratedPrimerAudioCacheKey(text));
-  if (cached) return primerAudioPlayback.playSource(cached);
+  if (cached) return primerAudioPlayback.playSource(cached, finish);
 
   const source = await getCachedGeneratedPrimerAudio(text);
-  return source ? primerAudioPlayback.playSource(source) : false;
+  if (activePrimerPlayback?.id !== id) return false;
+  if (!source) {
+    finish('failed');
+    return false;
+  }
+  return primerAudioPlayback.playSource(source, finish);
 }
 
 export function clearPrimerAudioCacheForTests() {
@@ -76,6 +104,9 @@ export function clearPrimerAudioCacheForTests() {
 }
 
 export function stopPrimerAudio() {
+  activePrimerPlayback?.finish('interrupted');
+  activePrimerPlayback = null;
+  primerPlaybackId += 1;
   primerAudioPlayback.stop(true);
 }
 

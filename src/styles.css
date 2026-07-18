@@ -7397,10 +7397,16 @@
   box-shadow:0 18px 42px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.035);
 }
 
-.public-app[data-theme="dark"] .foundations-primer-sound:hover,
 .public-app[data-theme="dark"] .foundations-primer-sound:focus-visible{
   background:rgba(255,255,255,.06);
   border-color:rgba(255,255,255,.18);
+}
+
+@media (hover:hover) and (pointer:fine){
+  .public-app[data-theme="dark"] .foundations-primer-sound:hover{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.18);
+  }
 }
 
 .public-app[data-theme="dark"] .collection-intro-audio{
@@ -9356,7 +9362,6 @@
   transition:transform .16s ease, background .16s ease, border-color .16s ease;
 }
 
-.foundations-primer-sound:hover,
 .foundations-primer-sound:focus-visible{
   outline:0;
   border-color:rgba(217,0,0,.22);
@@ -9366,6 +9371,15 @@
 
 .foundations-primer-sound:focus-visible{
   box-shadow:var(--public-card-focus-shadow, 0 0 0 3px rgba(15,23,42,.14));
+}
+
+@media (hover:hover) and (pointer:fine){
+  .foundations-primer-sound:hover{
+    outline:0;
+    border-color:rgba(217,0,0,.22);
+    background:var(--public-elevated-ivory-hover, rgba(255,255,255,.78));
+    transform:translateY(-1px);
+  }
 }
 
 .foundations-primer-sound:active{
@@ -9380,11 +9394,6 @@
 .foundations-primer-sound:disabled{
   cursor:progress;
   opacity:.68;
-}
-
-.foundations-primer-sound.failed{
-  border-color:rgba(217,0,0,.24);
-  color:var(--accent, #d90000);
 }
 
 .foundations-primer-audio-note{

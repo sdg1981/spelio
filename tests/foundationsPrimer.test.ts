@@ -27,6 +27,7 @@ const documentShellSource = readFileSync('index.html', 'utf8');
 const stylesSource = readFileSync('src/styles.css', 'utf8');
 const practiceSessionSource = readFileSync('src/hooks/usePracticeSession.ts', 'utf8');
 const primerAudioSource = readFileSync('src/lib/foundationsPrimerAudio.ts', 'utf8');
+const primerComponentSource = readFileSync('src/components/FoundationsPrimer.tsx', 'utf8');
 
 assert(documentShellSource.includes('viewport-fit=cover'), 'Document viewport should expose iOS safe-area insets.');
 assert(
@@ -40,6 +41,23 @@ assert(
 assert(
   practiceSessionSource.includes('createAudioPlaybackController') && primerAudioSource.includes('createAudioPlaybackController'),
   'Practice sessions and Foundations samples should use the same playback controller.'
+);
+assert(
+  primerComponentSource.includes("useState<string | null>(null)") &&
+    primerComponentSource.includes("className={`foundations-primer-sound${isPlaying ? ' playing' : ''}`}"),
+  'Primer sound buttons should start without any selected or playing item.'
+);
+assert(
+  !primerComponentSource.includes('autoFocus'),
+  'Primer sound buttons should not request focus when the primer mounts.'
+);
+assert(
+  /@media \(hover:hover\) and \(pointer:fine\)\{[\s\S]*?\.foundations-primer-sound:hover/.test(stylesSource),
+  'Primer hover styling should only apply to devices with a real fine hover pointer.'
+);
+assert(
+  /\.foundations-primer-sound:focus-visible\{[\s\S]*?box-shadow:/.test(stylesSource),
+  'Primer sound buttons should retain a visible keyboard-only focus treatment.'
 );
 
 const dDdPrimer = getFoundationsPrimer('foundation_patterns_d_dd', 'en');
@@ -382,6 +400,8 @@ class MockAudio {
   currentTime = 0;
   loadCalls = 0;
   onended: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onpause: (() => void) | null = null;
   pauseCalls = 0;
   playCalls = 0;
   playCallsDuringUserGesture = 0;
@@ -513,6 +533,19 @@ async function runPrimerAudioTests() {
     await playPrimerSound(regeneratedItem);
     assertEqual(MockAudio.instances.length, 3, 'Leaving and returning should create a fresh player instead of retaining stale screen state.');
 
+    const firstPlaybackOutcomes: string[] = [];
+    const secondPlaybackOutcomes: string[] = [];
+    await playPrimerSound(storedItem, outcome => firstPlaybackOutcomes.push(outcome));
+    assertEqual(firstPlaybackOutcomes.length, 0, 'A primer item should remain playing until media actually ends or is interrupted.');
+    await playPrimerSound({
+      ...storedItem,
+      audioUrl: 'https://example.test/storage/v1/object/public/audio/cy-primer/foundations-first-words/d-sound/20260529T120000Z.mp3'
+    }, outcome => secondPlaybackOutcomes.push(outcome));
+    assertEqual(firstPlaybackOutcomes.join(','), 'interrupted', 'Starting another primer item should immediately clear the previous playing item.');
+    assertEqual(secondPlaybackOutcomes.length, 0, 'The newly started primer item should be the only active item.');
+    MockAudio.instances[MockAudio.instances.length - 1]?.onended?.();
+    assertEqual(secondPlaybackOutcomes.join(','), 'ended', 'Playback completion should restore the active primer item to neutral.');
+
     clearPrimerAudioCacheForTests();
     MockAudio.instances = [];
     fetchCalls = 0;
@@ -542,14 +575,33 @@ async function runPrimerAudioTests() {
     assertEqual(MockAudio.instances[0].playCallsDuringUserGesture, 1, 'Prepared primer audio should call play before yielding the user gesture.');
 
     MockAudio.playShouldReject = true;
-    const rejectedPlayback = await playPrimerSound(fallbackItem);
+    const rejectedOutcomes: string[] = [];
+    const rejectedPlayback = await playPrimerSound(fallbackItem, outcome => rejectedOutcomes.push(outcome));
     MockAudio.playShouldReject = false;
     assertEqual(rejectedPlayback, false, 'Primer playback rejection should be caught and reported without an unhandled rejection.');
+    assertEqual(rejectedOutcomes.join(','), 'failed', 'Playback rejection should restore the primer item to neutral.');
 
     MockAudio.playThrowsSynchronously = true;
-    const synchronouslyRejectedPlayback = await playPrimerSound(fallbackItem);
+    const synchronousFailureOutcomes: string[] = [];
+    const synchronouslyRejectedPlayback = await playPrimerSound(fallbackItem, outcome => synchronousFailureOutcomes.push(outcome));
     MockAudio.playThrowsSynchronously = false;
     assertEqual(synchronouslyRejectedPlayback, false, 'Synchronous media failures should also remain caught and non-blocking.');
+    assertEqual(synchronousFailureOutcomes.join(','), 'failed', 'Synchronous media failure should restore the primer item to neutral.');
+
+    const mediaFailureOutcomes: string[] = [];
+    await playPrimerSound(fallbackItem, outcome => mediaFailureOutcomes.push(outcome));
+    MockAudio.instances[MockAudio.instances.length - 1]?.onerror?.();
+    assertEqual(mediaFailureOutcomes.join(','), 'failed', 'A media error after playback starts should restore the primer item to neutral.');
+
+    const mediaInterruptionOutcomes: string[] = [];
+    await playPrimerSound(fallbackItem, outcome => mediaInterruptionOutcomes.push(outcome));
+    MockAudio.instances[MockAudio.instances.length - 1]?.onpause?.();
+    assertEqual(mediaInterruptionOutcomes.join(','), 'interrupted', 'A media interruption after playback starts should restore the primer item to neutral.');
+
+    const stoppedOutcomes: string[] = [];
+    await playPrimerSound(fallbackItem, outcome => stoppedOutcomes.push(outcome));
+    stopPrimerAudio();
+    assertEqual(stoppedOutcomes.join(','), 'interrupted', 'Navigation or unmount cleanup should clear the playing primer item.');
   } finally {
     clearPrimerAudioCacheForTests();
     (globalThis as unknown as { Audio: typeof Audio }).Audio = originalAudio;

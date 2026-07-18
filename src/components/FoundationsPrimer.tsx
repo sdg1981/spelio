@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { Volume2 } from 'lucide-react';
 import { PrimaryButton } from './Buttons';
 import { Footer } from './Footer';
@@ -36,6 +36,7 @@ export function FoundationsPrimer({
   t: Translate;
 }) {
   const [soundsPrepared, setSoundsPrepared] = useState(false);
+  const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
   const practiceWords = useMemo(
     () => [
       ...(wordList?.words ?? []),
@@ -50,6 +51,7 @@ export function FoundationsPrimer({
 
   useEffect(() => {
     let cancelled = false;
+    setPlayingSoundId(null);
     setSoundsPrepared(soundItems.length === 0);
     void preloadPrimerSounds(soundItems).finally(() => {
       if (!cancelled) setSoundsPrepared(true);
@@ -59,6 +61,13 @@ export function FoundationsPrimer({
       stopPrimerAudio();
     };
   }, [soundItems]);
+
+  function playSound(item: PrimerSoundItem) {
+    setPlayingSoundId(item.id);
+    void playPrimerSound(item, () => {
+      setPlayingSoundId(currentId => currentId === item.id ? null : currentId);
+    });
+  }
 
   return (
     <main className="how-page public-info-page foundations-primer-page">
@@ -86,7 +95,14 @@ export function FoundationsPrimer({
         {soundItems.length > 0 && (
           <div className="foundations-primer-sounds" aria-label={t('primer.soundButtonsLabel')}>
             {soundItems.map(item => (
-              <PrimerSoundButton key={`${primer.listId}:${item.id}`} disabled={!soundsPrepared} item={item} t={t} />
+              <PrimerSoundButton
+                key={`${primer.listId}:${item.id}`}
+                disabled={!soundsPrepared}
+                isPlaying={playingSoundId === item.id}
+                item={item}
+                onPlay={playSound}
+                t={t}
+              />
             ))}
           </div>
         )}
@@ -113,25 +129,33 @@ export function FoundationsPrimer({
   );
 }
 
-function PrimerSoundButton({ disabled, item, t }: { disabled: boolean; item: PrimerSoundItem; t: Translate }) {
-  const [state, setState] = useState<'idle' | 'playing' | 'failed'>('idle');
-
-  function playSound() {
-    setState('playing');
-    const playback = playPrimerSound(item);
-    void playback.then(
-      played => setState(played ? 'idle' : 'failed'),
-      () => setState('failed')
-    );
+function PrimerSoundButton({
+  disabled,
+  isPlaying,
+  item,
+  onPlay,
+  t
+}: {
+  disabled: boolean;
+  isPlaying: boolean;
+  item: PrimerSoundItem;
+  onPlay: (item: PrimerSoundItem) => void;
+  t: Translate;
+}) {
+  function handleClick(event: MouseEvent<HTMLButtonElement>) {
+    // Pointer/touch clicks should not leave WebKit's button focus styling behind.
+    // Keyboard-generated clicks have detail 0 and retain their visible focus.
+    if (event.detail > 0) event.currentTarget.blur();
+    onPlay(item);
   }
 
   return (
     <button
-      className={`foundations-primer-sound ${state === 'playing' ? 'playing' : ''} ${state === 'failed' ? 'failed' : ''}`.trim()}
+      className={`foundations-primer-sound${isPlaying ? ' playing' : ''}`}
       type="button"
-      onClick={playSound}
+      onClick={handleClick}
       disabled={disabled}
-      aria-busy={disabled || state === 'playing'}
+      aria-busy={disabled || isPlaying}
       aria-label={`${t('primer.playSound')} ${item.label}`}
     >
       <Volume2 size={20} strokeWidth={2.2} aria-hidden="true" />
