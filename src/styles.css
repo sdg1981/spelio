@@ -648,7 +648,7 @@
   }
 
   .practice-app.touch-keyboard-active .practice-shell{
-    padding-top:96px;
+    padding-top:calc(96px + var(--practice-safe-area-top));
     padding-bottom:calc(var(--spelio-touch-keyboard-height) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -4308,10 +4308,28 @@
 
 /* Practice screen visual refinement */
 .practice-app{
+  --practice-safe-area-top:env(safe-area-inset-top, 0px);
   background:#f6f5f2;
 }
 
+.practice-header{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:20;
+  padding-top:var(--practice-safe-area-top);
+  pointer-events:none;
+}
+
+.practice-header-inner{
+  position:relative;
+  height:86px;
+}
+
 .practice-app .progress-top{
+  position:absolute;
+  inset:0;
   height:86px;
   background:transparent;
   box-shadow:none;
@@ -4360,8 +4378,9 @@
 
 .practice-home-back,
 .practice-home-logo{
-  position:fixed;
+  position:absolute;
   z-index:31;
+  pointer-events:auto;
 }
 
 .practice-home-back{
@@ -4369,8 +4388,8 @@
   top:27px;
   display:grid;
   place-items:center;
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
   border:0;
   background:transparent;
   color:#172433;
@@ -4382,7 +4401,9 @@
 
 .practice-home-logo{
   right:42px;
-  top:28px;
+  top:21px;
+  width:44px;
+  height:44px;
 }
 
 .practice-home-logo button{
@@ -4392,6 +4413,8 @@
   background:transparent;
   color:#061724;
   padding:0;
+  width:44px;
+  height:44px;
   font-size:42px;
   font-weight:900;
   line-height:.78;
@@ -4451,7 +4474,7 @@
 .practice-app .practice-shell{
   max-width:760px;
   min-height:100svh;
-  padding:220px 32px 44px;
+  padding:calc(220px + var(--practice-safe-area-top)) 32px 44px;
 }
 
 .practice-app .word-pill{
@@ -4961,7 +4984,7 @@
 
 @media (max-height:760px) and (min-width:700px){
   .practice-app .practice-shell{
-    padding-top:142px;
+    padding-top:calc(142px + var(--practice-safe-area-top));
     padding-bottom:28px;
   }
 
@@ -4980,6 +5003,10 @@
 }
 
 @media (max-width:767px){
+  .practice-header-inner{
+    height:68px;
+  }
+
   .practice-app .progress-top{
     height:68px;
   }
@@ -5000,13 +5027,11 @@
   .practice-home-back{
     left:22px;
     top:14px;
-    width:40px;
-    height:40px;
   }
 
   .practice-home-logo{
     right:18px;
-    top:18px;
+    top:12px;
   }
 
   .practice-home-logo button{
@@ -5031,7 +5056,7 @@
   .practice-app .practice-shell{
     max-width:100%;
     min-height:100svh;
-    padding:106px 18px 24px;
+    padding:calc(106px + var(--practice-safe-area-top)) 18px 24px;
   }
 
   .practice-app .word-pill{
@@ -5214,7 +5239,7 @@
 
 @media (max-width:767px) and (max-height:760px){
   .practice-app .practice-shell{
-    padding-top:92px;
+    padding-top:calc(92px + var(--practice-safe-area-top));
     padding-bottom:20px;
   }
 
@@ -6729,7 +6754,7 @@
 @media (min-width:768px){
   .practice-app .practice-shell{
     max-width:1040px;
-    padding-top:188px;
+    padding-top:calc(188px + var(--practice-safe-area-top));
   }
 
   .practice-app .word-pill{
@@ -6837,7 +6862,7 @@
 @media (min-width:768px) and (max-width:960px){
   .practice-app .practice-shell{
     max-width:900px;
-    padding-top:176px;
+    padding-top:calc(176px + var(--practice-safe-area-top));
   }
 
   .practice-app .word-pill{

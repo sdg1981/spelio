@@ -1315,8 +1315,7 @@ export function Practice({
   if (!hasWords || !currentWord) {
     return (
       <main className="app-bg practice-app relative overflow-hidden">
-        <Progress value={0} count="0 / 0" />
-        <PracticeTopNav onBackHome={onBackHome} />
+        <PracticeHeader value={0} count="0 / 0" onBackHome={onBackHome} />
         <section className="page-shell practice-shell">
           <div className="status-line">{t('practice.selectListToBegin')}</div>
           <button className="done-button mt-10" onClick={() => setModal('wordlist')}>{t('home.selectWordList')}</button>
@@ -1381,7 +1380,7 @@ export function Practice({
 
   return (
     <main className={`app-bg practice-app relative ${shouldShowCustomKeyboard ? 'touch-keyboard-active' : 'overflow-hidden'}`.trim()}>
-      <Progress
+      <PracticeHeader
         value={isComplete ? 100 : progressValue}
         count={isComplete ? `${stats.total} / ${stats.total}` : isRecapActive ? (
           <span className="quick-recap-heading">
@@ -1389,8 +1388,8 @@ export function Practice({
             <span>{progressCount}</span>
           </span>
         ) : progressCount}
+        onBackHome={onBackHome}
       />
-      <PracticeTopNav onBackHome={onBackHome} />
 
       <section className="page-shell practice-shell">
         <button
@@ -1579,6 +1578,25 @@ export function Practice({
         />
       )}
     </main>
+  );
+}
+
+function PracticeHeader({
+  value,
+  count,
+  onBackHome
+}: {
+  value: number;
+  count: ReactNode;
+  onBackHome: () => void;
+}) {
+  return (
+    <header className="practice-header">
+      <div className="practice-header-inner">
+        <Progress value={value} count={count} />
+        <PracticeTopNav onBackHome={onBackHome} />
+      </div>
+    </header>
   );
 }
 

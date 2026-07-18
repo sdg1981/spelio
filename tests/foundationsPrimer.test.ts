@@ -1,3 +1,4 @@
+import './practiceHeaderSafeArea.test';
 import foundationsExport from '../data-exports/spelio_welsh_foundations_content.json';
 import { getFoundationsPrimer, getPrimerAudioText, hasFoundationsPrimer } from '../src/content/foundationsPrimer';
 import { getCollectionIntro, getCollectionIntroAudioGenerationText, hasSeenCollectionIntro, markCollectionIntroSeen, normalizeCollectionIntroContent, WELSH_FOUNDATIONS_COLLECTION_ID } from '../src/content/collectionIntro';
