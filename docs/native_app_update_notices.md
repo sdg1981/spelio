@@ -4,8 +4,8 @@ Spelio has a small, remotely configurable update notice for native wrapper relea
 
 ## Platform audit
 
-- **iOS Capacitor app:** The Xcode target supplies `CFBundleShortVersionString` from `MARKETING_VERSION` and `CFBundleVersion` from `CURRENT_PROJECT_VERSION` (currently `1.0.1` and build `1`). `@capacitor/app` is installed, synced through the existing Swift Package Manager Capacitor project, and `App.getInfo()` exposes those installed native values. The checker also requires `Capacitor.isNativePlatform()` and the native platform `ios`, so Safari and installed iOS PWAs are excluded.
-- **Android TWA:** `android/` is a stock Android Browser Helper `LauncherActivity` using `com.google.androidbrowserhelper:androidbrowserhelper:2.7.2`. It launches `https://spelio.app`, currently has native `versionName "0.3"` / `versionCode 2`, and does not expose either value to web content. A user-agent, display mode, or Android-looking browser is not proof of the installed package version, so Android notices remain disabled and the web checker deliberately does not infer one.
+- **iOS Capacitor app:** The Xcode target supplies `CFBundleShortVersionString` from `MARKETING_VERSION` and `CFBundleVersion` from `CURRENT_PROJECT_VERSION` (currently `1.0.2` and build `1`). `@capacitor/app` is installed, synced through the existing Swift Package Manager Capacitor project, and `App.getInfo()` exposes those installed native values. The checker also requires `Capacitor.isNativePlatform()` and the native platform `ios`, so Safari and installed iOS PWAs are excluded.
+- **Android TWA:** `android/` is a stock Android Browser Helper `LauncherActivity` using `com.google.androidbrowserhelper:androidbrowserhelper:2.7.2`. It launches `https://spelio.app`, currently has native `versionName "1.0.2"` / `versionCode 2`, and does not expose either value to web content. A user-agent, display mode, or Android-looking browser is not proof of the installed package version, so Android notices remain disabled and the web checker deliberately does not infer one.
 - **Installed browser PWA:** The existing `display-mode: standalone` / install-prompt helpers distinguish installed web-app presentation where needed. A PWA is still hosted web content and does not receive a native-store update notice.
 - **Ordinary website:** It receives neither native-store notice. Web and PWA updates continue to use the existing service worker behaviour.
 
@@ -25,6 +25,8 @@ To announce an iOS release:
 4. Deploy the policy change to the Spelio web origin.
 
 Do not change `latestVersion` for an ordinary website deployment. iOS Capacitor builds package their web assets, so bundled changes require a new App Store build. The Android TWA normally displays current hosted web content, so a future Play notice must refer only to a native wrapper/package release.
+
+Public release versions should normally be aligned across the website, Apple App Store, and Google Play. Apple build numbers and Android `versionCode` remain independent internal identifiers.
 
 ## Android future options
 
