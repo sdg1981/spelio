@@ -7043,6 +7043,39 @@
   box-shadow:0 12px 20px var(--accent-red-shadow-active),0 0 0 1px rgba(255,255,255,.05) inset;
 }
 
+@media (hover:hover) and (pointer:fine){
+  .public-app[data-theme="dark"] .end-primary{
+    background:var(--accent);
+    box-shadow:0 14px 24px var(--accent-red-shadow),0 0 0 1px rgba(255,255,255,.06) inset;
+    transition:background-color .16s ease-out,box-shadow .12s ease-out;
+  }
+
+  .public-app[data-theme="dark"] .end-primary:hover{
+    transform:none;
+    background:var(--accent-hover);
+    box-shadow:0 14px 24px var(--accent-red-shadow),0 0 0 1px rgba(255,255,255,.06) inset;
+  }
+
+  .public-app[data-theme="dark"] .end-primary:active{
+    transform:none;
+    background:var(--accent-pressed);
+    box-shadow:0 8px 16px var(--accent-red-shadow-active),0 0 0 1px rgba(255,255,255,.05) inset;
+  }
+}
+
+@media (hover:none), (pointer:coarse){
+  .public-app[data-theme="dark"] .end-primary:hover{
+    transform:none;
+    background:linear-gradient(180deg,var(--accent-hover),var(--accent));
+    box-shadow:0 18px 30px var(--accent-red-shadow),0 0 0 1px rgba(255,255,255,.06) inset;
+  }
+}
+
+.public-app[data-theme="dark"] .end-primary:focus-visible{
+  transform:none;
+  box-shadow:0 0 0 3px var(--accent-red-focus-soft),0 0 0 1px var(--accent-red-focus-strong);
+}
+
 .public-app[data-theme="dark"] .action-row{
   color:var(--text-primary);
 }
