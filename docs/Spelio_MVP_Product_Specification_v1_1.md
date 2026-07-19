@@ -98,6 +98,10 @@ Quiet animation polish:
 - `prefers-reduced-motion: reduce` must disable decorative animation and reduce transitions globally.
 - Animation must not change scoring, reveal logic, difficult-word logic, session state, or recommendation behaviour.
 
+### 3.0.2 Phone orientation policy
+
+Native phone apps use portrait orientation for the learner experience. iPad, Android tablet, and other larger-screen orientation remains flexible where the platform supports it. Browser landscape must degrade gracefully through the responsive learner layout; Spelio does not currently maintain a separate landscape-phone practice interface.
+
 ### 3.1 No auto-start rule
 
 The app must never automatically start a practice session as a side-effect of another action.

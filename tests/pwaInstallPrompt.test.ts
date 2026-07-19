@@ -81,6 +81,7 @@ const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8'))
   start_url?: string;
   scope?: string;
   display?: string;
+  orientation?: string;
   theme_color?: string;
   background_color?: string;
   icons?: Array<{ src?: string; sizes?: string; type?: string }>;
@@ -96,6 +97,7 @@ assertEqual(
 assertEqual(manifest.start_url, '/', 'Manifest should start at the app root.');
 assertEqual(manifest.scope, '/', 'Manifest should scope the app to root.');
 assertEqual(manifest.display, 'standalone', 'Manifest should request standalone display.');
+assertEqual(manifest.orientation, 'portrait', 'Installed PWA use should prefer portrait orientation.');
 assertEqual(manifest.theme_color, '#d90000', 'Manifest should match the public UI theme colour.');
 assertEqual(manifest.background_color, '#f6f5f2', 'Manifest should match the warm public background.');
 assert(manifest.icons?.some(icon => icon.src === '/spelio-icon-192.png' && icon.sizes === '192x192' && icon.type === 'image/png'), 'Manifest should include a 192px PNG icon.');

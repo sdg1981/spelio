@@ -1,0 +1,4 @@
+<resources>
+    <!-- ActivityInfo.SCREEN_ORIENTATION_PORTRAIT on compact displays. -->
+    <integer name="launcher_screen_orientation">1</integer>
+</resources>

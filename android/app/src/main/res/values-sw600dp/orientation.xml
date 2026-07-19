@@ -1,0 +1,4 @@
+<resources>
+    <!-- ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED keeps large screens flexible. -->
+    <integer name="launcher_screen_orientation">-1</integer>
+</resources>
