@@ -9272,9 +9272,7 @@
 
 /* The catalogue was originally authored with translucent light surfaces while
    its foregrounds already followed the public dark-theme tokens. Give this
-   page explicit, application-owned dark surfaces and state colours, and keep
-   WebKit from natively repainting its controls. */
-@supports (-webkit-touch-callout:none){
+   page explicit, application-owned dark surfaces and state colours. */
 .public-app[data-theme="dark"] .word-lists-page{
   --word-lists-card-bg:#211d19;
   --word-lists-card-raised:#29231f;
@@ -9295,10 +9293,15 @@
   --word-lists-icon-warm:#3b281f;
 }
 
+/* WKWebView can otherwise reapply native dark control painting after the
+   application colour-scheme changes. Surface and state styling above remains
+   shared by every browser. */
+@supports (-webkit-touch-callout:none){
 .public-app[data-theme="dark"] .word-lists-page :is(button,a),
 .public-app[data-theme="dark"] .wordlist-page-actions button{
   -webkit-appearance:none;
   appearance:none;
+}
 }
 
 .public-app[data-theme="dark"] .word-lists-page :is(
@@ -9507,7 +9510,6 @@
 .public-app[data-theme="dark"] .wordlist-page-actions .wordlist-custom-list-link{
   background:rgba(255,68,92,.10);
   color:var(--accent-hover);
-}
 }
 
 .foundations-primer-page.how-page{

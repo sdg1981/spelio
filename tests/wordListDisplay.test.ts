@@ -456,12 +456,21 @@ assert(
 
 const stylesSource = readFileSync('src/styles.css', 'utf8');
 assert(
-  /@supports \(-webkit-touch-callout:none\)\{\s*\.public-app\[data-theme="dark"\] \.word-lists-page\{/.test(stylesSource),
-  'The word-list compatibility correction should remain scoped to iOS WebKit and leave Android styling unchanged.'
+  /\.public-app\[data-theme="dark"\] \.word-lists-page\{\s*--word-lists-card-bg:/.test(stylesSource) &&
+    !/@supports \(-webkit-touch-callout:none\)\{\s*\.public-app\[data-theme="dark"\] \.word-lists-page\{\s*--word-lists-card-bg:/.test(stylesSource),
+  'Shared Word Lists dark surfaces should apply in normal web and Android dark mode, not only in iOS WebKit.'
 );
 const darkWordListsTokens = stylesSource.match(
   /\.public-app\[data-theme="dark"\] \.word-lists-page\{([\s\S]*?)\n\}/
 )?.[1] ?? '';
+const webKitWordListsCompatibility = stylesSource.match(
+  /@supports \(-webkit-touch-callout:none\)\{([\s\S]*?)\n\}/
+)?.[1] ?? '';
+assert(
+  webKitWordListsCompatibility.includes('-webkit-appearance:none;') &&
+    !/(?:background|color|border-color|box-shadow):/.test(webKitWordListsCompatibility),
+  'The iOS/WebKit-specific Word Lists block should contain only native control-painting compatibility.'
+);
 
 function getHexToken(name: string) {
   const value = darkWordListsTokens.match(new RegExp(`--${name}:(#[0-9a-f]{6});`, 'i'))?.[1];
