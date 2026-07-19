@@ -451,6 +451,31 @@
   caret-color:transparent;
 }
 
+.input-debug-panel{
+  position:fixed;
+  z-index:120;
+  right:max(12px, env(safe-area-inset-right));
+  bottom:max(12px, env(safe-area-inset-bottom));
+  display:grid;
+  gap:6px;
+  min-width:190px;
+  padding:10px;
+  border:1px solid rgba(104,82,161,.35);
+  border-radius:12px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 8px 30px rgba(28,20,50,.18);
+  color:#251d38;
+  font-size:12px;
+}
+
+.input-debug-panel button{
+  padding:7px 10px;
+  border-radius:8px;
+  background:#6f55a8;
+  color:#fff;
+  font-weight:700;
+}
+
 .practice-app.touch-keyboard-active{
   --spelio-touch-keyboard-height:330px;
   height:100dvh;

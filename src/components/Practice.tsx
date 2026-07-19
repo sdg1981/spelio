@@ -23,7 +23,14 @@ import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practic
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { getInitialWordListPageSelection, getPendingWelshFoundationsJourneyList, isWelshFoundationsJourneyList } from '../lib/practice/learningJourneySelection';
 import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
-import { createNativeInputCoordinator } from '../lib/practice/nativeInput';
+import {
+  isPracticeInputDiagnosticsEnabled,
+  safeCharacterCount,
+  toNormalizedUnicodeCodePoints,
+  toUnicodeCodePoints,
+  type PracticeInputDiagnosticEntry
+} from '../lib/practice/inputDiagnostics';
+import { createNativeInputCoordinator, type NativeInputContext } from '../lib/practice/nativeInput';
 import type { PendingMobileTypo } from '../hooks/usePracticeSession';
 import type { MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
 import { recordMobileTypoGraceEvent } from '../lib/practice/typoGraceAnalytics';
@@ -243,6 +250,11 @@ export function Practice({
   const mobileKeyboardEnabledRef = useRef(false);
   const nativeInputCoordinatorRef = useRef<ReturnType<typeof createNativeInputCoordinator> | null>(null);
   if (!nativeInputCoordinatorRef.current) nativeInputCoordinatorRef.current = createNativeInputCoordinator();
+  const inputDiagnosticsEnabled = typeof window !== 'undefined' && isPracticeInputDiagnosticsEnabled(window.location.search);
+  const inputDiagnosticStartRef = useRef<number | null>(null);
+  const inputDiagnosticEntriesRef = useRef<PracticeInputDiagnosticEntry[]>([]);
+  const [inputDiagnosticEntryCount, setInputDiagnosticEntryCount] = useState(0);
+  const [inputDiagnosticCopied, setInputDiagnosticCopied] = useState(false);
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
   const [customTouchKeyboardAvailable, setCustomTouchKeyboardAvailable] = useState(false);
   const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
@@ -357,6 +369,63 @@ export function Practice({
     onMobileTypoGraceEvent: recordTypoGraceOutcome,
     t
   });
+  const nativeInputContextRef = useRef<NativeInputContext>({ wordId: '', inputPosition: -1 });
+  nativeInputContextRef.current = {
+    wordId: currentWord?.id ?? '',
+    inputPosition: activeIndex
+  };
+
+  const recordInputDiagnostic = useCallback((entry: Omit<PracticeInputDiagnosticEntry, 'elapsedMs'>) => {
+    if (!inputDiagnosticsEnabled) return;
+    const now = performance.now();
+    if (inputDiagnosticStartRef.current === null) inputDiagnosticStartRef.current = now;
+    const entries = inputDiagnosticEntriesRef.current;
+    entries.push({
+      elapsedMs: Math.round((now - inputDiagnosticStartRef.current) * 10) / 10,
+      ...entry
+    });
+    if (entries.length > 240) entries.splice(0, entries.length - 240);
+    setInputDiagnosticEntryCount(entries.length);
+    setInputDiagnosticCopied(false);
+  }, [inputDiagnosticsEnabled]);
+
+  useEffect(() => {
+    const coordinator = nativeInputCoordinatorRef.current;
+    if (!coordinator || !inputDiagnosticsEnabled) {
+      coordinator?.setTraceListener();
+      return;
+    }
+
+    coordinator.setTraceListener(event => {
+      recordInputDiagnostic({
+        eventType: 'coordinator',
+        inputType: event.inputType,
+        enteredCodePoints: toUnicodeCodePoints(event.value),
+        normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(event.value),
+        answerIndexBefore: event.context?.inputPosition,
+        decision: event.action,
+        cycleId: event.cycleId,
+        wordId: event.context?.wordId,
+        resolvedVariantId: currentWord?.id
+      });
+    });
+    return () => coordinator.setTraceListener();
+  }, [currentWord?.id, inputDiagnosticsEnabled, recordInputDiagnostic]);
+
+  useEffect(() => () => nativeInputCoordinatorRef.current?.reset(), []);
+
+  const copyInputDiagnosticReport = useCallback(async () => {
+    const report = JSON.stringify({
+      schema: 'spelio-input-debug-v1',
+      entries: inputDiagnosticEntriesRef.current
+    }, null, 2);
+    try {
+      await navigator.clipboard.writeText(report);
+      setInputDiagnosticCopied(true);
+    } catch {
+      setInputDiagnosticCopied(false);
+    }
+  }, []);
   const completedListIds = useMemo(
     () => getFullyCompletedListIds(storage, lists),
     [lists, storage.listProgress, storage.settings.dialectPreference, storage.wordProgress]
@@ -1431,6 +1500,30 @@ export function Practice({
 
         <input
           ref={mobileInputRef}
+          onBeforeInput={(event) => {
+            if (!inputDiagnosticsEnabled) return;
+            const nativeEvent = event.nativeEvent as InputEvent;
+            const value = event.currentTarget.value;
+            const context = nativeInputContextRef.current;
+            const expected = practiceAnswer[context.inputPosition] ?? '';
+            recordInputDiagnostic({
+              eventType: 'beforeinput',
+              inputType: nativeEvent.inputType,
+              isComposing: nativeEvent.isComposing,
+              dataCodePoints: toUnicodeCodePoints(nativeEvent.data),
+              hiddenValueLength: value.length,
+              hiddenCharacterCount: safeCharacterCount(value),
+              source: 'native-hidden-input',
+              answerIndexBefore: context.inputPosition,
+              expectedCodePoints: toUnicodeCodePoints(expected),
+              normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+              enteredCodePoints: toUnicodeCodePoints(nativeEvent.data),
+              normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(nativeEvent.data),
+              decision: 'observed-only',
+              wordId: currentWord.id,
+              resolvedVariantId: currentWord.id
+            });
+          }}
           onInput={(event) => {
             if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
               nativeInputCoordinatorRef.current?.reset();
@@ -1439,15 +1532,84 @@ export function Practice({
             }
 
             const value = event.currentTarget.value;
-            const committed = nativeInputCoordinatorRef.current?.handleInput(
+            const nativeEvent = event.nativeEvent as InputEvent;
+            const context = nativeInputContextRef.current;
+            const expected = practiceAnswer[context.inputPosition] ?? '';
+            recordInputDiagnostic({
+              eventType: 'input',
+              inputType: nativeEvent.inputType,
+              isComposing: nativeEvent.isComposing,
+              dataCodePoints: toUnicodeCodePoints(nativeEvent.data),
+              hiddenValueLength: value.length,
+              hiddenCharacterCount: safeCharacterCount(value),
+              source: 'native-hidden-input',
+              answerIndexBefore: context.inputPosition,
+              expectedCodePoints: toUnicodeCodePoints(expected),
+              normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+              enteredCodePoints: toUnicodeCodePoints(nativeEvent.data ?? value),
+              normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(nativeEvent.data ?? value),
+              decision: 'received',
+              wordId: currentWord.id,
+              resolvedVariantId: currentWord.id
+            });
+            const result = nativeInputCoordinatorRef.current?.handleInput({
               value,
-              event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing,
-              input => handlePracticeInput(input, { mobileTouchInput: true })
-            );
-            if (committed) event.currentTarget.value = '';
+              data: nativeEvent.data,
+              inputType: nativeEvent.inputType,
+              eventIsComposing: nativeEvent.isComposing,
+              context,
+              commit: input => {
+                const validation = handlePracticeInput(input, { mobileTouchInput: true });
+                const outcomePosition = 'inputPosition' in validation
+                  ? validation.inputPosition
+                  : context.inputPosition;
+                recordInputDiagnostic({
+                  eventType: 'validation',
+                  inputType: nativeEvent.inputType,
+                  source: 'native-hidden-input',
+                  answerIndexBefore: context.inputPosition,
+                  answerIndexAfter: validation.type === 'correct'
+                    ? outcomePosition + 1
+                    : outcomePosition,
+                  expectedCodePoints: toUnicodeCodePoints(expected),
+                  enteredCodePoints: toUnicodeCodePoints(input),
+                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+                  normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(input),
+                  decision: validation.type,
+                  wordId: currentWord.id,
+                  resolvedVariantId: currentWord.id
+                });
+              }
+            });
+            if (result?.handled) event.currentTarget.value = '';
           }}
           onCompositionStart={() => {
-            nativeInputCoordinatorRef.current?.startComposition();
+            const context = nativeInputContextRef.current;
+            recordInputDiagnostic({
+              eventType: 'compositionstart',
+              source: 'native-hidden-input',
+              answerIndexBefore: context.inputPosition,
+              decision: 'received',
+              wordId: currentWord.id,
+              resolvedVariantId: currentWord.id
+            });
+            nativeInputCoordinatorRef.current?.startComposition(context);
+          }}
+          onCompositionUpdate={(event) => {
+            const context = nativeInputContextRef.current;
+            recordInputDiagnostic({
+              eventType: 'compositionupdate',
+              dataCodePoints: toUnicodeCodePoints(event.data),
+              hiddenValueLength: event.currentTarget.value.length,
+              hiddenCharacterCount: safeCharacterCount(event.currentTarget.value),
+              source: 'native-hidden-input',
+              answerIndexBefore: context.inputPosition,
+              enteredCodePoints: toUnicodeCodePoints(event.data),
+              normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(event.data),
+              decision: 'observed-only',
+              wordId: currentWord.id,
+              resolvedVariantId: currentWord.id
+            });
           }}
           onCompositionEnd={(event) => {
             if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
@@ -1457,12 +1619,52 @@ export function Practice({
             }
 
             const input = event.currentTarget;
+            const context = nativeInputContextRef.current;
+            const expected = practiceAnswer[context.inputPosition] ?? '';
+            recordInputDiagnostic({
+              eventType: 'compositionend',
+              dataCodePoints: toUnicodeCodePoints(event.data),
+              hiddenValueLength: input.value.length,
+              hiddenCharacterCount: safeCharacterCount(input.value),
+              source: 'native-hidden-input',
+              answerIndexBefore: context.inputPosition,
+              expectedCodePoints: toUnicodeCodePoints(expected),
+              normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+              enteredCodePoints: toUnicodeCodePoints(event.data || input.value),
+              normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(event.data || input.value),
+              decision: 'fallback-requested',
+              wordId: currentWord.id,
+              resolvedVariantId: currentWord.id
+            });
             nativeInputCoordinatorRef.current?.endComposition({
+              data: event.data,
               readValue: () => input.value,
               clearValue: () => {
                 input.value = '';
               },
-              commit: value => handlePracticeInput(value, { mobileTouchInput: true })
+              context,
+              getContext: () => nativeInputContextRef.current,
+              commit: value => {
+                const validation = handlePracticeInput(value, { mobileTouchInput: true });
+                const outcomePosition = 'inputPosition' in validation
+                  ? validation.inputPosition
+                  : context.inputPosition;
+                recordInputDiagnostic({
+                  eventType: 'validation',
+                  source: 'composition-fallback',
+                  answerIndexBefore: context.inputPosition,
+                  answerIndexAfter: validation.type === 'correct'
+                    ? outcomePosition + 1
+                    : outcomePosition,
+                  expectedCodePoints: toUnicodeCodePoints(expected),
+                  enteredCodePoints: toUnicodeCodePoints(value),
+                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+                  normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(value),
+                  decision: validation.type,
+                  wordId: currentWord.id,
+                  resolvedVariantId: currentWord.id
+                });
+              }
             });
           }}
           onKeyDown={(event) => {
@@ -1482,6 +1684,15 @@ export function Practice({
           }}
           className="mobile-practice-input"
         />
+        {inputDiagnosticsEnabled && (
+          <div className="input-debug-panel">
+            <strong>Input diagnostic</strong>
+            <span>{inputDiagnosticEntryCount} local events</span>
+            <button type="button" onClick={() => void copyInputDiagnosticReport()}>
+              {inputDiagnosticCopied ? 'Diagnostic copied' : 'Copy diagnostic report'}
+            </button>
+          </div>
+        )}
 
         <div
           onClick={shouldShowCustomKeyboard ? undefined : focusMobileInput}

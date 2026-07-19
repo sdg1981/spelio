@@ -7,6 +7,12 @@ import {
   removeLastPracticeInput
 } from '../src/lib/practice/inputFlow';
 import { createNativeInputCoordinator, type NativeInputScheduler } from '../src/lib/practice/nativeInput';
+import {
+  isPracticeInputDiagnosticsEnabled,
+  safeCharacterCount,
+  toNormalizedUnicodeCodePoints,
+  toUnicodeCodePoints
+} from '../src/lib/practice/inputDiagnostics';
 import { findSupportWordList } from '../src/data/supportWordLists';
 import { wordLists } from '../src/data/wordLists';
 
@@ -47,9 +53,20 @@ assertEqual(
 );
 assertEqual(
   practiceSource.includes('onBeforeInput='),
-  false,
-  'beforeinput must not provide a second printable-character validation path.'
+  true,
+  'The opt-in diagnostic should observe beforeinput without making it authoritative.'
 );
+assertEqual(
+  practiceSource.includes("eventType: 'beforeinput'") && practiceSource.includes("decision: 'observed-only'"),
+  true,
+  'beforeinput must remain trace-only and must not validate printable characters.'
+);
+assertEqual(isPracticeInputDiagnosticsEnabled('?input-debug=1'), true, 'The diagnostic should require its narrow query opt-in.');
+assertEqual(isPracticeInputDiagnosticsEnabled('?input-debug=0'), false, 'The diagnostic must remain disabled in normal use.');
+assertEqual(toUnicodeCodePoints('ŵ'), 'U+0175', 'Diagnostics should report code points instead of literal answer text.');
+assertEqual(toUnicodeCodePoints('o\u0302'), 'U+00F4', 'Diagnostic code points should use canonical NFC form.');
+assertEqual(toNormalizedUnicodeCodePoints('Ŵ'), 'U+0175', 'Diagnostic comparison output should expose normalized case-insensitive code points.');
+assertEqual(safeCharacterCount('o\u0302'), 1, 'Diagnostic character counts should treat decomposed input as one logical character.');
 
 function createManualNativeInputScheduler() {
   let nextTask = 1;
@@ -68,6 +85,9 @@ function createManualNativeInputScheduler() {
 
   return {
     scheduler,
+    get size() {
+      return tasks.size;
+    },
     flush() {
       const queued = [...tasks.values()];
       tasks.clear();
@@ -80,18 +100,47 @@ function createManualNativeInputScheduler() {
   const manual = createManualNativeInputScheduler();
   const coordinator = createNativeInputCoordinator(manual.scheduler);
   const committed: string[] = [];
+  const context = { wordId: 'word-cath', inputPosition: 0 };
   let value = 'c';
 
-  coordinator.startComposition();
-  assertEqual(coordinator.handleInput(value, true, input => committed.push(input)), false, 'Interim composition input must not validate.');
+  coordinator.startComposition(context);
+  const interim = coordinator.handleInput({
+    value,
+    data: 'c',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  assertEqual(interim.committed, false, 'Interim composition input must not validate.');
   coordinator.endComposition({
+    data: 'c',
     readValue: () => value,
     clearValue: () => {
       value = '';
     },
+    context,
+    getContext: () => context,
     commit: input => committed.push(input)
   });
-  assertEqual(coordinator.handleInput(value, false, input => committed.push(input)), true, 'The final Samsung-style input event should validate.');
+  const finalInput = coordinator.handleInput({
+    value,
+    data: 'c',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context,
+    commit: input => committed.push(input)
+  });
+  assertEqual(finalInput.committed, true, 'The final Samsung-style input event should validate.');
+  const duplicateFinalInput = coordinator.handleInput({
+    value: 'c',
+    data: 'c',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context: { ...context, inputPosition: 1 },
+    commit: input => committed.push(input)
+  });
+  assertEqual(duplicateFinalInput.duplicate, true, 'Repeated final input events in one composition cycle must be consumed.');
   value = '';
   manual.flush();
 
@@ -102,20 +151,289 @@ function createManualNativeInputScheduler() {
   const manual = createManualNativeInputScheduler();
   const coordinator = createNativeInputCoordinator(manual.scheduler);
   const committed: string[] = [];
+  const context = { wordId: 'word-dwr', inputPosition: 1 };
   let value = 'ŵ';
 
-  coordinator.startComposition();
+  coordinator.startComposition(context);
   coordinator.endComposition({
+    data: 'ŵ',
     readValue: () => value,
     clearValue: () => {
       value = '';
     },
+    context,
+    getContext: () => context,
     commit: input => committed.push(input)
   });
   manual.flush();
 
   assertEqual(committed.join(','), 'ŵ', 'A browser that omits final input must retain one composition fallback.');
   assertEqual(value, '', 'The composition fallback must clear the hidden input after committing.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const originalContext = { wordId: 'word-cath', inputPosition: 0 };
+  const advancedContext = { wordId: 'word-cath', inputPosition: 1 };
+  let context = originalContext;
+  let value = 'c';
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: 'c',
+    readValue: () => value,
+    clearValue: () => {
+      value = '';
+    },
+    context,
+    getContext: () => context,
+    commit: input => {
+      committed.push(input);
+      context = advancedContext;
+    }
+  });
+  manual.flush();
+  assertEqual(committed.join(','), 'c', 'The fallback should commit a genuinely missing final input once.');
+
+  value = 'c';
+  const lateInput = coordinator.handleInput({
+    value: `acknowledged${value}`,
+    data: null,
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context,
+    commit: input => committed.push(input)
+  });
+  assertEqual(lateInput.duplicate, true, 'A late full hidden-input value must match the consumed composition suffix.');
+  assertEqual(lateInput.committed, false, 'A late matching input must not validate against the advanced answer position.');
+  assertEqual(committed.join(','), 'c', 'Late final input must not duplicate scoring or answer advancement.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-cath', inputPosition: 0 };
+  let value = 'c';
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: 'c',
+    readValue: () => value,
+    clearValue: () => {
+      value = '';
+    },
+    context,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  manual.flush();
+  for (let index = 0; index < 2; index += 1) {
+    coordinator.handleInput({
+      value: 'c',
+      data: 'c',
+      inputType: index === 0 ? 'insertCompositionText' : 'insertText',
+      eventIsComposing: false,
+      context: { ...context, inputPosition: 1 },
+      commit: input => committed.push(input)
+    });
+  }
+  assertEqual(committed.join(','), 'c', 'compositionend plus multiple matching input events must remain idempotent.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-chwarae', inputPosition: 1 };
+
+  const result = coordinator.handleInput({
+    value: 'previoush',
+    data: 'h',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context,
+    commit: input => committed.push(input)
+  });
+  assertEqual(result.value, 'h', 'A complete hidden-input value must yield only the newly inserted data.');
+  assertEqual(committed.join(','), 'h', 'Previously consumed hidden-input text must not be replayed.');
+
+  coordinator.handleInput({
+    value: 'ch',
+    data: 'ch',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context: { ...context, inputPosition: 2 },
+    commit: input => committed.push(input)
+  });
+  assertEqual(committed.join(','), 'h,ch', 'Intentional multi-character commits must remain sequential input payloads.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+
+  coordinator.handleInput({
+    value: 'c',
+    data: 'c',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context: { wordId: 'word-ch', inputPosition: 0 },
+    commit: input => committed.push(input)
+  });
+  const fullValue = coordinator.handleInput({
+    value: 'ch',
+    data: null,
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context: { wordId: 'word-ch', inputPosition: 1 },
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(fullValue.value, 'h', 'A data-less complete hidden-input value must be reduced against the acknowledged prefix.');
+  assertEqual(committed.join(','), 'c,h', 'Previously acknowledged characters must not be submitted again.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const originalContext = { wordId: 'word-cath', inputPosition: 0 };
+  let context = originalContext;
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: '',
+    readValue: () => 'c',
+    clearValue: () => undefined,
+    context,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  context = { ...context, inputPosition: 1 };
+  manual.flush();
+  assertEqual(committed.length, 0, 'A fallback must become stale after Reveal or answer-index advancement.');
+
+  context = { wordId: 'next-word', inputPosition: 0 };
+  coordinator.startComposition(originalContext);
+  coordinator.endComposition({
+    data: 'c',
+    readValue: () => 'c',
+    clearValue: () => undefined,
+    context: originalContext,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  manual.flush();
+  assertEqual(committed.length, 0, 'A fallback from a previous word must not commit after transition.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-cath', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: 'c',
+    readValue: () => 'c',
+    clearValue: () => undefined,
+    context,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  coordinator.reset();
+  manual.flush();
+  assertEqual(committed.length, 0, 'Reset on blur or unmount must cancel a pending fallback.');
+
+  const deletion = coordinator.handleInput({
+    value: '',
+    data: null,
+    inputType: 'deleteContentBackward',
+    eventIsComposing: false,
+    context,
+    commit: input => committed.push(input)
+  });
+  assertEqual(deletion.committed, false, 'Deletion events must never validate printable characters.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const answer = 'ca';
+  let letters = createInitialPracticeLetters(answer);
+  let incorrectFeedbackCount = 0;
+  let context = { wordId: 'word-ca', inputPosition: 0 };
+  const commit = (input: string) => {
+    const result = processPracticeInput({
+      targetAnswer: answer,
+      letters,
+      rawInput: input,
+      mode: 'strict'
+    });
+    letters = result.letters;
+    if (result.wrongFeedback) incorrectFeedbackCount += 1;
+    context = {
+      ...context,
+      inputPosition: findNextInputIndex(answer, letters)
+    };
+  };
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: 'c',
+    readValue: () => 'c',
+    clearValue: () => undefined,
+    context,
+    getContext: () => context,
+    commit
+  });
+  manual.flush();
+  coordinator.handleInput({
+    value: 'c',
+    data: 'c',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context,
+    commit
+  });
+
+  assertEqual(committedValue(letters), 'c_', 'A fallback plus late input must advance the answer exactly once.');
+  assertEqual(context.inputPosition, 1, 'A late duplicate must leave validation on the next expected position.');
+  assertEqual(incorrectFeedbackCount, 0, 'A late duplicate correct letter must not produce red-X feedback.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-ffon', inputPosition: 2 };
+
+  coordinator.startComposition(context);
+  coordinator.endComposition({
+    data: 'o\u0302',
+    readValue: () => 'o\u0302',
+    clearValue: () => undefined,
+    context,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  manual.flush();
+  const duplicate = coordinator.handleInput({
+    value: 'ô',
+    data: 'ô',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context: { ...context, inputPosition: 3 },
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(committed.join(','), 'ô', 'Composition payloads should commit in NFC form.');
+  assertEqual(duplicate.duplicate, true, 'Precomposed and decomposed late input must share one consumed fingerprint.');
 }
 
 {

@@ -2688,7 +2688,7 @@ Rules:
 
 - When native fallback is active, the hidden input must retain focus during practice.
 - UI interactions, including reveal letter and word pill tap, must restore focus where appropriate.
-- The native input's resulting `input` event is authoritative for printable characters; printable `keydown`, `beforeinput`, and `compositionend` events must not also update spelling. A delayed `compositionend` fallback may commit only when the browser omits the final `input` event. One physical or touch action must never validate or advance more than once.
+- The native input's resulting `input` event is authoritative for printable characters; printable `keydown`, `beforeinput`, and `compositionend` events must not also update spelling. A delayed `compositionend` fallback may commit only when the browser omits the final `input` event. Each fallback is associated with its composition cycle, word, and answer position, and the fallback plus any later matching native input must be idempotent. A late duplicate must never validate against the next character. One physical or touch action must never validate or advance more than once.
 - Desktop input is handled separately through key events.
 - The active touch input system should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
 - Revealing a letter must not dismiss the active touch input system.
