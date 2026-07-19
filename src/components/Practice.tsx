@@ -404,6 +404,12 @@ export function Practice({
         normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(event.value),
         answerIndexBefore: event.context?.inputPosition,
         decision: event.action,
+        previousBufferLength: event.previousBufferLength,
+        currentBufferLength: event.currentBufferLength,
+        acknowledgedBufferLength: event.acknowledgedBufferLength,
+        derivedSuffixCodePoints: toUnicodeCodePoints(event.derivedValue),
+        bufferUpdateKind: event.updateKind,
+        logicalCharacterEmitted: event.logicalCharacterEmitted,
         cycleId: event.cycleId,
         wordId: event.context?.wordId,
         resolvedVariantId: currentWord?.id
@@ -1563,27 +1569,32 @@ export function Practice({
                 const outcomePosition = 'inputPosition' in validation
                   ? validation.inputPosition
                   : context.inputPosition;
+                const validationExpected = practiceAnswer[outcomePosition] ?? expected;
                 recordInputDiagnostic({
                   eventType: 'validation',
                   inputType: nativeEvent.inputType,
                   source: 'native-hidden-input',
-                  answerIndexBefore: context.inputPosition,
+                  answerIndexBefore: outcomePosition,
                   answerIndexAfter: validation.type === 'correct'
                     ? outcomePosition + 1
                     : outcomePosition,
-                  expectedCodePoints: toUnicodeCodePoints(expected),
+                  expectedCodePoints: toUnicodeCodePoints(validationExpected),
                   enteredCodePoints: toUnicodeCodePoints(input),
-                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(validationExpected),
                   normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(input),
                   decision: validation.type,
+                  redXTriggered: validation.type === 'incorrect',
                   wordId: currentWord.id,
                   resolvedVariantId: currentWord.id
                 });
               }
             });
-            if (result?.handled) event.currentTarget.value = '';
+            if (result?.clearValue) {
+              event.currentTarget.value = '';
+              nativeInputCoordinatorRef.current?.acknowledgeValueCleared();
+            }
           }}
-          onCompositionStart={() => {
+          onCompositionStart={(event) => {
             const context = nativeInputContextRef.current;
             recordInputDiagnostic({
               eventType: 'compositionstart',
@@ -1593,7 +1604,7 @@ export function Practice({
               wordId: currentWord.id,
               resolvedVariantId: currentWord.id
             });
-            nativeInputCoordinatorRef.current?.startComposition(context);
+            nativeInputCoordinatorRef.current?.startComposition(context, event.currentTarget.value);
           }}
           onCompositionUpdate={(event) => {
             const context = nativeInputContextRef.current;
@@ -1649,18 +1660,20 @@ export function Practice({
                 const outcomePosition = 'inputPosition' in validation
                   ? validation.inputPosition
                   : context.inputPosition;
+                const validationExpected = practiceAnswer[outcomePosition] ?? expected;
                 recordInputDiagnostic({
                   eventType: 'validation',
                   source: 'composition-fallback',
-                  answerIndexBefore: context.inputPosition,
+                  answerIndexBefore: outcomePosition,
                   answerIndexAfter: validation.type === 'correct'
                     ? outcomePosition + 1
                     : outcomePosition,
-                  expectedCodePoints: toUnicodeCodePoints(expected),
+                  expectedCodePoints: toUnicodeCodePoints(validationExpected),
                   enteredCodePoints: toUnicodeCodePoints(value),
-                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(expected),
+                  normalizedExpectedCodePoints: toNormalizedUnicodeCodePoints(validationExpected),
                   normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(value),
                   decision: validation.type,
+                  redXTriggered: validation.type === 'incorrect',
                   wordId: currentWord.id,
                   resolvedVariantId: currentWord.id
                 });
@@ -1668,6 +1681,20 @@ export function Practice({
             });
           }}
           onKeyDown={(event) => {
+            if (event.key.length === 1) {
+              recordInputDiagnostic({
+                eventType: 'keydown',
+                source: 'native-hidden-input',
+                answerIndexBefore: nativeInputContextRef.current.inputPosition,
+                enteredCodePoints: toUnicodeCodePoints(event.key),
+                normalizedEnteredCodePoints: toNormalizedUnicodeCodePoints(event.key),
+                decision: 'printable-keydown-suppressed',
+                printableKeydown: 'suppressed',
+                wordId: currentWord.id,
+                resolvedVariantId: currentWord.id
+              });
+              return;
+            }
             if (event.key !== 'Backspace') return;
             event.stopPropagation();
             removeLastInput();
@@ -1678,9 +1705,9 @@ export function Practice({
           autoCorrect="off"
           spellCheck={false}
           aria-label={t('practice.typeAnswer')}
-          onBlur={() => {
+          onBlur={(event) => {
             mobileKeyboardEnabledRef.current = false;
-            nativeInputCoordinatorRef.current?.reset();
+            nativeInputCoordinatorRef.current?.reset(event.currentTarget.value);
           }}
           className="mobile-practice-input"
         />

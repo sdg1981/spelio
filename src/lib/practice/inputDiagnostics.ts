@@ -8,6 +8,12 @@ export type PracticeInputDiagnosticEntry = {
   dataCodePoints?: string;
   hiddenValueLength?: number;
   hiddenCharacterCount?: number;
+  previousBufferLength?: number;
+  currentBufferLength?: number;
+  acknowledgedBufferLength?: number;
+  derivedSuffixCodePoints?: string;
+  bufferUpdateKind?: string;
+  logicalCharacterEmitted?: boolean;
   source?: string;
   answerIndexBefore?: number;
   answerIndexAfter?: number;
@@ -16,6 +22,8 @@ export type PracticeInputDiagnosticEntry = {
   normalizedExpectedCodePoints?: string;
   normalizedEnteredCodePoints?: string;
   decision?: string;
+  redXTriggered?: boolean;
+  printableKeydown?: 'suppressed' | 'processed';
   cycleId?: number | null;
   wordId?: string;
   resolvedVariantId?: string;

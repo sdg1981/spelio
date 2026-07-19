@@ -42,6 +42,11 @@ assertEqual(
   'Printable keys from the focused native input must not also run through the global keydown path.'
 );
 assertEqual(
+  practiceSource.includes("decision: 'printable-keydown-suppressed'"),
+  true,
+  'The diagnostic must confirm printable keydown is suppressed for the authoritative native input.'
+);
+assertEqual(
   practiceSource.includes('nativeInputCoordinatorRef.current?.handleInput('),
   true,
   'The native input event must use the single input coordinator.'
@@ -112,7 +117,8 @@ function createManualNativeInputScheduler() {
     context,
     commit: input => committed.push(input)
   });
-  assertEqual(interim.committed, false, 'Interim composition input must not validate.');
+  assertEqual(interim.committed, true, 'A composing native input must immediately validate its newly appended character.');
+  assertEqual(interim.clearValue, false, 'Persistent composition input must keep its cumulative transport buffer intact.');
   coordinator.endComposition({
     data: 'c',
     readValue: () => value,
@@ -131,7 +137,8 @@ function createManualNativeInputScheduler() {
     context,
     commit: input => committed.push(input)
   });
-  assertEqual(finalInput.committed, true, 'The final Samsung-style input event should validate.');
+  assertEqual(finalInput.committed, false, 'The final input must not replay the character already acknowledged while composing.');
+  assertEqual(finalInput.duplicate, true, 'The final input should be recognized as an acknowledged cumulative buffer.');
   const duplicateFinalInput = coordinator.handleInput({
     value: 'c',
     data: 'c',
@@ -145,6 +152,314 @@ function createManualNativeInputScheduler() {
   manual.flush();
 
   assertEqual(committed.join(','), 'c', 'compositionend followed by input must validate one character exactly once.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  let context = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  for (const cumulativeBuffer of ['l', 'lf', 'lfp']) {
+    const result = coordinator.handleInput({
+      value: cumulativeBuffer,
+      data: cumulativeBuffer,
+      inputType: 'insertCompositionText',
+      eventIsComposing: true,
+      context,
+      commit: input => committed.push(input)
+    });
+    assertEqual(result.clearValue, false, 'Samsung composing updates must retain the cumulative hidden-input buffer.');
+    context = { ...context, inputPosition: context.inputPosition + 1 };
+  }
+
+  assertEqual(committed.join(','), 'l,f,p', 'Persistent cumulative Samsung input must emit only l, then f, then p.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const firstWord = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(firstWord);
+  coordinator.handleInput({
+    value: 'c',
+    data: 'c',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: firstWord,
+    commit: input => committed.push(`one:${input}`)
+  });
+  const nextWord = { wordId: 'word-two', inputPosition: 0 };
+  coordinator.handleInput({
+    value: 'ca',
+    data: 'ca',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: nextWord,
+    commit: input => committed.push(`two:${input}`)
+  });
+
+  assertEqual(committed.join(','), 'one:c,two:a', 'A persistent composition crossing words must submit only the appended character to the next word.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const firstContext = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(firstContext);
+  coordinator.handleInput({
+    value: 'c',
+    data: 'c',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: firstContext,
+    commit: input => committed.push(input)
+  });
+  coordinator.reset('c');
+  const refocusedContext = { wordId: 'word-two', inputPosition: 0 };
+  coordinator.handleInput({
+    value: 'ca',
+    data: 'ca',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: refocusedContext,
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(committed.join(','), 'c,a', 'Blur/refocus must preserve the acknowledged persistent buffer and emit only the new suffix.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'l',
+    data: 'l',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  coordinator.handleInput({
+    value: 'lf',
+    data: 'lf',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: { ...context, inputPosition: 1 },
+    commit: input => committed.push(input)
+  });
+  coordinator.handleInput({
+    value: 'lf',
+    data: 'lf',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: { ...context, inputPosition: 2 },
+    commit: input => committed.push(input)
+  });
+  coordinator.endComposition({
+    data: 'lf',
+    readValue: () => 'lf',
+    clearValue: () => undefined,
+    context: { ...context, inputPosition: 2 },
+    getContext: () => ({ ...context, inputPosition: 2 }),
+    commit: input => committed.push(input)
+  });
+  manual.flush();
+
+  assertEqual(committed.join(','), 'l,f', 'Duplicate composing input and late full-buffer compositionend must not replay acknowledged characters.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  let context = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'l',
+    data: 'l',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  context = { ...context, inputPosition: 1 };
+  coordinator.endComposition({
+    data: 'l',
+    readValue: () => 'l',
+    clearValue: () => undefined,
+    context,
+    getContext: () => context,
+    commit: input => committed.push(input)
+  });
+  coordinator.handleInput({
+    value: 'f',
+    data: 'f',
+    inputType: 'insertText',
+    eventIsComposing: false,
+    context,
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(committed.join(','), 'l,f', 'A finalized input that replaces the ended composition transport value must start a new buffer.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'l',
+    data: null,
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  coordinator.handleInput({
+    value: 'lf',
+    data: null,
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: { ...context, inputPosition: 1 },
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(committed.join(','), 'l,f', 'Null-data Samsung input must derive characters from the hidden-input value delta.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-one', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'abc',
+    data: 'abc',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  const deletion = coordinator.handleInput({
+    value: 'ab',
+    data: 'ab',
+    inputType: 'deleteContentBackward',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  const replacement = coordinator.handleInput({
+    value: 'ax',
+    data: 'ax',
+    inputType: 'insertReplacementText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  coordinator.handleInput({
+    value: 'axy',
+    data: 'axy',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(deletion.committed, false, 'A shorter persistent buffer must rebase without printable validation.');
+  assertEqual(replacement.committed, false, 'A non-prefix replacement must rebase without replaying old text.');
+  assertEqual(committed.join(','), 'a,b,c,y', 'After deletion/replacement rebasing, only a later appended suffix may be emitted.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const answer = 'lfp';
+  let letters = createInitialPracticeLetters(answer);
+  let incorrectFeedbackCount = 0;
+  let context = { wordId: 'word-lfp', inputPosition: 0 };
+  const commit = (input: string) => {
+    const result = processPracticeInput({
+      targetAnswer: answer,
+      letters,
+      rawInput: input,
+      mode: 'strict'
+    });
+    letters = result.letters;
+    if (result.wrongFeedback) incorrectFeedbackCount += 1;
+    context = { ...context, inputPosition: findNextInputIndex(answer, letters) };
+  };
+
+  coordinator.startComposition(context);
+  for (const cumulativeBuffer of ['l', 'lf', 'lfp']) {
+    coordinator.handleInput({
+      value: cumulativeBuffer,
+      data: cumulativeBuffer,
+      inputType: 'insertCompositionText',
+      eventIsComposing: true,
+      context,
+      commit
+    });
+  }
+
+  assertEqual(committedValue(letters), answer, 'Exact correct persistent-composition characters must complete the answer.');
+  assertEqual(incorrectFeedbackCount, 0, 'Exact correct persistent-composition input must never produce red-X feedback.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const answer = 'cat';
+  let letters = createInitialPracticeLetters(answer);
+  let incorrectFeedbackCount = 0;
+  const context = { wordId: 'word-cat', inputPosition: 0 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'x',
+    data: 'x',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => {
+      const result = processPracticeInput({
+        targetAnswer: answer,
+        letters,
+        rawInput: input,
+        mode: 'strict'
+      });
+      letters = result.letters;
+      if (result.wrongFeedback) incorrectFeedbackCount += 1;
+    }
+  });
+  coordinator.handleInput({
+    value: 'x',
+    data: 'x',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: () => {
+      incorrectFeedbackCount += 1;
+    }
+  });
+
+  assertEqual(incorrectFeedbackCount, 1, 'One wrong cumulative-buffer update must produce one error only.');
+  assertEqual(committedValue(letters), '___', 'Wrong persistent-composition input must not advance the answer.');
 }
 
 {
@@ -259,6 +574,7 @@ function createManualNativeInputScheduler() {
   });
   assertEqual(result.value, 'h', 'A complete hidden-input value must yield only the newly inserted data.');
   assertEqual(committed.join(','), 'h', 'Previously consumed hidden-input text must not be replayed.');
+  coordinator.acknowledgeValueCleared();
 
   coordinator.handleInput({
     value: 'ch',
@@ -268,7 +584,7 @@ function createManualNativeInputScheduler() {
     context: { ...context, inputPosition: 2 },
     commit: input => committed.push(input)
   });
-  assertEqual(committed.join(','), 'h,ch', 'Intentional multi-character commits must remain sequential input payloads.');
+  assertEqual(committed.join(','), 'h,c,h', 'Intentional multi-character commits must emit each logical character sequentially.');
 }
 
 {
@@ -434,6 +750,34 @@ function createManualNativeInputScheduler() {
 
   assertEqual(committed.join(','), 'ô', 'Composition payloads should commit in NFC form.');
   assertEqual(duplicate.duplicate, true, 'Precomposed and decomposed late input must share one consumed fingerprint.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  const context = { wordId: 'word-ffon', inputPosition: 2 };
+
+  coordinator.startComposition(context);
+  coordinator.handleInput({
+    value: 'o\u0302',
+    data: 'o\u0302',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context,
+    commit: input => committed.push(input)
+  });
+  const duplicate = coordinator.handleInput({
+    value: 'ô',
+    data: 'ô',
+    inputType: 'insertCompositionText',
+    eventIsComposing: true,
+    context: { ...context, inputPosition: 3 },
+    commit: input => committed.push(input)
+  });
+
+  assertEqual(committed.join(','), 'ô', 'Persistent composition must emit decomposed Welsh input in NFC form.');
+  assertEqual(duplicate.duplicate, true, 'Canonically equivalent cumulative buffers must not emit twice.');
 }
 
 {
