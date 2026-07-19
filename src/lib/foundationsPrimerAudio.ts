@@ -119,7 +119,14 @@ async function getCachedGeneratedPrimerAudio(text: string) {
   if (pending) return pending;
 
   const promise = fetchGeneratedPrimerAudio(text)
-    .catch(() => null)
+    .catch(error => {
+      console.warn('[primerAudio] Generated fallback request failed.', {
+        text,
+        route: getAzureTtsRoute(),
+        error: error instanceof Error ? { name: error.name, message: error.message } : String(error)
+      });
+      return null;
+    })
     .finally(() => {
       generatedPrimerAudioPromises.delete(cacheKey);
     });
@@ -136,7 +143,15 @@ async function fetchGeneratedPrimerAudio(text: string) {
     body: JSON.stringify(createWelshAzureTtsRequestPayload(text))
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.warn('[primerAudio] Generated fallback returned an error response.', {
+      text,
+      route: getAzureTtsRoute(),
+      status: response.status,
+      contentType: response.headers.get('content-type')
+    });
+    return null;
+  }
 
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);

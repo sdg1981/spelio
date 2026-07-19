@@ -222,6 +222,38 @@ assert(
 void runAsyncAssertions();
 
 async function runAsyncAssertions() {
+  const nativePreflightResponse = createResponse();
+  await handleAzureTtsRequest(
+    {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'capacitor://localhost',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type'
+      }
+    },
+    nativePreflightResponse,
+    {
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(nativePreflightResponse.statusCode, 204, 'The iOS Capacitor origin should be allowed to preflight generated primer audio.');
+  assertEqual(nativePreflightResponse.headers['Access-Control-Allow-Origin'], 'capacitor://localhost', 'Native TTS preflight should echo the approved iOS origin.');
+  assertEqual(nativePreflightResponse.headers['Access-Control-Allow-Methods'], 'POST, OPTIONS', 'Native TTS preflight should allow the generated-audio request method.');
+  assertEqual(nativePreflightResponse.headers['Access-Control-Allow-Headers'], 'Content-Type', 'Native TTS preflight should allow the JSON content type header.');
+
+  const untrustedPreflightResponse = createResponse();
+  await handleAzureTtsRequest(
+    { method: 'OPTIONS', headers: { origin: 'https://untrusted.example' } },
+    untrustedPreflightResponse,
+    {
+      logError: () => undefined,
+      logInfo: () => undefined
+    }
+  );
+  assertEqual(untrustedPreflightResponse.headers['Access-Control-Allow-Origin'], undefined, 'The TTS route should not grant CORS access to unrelated origins.');
+
   const overrideFfmpegPath = await resolveFfmpegPath(
     {
       readFile: async () => new Uint8Array([1])
@@ -298,7 +330,11 @@ async function runAsyncAssertions() {
   let primerRequestedSsml = '';
   const primerResponse = createResponse();
   await handleAzureTtsRequest(
-    { method: 'POST', body: createWelshAzureTtsRequestPayload('lle') },
+    {
+      method: 'POST',
+      body: createWelshAzureTtsRequestPayload('lle'),
+      headers: { origin: 'capacitor://localhost' }
+    },
     primerResponse,
     {
       env: {
@@ -325,6 +361,7 @@ async function runAsyncAssertions() {
     }
   );
   assertEqual(primerResponse.headers['X-Spelio-Azure-Language'], 'cy', 'Primer generation should use the Welsh Azure route.');
+  assertEqual(primerResponse.headers['Access-Control-Allow-Origin'], 'capacitor://localhost', 'The generated primer MP3 response should remain readable by iOS WebKit.');
   assertEqual(primerResponse.headers['X-Spelio-Azure-Locale'], AZURE_SPEECH_LOCALE, 'Primer generation should use the shared Welsh Azure locale.');
   assertEqual(primerResponse.headers['X-Spelio-Azure-Voice'], AZURE_WELSH_VOICE, 'Primer generation should use the shared Welsh Azure voice.');
   assertEqual(primerRequestedSsml, createWelshSsml('lle'), 'Primer generation should use the same Welsh SSML as standard Welsh audio generation.');

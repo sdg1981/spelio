@@ -48,6 +48,10 @@ assert(
   'Primer sound buttons should start without any selected or playing item.'
 );
 assert(
+  /soundItems\.map\(item => \([\s\S]*?<PrimerSoundButton[\s\S]*?item=\{item\}[\s\S]*?onPlay=\{playSound\}/.test(primerComponentSource),
+  'Every primer sound button should use the same item-aware playback handler.'
+);
+assert(
   !primerComponentSource.includes('autoFocus'),
   'Primer sound buttons should not request focus when the primer mounts.'
 );
@@ -92,6 +96,20 @@ assertEqual(wyPrimer.soundItems[0].label, 'WY', 'WY primer sound button should k
 assertEqual(wyPrimer.soundItems[0].audioText, 'mwyn', 'WY primer sound button should use mwyn for generated audio.');
 assertEqual(wyPrimer.soundItems[0].audioUrl, undefined, 'WY primer audio should be reset until mwyn audio is generated.');
 assertEqual(wyPrimer.soundItems[0].audioStatus, 'missing', 'WY primer audio should be marked missing until regenerated.');
+
+const wPrimer = getFoundationsPrimer('foundation_patterns_w', 'en');
+assert(wPrimer, 'W Foundations list should resolve a primer.');
+assertEqual(wPrimer.soundItems.length, 2, 'W primer should keep both sound buttons on the shared primer path.');
+assertEqual(wPrimer.soundItems[0].id, '0-w-as-a-vowel', 'W-as-vowel audio metadata should keep its distinct item id.');
+assertEqual(wPrimer.soundItems[0].label, 'W as a vowel', 'W-as-vowel audio metadata should keep its exact label.');
+assertEqual(wPrimer.soundItems[0].textToSpeak, 'cwm', 'W-as-vowel audio metadata should keep its exact generation text.');
+assertEqual(wPrimer.soundItems[0].order, 1, 'W-as-vowel audio metadata should remain first.');
+assertEqual(wPrimer.soundItems[1].id, '1-w-before-a-vowel', 'W-before-vowel audio metadata should keep its distinct item id.');
+assertEqual(wPrimer.soundItems[1].label, 'W before a vowel', 'W-before-vowel audio metadata should keep its exact label.');
+assertEqual(wPrimer.soundItems[1].textToSpeak, 'gwen', 'W-before-vowel audio metadata should keep its exact generation text.');
+assertEqual(wPrimer.soundItems[1].order, 2, 'W-before-vowel audio metadata should remain second.');
+assert(wPrimer.soundItems[0].id !== wPrimer.soundItems[1].id, 'W primer item ids must not collide.');
+assert(wPrimer.soundItems[0].textToSpeak !== wPrimer.soundItems[1].textToSpeak, 'W primer generation texts must remain distinct.');
 
 const welshYPrimerFromDraft = getFoundationsPrimer('foundation_patterns_y', 'cy');
 assert(welshYPrimerFromDraft, 'Welsh interface should resolve Y primer from bundled primerDrafts when DB content is absent.');
@@ -580,6 +598,10 @@ async function runPrimerAudioTests() {
     MockAudio.playShouldReject = false;
     assertEqual(rejectedPlayback, false, 'Primer playback rejection should be caught and reported without an unhandled rejection.');
     assertEqual(rejectedOutcomes.join(','), 'failed', 'Playback rejection should restore the primer item to neutral.');
+    const retryAfterRejectionOutcomes: string[] = [];
+    const retryAfterRejection = await playPrimerSound(fallbackItem, outcome => retryAfterRejectionOutcomes.push(outcome));
+    assert(retryAfterRejection, 'An item whose play attempt was rejected should remain tappable and retry the same shared playback path.');
+    assertEqual(retryAfterRejectionOutcomes.length, 0, 'A successful retry should remain playing instead of inheriting the previous failed state.');
 
     MockAudio.playThrowsSynchronously = true;
     const synchronousFailureOutcomes: string[] = [];

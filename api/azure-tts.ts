@@ -5,6 +5,7 @@ declare const process: {
 type ApiRequest = {
   method?: string;
   body?: unknown;
+  headers?: Record<string, string | string[] | undefined>;
 };
 
 type ApiResponse = {
@@ -169,13 +170,20 @@ export async function handleAzureTtsRequest(request: ApiRequest, response: ApiRe
   const logError = dependencies.logError ?? console.error;
 
   try {
+    setNativeWebViewCorsHeaders(request, response);
+
     logInfo('Azure TTS route invoked', {
       stage: 'route_start',
       audioPipelineVersion: AUDIO_PIPELINE_VERSION
     });
 
+    if (request.method === 'OPTIONS') {
+      response.setHeader('Allow', 'OPTIONS, POST');
+      return response.status(204).send('');
+    }
+
     if (request.method !== 'POST') {
-      response.setHeader('Allow', 'POST');
+      response.setHeader('Allow', 'OPTIONS, POST');
       return sendJsonError(response, 405, 'Method not allowed', 'unknown_route_failure');
     }
 
@@ -495,6 +503,23 @@ function parseBody(body: unknown): { text?: unknown; language?: unknown; purpose
 
   if (body && typeof body === 'object') return body as { text?: unknown; language?: unknown; purpose?: unknown };
   return null;
+}
+
+const NATIVE_WEB_VIEW_ORIGINS = new Set([
+  'capacitor://localhost',
+  'ionic://localhost'
+]);
+
+function setNativeWebViewCorsHeaders(request: ApiRequest, response: ApiResponse) {
+  const originHeader = Object.entries(request.headers ?? {})
+    .find(([name]) => name.toLowerCase() === 'origin')?.[1];
+  const origin = Array.isArray(originHeader) ? originHeader[0] : originHeader;
+  if (!origin || !NATIVE_WEB_VIEW_ORIGINS.has(origin)) return;
+
+  response.setHeader('Access-Control-Allow-Origin', origin);
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Vary', 'Origin');
 }
 
 async function readAzureErrorBody(azureResponse: AzureFetchResponse) {

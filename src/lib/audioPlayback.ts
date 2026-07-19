@@ -74,7 +74,10 @@ export function createAudioPlaybackController() {
       currentPlaybackId = playbackId;
       currentOnEnd = onEnd ?? null;
       audio.onended = () => finishCurrentPlayback('ended', playbackId);
-      audio.onerror = () => finishCurrentPlayback('failed', playbackId);
+      audio.onerror = () => {
+        reportAudioPlaybackFailure('media_error', audio, source);
+        finishCurrentPlayback('failed', playbackId);
+      };
       audio.onpause = () => finishCurrentPlayback('interrupted', playbackId);
 
       try {
@@ -87,12 +90,14 @@ export function createAudioPlaybackController() {
       // initiating tap. Rejection is converted to a non-blocking false result.
       return audio.play().then(
         () => true,
-        () => {
+        error => {
+          reportAudioPlaybackFailure('play_rejected', audio, source, error);
           finishCurrentPlayback('failed', playbackId);
           return false;
         }
       );
-    } catch {
+    } catch (error) {
+      reportAudioPlaybackFailure('play_threw', currentAudio, source, error);
       const hasRegisteredEndHandler = currentOnEnd !== null;
       finishCurrentPlayback('failed');
       if (!hasRegisteredEndHandler) onEnd?.('failed');
@@ -106,6 +111,23 @@ export function createAudioPlaybackController() {
   }
 
   return { playSource, playUrl, stop };
+}
+
+function reportAudioPlaybackFailure(
+  stage: 'media_error' | 'play_rejected' | 'play_threw',
+  audio: HTMLAudioElement | null,
+  source: string,
+  error?: unknown
+) {
+  console.warn('[audioPlayback] Playback failed.', {
+    stage,
+    source,
+    error: error instanceof Error ? { name: error.name, message: error.message } : error ? String(error) : undefined,
+    mediaError: audio?.error ? { code: audio.error.code, message: audio.error.message } : undefined,
+    networkState: audio?.networkState,
+    readyState: audio?.readyState,
+    currentSrc: audio?.currentSrc
+  });
 }
 
 const sharedAudioPlayback = createAudioPlaybackController();
