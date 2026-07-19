@@ -45,24 +45,37 @@ assertEqual(
   'All learner-facing practice launches should share the single guarded Practice render path.'
 );
 assertEqual(
-  practiceSource.includes('<Overlay className="settings-overlay">'),
+  practiceSource.includes('return createPortal(settingsOverlay, document.body);'),
   true,
-  'Settings should use its safe-area-aware overlay without changing other modal layouts.'
+  'Settings should mount directly under document.body instead of remaining inside a public-page stacking context.'
 );
 assertEqual(
-  /\.settings-overlay\{[\s\S]*?height:100vh;[\s\S]*?env\(safe-area-inset-top, 0px\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)[\s\S]*?\}/.test(stylesSource),
+  /\.settings-overlay\{[\s\S]*?position:fixed;[\s\S]*?inset:0;[\s\S]*?width:100%;[\s\S]*?height:100vh;[\s\S]*?min-height:100vh;/.test(stylesSource),
   true,
-  'Settings overlay should constrain its fallback viewport inside the iOS safe areas.'
+  'Settings backdrop should use fixed full-viewport bounds with a legacy viewport fallback.'
 );
 assertEqual(
-  /@supports \(height:100dvh\)\{[\s\S]*?\.settings-overlay\{[\s\S]*?height:100dvh;/.test(stylesSource),
+  /@supports \(height:100dvh\)\{[\s\S]*?\.settings-overlay\{[\s\S]*?height:100dvh;[\s\S]*?min-height:100dvh;/.test(stylesSource),
   true,
   'Settings overlay should prefer the dynamic viewport when the browser supports it.'
 );
 assertEqual(
-  stylesSource.includes('.settings-overlay .settings-modal{\n  max-height:100%;\n}'),
+  /--public-navigation-layer-max:(\d+);[\s\S]*?--public-modal-layer:(\d+);/.test(stylesSource) &&
+    Number(stylesSource.match(/--public-modal-layer:(\d+);/)?.[1]) >
+      Number(stylesSource.match(/--public-navigation-layer-max:(\d+);/)?.[1]),
   true,
-  'Settings modal height should be limited to the safe usable overlay area.'
+  'The documented public modal layer should exceed every public header and navigation layer.'
+);
+assertEqual(
+  /\.settings-overlay\{[\s\S]*?env\(safe-area-inset-top, 0px\)[\s\S]*?env\(safe-area-inset-right, 0px\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)[\s\S]*?env\(safe-area-inset-left, 0px\)[\s\S]*?\}/.test(stylesSource) &&
+    !stylesSource.includes('max-height:calc(100svh - 2rem)'),
+  true,
+  'Safe-area insets should create inner dialog clearance once, without shrinking or re-insetting the viewport backdrop.'
+);
+assertEqual(
+  stylesSource.includes('.settings-modal{display:flex;flex-direction:column;max-height:100%;overflow:hidden;padding:0;}'),
+  true,
+  'Settings should size its flex shell to the safe usable overlay area.'
 );
 assertEqual(
   /\.settings-modal-body\{[^}]*flex:1 1 auto;[^}]*min-height:0;[^}]*overflow-y:auto;/.test(stylesSource),
@@ -75,10 +88,19 @@ assertEqual(
   'Settings Close action should remain outside the scrolling choices.'
 );
 assertEqual(
-  /\.overlay\{\s*z-index:140;\s*\}/.test(stylesSource) &&
-    /\.homepage-bg \.homepage-public-header,[\s\S]*?\{\s*z-index:12;\s*\}/.test(stylesSource),
+  practiceSource.includes("const appRoot = document.getElementById('root');") &&
+    practiceSource.includes('appRoot.inert = true;') &&
+    practiceSource.includes('appRoot.inert = rootWasInert;'),
   true,
-  'Settings backdrop should cover the public navigation stacking layer.'
+  'Underlying public controls should become inert and inaccessible only while Settings is open.'
+);
+assertEqual(
+  practiceSource.includes("documentElement.style.overflow = 'hidden';") &&
+    practiceSource.includes("body.style.position = 'fixed';") &&
+    practiceSource.includes('Object.assign(body.style, previousBodyStyles);') &&
+    practiceSource.includes('window.scrollTo(0, scrollY);'),
+  true,
+  'Settings should lock background scrolling and restore the original page position on close.'
 );
 assertEqual(
   practiceSource.includes('className="modal-close" onClick={onClose}') &&
@@ -94,9 +116,10 @@ assertEqual(
   'Settings should keep keyboard focus inside the active dialog and close on Escape.'
 );
 assertEqual(
-  practiceSource.includes('previouslyFocused?.focus({ preventScroll: true })'),
+  practiceSource.includes("typeof document !== 'undefined' && document.activeElement instanceof HTMLElement") &&
+    practiceSource.includes('openerRef.current?.focus({ preventScroll: true })'),
   true,
-  'Closing Settings should restore focus to the control that opened it.'
+  'Settings should capture its opener before making the public root inert and restore focus on close.'
 );
 
 {

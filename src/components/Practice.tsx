@@ -1778,13 +1778,54 @@ export function SettingsModal({
   const resetCancelButtonRef = useRef<HTMLButtonElement>(null);
   const confirmingResetRef = useRef(confirmingReset);
   const onCloseRef = useRef(onClose);
+  const openerRef = useRef<HTMLElement | null>(
+    typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+  );
   const keyboardPreferenceVisible = showKeyboardPreference ?? detectedKeyboardPreferenceVisible;
 
   confirmingResetRef.current = confirmingReset;
   onCloseRef.current = onClose;
 
+  useLayoutEffect(() => {
+    const appRoot = document.getElementById('root');
+    const body = document.body;
+    const documentElement = document.documentElement;
+    const scrollY = window.scrollY;
+    const rootWasInert = appRoot?.inert ?? false;
+    const previousBodyStyles = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width
+    };
+    const previousDocumentOverflow = documentElement.style.overflow;
+
+    if (appRoot) {
+      appRoot.inert = true;
+    }
+    documentElement.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+
+    return () => {
+      documentElement.style.overflow = previousDocumentOverflow;
+      Object.assign(body.style, previousBodyStyles);
+      if (appRoot) {
+        appRoot.inert = rootWasInert;
+      }
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   useEffect(() => {
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusInitialControl = window.requestAnimationFrame(() => {
       initialCloseButtonRef.current?.focus({ preventScroll: true });
     });
@@ -1839,7 +1880,7 @@ export function SettingsModal({
     return () => {
       window.cancelAnimationFrame(focusInitialControl);
       document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus({ preventScroll: true });
+      openerRef.current?.focus({ preventScroll: true });
     };
   }, []);
 
@@ -1893,8 +1934,8 @@ export function SettingsModal({
     }
   }
 
-  return (
-    <Overlay className="settings-overlay">
+  const settingsOverlay = (
+    <div className="public-app overlay settings-overlay" data-theme={settings.theme}>
       <section ref={dialogRef} className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabIndex={-1}>
         <div className="settings-modal-header flex items-center justify-between">
           <h2 className="modal-title" id="settings-title">{t('settings.title')}</h2>
@@ -2080,8 +2121,10 @@ export function SettingsModal({
           </section>
         </div>
       )}
-    </Overlay>
+    </div>
   );
+
+  return createPortal(settingsOverlay, document.body);
 }
 
 const WordListRow = memo(function WordListRow({

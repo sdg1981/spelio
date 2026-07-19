@@ -602,7 +602,7 @@ Language rule:
 
 Settings should be minimal.
 
-On short mobile viewports, the Settings shell must remain inside the current safe-area-adjusted dynamic viewport, with a fixed header and Close action around an independently scrollable settings body.
+On short mobile viewports, the Settings shell must remain inside the current safe-area-adjusted dynamic viewport, with a fixed header and Close action around an independently scrollable settings body. Public modal backdrops must cover the complete viewport and safe-area regions from a viewport-level modal layer above all public navigation; safe-area insets apply to the dialog spacing, not to the backdrop bounds.
 
 Fields:
 
