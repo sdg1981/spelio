@@ -64,6 +64,45 @@ assert(
   'Primer sound buttons should retain a visible keyboard-only focus treatment.'
 );
 
+const continuousDarkLearningRule = stylesSource.match(
+  /\.public-app\[data-theme="dark"\]:is\([\s\S]*?\.public-app-reading-background,[\s\S]*?\.public-app-practice-background,[\s\S]*?\.public-app-end-background[\s\S]*?\) :is\(\.how-page,\.practice-app,\.end-bg\)\{([\s\S]*?)\n\}/
+)?.[1] ?? '';
+const darkLearningDocumentFallback = stylesSource.match(
+  /html:has\(\.public-app\[data-theme="dark"\]:is\([\s\S]*?#root:has\(> \.public-app\[data-theme="dark"\]:is\([\s\S]*?\)\)\{([\s\S]*?)\n\}/
+)?.[1] ?? '';
+
+assert(
+  stylesSource.includes('--public-dark-page-bg:#0f0d0b;') &&
+    /\.public-app\[data-theme="dark"\]\{[\s\S]*?--app-bg:var\(--public-dark-page-bg\);/.test(stylesSource),
+  'Dark public learning screens should use one semantic page-background token.'
+);
+assert(
+  continuousDarkLearningRule.includes('min-height:100vh;') &&
+    continuousDarkLearningRule.includes('background:var(--bg-app);') &&
+    !/(?:max-height|overflow:hidden)/.test(continuousDarkLearningRule),
+  'Primer, practice, and end wrappers should cover a full fallback viewport while remaining naturally scrollable.'
+);
+assert(
+  /@supports \(height:100dvh\)\{[\s\S]*?\.public-app\[data-theme="dark"\]:is\([\s\S]*?\) :is\(\.how-page,\.practice-app,\.end-bg\)\{[\s\S]*?min-height:100dvh;/.test(stylesSource),
+  'Public learning wrappers should use the dynamic viewport height where supported.'
+);
+assert(
+  darkLearningDocumentFallback.includes('background:var(--public-dark-page-bg);') &&
+    stylesSource.includes('body:has(> #root > .public-app[data-theme="dark"]:is(') &&
+    stylesSource.includes('#root:has(> .public-app[data-theme="dark"]:is('),
+  'The document, body, and React root fallback should match an active dark learning screen.'
+);
+assert(
+  /\.public-app\[data-theme="dark"\]:is\([\s\S]*?\.public-app-reading-background,[\s\S]*?\.public-app-end-background[\s\S]*?\) :is\(\.foundations-primer-footer,\.end-action-list\)\{[\s\S]*?background:transparent;[\s\S]*?background-image:none;/.test(stylesSource),
+  'Primer footers and end-screen action regions should not introduce a second page-level surface.'
+);
+assert(
+  /\.foundations-primer-page\.how-page\{[\s\S]*?min-height:100svh;[\s\S]*?env\(safe-area-inset-bottom\)/.test(stylesSource) &&
+    /\.end-bg\{[\s\S]*?background:#f6f5f2;/.test(stylesSource) &&
+    !continuousDarkLearningRule.includes('.admin'),
+  'Existing light primer/end styling, mobile safe areas, and isolated admin styling should remain unchanged.'
+);
+
 const dDdPrimer = getFoundationsPrimer('foundation_patterns_d_dd', 'en');
 assert(dDdPrimer, 'D/DD Foundations list should resolve a primer.');
 assertEqual(dDdPrimer.title, 'D and DD', 'Primer should use the exported title.');

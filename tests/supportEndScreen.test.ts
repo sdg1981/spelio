@@ -96,5 +96,14 @@ assert(
     endSource.includes('? onMilestoneContinue'),
   'Every end-screen primary label should retain the shared button and its existing continuation, review, list, and milestone handlers.'
 );
+assert(
+  /\.public-app\[data-theme="dark"\]:is\([\s\S]*?\.public-app-end-background[\s\S]*?\) :is\(\.how-page,\.practice-app,\.end-bg\)\{[\s\S]*?min-height:100vh;[\s\S]*?background:var\(--bg-app\);/.test(stylesSource),
+  'Every normal, shared-list, custom-list, support, and milestone end state should inherit the continuous semantic dark canvas.'
+);
+assert(
+  /\.public-app\[data-theme="dark"\]:is\([\s\S]*?\.public-app-end-background[\s\S]*?\) :is\(\.foundations-primer-footer,\.end-action-list\)\{[\s\S]*?background:transparent;[\s\S]*?background-image:none;/.test(stylesSource) &&
+    !/\.end-v2-shell\{[^}]*?(?:max-height|overflow:hidden)/.test(stylesSource),
+  'The end action region should stay on the page canvas and taller end states should remain naturally scrollable.'
+);
 
 console.log('support end screen tests passed');

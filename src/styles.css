@@ -6073,6 +6073,10 @@
    data-theme controls light/dark appearance. A future separate
    data-presentation axis can layer calm/warm/schools styling over these
    semantic aliases. Avoid one-off hardcoded colour overrides where possible. */
+:root{
+  --public-dark-page-bg:#0f0d0b;
+}
+
 .public-app{
   --app-bg:#f6f5f2;
   --surface:#fff;
@@ -6139,7 +6143,7 @@
 
 .public-app[data-theme="dark"]{
   color-scheme:dark;
-  --app-bg:#0f0d0b;
+  --app-bg:var(--public-dark-page-bg);
   --surface:#1a1714;
   --surface-raised:#211d19;
   --surface-soft:#29231f;
@@ -7021,6 +7025,74 @@
 
 .public-app[data-theme="dark"].public-app-with-shared-background.public-app-practice-background .practice-app{
   background:var(--bg-app);
+}
+
+/* Learning and session screens own one continuous dark canvas. The 100vh
+   fallback covers older engines; dynamic viewport units avoid exposing the
+   document canvas when browser chrome changes the visible viewport. */
+.public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+),
+.public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+) .screen-stage,
+.public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+) :is(.how-page,.practice-app,.end-bg){
+  min-height:100vh;
+  background:var(--bg-app);
+}
+
+@supports (height:100dvh){
+  .public-app[data-theme="dark"]:is(
+    .public-app-reading-background,
+    .public-app-practice-background,
+    .public-app-end-background
+  ),
+  .public-app[data-theme="dark"]:is(
+    .public-app-reading-background,
+    .public-app-practice-background,
+    .public-app-end-background
+  ) .screen-stage,
+  .public-app[data-theme="dark"]:is(
+    .public-app-reading-background,
+    .public-app-practice-background,
+    .public-app-end-background
+  ) :is(.how-page,.practice-app,.end-bg){
+    min-height:100dvh;
+  }
+}
+
+.public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-end-background
+) :is(.foundations-primer-footer,.end-action-list){
+  background:transparent;
+  background-image:none;
+}
+
+html:has(.public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+)),
+body:has(> #root > .public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+)),
+#root:has(> .public-app[data-theme="dark"]:is(
+  .public-app-reading-background,
+  .public-app-practice-background,
+  .public-app-end-background
+)){
+  background:var(--public-dark-page-bg);
 }
 
 .public-app[data-theme="dark"] .modal,
