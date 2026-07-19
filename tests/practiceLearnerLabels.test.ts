@@ -19,6 +19,7 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 }
 
 const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+const stylesSource = readFileSync('src/styles.css', 'utf8');
 const settingsStart = practiceSource.indexOf("{t('settings.welshStyle')}");
 const settingsEnd = practiceSource.indexOf("{t('settings.audioPrompts')}", settingsStart);
 const welshStyleSettingsSource = practiceSource.slice(settingsStart, settingsEnd);
@@ -49,6 +50,39 @@ const wordPillHandlerEnd = practiceSource.indexOf('\n  if (!hasWords || !current
 const wordPillHandler = practiceSource.slice(wordPillHandlerStart, wordPillHandlerEnd);
 assert(wordPillHandler.includes('playAudio();'), 'Activating the practice pill should still call the existing audio playback behavior.');
 assert(practiceSource.includes('onClick={handleWordPillClick}'), 'The whole practice word/audio pill should remain wired to the existing replay handler.');
+
+const darkWordPillRule = stylesSource.match(
+  /\.public-app\[data-theme="dark"\] \.practice-app \.word-pill\{([\s\S]*?)\}/
+)?.[1] ?? '';
+const darkWordPillHoverRule = stylesSource.match(
+  /@media \(hover:hover\) and \(pointer:fine\)\{\s*\.public-app\[data-theme="dark"\] \.practice-app \.word-pill:hover\{([\s\S]*?)\}/
+)?.[1] ?? '';
+
+assert(
+  darkWordPillRule.includes('background:var(--bg-surface-raised);'),
+  'The dark practice pill should use an opaque semantic surface instead of revealing the practice shell through a translucent fill.'
+);
+assert(
+  darkWordPillHoverRule.includes('background:var(--bg-surface-soft);') &&
+    darkWordPillHoverRule.includes('transform:none;'),
+  'The dark practice pill should have one fine-pointer hover surface without movement.'
+);
+assert(
+  !darkWordPillHoverRule.includes('box-shadow') &&
+    !stylesSource.includes('.practice-app .word-pill:hover svg') &&
+    !stylesSource.includes('.practice-app .word-pill:hover .prompt-audio-icon') &&
+    !stylesSource.includes('.practice-app .word-pill:hover .prompt-text'),
+  'Dark practice pill hover should not animate a large shadow or give its icon and prompt conflicting child hover states.'
+);
+assert(
+  stylesSource.includes('.practice-app .word-pill:focus-visible{') &&
+    stylesSource.includes('outline-color:var(--focus-ring);'),
+  'The practice pill should retain its visible keyboard focus treatment.'
+);
+assert(
+  !stylesSource.includes('.practice-shell:hover') && !stylesSource.includes('.practice-app:hover'),
+  'Hovering the practice pill must not change a practice shell or practice app ancestor surface.'
+);
 
 assertEqual(translate('en', 'settings.southStandard'), 'South Wales', 'English Settings should use the revised South Wales label.');
 assertEqual(translate('cy', 'settings.southStandard'), 'De Cymru', 'Welsh Settings should use the revised De Cymru label.');
