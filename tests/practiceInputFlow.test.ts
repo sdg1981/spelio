@@ -6,6 +6,7 @@ import {
   processPracticeInput,
   removeLastPracticeInput
 } from '../src/lib/practice/inputFlow';
+import { createNativeInputCoordinator, type NativeInputScheduler } from '../src/lib/practice/nativeInput';
 import { findSupportWordList } from '../src/data/supportWordLists';
 import { wordLists } from '../src/data/wordLists';
 
@@ -35,15 +36,87 @@ assertEqual(
   'Printable keys from the focused native input must not also run through the global keydown path.'
 );
 assertEqual(
-  practiceSource.includes('mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)'),
+  practiceSource.includes('nativeInputCoordinatorRef.current?.handleInput('),
   true,
-  'Interim composition input must not be committed as separate spelling characters.'
+  'The native input event must use the single input coordinator.'
 );
 assertEqual(
-  practiceSource.includes('onCompositionEnd={(event) => {'),
+  practiceSource.includes('nativeInputCoordinatorRef.current?.endComposition({'),
   true,
-  'A completed composition must be committed once from the native input value.'
+  'Composition completion must use the coordinator fallback instead of validating directly.'
 );
+assertEqual(
+  practiceSource.includes('onBeforeInput='),
+  false,
+  'beforeinput must not provide a second printable-character validation path.'
+);
+
+function createManualNativeInputScheduler() {
+  let nextTask = 1;
+  const tasks = new Map<number, () => void>();
+  const scheduler: NativeInputScheduler = {
+    schedule(callback) {
+      const task = nextTask;
+      nextTask += 1;
+      tasks.set(task, callback);
+      return task as ReturnType<typeof setTimeout>;
+    },
+    cancel(task) {
+      tasks.delete(task as number);
+    }
+  };
+
+  return {
+    scheduler,
+    flush() {
+      const queued = [...tasks.values()];
+      tasks.clear();
+      for (const task of queued) task();
+    }
+  };
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  let value = 'c';
+
+  coordinator.startComposition();
+  assertEqual(coordinator.handleInput(value, true, input => committed.push(input)), false, 'Interim composition input must not validate.');
+  coordinator.endComposition({
+    readValue: () => value,
+    clearValue: () => {
+      value = '';
+    },
+    commit: input => committed.push(input)
+  });
+  assertEqual(coordinator.handleInput(value, false, input => committed.push(input)), true, 'The final Samsung-style input event should validate.');
+  value = '';
+  manual.flush();
+
+  assertEqual(committed.join(','), 'c', 'compositionend followed by input must validate one character exactly once.');
+}
+
+{
+  const manual = createManualNativeInputScheduler();
+  const coordinator = createNativeInputCoordinator(manual.scheduler);
+  const committed: string[] = [];
+  let value = 'ŵ';
+
+  coordinator.startComposition();
+  coordinator.endComposition({
+    readValue: () => value,
+    clearValue: () => {
+      value = '';
+    },
+    commit: input => committed.push(input)
+  });
+  manual.flush();
+
+  assertEqual(committed.join(','), 'ŵ', 'A browser that omits final input must retain one composition fallback.');
+  assertEqual(value, '', 'The composition fallback must clear the hidden input after committing.');
+}
 
 {
   const answer = 'e-bost';

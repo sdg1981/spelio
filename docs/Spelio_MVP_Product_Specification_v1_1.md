@@ -2684,7 +2684,7 @@ Rules:
 
 - When native fallback is active, the hidden input must retain focus during practice.
 - UI interactions, including reveal letter and word pill tap, must restore focus where appropriate.
-- The native input's resulting value is authoritative for printable characters; printable `keydown` events must not also update spelling. Use `keydown` only for control keys such as Backspace where needed.
+- The native input's resulting `input` event is authoritative for printable characters; printable `keydown`, `beforeinput`, and `compositionend` events must not also update spelling. A delayed `compositionend` fallback may commit only when the browser omits the final `input` event. One physical or touch action must never validate or advance more than once.
 - Desktop input is handled separately through key events.
 - The active touch input system should remain available throughout practice unless the user intentionally leaves practice or opens a modal.
 - Revealing a letter must not dismiss the active touch input system.
@@ -2692,7 +2692,7 @@ Rules:
 
 #### Mobile adjacent-key typo grace
 
-Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. A conservative explicit QWERTY A-Z neighbour map is used. For adjacency detection only, supported accented Welsh letters resolve to their physical/base QWERTY key, including canonically equivalent precomposed and decomposed forms; strict and flexible spelling validation remain unchanged. The entered character remains visible in the active position until it is deleted, directly overwritten by the correct expected character, or committed as wrong. Direct overwrite is available only while the adjacent-key character is pending, and the grace opportunity remains limited to once per answer position.
+Spelio preserves immediate letter-level feedback while giving mobile learners one neutral correction opportunity for a probable adjacent-key touch. Exact expected-character validation always takes priority and never enters typo grace. A conservative explicit QWERTY A-Z neighbour map is used, and a key is never adjacent to itself. For adjacency detection only, supported accented Welsh letters resolve to their physical/base QWERTY key, including canonically equivalent precomposed and decomposed forms; strict and flexible spelling validation remain unchanged. The entered character remains visible in the active position until it is deleted, directly overwritten by the correct expected character, or committed as wrong. Direct overwrite is available only while the adjacent-key character is pending, and the grace opportunity remains limited to once per answer position.
 
 This grace is limited to touch-first mobile input and is disabled in Practice test and any future strict assessment context. Desktop and physical-keyboard input retains immediate incorrect feedback.
 

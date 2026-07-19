@@ -23,6 +23,7 @@ import { getSpellingPatternHint, type SpellingPatternHint } from '../lib/practic
 import { normalizeSingleSelectedListIds, selectSingleWordList } from '../lib/practice/wordListSelection';
 import { getInitialWordListPageSelection, getPendingWelshFoundationsJourneyList, isWelshFoundationsJourneyList } from '../lib/practice/learningJourneySelection';
 import { isCommittedAnswerComplete, isFixedAnswerPunctuation } from '../lib/practice/inputFlow';
+import { createNativeInputCoordinator } from '../lib/practice/nativeInput';
 import type { PendingMobileTypo } from '../hooks/usePracticeSession';
 import type { MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
 import { recordMobileTypoGraceEvent } from '../lib/practice/typoGraceAnalytics';
@@ -240,7 +241,8 @@ export function Practice({
   const [localStatusSecondary, setLocalStatusSecondary] = useState<string | null>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileKeyboardEnabledRef = useRef(false);
-  const mobileInputComposingRef = useRef(false);
+  const nativeInputCoordinatorRef = useRef<ReturnType<typeof createNativeInputCoordinator> | null>(null);
+  if (!nativeInputCoordinatorRef.current) nativeInputCoordinatorRef.current = createNativeInputCoordinator();
   const [customTouchKeyboardActive, setCustomTouchKeyboardActive] = useState(false);
   const [customTouchKeyboardAvailable, setCustomTouchKeyboardAvailable] = useState(false);
   const [keyboardPortalTarget, setKeyboardPortalTarget] = useState<HTMLElement | null>(null);
@@ -1429,31 +1431,39 @@ export function Practice({
 
         <input
           ref={mobileInputRef}
-          onChange={(event) => {
+          onInput={(event) => {
             if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
-              event.target.value = '';
-              return;
-            }
-
-            if (mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)) return;
-
-            const value = event.target.value;
-            if (value) handlePracticeInput(value, { mobileTouchInput: true });
-            event.target.value = '';
-          }}
-          onCompositionStart={() => {
-            mobileInputComposingRef.current = true;
-          }}
-          onCompositionEnd={(event) => {
-            mobileInputComposingRef.current = false;
-            if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
+              nativeInputCoordinatorRef.current?.reset();
               event.currentTarget.value = '';
               return;
             }
 
             const value = event.currentTarget.value;
-            if (value) handlePracticeInput(value, { mobileTouchInput: true });
-            event.currentTarget.value = '';
+            const committed = nativeInputCoordinatorRef.current?.handleInput(
+              value,
+              event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing,
+              input => handlePracticeInput(input, { mobileTouchInput: true })
+            );
+            if (committed) event.currentTarget.value = '';
+          }}
+          onCompositionStart={() => {
+            nativeInputCoordinatorRef.current?.startComposition();
+          }}
+          onCompositionEnd={(event) => {
+            if (!mobileKeyboardEnabledRef.current || !shouldUseMobileKeyboard()) {
+              nativeInputCoordinatorRef.current?.reset();
+              event.currentTarget.value = '';
+              return;
+            }
+
+            const input = event.currentTarget;
+            nativeInputCoordinatorRef.current?.endComposition({
+              readValue: () => input.value,
+              clearValue: () => {
+                input.value = '';
+              },
+              commit: value => handlePracticeInput(value, { mobileTouchInput: true })
+            });
           }}
           onKeyDown={(event) => {
             if (event.key !== 'Backspace') return;
@@ -1468,6 +1478,7 @@ export function Practice({
           aria-label={t('practice.typeAnswer')}
           onBlur={() => {
             mobileKeyboardEnabledRef.current = false;
+            nativeInputCoordinatorRef.current?.reset();
           }}
           className="mobile-practice-input"
         />

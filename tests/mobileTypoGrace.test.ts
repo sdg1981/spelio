@@ -17,6 +17,8 @@ function assertIncludes(source: string, fragment: string, message: string) {
 assertEqual(isAdjacentQwertyKey('s', 'w'), true, 'A diagonal neighbour should be eligible.');
 assertEqual(isAdjacentQwertyKey('E', 'w'), true, 'QWERTY adjacency should be case-insensitive.');
 assertEqual(isAdjacentQwertyKey('p', 'q'), false, 'A distant key must not be eligible.');
+assertEqual(isAdjacentQwertyKey('w', 'w'), false, 'A key must never be adjacent to itself.');
+assertEqual(isAdjacentQwertyKey('ŵ', 'w'), false, 'Accent-to-base normalization must not make the same physical key adjacent to itself.');
 assertEqual(isAdjacentQwertyKey('c', 'ch'), false, 'Welsh digraphs must continue through ordinary per-character validation.');
 
 const supportedKeyboardBases = {
@@ -63,6 +65,12 @@ assertEqual(validateLetter('o', 'ô', 'flexible'), true, 'Flexible correctness m
 
 const correct = processPracticeInput({ targetAnswer: 'wel', letters: createInitialPracticeLetters('wel'), rawInput: 'w', mode: 'strict' });
 assertEqual(findNextInputIndex('wel', correct.letters), 1, 'A correct mobile character should still advance immediately.');
+assertEqual(correct.wrongFeedback, null, 'An exact expected character must finish normal validation before typo grace is considered.');
+assertEqual(
+  shouldOfferMobileTypoGrace({ ...eligibilityBase, attempted: 'w', expected: 'w' }),
+  false,
+  'An exact expected character must never be eligible for typo grace.'
+);
 const wrong = processPracticeInput({ targetAnswer: 'wel', letters: createInitialPracticeLetters('wel'), rawInput: 'p', mode: 'strict' });
 assertEqual(wrong.wrongFeedback?.inputPosition, 0, 'A non-adjacent wrong character should retain immediate feedback.');
 const accented = processPracticeInput({ targetAnswer: 'dŵr', letters: createInitialPracticeLetters('dŵr'), rawInput: 'dŵr', mode: 'strict' });
@@ -105,8 +113,8 @@ const migrationSource = [
   readFileSync('supabase/migrations/202607150002_split_mobile_typo_grace_corrections.sql', 'utf8')
 ].join('\n');
 
-assertIncludes(practiceSource, 'mobileInputComposingRef.current || (event.nativeEvent instanceof InputEvent && event.nativeEvent.isComposing)', 'Composition input must remain guarded.');
-assertIncludes(practiceSource, 'handlePracticeInput(value, { mobileTouchInput: true })', 'Native input values should be the mobile grace entry point.');
+assertIncludes(practiceSource, 'nativeInputCoordinatorRef.current?.handleInput(', 'Native input must pass through the single input coordinator.');
+assertIncludes(practiceSource, 'input => handlePracticeInput(input, { mobileTouchInput: true })', 'Native input values should be the mobile grace entry point.');
 assertIncludes(practiceSource, 'event.target !== mobileInputRef.current && event.key.length === 1', 'Global printable keydown must still exclude the authoritative native input.');
 assertIncludes(practiceSource, 'strictAssessmentMode: practiceTestMode', 'Practice test mode must explicitly disable grace.');
 assertIncludes(hookSource, 'mobileTypoGraceUsedPositionsRef.current.add(pending.inputPosition)', 'A grace opportunity should be consumed at its answer position.');

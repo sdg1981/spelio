@@ -63,6 +63,7 @@ export function isAdjacentQwertyKey(attempted: string, expected: string) {
   const attemptedKey = getKeyboardBaseCharacter(attempted);
   const expectedKey = getKeyboardBaseCharacter(expected);
   if (!attemptedKey || !expectedKey) return false;
+  if (attemptedKey === expectedKey) return false;
   return QWERTY_ADJACENCY[expectedKey]?.includes(attemptedKey) ?? false;
 }
 
