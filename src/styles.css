@@ -9276,6 +9276,246 @@
   padding-bottom:0;
 }
 
+/* The catalogue was originally authored with translucent light surfaces while
+   its foregrounds already followed the public dark-theme tokens. Give this
+   page explicit, application-owned dark surfaces and state colours, and keep
+   WebKit from natively repainting its controls. */
+@supports (-webkit-touch-callout:none){
+.public-app[data-theme="dark"] .word-lists-page{
+  --word-lists-card-bg:#211d19;
+  --word-lists-card-raised:#29231f;
+  --word-lists-card-subtle:#1b1815;
+  --word-lists-card-text:#f5f1ed;
+  --word-lists-card-muted:#c0b7af;
+  --word-lists-card-faint:#a99f96;
+  --word-lists-selected-bg:#3a2026;
+  --word-lists-selected-text:#ff96a3;
+  --word-lists-completed-bg:#183226;
+  --word-lists-completed-text:#8dd5a2;
+  --word-lists-progress-bg:#342b1c;
+  --word-lists-progress-text:#e8c47e;
+  --word-lists-footer-text:#b0a9a3;
+  --word-lists-icon-red:#3a231f;
+  --word-lists-icon-green:#263326;
+  --word-lists-icon-blue:#22343a;
+  --word-lists-icon-warm:#3b281f;
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(button,a),
+.public-app[data-theme="dark"] .wordlist-page-actions button{
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-card,
+  .upcoming-journey-card,
+  .practice-library-card,
+  .practice-library-growth-card,
+  .word-lists-search-card
+){
+  border-color:rgba(255,255,255,.10);
+  background:var(--word-lists-card-bg);
+  box-shadow:0 20px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-card.selected,
+  .practice-library-card.selected
+){
+  border-color:rgba(255,68,92,.42);
+  background:var(--word-lists-selected-bg);
+  box-shadow:inset 0 0 0 2px rgba(255,68,92,.14),0 20px 48px rgba(0,0,0,.24);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-main h3,
+  .learning-journey-main strong,
+  .upcoming-journey-card h3,
+  .practice-library-card-title,
+  .practice-library-card-footer
+){
+  color:var(--word-lists-card-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .word-lists-introduction,
+  .word-lists-section-heading p,
+  .learning-journey-main p,
+  .upcoming-journey-card p,
+  .practice-library-card-subtitle,
+  .practice-library-card-status,
+  .practice-library-growth-card p,
+  .word-lists-empty-search,
+  .word-lists-recent-custom p
+){
+  color:var(--word-lists-card-muted);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .learning-journey-progress-row{
+  color:var(--word-lists-card-muted);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .learning-journey-progress-track{
+  background:rgba(255,255,255,.14);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-icon,
+  .practice-library-growth-icon
+){
+  background:linear-gradient(135deg,var(--word-lists-icon-red),var(--word-lists-icon-green));
+  color:var(--word-lists-card-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-growth-icon{
+  background:var(--word-lists-icon-warm);
+  color:var(--accent);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card:nth-child(3n+1) .practice-library-card-icon{
+  background:var(--word-lists-icon-red);
+  color:#ffad9f;
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card:nth-child(3n+2) .practice-library-card-icon{
+  background:var(--word-lists-icon-green);
+  color:#a9d79e;
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card:nth-child(3n+3) .practice-library-card-icon{
+  background:var(--word-lists-icon-blue);
+  color:#9bcddd;
+}
+
+.public-app[data-theme="dark"] .word-lists-page .upcoming-journey-card{
+  background:var(--word-lists-card-subtle);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .upcoming-journey-card > span{
+  background:var(--word-lists-card-raised);
+  color:var(--word-lists-card-faint);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip,
+  .learning-journey-chip-button,
+  .foundations-pattern-item
+){
+  border-color:rgba(255,255,255,.13);
+  background:var(--word-lists-card-raised);
+  color:var(--word-lists-card-text);
+  box-shadow:0 8px 18px rgba(0,0,0,.16);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip:hover,
+  .learning-journey-chip:focus-visible,
+  .learning-journey-chip-button:hover,
+  .learning-journey-chip-button:focus-visible,
+  .foundations-pattern-item:hover,
+  .foundations-pattern-item:focus-visible
+){
+  border-color:rgba(255,68,92,.34);
+  background:#302824;
+  color:var(--accent-hover);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip.selected,
+  .foundations-pattern-item.selected
+){
+  border-color:rgba(255,68,92,.46);
+  background:var(--word-lists-selected-bg);
+  color:var(--word-lists-selected-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip.completed,
+  .foundations-pattern-item.completed
+){
+  border-color:rgba(141,213,162,.28);
+  background:var(--word-lists-completed-bg);
+  color:var(--word-lists-card-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip.completed svg,
+  .foundations-pattern-completed,
+  .practice-library-completed
+){
+  color:var(--word-lists-completed-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page :is(
+  .learning-journey-chip.in-progress,
+  .foundations-pattern-item.in-progress
+){
+  border-color:rgba(232,196,126,.24);
+  background:var(--word-lists-progress-bg);
+  color:var(--word-lists-progress-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .learning-journey-chip.selected:is(.completed,.in-progress){
+  border-color:rgba(255,68,92,.46);
+  background:var(--word-lists-selected-bg);
+  color:var(--word-lists-selected-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card:hover,
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card:focus-visible{
+  border-color:rgba(255,68,92,.28);
+  background:var(--word-lists-card-raised);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-card.selected .practice-library-card-footer{
+  color:var(--word-lists-selected-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-share-button{
+  background:var(--word-lists-selected-bg);
+  color:var(--word-lists-selected-text);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-growth-link{
+  border-color:rgba(255,255,255,.14);
+  background:var(--word-lists-card-raised);
+  color:var(--word-lists-card-text);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .practice-library-growth-link:hover,
+.public-app[data-theme="dark"] .word-lists-page .practice-library-growth-link:focus-visible{
+  border-color:rgba(255,68,92,.30);
+  background:#302824;
+  color:var(--accent-hover);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .word-lists-recent-custom-heading svg{
+  color:var(--word-lists-card-muted);
+}
+
+.public-app[data-theme="dark"] .word-lists-page .word-lists-recent-custom-remove:hover,
+.public-app[data-theme="dark"] .word-lists-page .word-lists-recent-custom-remove:focus-visible{
+  background:rgba(255,255,255,.07);
+}
+
+.public-app[data-theme="dark"] .word-lists-footer.public-info-footer{
+  color:var(--word-lists-footer-text);
+}
+
+.public-app[data-theme="dark"] .wordlist-page-actions{
+  border-top-color:rgba(255,255,255,.10);
+  background:rgba(23,20,17,.94);
+  box-shadow:0 -10px 28px rgba(0,0,0,.30);
+}
+
+.public-app[data-theme="dark"] .wordlist-page-actions .wordlist-custom-list-link{
+  background:rgba(255,68,92,.10);
+  color:var(--accent-hover);
+}
+}
+
 .foundations-primer-page.how-page{
   min-height:100svh;
   padding-bottom:calc(44px + env(safe-area-inset-bottom));

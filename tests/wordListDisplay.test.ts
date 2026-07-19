@@ -453,3 +453,93 @@ assert(
   practiceSource.includes('return Icon ?? BookOpen;') && !practiceSource.includes("typeof Icon === 'function'"),
   'Lucide icon resolution should accept React component object exports and only fall back to BookOpen when no icon resolves.'
 );
+
+const stylesSource = readFileSync('src/styles.css', 'utf8');
+assert(
+  /@supports \(-webkit-touch-callout:none\)\{\s*\.public-app\[data-theme="dark"\] \.word-lists-page\{/.test(stylesSource),
+  'The word-list compatibility correction should remain scoped to iOS WebKit and leave Android styling unchanged.'
+);
+const darkWordListsTokens = stylesSource.match(
+  /\.public-app\[data-theme="dark"\] \.word-lists-page\{([\s\S]*?)\n\}/
+)?.[1] ?? '';
+
+function getHexToken(name: string) {
+  const value = darkWordListsTokens.match(new RegExp(`--${name}:(#[0-9a-f]{6});`, 'i'))?.[1];
+  assert(value, `Dark word-list theme should define --${name} as an explicit application-owned colour.`);
+  return value;
+}
+
+function relativeLuminance(hex: string) {
+  const channels = [1, 3, 5].map(index => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+  const [red, green, blue] = channels.map(channel => (
+    channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+  return (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+}
+
+function contrastRatio(foreground: string, background: string) {
+  const foregroundLuminance = relativeLuminance(foreground);
+  const backgroundLuminance = relativeLuminance(background);
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+  const darker = Math.min(foregroundLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+const darkCardBackground = getHexToken('word-lists-card-bg');
+assert(
+  contrastRatio(getHexToken('word-lists-card-text'), darkCardBackground) >= 7,
+  'Dark word-list card text should retain enhanced contrast against card surfaces.'
+);
+assert(
+  contrastRatio(getHexToken('word-lists-card-muted'), darkCardBackground) >= 4.5,
+  'Dark word-list descriptions and progress copy should retain readable contrast against card surfaces.'
+);
+assert(
+  contrastRatio(getHexToken('word-lists-selected-text'), getHexToken('word-lists-selected-bg')) >= 4.5,
+  'Selected word-list labels should remain readable and visually distinct in dark mode.'
+);
+assert(
+  contrastRatio(getHexToken('word-lists-completed-text'), getHexToken('word-lists-completed-bg')) >= 4.5,
+  'Completed word-list labels should remain readable and visually distinct in dark mode.'
+);
+assert(
+  contrastRatio(getHexToken('word-lists-progress-text'), getHexToken('word-lists-progress-bg')) >= 4.5,
+  'In-progress word-list labels should remain readable and visually distinct in dark mode.'
+);
+assert(
+  /\.learning-journey-chip\.selected:is\(\.completed,\.in-progress\)\{[\s\S]*?background:var\(--word-lists-selected-bg\);/.test(stylesSource),
+  'A selected preview chip should remain visibly selected when it is also completed or in progress.'
+);
+assert(
+  contrastRatio(getHexToken('word-lists-footer-text'), '#0f0d0b') >= 4.5,
+  'The word-list page footer should remain readable against the dark app background.'
+);
+
+assert(
+  !/(?:^|[;\s])(opacity|filter|backdrop-filter):/i.test(darkWordListsTokens) &&
+    !/\.word-lists-page::(?:before|after)/.test(stylesSource),
+  'The dark word-list page must not use a page-wide opacity, filter, backdrop, or overlay.'
+);
+assert(
+  /\.public-app\[data-theme="dark"\] \.word-lists-page \.practice-library-growth-link\{[\s\S]*?background:var\(--word-lists-card-raised\);[\s\S]*?color:var\(--word-lists-card-text\);/.test(stylesSource) &&
+    practiceSource.includes('<a className="practice-library-growth-link"') &&
+    practiceSource.includes("{t('wordLists.suggestTopic')}"),
+  'The Practice Library growth action should keep its content and use an explicit readable dark surface.'
+);
+assert(
+  /\.public-app\[data-theme="dark"\] \.word-lists-page :is\(button,a\),[\s\S]*?-webkit-appearance:none;[\s\S]*?appearance:none;/.test(stylesSource),
+  'Dark word-list controls should opt out of iOS native control repainting.'
+);
+assert(
+  /\.wordlist-page-actions\{[\s\S]*?padding:8px clamp\(24px,5vw,72px\) calc\(8px \+ env\(safe-area-inset-bottom\)\);/.test(stylesSource) &&
+    /@media \(max-width:520px\)\{[\s\S]*?\.wordlist-page-actions\{[\s\S]*?calc\(12px \+ env\(safe-area-inset-bottom\)\)/.test(stylesSource) &&
+    /\.word-lists-page\.how-page\{[\s\S]*?padding-bottom:calc\(112px \+ env\(safe-area-inset-bottom\)\);/.test(stylesSource) &&
+    /\.word-lists-page\.how-page\{[\s\S]*?padding:calc\(32px \+ env\(safe-area-inset-top\)\) 26px calc\(106px \+ env\(safe-area-inset-bottom\)\);/.test(stylesSource),
+  'The word-list page should clear the iPhone status area and fixed action bar while preserving bottom safe-area padding.'
+);
+assert(
+  stylesSource.includes('background:rgba(255,255,255,.76);') &&
+    stylesSource.includes('background:rgba(255,255,255,.78);') &&
+    stylesSource.indexOf('background:rgba(255,255,255,.76);') < stylesSource.indexOf('--word-lists-card-bg:#211d19;'),
+  'Existing light-mode word-list surfaces should remain intact ahead of scoped dark-mode overrides.'
+);
