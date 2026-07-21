@@ -19,6 +19,14 @@ The checked-in native project uses Swift Package Manager for Capacitor. Generate
 
 The bundled web app uses `@capacitor/app` and `App.getInfo()` to read the installed native marketing version and build for the optional update notice. The remotely hosted policy and release procedure are documented in [`docs/native_app_update_notices.md`](../docs/native_app_update_notices.md). Because this wrapper packages its web assets, bundled app changes require an App Store release; the checker cannot run in builds released before it was included.
 
+## Native Keyboard Accessory Bar
+
+The previous/next and Done bar shown above the iPhone keyboard during practice is WKWebView's native form accessory. It appears when the practice screen focuses its single visually hidden `<input type="text">`; the input is not inside a `<form>`, and the normal practice screen has no second editable control. Other focusable buttons do not cause the bar. Additional editable fields only determine whether WebKit can enable its previous/next navigation actions.
+
+Spelio intentionally leaves this accessory bar in place. There is no public WKWebView or HTML API that suppresses the iPhone form accessory while retaining native text input. Capacitor Keyboard's documented `setAccessoryBarVisible` method is not acceptable for this project because its iOS implementation finds private WebKit/UIKit classes by name and replaces their `inputAccessoryView` method implementations at runtime. Do not add that plugin, reproduce its Objective-C runtime behaviour, cover the bar visually, or replace the native keyboard. Revisit this decision only if Apple adds a supported public WKWebView API or Capacitor changes the implementation to use one.
+
+This preserves the hidden-input architecture and native IME/composition path used by iPhone, Samsung Keyboard, Gboard, accented Welsh text, hardware keyboards, and assistive technologies.
+
 ## Build And Sync
 
 From the repo root:
