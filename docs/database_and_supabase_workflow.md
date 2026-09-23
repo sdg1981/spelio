@@ -14,6 +14,21 @@ CLI link alone.
 
 - Treat committed files in `supabase/migrations/` as immutable once applied.
   Correct or normalize database state with a new additive migration.
+- Never delete a migration file after it has been applied to any shared
+  environment. The file is part of the audit trail and is required to rebuild a
+  fresh database consistently.
+- Make DEVELOPMENT and PRODUCTION schema and reference-content changes through
+  committed migrations. Do not use the SQL editor or application/admin tooling
+  to bypass migration history for changes that belong in the database baseline.
+- Before any database deployment, compare the complete local migration sequence
+  with `supabase migration list --linked` and run `supabase db push --linked
+  --dry-run`. Stop on remote-only versions, unexplained local-only versions, or
+  name/version mismatches.
+- Migration-history repair is an audit operation, not a way to unblock a push.
+  Mark a version applied only after direct schema/catalog/data evidence proves
+  its complete effect exists, or after a documented later migration has
+  deliberately superseded its intermediate state. Preserve the evidence and
+  reconcile genuine missing or divergent state before repairing the ledger.
 - Reconstruct locally with `supabase db reset` when the existing local Supabase
   stack is available. Do not install Docker solely to run this check.
 - Run application checks with `npm test` and `npm run build` as appropriate.
