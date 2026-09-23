@@ -49,6 +49,11 @@ npm run diagnose:azure-tts -- gwaith
 
 The diagnostic reports which env vars are present, the region-derived Azure host, status code, Azure request id when returned, and success/failure without printing secret values.
 
+## Database development
+
+Supabase migration, environment-safety, Data API privilege, and local verification
+rules are documented in [docs/database_and_supabase_workflow.md](docs/database_and_supabase_workflow.md).
+
 ## Included screens
 
 - First-time homepage
